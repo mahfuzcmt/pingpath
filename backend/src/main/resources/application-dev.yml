@@ -1,0 +1,17 @@
+spring:
+  jpa:
+    open-in-view: false
+
+logging:
+  level:
+    com.webinnovation.pingpath: DEBUG
+    com.webinnovation.pingpath.netty: DEBUG
+    com.webinnovation.pingpath.protocol: DEBUG
+
+pingpath:
+  cors:
+    allowed-origins: http://localhost:3000
+  seed:
+    enabled: true
+    admin-email: admin@pingpath.local
+    admin-password: admin1234

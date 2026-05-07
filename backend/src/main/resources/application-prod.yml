@@ -1,0 +1,14 @@
+spring:
+  jpa:
+    open-in-view: false
+
+logging:
+  level:
+    root: WARN
+    com.webinnovation.pingpath: INFO
+
+pingpath:
+  cors:
+    allowed-origins: https://app.pingpath.com
+  seed:
+    enabled: false

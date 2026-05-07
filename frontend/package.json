@@ -1,0 +1,36 @@
+{
+  "name": "pingpath-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "PingPath dashboard — Next.js 15 App Router, Tailwind, Mapbox GL JS, STOMP WebSocket",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "next": "^15.1.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "mapbox-gl": "^3.7.0",
+    "@stomp/stompjs": "^7.0.0",
+    "axios": "^1.7.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22.9.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@types/mapbox-gl": "^3.4.0",
+    "typescript": "^5.6.3",
+    "tailwindcss": "^3.4.14",
+    "postcss": "^8.4.47",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^9.14.0",
+    "eslint-config-next": "^15.1.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
