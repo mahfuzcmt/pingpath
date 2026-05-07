@@ -36,6 +36,7 @@ public class AuthService {
     private final RefreshTokenRepository refreshRepo;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final AuditService audit;
 
     private static final SecureRandom RNG = new SecureRandom();
 
@@ -59,6 +60,10 @@ public class AuthService {
         userRepo.touchLastLogin(user.id());
 
         TokenPair tokens = issueTokens(user.id(), user.orgId(), user.role());
+
+        // login happens before TenantContext is set on the request — pass actor explicitly
+        audit.recordFor(user.orgId(), user.id(), "AUTH_LOGIN", "user", user.id().toString(),
+                java.util.Map.of("email", user.email()));
 
         return new LoginResponse(
                 tokens.accessToken(),

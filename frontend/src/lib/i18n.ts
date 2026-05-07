@@ -22,6 +22,7 @@ const STRINGS = {
   "nav.alarms": { en: "Alarms", bn: "অ্যালার্ম" },
   "nav.reports": { en: "Reports", bn: "রিপোর্ট" },
   "nav.settings": { en: "Settings", bn: "সেটিংস" },
+  "nav.auditLog": { en: "Audit log", bn: "অডিট লগ" },
 
   // ── Map / fleet ───────────────────────────────────────────────────
   "fleet.title": { en: "Live fleet", bn: "লাইভ ফ্লিট" },
@@ -94,6 +95,48 @@ const STRINGS = {
   "reports.alarmsReport": { en: "Alarms report", bn: "অ্যালার্ম রিপোর্ট" },
 
   "lang.toggle": { en: "বাংলা", bn: "English" },
+
+  // ── Settings ──────────────────────────────────────────────────────
+  "settings.title": { en: "Settings", bn: "সেটিংস" },
+  "settings.tab.org": { en: "Organization", bn: "প্রতিষ্ঠান" },
+  "settings.tab.users": { en: "Users", bn: "ব্যবহারকারী" },
+  "settings.org.name": { en: "Organization name", bn: "প্রতিষ্ঠানের নাম" },
+  "settings.org.contactEmail": { en: "Contact email", bn: "যোগাযোগ ইমেইল" },
+  "settings.org.contactPhone": { en: "Contact phone", bn: "যোগাযোগ ফোন" },
+  "settings.org.address": { en: "Address", bn: "ঠিকানা" },
+  "settings.org.locale": { en: "Default language", bn: "ডিফল্ট ভাষা" },
+  "settings.org.timezone": { en: "Timezone", bn: "টাইমজোন" },
+  "settings.org.plan": { en: "Plan", bn: "প্ল্যান" },
+  "settings.org.saved": { en: "Saved", bn: "সংরক্ষিত" },
+
+  "users.title": { en: "Users", bn: "ব্যবহারকারী" },
+  "users.add": { en: "Add user", bn: "ব্যবহারকারী যোগ করুন" },
+  "users.edit": { en: "Edit", bn: "সম্পাদনা" },
+  "users.disable": { en: "Disable", bn: "নিষ্ক্রিয়" },
+  "users.enable": { en: "Enable", bn: "সক্রিয়" },
+  "users.email": { en: "Email", bn: "ইমেইল" },
+  "users.phone": { en: "Phone", bn: "ফোন" },
+  "users.fullName": { en: "Full name", bn: "পুরো নাম" },
+  "users.role": { en: "Role", bn: "ভূমিকা" },
+  "users.password": { en: "Password", bn: "পাসওয়ার্ড" },
+  "users.passwordHint": { en: "Leave blank to keep current", bn: "একই রাখতে খালি রাখুন" },
+  "users.lastLogin": { en: "Last login", bn: "সর্বশেষ লগইন" },
+  "users.status": { en: "Status", bn: "অবস্থা" },
+  "users.active": { en: "Active", bn: "সক্রিয়" },
+  "users.inactive": { en: "Inactive", bn: "নিষ্ক্রিয়" },
+  "users.role.SUPER_ADMIN": { en: "Super admin", bn: "সুপার অ্যাডমিন" },
+  "users.role.ORG_ADMIN": { en: "Admin", bn: "অ্যাডমিন" },
+  "users.role.ORG_USER": { en: "User", bn: "ব্যবহারকারী" },
+
+  // ── Audit log ─────────────────────────────────────────────────────
+  "audit.title": { en: "Audit log", bn: "অডিট লগ" },
+  "audit.action": { en: "Action", bn: "কর্ম" },
+  "audit.actor": { en: "Actor", bn: "অভিনেতা" },
+  "audit.resource": { en: "Resource", bn: "রিসোর্স" },
+  "audit.ip": { en: "IP", bn: "আইপি" },
+  "audit.when": { en: "When", bn: "কখন" },
+  "audit.metadata": { en: "Details", bn: "বিস্তারিত" },
+  "audit.allActions": { en: "All actions", bn: "সব কর্ম" },
 } as const;
 
 export type StringKey = keyof typeof STRINGS;

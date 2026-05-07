@@ -55,4 +55,33 @@ public class OrganizationRepository {
             return Optional.empty();
         }
     }
+
+    public java.util.List<Organization> findAll() {
+        return jdbc.query(
+                "SELECT * FROM organizations ORDER BY created_at DESC",
+                ROW_MAPPER);
+    }
+
+    public int update(UUID id, String name, String contactEmail, String contactPhone,
+                      String address, String locale, String timezone) {
+        var params = new MapSqlParameterSource()
+                .addValue("id", id)
+                .addValue("name", name)
+                .addValue("contactEmail", contactEmail)
+                .addValue("contactPhone", contactPhone)
+                .addValue("address", address)
+                .addValue("locale", locale)
+                .addValue("timezone", timezone);
+        return jdbc.update("""
+                UPDATE organizations
+                   SET name          = COALESCE(:name, name),
+                       contact_email = COALESCE(:contactEmail, contact_email),
+                       contact_phone = COALESCE(:contactPhone, contact_phone),
+                       address       = COALESCE(:address, address),
+                       locale        = COALESCE(:locale, locale),
+                       timezone      = COALESCE(:timezone, timezone),
+                       updated_at    = now()
+                 WHERE id = :id
+                """, params);
+    }
 }

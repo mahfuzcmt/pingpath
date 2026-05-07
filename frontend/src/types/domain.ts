@@ -1,6 +1,71 @@
 export type DeviceStatus = "ONLINE" | "OFFLINE" | "NEVER_CONNECTED";
 export type UserRole = "SUPER_ADMIN" | "ORG_ADMIN" | "ORG_USER";
 
+export interface OrgDetail {
+  id: string;
+  name: string;
+  slug: string;
+  planTier: string;
+  status: string;
+  contactEmail: string | null;
+  contactPhone: string | null;
+  address: string | null;
+  locale: string;
+  timezone: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface OrgUpdate {
+  name?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  address?: string;
+  locale?: string;
+  timezone?: string;
+}
+
+export interface UserDetail {
+  id: string;
+  orgId: string;
+  email: string;
+  phone: string | null;
+  fullName: string | null;
+  role: UserRole;
+  isActive: boolean;
+  lastLoginAt: string | null;
+  createdAt: string;
+}
+
+export interface UserCreate {
+  email: string;
+  phone?: string;
+  fullName: string;
+  role: UserRole;
+  password: string;
+}
+
+export interface UserUpdate {
+  fullName?: string;
+  phone?: string;
+  role?: UserRole;
+  isActive?: boolean;
+  password?: string;
+}
+
+export interface AuditLogEntry {
+  id: number;
+  orgId: string | null;
+  userId: string | null;
+  action: string;
+  resourceType: string | null;
+  resourceId: string | null;
+  metadata: string | null;
+  ipAddress: string | null;
+  userAgent: string | null;
+  ts: string;
+}
+
 /**
  * Mirrors backend `dto.DeviceDtos.DeviceView`. Field names are the wire
  * format — keep them aligned with the Java record.

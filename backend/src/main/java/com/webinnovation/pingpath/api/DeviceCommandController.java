@@ -3,6 +3,7 @@ package com.webinnovation.pingpath.api;
 import com.webinnovation.pingpath.dto.CommandDtos.CommandRequest;
 import com.webinnovation.pingpath.dto.CommandDtos.CommandResponse;
 import com.webinnovation.pingpath.security.TenantContext;
+import com.webinnovation.pingpath.service.AuditService;
 import com.webinnovation.pingpath.service.DeviceCommandService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -34,6 +35,7 @@ public class DeviceCommandController {
     private static final long REPLY_WAIT_MS = 20_000;
 
     private final DeviceCommandService commandService;
+    private final AuditService audit;
 
     @GetMapping("/online")
     public Map<String, Boolean> isOnline(@PathVariable String imei) {
@@ -44,6 +46,7 @@ public class DeviceCommandController {
     public ResponseEntity<CommandResponse> cutFuel(@PathVariable String imei,
                                                    @RequestBody CommandRequest req) {
         UUID orgId = TenantContext.requireOrgId();
+        audit.record("DEVICE_CMD_CUT_FUEL", "device", imei, null);
         return await(commandService.cutFuel(orgId, imei, req.devicePassword()));
     }
 
@@ -51,6 +54,7 @@ public class DeviceCommandController {
     public ResponseEntity<CommandResponse> restoreFuel(@PathVariable String imei,
                                                        @RequestBody CommandRequest req) {
         UUID orgId = TenantContext.requireOrgId();
+        audit.record("DEVICE_CMD_RESTORE_FUEL", "device", imei, null);
         return await(commandService.restoreFuel(orgId, imei, req.devicePassword()));
     }
 
@@ -58,6 +62,7 @@ public class DeviceCommandController {
     public ResponseEntity<CommandResponse> queryAddress(@PathVariable String imei,
                                                         @RequestBody CommandRequest req) {
         UUID orgId = TenantContext.requireOrgId();
+        audit.record("DEVICE_CMD_QUERY_ADDRESS", "device", imei, null);
         return await(commandService.queryAddress(orgId, imei, req.devicePassword()));
     }
 
@@ -69,6 +74,8 @@ public class DeviceCommandController {
             return ResponseEntity.badRequest()
                     .body(CommandResponse.failure("rawCommand required"));
         }
+        audit.record("DEVICE_CMD_RAW", "device", imei,
+                Map.of("command", req.rawCommand()));
         return await(commandService.sendRaw(orgId, imei, req.rawCommand()));
     }
 

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -86,5 +87,70 @@ public class UserRepository {
         jdbc.update(
                 "UPDATE users SET last_login_at = now(), updated_at = now() WHERE id = :id",
                 new MapSqlParameterSource("id", userId));
+    }
+
+    public List<User> listByOrg(UUID orgId) {
+        return jdbc.query(
+                "SELECT * FROM users WHERE org_id = :orgId ORDER BY created_at",
+                new MapSqlParameterSource("orgId", orgId),
+                ROW_MAPPER);
+    }
+
+    public UUID createInOrg(UUID orgId, String email, String phone, String passwordHash,
+                            String fullName, String role) {
+        UUID id = UUID.randomUUID();
+        var params = new MapSqlParameterSource()
+                .addValue("id", id)
+                .addValue("orgId", orgId)
+                .addValue("email", email)
+                .addValue("phone", phone)
+                .addValue("passwordHash", passwordHash)
+                .addValue("fullName", fullName)
+                .addValue("role", role);
+        jdbc.update("""
+                INSERT INTO users (id, org_id, email, phone, password_hash, full_name, role)
+                VALUES (:id, :orgId, :email, :phone, :passwordHash, :fullName, :role)
+                """, params);
+        return id;
+    }
+
+    public int update(UUID id, UUID orgId, String fullName, String phone, String role, Boolean isActive) {
+        var params = new MapSqlParameterSource()
+                .addValue("id", id)
+                .addValue("orgId", orgId)
+                .addValue("fullName", fullName)
+                .addValue("phone", phone)
+                .addValue("role", role)
+                .addValue("isActive", isActive);
+        return jdbc.update("""
+                UPDATE users
+                   SET full_name = COALESCE(:fullName, full_name),
+                       phone     = COALESCE(:phone, phone),
+                       role      = COALESCE(:role, role),
+                       is_active = COALESCE(:isActive, is_active),
+                       updated_at = now()
+                 WHERE id = :id AND org_id = :orgId
+                """, params);
+    }
+
+    public int updatePassword(UUID id, UUID orgId, String passwordHash) {
+        var params = new MapSqlParameterSource()
+                .addValue("id", id)
+                .addValue("orgId", orgId)
+                .addValue("passwordHash", passwordHash);
+        return jdbc.update("""
+                UPDATE users SET password_hash = :passwordHash, updated_at = now()
+                 WHERE id = :id AND org_id = :orgId
+                """, params);
+    }
+
+    public int softDelete(UUID id, UUID orgId) {
+        var params = new MapSqlParameterSource()
+                .addValue("id", id)
+                .addValue("orgId", orgId);
+        return jdbc.update("""
+                UPDATE users SET is_active = false, updated_at = now()
+                 WHERE id = :id AND org_id = :orgId
+                """, params);
     }
 }

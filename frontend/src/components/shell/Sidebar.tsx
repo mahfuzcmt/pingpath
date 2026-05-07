@@ -3,11 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLocale, type StringKey } from "@/lib/i18n";
+import { useSession } from "@/lib/session-context";
 
 interface NavItem {
   href: string;
   label: StringKey;
   icon: React.ReactNode;
+  adminOnly?: boolean;
 }
 
 const NAV: NavItem[] = [
@@ -17,12 +19,16 @@ const NAV: NavItem[] = [
   { href: "/dashboard/trips", label: "nav.trips", icon: <TripsIcon /> },
   { href: "/dashboard/alarms", label: "nav.alarms", icon: <AlarmIcon /> },
   { href: "/dashboard/reports", label: "nav.reports", icon: <ReportIcon /> },
+  { href: "/dashboard/audit-log", label: "nav.auditLog", icon: <AuditIcon />, adminOnly: true },
   { href: "/dashboard/settings", label: "nav.settings", icon: <SettingsIcon /> },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
   const { t } = useLocale();
+  const { role } = useSession();
+  const isAdmin = role === "ORG_ADMIN" || role === "SUPER_ADMIN";
+  const items = NAV.filter((n) => !n.adminOnly || isAdmin);
 
   return (
     <aside className="flex w-56 shrink-0 flex-col border-r border-ink-400/15 bg-ink-900/60">
@@ -32,7 +38,7 @@ export function Sidebar() {
       </div>
       <nav className="flex-1 overflow-y-auto p-2">
         <ul className="space-y-1">
-          {NAV.map((item) => {
+          {items.map((item) => {
             const active =
               item.href === "/dashboard"
                 ? pathname === "/dashboard"
@@ -107,6 +113,14 @@ function ReportIcon() {
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9l-6-6Z" />
       <path d="M14 3v6h6M8 13h8M8 17h6" />
+    </svg>
+  );
+}
+function AuditIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 12h6M9 16h6M9 8h6" />
+      <path d="M5 4h14v16H5z" />
     </svg>
   );
 }

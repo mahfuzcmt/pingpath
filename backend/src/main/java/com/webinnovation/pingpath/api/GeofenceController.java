@@ -7,6 +7,7 @@ import com.webinnovation.pingpath.dto.GeofenceDtos.AssignRequest;
 import com.webinnovation.pingpath.dto.GeofenceDtos.CreateRequest;
 import com.webinnovation.pingpath.dto.GeofenceDtos.GeofenceView;
 import com.webinnovation.pingpath.security.TenantContext;
+import com.webinnovation.pingpath.service.AuditService;
 import com.webinnovation.pingpath.service.GeofenceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -28,6 +29,7 @@ import java.util.UUID;
 public class GeofenceController {
 
     private final GeofenceService service;
+    private final AuditService audit;
 
     @GetMapping
     public List<GeofenceView> list() {
@@ -69,6 +71,8 @@ public class GeofenceController {
                 yield service.createPolygon(orgId, req.name(), notify, req.color(), verts, req.imeis());
             }
         };
+        audit.record("GEOFENCE_CREATE", "geofence", saved.id().toString(),
+                java.util.Map.of("name", saved.name(), "type", saved.type().name()));
         return ResponseEntity.status(HttpStatus.CREATED).body(GeofenceView.of(saved));
     }
 
@@ -76,6 +80,7 @@ public class GeofenceController {
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         UUID orgId = TenantContext.requireOrgId();
         service.delete(orgId, id);
+        audit.record("GEOFENCE_DELETE", "geofence", id.toString(), null);
         return ResponseEntity.noContent().build();
     }
 
@@ -89,6 +94,8 @@ public class GeofenceController {
     public ResponseEntity<Void> assignDevices(@PathVariable UUID id, @RequestBody AssignRequest req) {
         UUID orgId = TenantContext.requireOrgId();
         service.assignDevices(orgId, id, req.imeis());
+        audit.record("GEOFENCE_ASSIGN", "geofence", id.toString(),
+                java.util.Map.of("imeis", req.imeis() == null ? List.of() : req.imeis()));
         return ResponseEntity.noContent().build();
     }
 
@@ -96,6 +103,8 @@ public class GeofenceController {
     public ResponseEntity<Void> unassignDevice(@PathVariable UUID id, @PathVariable String imei) {
         UUID orgId = TenantContext.requireOrgId();
         service.unassignDevice(orgId, id, imei);
+        audit.record("GEOFENCE_UNASSIGN", "geofence", id.toString(),
+                java.util.Map.of("imei", imei));
         return ResponseEntity.noContent().build();
     }
 }

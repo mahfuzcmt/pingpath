@@ -4,6 +4,7 @@ import com.webinnovation.pingpath.dto.AlarmDtos.AlarmView;
 import com.webinnovation.pingpath.exception.NotFoundException;
 import com.webinnovation.pingpath.security.TenantContext;
 import com.webinnovation.pingpath.service.AlarmService;
+import com.webinnovation.pingpath.service.AuditService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,6 +23,7 @@ import java.util.UUID;
 public class AlarmController {
 
     private final AlarmService alarmService;
+    private final AuditService audit;
 
     @GetMapping
     public List<AlarmView> list(
@@ -59,6 +61,7 @@ public class AlarmController {
             alarmService.getOrThrow(orgId, id);  // throws NotFoundException if missing
             throw new NotFoundException("Alarm already acknowledged: " + id);
         }
+        audit.record("ALARM_ACKNOWLEDGE", "alarm", id.toString(), null);
         return ResponseEntity.ok(AlarmView.of(alarmService.getOrThrow(orgId, id)));
     }
 }
