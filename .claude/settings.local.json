@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(awk -F/ '{print $1\"/\"$2}')",
+      "PowerShell(Copy-Item *)",
+      "PowerShell(npm run *)",
+      "Bash(git config *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "PowerShell(try { $r = Invoke-WebRequest -Uri \"https://raw.githubusercontent.com/mahfuzcmt/pingpath/main/scripts/deploy_vps.sh\" -Method Head -UseBasicParsing -TimeoutSec 15; Write-Output \"HTTP $\\($r.StatusCode\\) — $\\($r.Headers['Content-Length']\\) bytes — public, reachable\" } catch { Write-Output \"FAIL: $\\($_.Exception.Message\\)\" })",
+      "PowerShell(try { $r = Invoke-WebRequest -Uri \"https://api.github.com/repos/mahfuzcmt/pingpath\" -UseBasicParsing -TimeoutSec 15; $j = $r.Content | ConvertFrom-Json; Write-Output \\(\"private={0} default_branch={1} pushed_at={2}\" -f $j.private, $j.default_branch, $j.pushed_at\\) } catch { Write-Output \\(\"status=\" + $_.Exception.Response.StatusCode.value__\\) })",
+      "PowerShell(try { $r = Invoke-WebRequest -Uri \"https://raw.githubusercontent.com/mahfuzcmt/pingpath/main/scripts/deploy_vps.sh\" -Method Head -UseBasicParsing -TimeoutSec 15; Write-Output \"HTTP $\\($r.StatusCode\\) — public, reachable\" } catch { Write-Output \"FAIL: $\\($_.Exception.Message\\)\" })"
+    ]
+  }
+}
