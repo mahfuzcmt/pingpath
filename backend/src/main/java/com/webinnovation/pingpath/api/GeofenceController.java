@@ -72,7 +72,7 @@ public class GeofenceController {
             }
         };
         audit.record("GEOFENCE_CREATE", "geofence", saved.id().toString(),
-                java.util.Map.of("name", saved.name(), "type", saved.type().name()));
+                java.util.Map.of("name", saved.name(), "type", saved.type()));
         return ResponseEntity.status(HttpStatus.CREATED).body(GeofenceView.of(saved));
     }
 

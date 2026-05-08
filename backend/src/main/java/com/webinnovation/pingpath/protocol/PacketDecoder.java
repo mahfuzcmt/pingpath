@@ -84,8 +84,8 @@ public class PacketDecoder {
                 || protocolNumber == PacketType.LOCATION_4G) {
             if (content.readableBytes() >= 7) {
                 loc.setAccOn(content.readUnsignedByte() == 1);
-                loc.setUploadMode(content.readUnsignedByte());
-                loc.setRealtimeFlag(content.readUnsignedByte());
+                loc.setUploadMode((int) content.readUnsignedByte());
+                loc.setRealtimeFlag((int) content.readUnsignedByte());
                 loc.setMileageMeters(content.readUnsignedInt() * 1000L);  // km → m
             }
         }
