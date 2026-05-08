@@ -44,7 +44,7 @@
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <scope>runtime</scope>
+            <!-- Must be compile scope: AlarmRepository imports PGobject for jsonb serialization. -->
         </dependency>
         <dependency>
             <groupId>org.flywaydb</groupId>
