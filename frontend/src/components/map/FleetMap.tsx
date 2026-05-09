@@ -21,6 +21,11 @@ const ARROW_SVG = (color: string) =>
      </g>
    </svg>`;
 
+function getDeviceLabel(device: DeviceView | undefined): string {
+  if (!device) return "Unknown";
+  return device.name || device.vehiclePlate || device.imei.slice(-8);
+}
+
 function colorFor(device: DeviceView | undefined): string {
   if (!device) return "#E8900A"; // brand-500
   if (device.status === "OFFLINE") return "#64748B"; // ink-400
@@ -77,18 +82,27 @@ export function FleetMap({ devices, locations, selectedImei, onSelect }: FleetMa
       const color = colorFor(device);
       let marker = markersRef.current.get(imei);
 
+      const label = getDeviceLabel(device);
+      const speed = loc.speed ?? 0;
+
       if (!marker) {
         const el = document.createElement("div");
         el.className = "pp-vehicle-marker";
-        el.style.cssText = "cursor:pointer;will-change:transform;";
-        el.innerHTML = ARROW_SVG(color);
+        el.style.cssText = "cursor:pointer;will-change:transform;display:flex;flex-direction:column;align-items:center;";
+        el.innerHTML = `
+          <div class="pp-arrow-wrapper">${ARROW_SVG(color)}</div>
+          <div class="pp-marker-label">
+            <span class="pp-label-name">${label}</span>
+            <span class="pp-label-speed">${speed} kph</span>
+          </div>
+        `;
         el.dataset.imei = imei;
         el.addEventListener("click", (e) => {
           e.stopPropagation();
           onSelect(imei);
         });
 
-        marker = new mapboxgl.Marker({ element: el, rotationAlignment: "map" })
+        marker = new mapboxgl.Marker({ element: el, rotationAlignment: "map", anchor: "top" })
           .setLngLat([loc.longitude, loc.latitude])
           .addTo(map);
         markersRef.current.set(imei, marker);
@@ -98,8 +112,17 @@ export function FleetMap({ devices, locations, selectedImei, onSelect }: FleetMa
         const el = marker.getElement();
         const svg = el.querySelector("svg path") as SVGPathElement | null;
         if (svg) svg.setAttribute("fill", color);
+        // Update label text
+        const nameEl = el.querySelector(".pp-label-name");
+        const speedEl = el.querySelector(".pp-label-speed");
+        if (nameEl) nameEl.textContent = label;
+        if (speedEl) speedEl.textContent = `${speed} kph`;
       }
-      marker.setRotation(loc.course || 0);
+      // Only rotate the arrow, not the label
+      const arrowWrapper = marker.getElement().querySelector(".pp-arrow-wrapper") as HTMLElement | null;
+      if (arrowWrapper) {
+        arrowWrapper.style.transform = `rotate(${loc.course || 0}deg)`;
+      }
 
       const el = marker.getElement();
       el.classList.toggle("pp-marker-selected", imei === selectedImei);
@@ -147,9 +170,42 @@ export function FleetMap({ devices, locations, selectedImei, onSelect }: FleetMa
         .pp-vehicle-marker {
           transition: transform 800ms ease-out;
         }
+        .pp-arrow-wrapper {
+          transition: transform 300ms ease-out;
+        }
+        .pp-marker-label {
+          margin-top: 2px;
+          padding: 2px 6px;
+          background: rgba(10, 25, 40, 0.9);
+          border-radius: 4px;
+          border: 1px solid rgba(100, 116, 139, 0.3);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          white-space: nowrap;
+          font-family: 'Inter', sans-serif;
+        }
+        .pp-label-name {
+          font-size: 11px;
+          font-weight: 600;
+          color: #f1f5f9;
+          max-width: 80px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .pp-label-speed {
+          font-size: 10px;
+          font-weight: 500;
+          color: #e8900a;
+          font-family: 'JetBrains Mono', monospace;
+        }
         .pp-marker-selected {
           filter: drop-shadow(0 0 6px #e8900a);
           z-index: 2;
+        }
+        .pp-marker-selected .pp-marker-label {
+          border-color: #e8900a;
+          background: rgba(232, 144, 10, 0.15);
         }
       `}</style>
     </div>
