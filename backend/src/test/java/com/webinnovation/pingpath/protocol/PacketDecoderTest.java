@@ -40,7 +40,7 @@ class PacketDecoderTest {
         bb.putInt((int) (latRaw & 0xFFFFFFFFL));
         bb.putInt((int) (lngRaw & 0xFFFFFFFFL));
         bb.put((byte) 42);                    // speed
-        bb.putShort((short) (0x1000 | 90));   // valid + course=90, north/east
+        bb.putShort((short) (0x1000 | 0x0400 | 0x0800 | 90));   // valid + north + east + course=90
         bb.putShort((short) 470);             // MCC
         bb.put((byte) 1);                     // MNC
         bb.putShort((short) 0x1234);          // LAC
@@ -85,7 +85,7 @@ class PacketDecoderTest {
         bb.putInt((int) raw);
         bb.putInt(0);                  // longitude 0
         bb.put((byte) 0);              // speed
-        bb.putShort((short) 0x1000);   // valid only
+        bb.putShort((short) (0x1000 | 0x0400 | 0x0800));   // valid + north + east
         bb.putShort((short) 0);        // MCC etc...
         bb.put((byte) 0);
         bb.putShort((short) 0);
@@ -103,6 +103,8 @@ class PacketDecoderTest {
 
     @Test
     void south_west_flags_negate_coordinates() {
+        // GT06 devices: bit CLEAR = South/West (coordinates negative)
+        // bit SET = North/East (coordinates positive)
         double targetLat = 23.7806;
         double targetLng = 90.4193;
         long latRaw = (long) (targetLat * 1_800_000);
@@ -114,7 +116,7 @@ class PacketDecoderTest {
         bb.putInt((int) latRaw);
         bb.putInt((int) lngRaw);
         bb.put((byte) 0);
-        bb.putShort((short) (0x1000 | 0x0400 | 0x0800));  // valid + south + west
+        bb.putShort((short) 0x1000);  // valid only, N/S and E/W bits CLEAR = South + West
         bb.putShort((short) 0); bb.put((byte) 0); bb.putShort((short) 0);
         bb.put((byte) 0).put((byte) 0).put((byte) 0);
         bb.put((byte) 0); bb.put((byte) 0); bb.put((byte) 0); bb.putInt(0);
@@ -125,6 +127,36 @@ class PacketDecoderTest {
             LocationData loc = decoder.decodeLocation(content, PacketType.LOCATION_V3);
             assertThat(loc.getLatitude()).isLessThan(0);
             assertThat(loc.getLongitude()).isLessThan(0);
+        } finally {
+            content.release();
+        }
+    }
+
+    @Test
+    void north_east_flags_keep_coordinates_positive() {
+        // GT06 devices: bit SET = North/East (coordinates positive)
+        double targetLat = 23.7806;
+        double targetLng = 90.4193;
+        long latRaw = (long) (targetLat * 1_800_000);
+        long lngRaw = (long) (targetLng * 1_800_000);
+
+        ByteBuffer bb = ByteBuffer.allocate(64);
+        bb.put((byte) 26).put((byte) 5).put((byte) 7).put((byte) 0).put((byte) 0).put((byte) 0);
+        bb.put((byte) ((12 << 4) | 0x0C));
+        bb.putInt((int) latRaw);
+        bb.putInt((int) lngRaw);
+        bb.put((byte) 0);
+        bb.putShort((short) (0x1000 | 0x0400 | 0x0800));  // valid + north + east bits SET
+        bb.putShort((short) 0); bb.put((byte) 0); bb.putShort((short) 0);
+        bb.put((byte) 0).put((byte) 0).put((byte) 0);
+        bb.put((byte) 0); bb.put((byte) 0); bb.put((byte) 0); bb.putInt(0);
+        bb.flip();
+
+        ByteBuf content = Unpooled.wrappedBuffer(bb);
+        try {
+            LocationData loc = decoder.decodeLocation(content, PacketType.LOCATION_V3);
+            assertThat(loc.getLatitude()).isGreaterThan(0);
+            assertThat(loc.getLongitude()).isGreaterThan(0);
         } finally {
             content.release();
         }

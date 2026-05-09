@@ -39,6 +39,10 @@ const STRINGS = {
   "fleet.accOff": { en: "Off", bn: "বন্ধ" },
   "fleet.noDevices": { en: "No devices yet", bn: "এখনও কোনো ডিভাইস নেই" },
   "fleet.kmh": { en: "km/h", bn: "কিমি/ঘ" },
+  "fleet.viewHistory": { en: "View Route History", bn: "রুট ইতিহাস দেখুন" },
+  "fleet.routeHistory": { en: "Route History", bn: "রুট ইতিহাস" },
+  "fleet.period": { en: "Period", bn: "সময়কাল" },
+  "fleet.pointDetails": { en: "Point Details", bn: "পয়েন্ট বিস্তারিত" },
 
   // ── Common ────────────────────────────────────────────────────────
   "common.loading": { en: "Loading…", bn: "লোড হচ্ছে…" },

@@ -61,9 +61,12 @@ export function GeofenceEditor({ onSubmit, onCancel }: Props) {
   const [error, setError] = useState<string | null>(null);
 
   const canSave = useMemo(() => {
-    if (!name.trim()) return false;
-    if (type === "CIRCLE") return center !== null && radiusM > 0;
-    return polygon.length >= 3;
+    const hasName = !!name.trim();
+    const circleOk = type === "CIRCLE" ? (center !== null && radiusM > 0) : true;
+    const polygonOk = type === "POLYGON" ? (polygon.length >= 3) : true;
+    const result = hasName && (type === "CIRCLE" ? circleOk : polygonOk);
+    console.log("[GeofenceEditor] canSave:", result, { hasName, type, center, radiusM, polygonLength: polygon.length });
+    return result;
   }, [name, type, center, radiusM, polygon]);
 
   // Init map
@@ -93,16 +96,32 @@ export function GeofenceEditor({ onSubmit, onCancel }: Props) {
   // Click handler — depends on current type
   useEffect(() => {
     const map = mapRef.current;
-    if (!map) return;
+    if (!map) {
+      console.log("[GeofenceEditor] Map not ready for click handler");
+      return;
+    }
     const onClick = (e: mapboxgl.MapMouseEvent) => {
       const ll = { lat: e.lngLat.lat, lng: e.lngLat.lng };
+      console.log("[GeofenceEditor] Map clicked:", ll, "type:", type);
       if (type === "CIRCLE") {
         setCenter(ll);
       } else {
         setPolygon((prev) => [...prev, ll]);
       }
     };
-    map.on("click", onClick);
+
+    // Ensure map is loaded before adding click handler
+    const addClickHandler = () => {
+      console.log("[GeofenceEditor] Adding click handler");
+      map.on("click", onClick);
+    };
+
+    if (map.loaded()) {
+      addClickHandler();
+    } else {
+      map.once("load", addClickHandler);
+    }
+
     return () => {
       map.off("click", onClick);
     };
@@ -315,6 +334,23 @@ export function GeofenceEditor({ onSubmit, onCancel }: Props) {
 
         <div className="rounded border border-dashed border-ink-400/30 p-2 text-xs text-ink-400">
           {type === "CIRCLE" ? t("geo.clickToSetCenter") : t("geo.clickToAddVertex")}
+        </div>
+
+        {/* Debug: Show what's needed for save */}
+        <div className="text-xs text-ink-400 space-y-1">
+          <div className={name.trim() ? "text-alarm-green" : "text-alarm-red"}>
+            {name.trim() ? "✓" : "✗"} Name: {name.trim() || "(empty)"}
+          </div>
+          {type === "CIRCLE" && (
+            <div className={center ? "text-alarm-green" : "text-alarm-red"}>
+              {center ? "✓" : "✗"} Center: {center ? `${center.lat.toFixed(4)}, ${center.lng.toFixed(4)}` : "(click map)"}
+            </div>
+          )}
+          {type === "POLYGON" && (
+            <div className={polygon.length >= 3 ? "text-alarm-green" : "text-alarm-red"}>
+              {polygon.length >= 3 ? "✓" : "✗"} Vertices: {polygon.length}/3 minimum
+            </div>
+          )}
         </div>
 
         {type === "POLYGON" && polygon.length > 0 && (

@@ -5,6 +5,11 @@
 @layer base {
   :root {
     color-scheme: dark;
+    /* System font stacks as fallback when Google Fonts unavailable */
+    --font-inter: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-familjen: 'Familjen Grotesk', 'Inter', -apple-system, sans-serif;
+    --font-jetbrains: 'JetBrains Mono', 'SF Mono', 'Consolas', monospace;
+    --font-hind-siliguri: 'Hind Siliguri', 'Noto Sans Bengali', sans-serif;
   }
 
   html,
@@ -14,12 +19,13 @@
 
   body {
     @apply bg-ink-950 text-ink-50 antialiased;
+    font-family: var(--font-inter);
     font-feature-settings: "ss01", "cv11";
   }
 
   /* Bengali script — applied via [lang="bn"] on <html> when locale=bn */
   html[lang="bn"] body {
-    font-family: var(--font-hind-siliguri), var(--font-inter), sans-serif;
+    font-family: var(--font-hind-siliguri);
   }
 
   ::selection {

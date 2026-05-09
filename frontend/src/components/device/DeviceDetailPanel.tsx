@@ -1,8 +1,16 @@
 "use client";
 
+import { useState } from "react";
+import dynamic from "next/dynamic";
 import { useLocale } from "@/lib/i18n";
 import { formatDateTime, formatNumber, formatVoltage } from "@/lib/format";
 import type { DeviceView, LocationView } from "@/types/domain";
+
+// Dynamic import to avoid SSR issues with mapbox
+const RouteHistoryPanel = dynamic(
+  () => import("./RouteHistoryPanel").then((m) => m.RouteHistoryPanel),
+  { ssr: false }
+);
 
 interface Props {
   device: DeviceView;
@@ -12,6 +20,11 @@ interface Props {
 
 export function DeviceDetailPanel({ device, location, onClose }: Props) {
   const { t, locale } = useLocale();
+  const [showHistory, setShowHistory] = useState(false);
+
+  if (showHistory) {
+    return <RouteHistoryPanel device={device} onClose={() => setShowHistory(false)} />;
+  }
 
   return (
     <section className="absolute right-0 top-0 z-10 h-full w-96 border-l border-ink-400/15 bg-ink-900/85 backdrop-blur-md">
@@ -93,6 +106,17 @@ export function DeviceDetailPanel({ device, location, onClose }: Props) {
           </Row>
         )}
       </dl>
+
+      {/* Action buttons */}
+      <div className="border-t border-ink-400/15 p-4 space-y-2">
+        <button
+          type="button"
+          onClick={() => setShowHistory(true)}
+          className="btn-primary w-full py-2 text-sm"
+        >
+          {t("fleet.viewHistory")}
+        </button>
+      </div>
     </section>
   );
 }

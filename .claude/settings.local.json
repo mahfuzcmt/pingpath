@@ -73,7 +73,28 @@
       "Bash(SSH_ASKPASS_REQUIRE=force SSH_ASKPASS=\"echo 8IUewxU3PaH26Ro8o9Vc\" sshpass -p '8IUewxU3PaH26Ro8o9Vc' ssh -v -o StrictHostKeyChecking=no -o PubkeyAuthentication=no -o PasswordAuthentication=yes root@103.187.22.131 \"echo test\")",
       "Bash(sshpass -p '8IUewxU3PaH26Ro8o9Vc' ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no -o PubkeyAuthentication=no root@103.187.22.131 \"whoami && hostname\")",
       "Bash(sshpass -p '8IUewxU3PaH26Ro8o9Vc' ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no -o PubkeyAuthentication=no root@103.187.22.131 \"echo ''Connected!'' && uptime\")",
-      "Bash(sshpass -p 'LlX8AedBpHOG8sir7HSN' ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no -o PubkeyAuthentication=no root@103.187.22.131 \"echo ''Connected!'' && hostname && uptime\")"
+      "Bash(sshpass -p 'LlX8AedBpHOG8sir7HSN' ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no -o PubkeyAuthentication=no root@103.187.22.131 \"echo ''Connected!'' && hostname && uptime\")",
+      "Bash(git commit:*)",
+      "Bash(sshpass -p 'LlX8AedBpHOG8sir7HSN' ssh -o StrictHostKeyChecking=no root@103.187.22.131 \"docker exec phpnuxbill-db mysql -u phpnuxbill -phuR6PbLFtV2Z94htHalbc1olzmcdQWy0 phpnuxbill -e ''SHOW TABLES;''\")",
+      "Bash(sshpass -p 'LlX8AedBpHOG8sir7HSN' ssh -o StrictHostKeyChecking=no root@103.187.22.131 \"docker exec phpnuxbill-db mysql -u phpnuxbill -phuR6PbLFtV2Z94htHalbc1olzmcdQWy0 phpnuxbill -e ''DESCRIBE tbl_plans; DESCRIBE tbl_bandwidth; DESCRIBE tbl_routers; SELECT * FROM tbl_routers;''\")",
+      "Bash(sshpass -p 'LlX8AedBpHOG8sir7HSN' ssh -o StrictHostKeyChecking=no root@103.187.22.131 \"docker exec phpnuxbill-db mysql -u phpnuxbill -phuR6PbLFtV2Z94htHalbc1olzmcdQWy0 phpnuxbill -e ''DESCRIBE tbl_customers; SELECT * FROM tbl_bandwidth; SELECT * FROM tbl_plans;''\")",
+      "Bash(sshpass -p 'LlX8AedBpHOG8sir7HSN' ssh -o StrictHostKeyChecking=no root@103.187.22.131 \"docker exec phpnuxbill-db mysql -u phpnuxbill -phuR6PbLFtV2Z94htHalbc1olzmcdQWy0 phpnuxbill -e ''DESCRIBE tbl_user_recharges;''\")",
+      "Bash(sshpass -p 'LlX8AedBpHOG8sir7HSN' ssh -o StrictHostKeyChecking=no root@103.187.22.131 \"docker exec phpnuxbill-db mysql -u phpnuxbill -phuR6PbLFtV2Z94htHalbc1olzmcdQWy0 phpnuxbill -e \"\"SELECT username FROM tbl_customers ORDER BY username;\"\"\")",
+      "Bash(sshpass -p 'LlX8AedBpHOG8sir7HSN' ssh -o StrictHostKeyChecking=no root@103.187.22.131 \"docker logs pingpath-backend --tail 50 2>&1 | grep -E ''\\(IMEI|location|Login|CRC|866703\\)''\")",
+      "Bash(sshpass -p 'LlX8AedBpHOG8sir7HSN' ssh -o StrictHostKeyChecking=no root@103.187.22.131 \"docker logs pingpath-backend --tail 200 2>&1 | grep -iE ''\\(location|0x12|0x22|0x32|lat|lng|saving\\)''\")",
+      "Bash(sshpass -p 'LlX8AedBpHOG8sir7HSN' ssh -o StrictHostKeyChecking=no root@103.187.22.131 \"docker logs pingpath-backend --tail 300 2>&1 | grep -E ''\\(proto=|packet|866703|Handler|Gt06\\)''\")",
+      "Bash(sshpass -p 'LlX8AedBpHOG8sir7HSN' ssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 root@103.187.22.131 \"docker logs pingpath-backend --since 1h 2>&1 | tail -100\")",
+      "Bash(sshpass -p 'LlX8AedBpHOG8sir7HSN' ssh -o StrictHostKeyChecking=no root@103.187.22.131 \"docker logs pingpath-backend 2>&1 | tail -150\")",
+      "Bash(sshpass -p 'LlX8AedBpHOG8sir7HSN' ssh -o StrictHostKeyChecking=no root@103.187.22.131 \"docker exec pingpath-postgres psql -U pingpath -d pingpath -c \"\"SELECT * FROM devices WHERE imei=''866703066253271'';\"\" -c \"\"SELECT COUNT\\(*\\) as location_count FROM locations WHERE device_imei=''866703066253271'';\"\" -c \"\"SELECT * FROM locations WHERE device_imei=''866703066253271'' ORDER BY ts DESC LIMIT 5;\"\"\")",
+      "Bash(./mvnw clean package:*)",
+      "Bash(chmod:*)",
+      "Bash(sshpass -p 'LlX8AedBpHOG8sir7HSN' scp -o StrictHostKeyChecking=no /Users/mahfuzahmed/Desktop/Softwares/pingpath/backend/target/pingpath.jar root@103.187.22.131:/opt/pingpath/backend/target/)",
+      "Bash(sshpass:*)",
+      "Bash(npm run build:*)",
+      "Bash(npx next build:*)",
+      "Bash(npm install)",
+      "Bash(./node_modules/.bin/next build:*)",
+      "Bash(docker compose build:*)"
     ]
   }
 }
