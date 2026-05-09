@@ -45,8 +45,8 @@ public class PacketDecoder {
         loc.setCourse(courseStatus & 0x03FF);
         loc.setValid((courseStatus & 0x1000) != 0);
         // GT06 devices: bit SET = North/East, bit CLEAR = South/West (inverted from some docs)
-        boolean south = (courseStatus & 0x0400) == 0;
-        boolean west  = (courseStatus & 0x0800) == 0;
+        boolean south = (courseStatus & 0x0400) != 0;
+        boolean west  = (courseStatus & 0x0800) != 0;
 
         double lat;
         double lon;

@@ -71,24 +71,33 @@ export function GeofenceEditor({ onSubmit, onCancel }: Props) {
 
   // Init map
   useEffect(() => {
+    console.log("[GeofenceEditor] Init map effect - containerRef:", !!containerRef.current, "mapRef:", !!mapRef.current);
     if (mapRef.current || !containerRef.current) return;
     const token = mapboxToken();
+    console.log("[GeofenceEditor] Token:", token ? "present" : "MISSING");
     if (!token) return;
     mapboxgl.accessToken = token;
-    const map = new mapboxgl.Map({
-      container: containerRef.current,
-      style: MAPBOX_STYLE,
-      center: DHAKA_CENTER,
-      zoom: DEFAULT_ZOOM,
-    });
-    map.addControl(new mapboxgl.NavigationControl({ visualizePitch: false }), "bottom-right");
-    mapRef.current = map;
+    try {
+      const map = new mapboxgl.Map({
+        container: containerRef.current,
+        style: MAPBOX_STYLE,
+        center: DHAKA_CENTER,
+        zoom: DEFAULT_ZOOM,
+      });
+      map.on("load", () => console.log("[GeofenceEditor] Map loaded successfully"));
+      map.on("error", (e) => console.error("[GeofenceEditor] Map error:", e));
+      map.addControl(new mapboxgl.NavigationControl({ visualizePitch: false }), "bottom-right");
+      mapRef.current = map;
+      console.log("[GeofenceEditor] Map created");
+    } catch (err) {
+      console.error("[GeofenceEditor] Map creation failed:", err);
+    }
     return () => {
       centerMarkerRef.current?.remove();
       centerMarkerRef.current = null;
       for (const m of vertexMarkersRef.current) m.remove();
       vertexMarkersRef.current = [];
-      map.remove();
+      mapRef.current?.remove();
       mapRef.current = null;
     };
   }, []);
@@ -380,8 +389,9 @@ export function GeofenceEditor({ onSubmit, onCancel }: Props) {
         </div>
       </div>
 
-      <div className="relative flex-1">
-        <div ref={containerRef} className="absolute inset-0" />
+      <div className="relative flex-1 bg-ink-900" style={{ minHeight: "400px" }}>
+        <div ref={containerRef} className="absolute inset-0 bg-blue-900/50" style={{ width: "100%", height: "100%" }} />
+        {/* Debug: if you see blue, container is rendering */}
         {!mapboxToken() && (
           <div className="absolute inset-0 flex items-center justify-center bg-ink-950/70 text-sm">
             NEXT_PUBLIC_MAPBOX_TOKEN is not configured.
