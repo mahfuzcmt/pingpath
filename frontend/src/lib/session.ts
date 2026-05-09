@@ -30,7 +30,7 @@ export async function writeSession(p: SessionPayload): Promise<void> {
   const encoded = Buffer.from(JSON.stringify(p), "utf8").toString("base64url");
   c.set(COOKIE_NAME, encoded, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: process.env.COOKIE_SECURE === "true",  // Only secure over HTTPS
     sameSite: "lax",
     path: "/",
     maxAge: MAX_AGE,

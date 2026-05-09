@@ -23,7 +23,7 @@ async function loadMe(): Promise<AuthMeResponse> {
   const session = await readSession();
   if (!session) redirect("/login");
 
-  const r = await fetch(`${backendBase()}/auth/me`, {
+  const r = await fetch(`${backendBase()}/api/v1/auth/me`, {
     headers: { Authorization: `Bearer ${session.accessToken}` },
     cache: "no-store",
   });

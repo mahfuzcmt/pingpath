@@ -3,7 +3,8 @@ package com.webinnovation.pingpath.netty;
 import io.netty.buffer.ByteBuf;
 
 /**
- * CRC-ITU (X.25 CRC-16) — poly 0x1021, init 0xFFFF, no reflection, XOR-out 0xFFFF.
+ * CRC-ITU (CRC-16-CCITT) for GT06 protocol.
+ * Uses reflected polynomial 0x8408, init 0xFFFF, XOR-out 0xFFFF.
  * Computed over [Length] [ProtocolNumber] [Content] [Serial] (CLAUDE.md §6.6).
  */
 public final class ChecksumUtil {
@@ -11,12 +12,13 @@ public final class ChecksumUtil {
     private static final int[] TABLE = new int[256];
 
     static {
+        // Generate CRC-CCITT table (reflected polynomial 0x8408)
         for (int i = 0; i < 256; i++) {
-            int crc = i << 8;
+            int crc = i;
             for (int j = 0; j < 8; j++) {
-                crc = (crc & 0x8000) != 0 ? (crc << 1) ^ 0x1021 : crc << 1;
+                crc = (crc & 1) != 0 ? (crc >>> 1) ^ 0x8408 : crc >>> 1;
             }
-            TABLE[i] = crc & 0xFFFF;
+            TABLE[i] = crc;
         }
     }
 
@@ -25,16 +27,16 @@ public final class ChecksumUtil {
     public static int crcItu(ByteBuf buf, int offset, int length) {
         int crc = 0xFFFF;
         for (int i = 0; i < length; i++) {
-            crc = TABLE[((crc >> 8) ^ buf.getByte(offset + i)) & 0xFF] ^ (crc << 8);
+            crc = (crc >>> 8) ^ TABLE[(crc ^ buf.getByte(offset + i)) & 0xFF];
         }
-        return (~crc) & 0xFFFF;
+        return crc ^ 0xFFFF;
     }
 
     public static int crcItu(byte[] data, int offset, int length) {
         int crc = 0xFFFF;
         for (int i = 0; i < length; i++) {
-            crc = TABLE[((crc >> 8) ^ data[offset + i]) & 0xFF] ^ (crc << 8);
+            crc = (crc >>> 8) ^ TABLE[(crc ^ data[offset + i]) & 0xFF];
         }
-        return (~crc) & 0xFFFF;
+        return crc ^ 0xFFFF;
     }
 }

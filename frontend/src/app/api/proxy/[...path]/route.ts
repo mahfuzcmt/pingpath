@@ -13,7 +13,7 @@ async function forward(req: NextRequest, path: string[]): Promise<NextResponse> 
   }
 
   const search = req.nextUrl.search;
-  const url = `${backendBase()}/${path.map(encodeURIComponent).join("/")}${search}`;
+  const url = `${backendBase()}/api/v1/${path.map(encodeURIComponent).join("/")}${search}`;
 
   const headers: Record<string, string> = {
     Authorization: `Bearer ${session.accessToken}`,
