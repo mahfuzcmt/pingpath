@@ -7,7 +7,13 @@ import { useLiveLocations } from "@/hooks/useLiveLocations";
 import { useSession } from "@/lib/session-context";
 import { useLocale } from "@/lib/i18n";
 import { DeviceList } from "@/components/device/DeviceList";
-import { DeviceDetailPanel } from "@/components/device/DeviceDetailPanel";
+import { DeviceBottomPanel } from "@/components/device/DeviceBottomPanel";
+
+// Dynamic import for route history to avoid SSR issues
+const RouteHistoryPanel = dynamic(
+  () => import("@/components/device/RouteHistoryPanel").then((m) => m.RouteHistoryPanel),
+  { ssr: false }
+);
 
 // mapbox-gl pulls window/document at import time → client-only.
 const FleetMap = dynamic(
@@ -21,6 +27,7 @@ export default function DashboardPage() {
   const { devices, loading } = useDevices();
   const { locations, error } = useLiveLocations(orgId);
   const [selectedImei, setSelectedImei] = useState<string | null>(null);
+  const [showHistory, setShowHistory] = useState(false);
 
   const selectedDevice = selectedImei
     ? devices.find((d) => d.imei === selectedImei) ?? null
@@ -43,11 +50,21 @@ export default function DashboardPage() {
           onSelect={setSelectedImei}
         />
 
-        {selectedDevice && (
-          <DeviceDetailPanel
+        {/* Bottom details panel */}
+        {selectedDevice && !showHistory && (
+          <DeviceBottomPanel
             device={selectedDevice}
             location={locations.get(selectedDevice.imei)}
             onClose={() => setSelectedImei(null)}
+            onViewHistory={() => setShowHistory(true)}
+          />
+        )}
+
+        {/* Route history overlay */}
+        {selectedDevice && showHistory && (
+          <RouteHistoryPanel
+            device={selectedDevice}
+            onClose={() => setShowHistory(false)}
           />
         )}
 

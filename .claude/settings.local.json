@@ -94,7 +94,8 @@
       "Bash(npx next build:*)",
       "Bash(npm install)",
       "Bash(./node_modules/.bin/next build:*)",
-      "Bash(docker compose build:*)"
+      "Bash(docker compose build:*)",
+      "Bash(echo \"On the server \\(103.187.22.131\\), run these commands:\n\ncd /opt/pingpath\ngit pull origin main\ndocker compose build frontend\ndocker compose up -d frontend\n\nThen open the browser console \\(F12\\) to see the debug logs:\n- [GeofenceEditor] - shows why save button is disabled\n- [RouteHistory] - shows how many history points loaded\n- [useDeviceHistory] - shows API requests/responses\")"
     ]
   }
 }
