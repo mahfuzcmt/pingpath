@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useRef } from "react";
 import { api } from "@/lib/api";
 import type { LocationView } from "@/types/domain";
 
@@ -13,45 +13,70 @@ interface UseDeviceHistoryOptions {
 
 export function useDeviceHistory({ imei, from, to, limit = 1000 }: UseDeviceHistoryOptions) {
   const [history, setHistory] = useState<LocationView[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // Start as true for initial load
   const [error, setError] = useState<string | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
-  const fetchHistory = useCallback(async () => {
+  useEffect(() => {
+    // Abort previous request
+    abortRef.current?.abort();
+
     if (!imei) {
       setHistory([]);
+      setLoading(false);
       return;
     }
 
-    setLoading(true);
-    setError(null);
+    const controller = new AbortController();
+    abortRef.current = controller;
 
-    try {
-      const params: Record<string, string | number> = { limit };
-      if (from) params.from = from;
-      if (to) params.to = to;
+    const fetchHistory = async () => {
+      setLoading(true);
+      setError(null);
 
-      console.log("[useDeviceHistory] Fetching:", `/devices/${encodeURIComponent(imei)}/locations`, params);
-      const r = await api.get<LocationView[]>(
-        `/devices/${encodeURIComponent(imei)}/locations`,
-        { params }
-      );
-      console.log("[useDeviceHistory] Response:", r.data?.length ?? 0, "locations");
-      // Handle both array and wrapped response formats
-      const data = Array.isArray(r.data) ? r.data : (r.data as unknown as { data: LocationView[] })?.data ?? [];
-      setHistory(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load history");
-      setHistory([]);
-    } finally {
-      setLoading(false);
-    }
+      try {
+        const params: Record<string, string | number> = { limit };
+        if (from) params.from = from;
+        if (to) params.to = to;
+
+        console.log("[useDeviceHistory] Fetching:", `/devices/${encodeURIComponent(imei)}/locations`, params);
+        const r = await api.get<LocationView[]>(
+          `/devices/${encodeURIComponent(imei)}/locations`,
+          { params, signal: controller.signal }
+        );
+
+        if (controller.signal.aborted) return;
+
+        console.log("[useDeviceHistory] Response:", r.data?.length ?? 0, "locations");
+        // Handle both array and wrapped response formats
+        const data = Array.isArray(r.data) ? r.data : (r.data as unknown as { data: LocationView[] })?.data ?? [];
+        setHistory(data);
+        setError(null);
+      } catch (err) {
+        if (controller.signal.aborted) return;
+        console.error("[useDeviceHistory] Error:", err);
+        setError(err instanceof Error ? err.message : "Failed to load history");
+        setHistory([]);
+      } finally {
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchHistory();
+
+    return () => {
+      controller.abort();
+    };
   }, [imei, from, to, limit]);
 
-  useEffect(() => {
-    fetchHistory();
-  }, [fetchHistory]);
+  const refetch = () => {
+    // Trigger a refetch by slightly modifying state
+    setLoading(true);
+  };
 
-  return { history, loading, error, refetch: fetchHistory };
+  return { history, loading, error, refetch };
 }
 
 // Helper to get date ranges

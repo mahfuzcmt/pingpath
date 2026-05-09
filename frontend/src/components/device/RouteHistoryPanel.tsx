@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { useLocale } from "@/lib/i18n";
@@ -42,7 +42,9 @@ export function RouteHistoryPanel({ device, onClose }: Props) {
   const [progress, setProgress] = useState(0);
   const rafRef = useRef<number | null>(null);
 
-  const dateRange = getDateRange(period);
+  // Memoize date range to prevent infinite re-fetching
+  const dateRange = useMemo(() => getDateRange(period), [period]);
+
   const { history, loading, error } = useDeviceHistory({
     imei: device.imei,
     from: dateRange.from,

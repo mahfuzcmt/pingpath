@@ -5,6 +5,7 @@ const nextConfig = {
   experimental: {
     typedRoutes: false,
   },
+  transpilePackages: ["mapbox-gl"],
 };
 
 module.exports = nextConfig;

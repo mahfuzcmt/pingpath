@@ -44,8 +44,10 @@ public class PacketDecoder {
         int courseStatus = content.readUnsignedShort();
         loc.setCourse(courseStatus & 0x03FF);
         loc.setValid((courseStatus & 0x1000) != 0);
-        // GT06: bit 0x0400 = 1 means South, bit 0x0800 = 1 means West
-        boolean south = (courseStatus & 0x0400) != 0;
+        // GT06 hemisphere bits (per Traccar reference):
+        // Bit 10 (0x0400): 0 = South, 1 = North
+        // Bit 11 (0x0800): 0 = East, 1 = West
+        boolean south = (courseStatus & 0x0400) == 0;
         boolean west  = (courseStatus & 0x0800) != 0;
 
         double lat;
@@ -134,8 +136,10 @@ public class PacketDecoder {
         int courseStatus = content.readUnsignedShort();
         loc.setCourse(courseStatus & 0x03FF);
         loc.setValid((courseStatus & 0x1000) != 0);
-        // GT06: bit 0x0400 = 1 means South, bit 0x0800 = 1 means West
-        boolean south = (courseStatus & 0x0400) != 0;
+        // GT06 hemisphere bits (per Traccar reference):
+        // Bit 10 (0x0400): 0 = South, 1 = North
+        // Bit 11 (0x0800): 0 = East, 1 = West
+        boolean south = (courseStatus & 0x0400) == 0;
         boolean west = (courseStatus & 0x0800) != 0;
 
         double lat = latRaw / 1_800_000.0;
