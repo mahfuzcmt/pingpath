@@ -5,6 +5,7 @@ import { Sidebar } from "@/components/shell/Sidebar";
 import { Topbar } from "@/components/shell/Topbar";
 import { AlarmBanner } from "@/components/alarm/AlarmBanner";
 import { SessionProvider } from "@/lib/session-context";
+import { MobileNavProvider } from "@/components/shell/MobileNav";
 import type { AuthMeResponse } from "@/types/domain";
 
 interface BackendUser {
@@ -59,14 +60,16 @@ export default async function DashboardLayout({ children }: { children: React.Re
         role: me.user.role,
       }}
     >
-      <div className="flex h-screen w-screen overflow-hidden bg-ink-950 text-ink-50">
-        <Sidebar />
-        <div className="flex min-w-0 flex-1 flex-col">
-          <Topbar user={me.user} orgId={me.org.id} />
-          <main className="flex-1 min-h-0 overflow-hidden">{children}</main>
+      <MobileNavProvider>
+        <div className="flex h-screen w-screen overflow-hidden bg-ink-950 text-ink-50">
+          <Sidebar />
+          <div className="flex min-w-0 flex-1 flex-col">
+            <Topbar user={me.user} orgId={me.org.id} />
+            <main className="flex-1 min-h-0 overflow-hidden">{children}</main>
+          </div>
+          <AlarmBanner />
         </div>
-        <AlarmBanner />
-      </div>
+      </MobileNavProvider>
     </SessionProvider>
   );
 }

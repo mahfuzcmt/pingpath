@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { logout } from "@/lib/auth";
 import { useLocale } from "@/lib/i18n";
 import { LanguageToggle } from "./LanguageToggle";
+import { HamburgerButton } from "./MobileNav";
 import type { UserView } from "@/types/domain";
 
 export function Topbar({ user, orgId }: { user: UserView; orgId: string }) {
@@ -16,21 +17,22 @@ export function Topbar({ user, orgId }: { user: UserView; orgId: string }) {
   }
 
   return (
-    <header className="flex h-14 shrink-0 items-center justify-between border-b border-ink-400/15 bg-ink-900/40 px-4">
-      <div className="flex items-center gap-3">
-        <h1 className="font-display text-base font-semibold tracking-tight">{t("fleet.title")}</h1>
-        <span className="font-mono text-[11px] text-ink-400" title={orgId}>
+    <header className="flex h-14 shrink-0 items-center justify-between border-b border-ink-400/15 bg-ink-900/40 px-2 sm:px-4">
+      <div className="flex items-center gap-2 sm:gap-3">
+        <HamburgerButton />
+        <h1 className="font-display text-sm sm:text-base font-semibold tracking-tight">{t("fleet.title")}</h1>
+        <span className="hidden sm:inline font-mono text-[11px] text-ink-400" title={orgId}>
           {orgId.slice(0, 8)}…
         </span>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3">
         <LanguageToggle />
-        <div className="text-right text-xs leading-tight">
+        <div className="hidden sm:block text-right text-xs leading-tight">
           <div className="text-ink-50">{user.fullName ?? user.email}</div>
           <div className="text-ink-400">{user.role}</div>
         </div>
-        <button type="button" onClick={onSignOut} className="btn-ghost text-xs">
+        <button type="button" onClick={onSignOut} className="btn-ghost text-xs px-2 sm:px-4">
           {t("auth.signOut")}
         </button>
       </div>
