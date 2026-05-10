@@ -98,7 +98,15 @@
       "Bash(echo \"On the server \\(103.187.22.131\\), run these commands:\n\ncd /opt/pingpath\ngit pull origin main\ndocker compose build frontend\ndocker compose up -d frontend\n\nThen open the browser console \\(F12\\) to see the debug logs:\n- [GeofenceEditor] - shows why save button is disabled\n- [RouteHistory] - shows how many history points loaded\n- [useDeviceHistory] - shows API requests/responses\")",
       "Bash(git remote set-url:*)",
       "Bash(scp:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(npm run typecheck:*)",
+      "Bash(./mvnw compile:*)",
+      "WebFetch(domain:gomaxtracker.com)",
+      "WebFetch(domain:gomaxtracker.net)",
+      "WebFetch(domain:s1.gps-server.net)",
+      "WebSearch",
+      "Bash(git rm:*)",
+      "Bash(docker build:*)"
     ]
   }
 }

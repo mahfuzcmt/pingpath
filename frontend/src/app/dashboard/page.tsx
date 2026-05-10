@@ -48,7 +48,7 @@ export default function DashboardPage() {
         onSelect={setSelectedImei}
       />
 
-      <div className="relative flex-1 min-w-0">
+      <div className="relative flex-1 min-w-0 h-full">
         <FleetMap
           devices={devices}
           locations={locations}
