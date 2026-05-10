@@ -48,7 +48,7 @@ export default function LoginPage() {
       </header>
 
       <div className="relative z-0 flex min-h-screen items-center justify-center px-4">
-        <div className="card w-full max-w-md p-8 shadow-2xl">
+        <div className="panel w-full max-w-md p-8 shadow-2xl">
           <h1 className="font-display text-2xl font-semibold">{t("auth.signIn")}</h1>
           <p className="mt-1 text-sm text-ink-400">
             {t("nav.dashboard")} · {t("fleet.title")}

@@ -1,18 +1,13 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Familjen_Grotesk, JetBrains_Mono, Hind_Siliguri } from "next/font/google";
+import { Open_Sans, JetBrains_Mono, Hind_Siliguri } from "next/font/google";
 import { cookies } from "next/headers";
 import "./globals.css";
 import { LocaleProvider } from "@/lib/i18n";
 
-const inter = Inter({
+const openSans = Open_Sans({
   subsets: ["latin"],
-  variable: "--font-inter",
-  display: "swap",
-});
-
-const familjen = Familjen_Grotesk({
-  subsets: ["latin"],
-  variable: "--font-familjen",
+  weight: ["300", "400", "600", "700"],
+  variable: "--font-open-sans",
   display: "swap",
 });
 
@@ -36,7 +31,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0A1928",
+  themeColor: "#FFFFFF",
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
@@ -46,7 +41,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html
       lang={locale}
-      className={`${inter.variable} ${familjen.variable} ${jetbrains.variable} ${hindSiliguri.variable}`}
+      className={`${openSans.variable} ${jetbrains.variable} ${hindSiliguri.variable}`}
     >
       <body>
         <LocaleProvider initialLocale={locale}>{children}</LocaleProvider>

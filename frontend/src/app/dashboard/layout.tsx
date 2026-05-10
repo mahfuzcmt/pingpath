@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { readSession } from "@/lib/session";
 import { backendBase } from "@/lib/session";
-import { Sidebar } from "@/components/shell/Sidebar";
 import { Topbar } from "@/components/shell/Topbar";
 import { AlarmBanner } from "@/components/alarm/AlarmBanner";
 import { SessionProvider } from "@/lib/session-context";
@@ -15,10 +14,6 @@ interface BackendUser {
   orgId: string;
 }
 
-/**
- * Server-side hydration of the auth state. /auth/me returns just the user;
- * org info comes from the cookie (set at login). Failure → redirect to login.
- */
 async function loadMe(): Promise<AuthMeResponse> {
   const session = await readSession();
   if (!session) redirect("/login");
@@ -59,12 +54,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
         role: me.user.role,
       }}
     >
-      <div className="flex h-screen w-screen overflow-hidden bg-ink-950 text-ink-50">
-        <Sidebar />
-        <div className="flex min-w-0 flex-1 flex-col">
-          <Topbar user={me.user} orgId={me.org.id} />
-          <main className="flex-1 min-h-0 overflow-hidden">{children}</main>
-        </div>
+      <div className="flex h-screen w-screen flex-col overflow-hidden bg-surface-100 text-ink-900">
+        <Topbar user={me.user} orgId={me.org.id} />
+        <main className="min-h-0 flex-1 overflow-hidden">{children}</main>
         <AlarmBanner />
       </div>
     </SessionProvider>
