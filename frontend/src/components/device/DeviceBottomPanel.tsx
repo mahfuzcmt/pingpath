@@ -54,7 +54,7 @@ export function DeviceBottomPanel({ device, location, onClose, onViewHistory }: 
   ];
 
   return (
-    <div className="absolute bottom-0 left-0 right-0 z-10 border-t border-surface-300 bg-white shadow-lg">
+    <div className="absolute bottom-0 left-0 right-0 z-[1000] border-t border-surface-300 bg-white shadow-lg">
       {/* Tab bar */}
       <div className="flex items-center justify-between border-b border-surface-300 bg-surface-100">
         <div className="flex">
