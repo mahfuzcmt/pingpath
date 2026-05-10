@@ -10,5 +10,7 @@ public enum AlarmType {
     COLLISION,
     ACC_ON,
     ACC_OFF,
-    LOW_BATTERY
+    LOW_BATTERY,
+    /** Vehicle's ACC was on during a window an org-defined rule designated as forbidden. */
+    CURFEW_VIOLATION
 }

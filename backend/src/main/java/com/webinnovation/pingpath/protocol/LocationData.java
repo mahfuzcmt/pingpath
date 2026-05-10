@@ -32,6 +32,7 @@ public class LocationData {
     private Long mileageMeters;
     private Integer voltageMv;
     private Long accOnTimeSeconds;
+    private Integer gsmSignal;
     private byte[] rawPayload;
 
     /**

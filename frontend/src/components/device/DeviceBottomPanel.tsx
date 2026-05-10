@@ -1,7 +1,7 @@
 "use client";
 
 import { useLocale } from "@/lib/i18n";
-import { formatDateTime, formatNumber, formatVoltage } from "@/lib/format";
+import { formatEngineHours, formatGsmSignal, formatVoltage, gsmBars } from "@/lib/format";
 import type { DeviceView, LocationView } from "@/types/domain";
 
 interface Props {
@@ -48,6 +48,11 @@ export function DeviceBottomPanel({ device, location, onClose, onViewHistory }: 
   const { t, locale } = useLocale();
   const state = getDeviceState(device, location);
   const speed = location?.speed ?? 0;
+  // GSM falls back to the device's last known reading when the latest location
+  // packet doesn't carry one (location packets don't, but heartbeats and alarms do).
+  const gsm = location?.gsmSignal ?? device.lastGsmSignal ?? null;
+  const engineHours = location?.engineHoursSeconds ?? device.lastEngineHoursSeconds ?? null;
+  const usingCellFallback = location != null && !location.valid;
 
   return (
     <div className="absolute bottom-0 left-0 right-0 z-10 border-t border-ink-400/20 bg-ink-900/95 backdrop-blur-md">
@@ -192,10 +197,46 @@ export function DeviceBottomPanel({ device, location, onClose, onViewHistory }: 
               </svg>
             }
             label="GPS"
-            value={location?.valid ? "Valid" : "No Fix"}
+            value={location?.valid ? "Valid" : usingCellFallback ? t("fleet.cellFallback") : t("fleet.noFix")}
             subValue={location?.satellites != null ? `${location.satellites} sats` : undefined}
-            color={location?.valid ? "text-alarm-green" : "text-alarm-red"}
+            color={location?.valid ? "text-alarm-green" : usingCellFallback ? "text-brand-500" : "text-alarm-red"}
           />
+
+          {/* GSM Signal — bars-style indicator. Only renders when we have a value. */}
+          <StatCard
+            icon={<GsmBarsIcon bars={gsmBars(gsm)} />}
+            label={t("fleet.gsm")}
+            value={formatGsmSignal(gsm, locale)}
+            color={gsm == null ? "text-ink-400" : gsmBars(gsm) <= 1 ? "text-alarm-red" : gsmBars(gsm) === 2 ? "text-brand-500" : "text-alarm-green"}
+          />
+
+          {/* Engine hours — V4 location packets carry cumulative ACC-on time */}
+          <StatCard
+            icon={
+              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            }
+            label={t("fleet.engineHours")}
+            value={formatEngineHours(engineHours, locale)}
+            color="text-ink-50"
+          />
+
+          {/* SIM number — surfaces what the device is dialling out on */}
+          {device.simMsisdn && (
+            <StatCard
+              icon={
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                </svg>
+              }
+              label={t("fleet.sim")}
+              value={device.simMsisdn}
+              color="text-ink-50"
+              mono
+            />
+          )}
 
           {/* Last Update */}
           <StatCard
@@ -237,5 +278,26 @@ function StatCard({ icon, label, value, unit, subValue, color = "text-ink-50", m
         {subValue && <div className="text-[9px] sm:text-[10px] text-ink-400">{subValue}</div>}
       </div>
     </div>
+  );
+}
+
+function GsmBarsIcon({ bars }: { bars: number }) {
+  // 4 stacked bars with increasing height; lit count comes from props
+  const heights = [4, 8, 12, 16];
+  return (
+    <svg className="w-4 h-4 sm:w-5 sm:h-5" viewBox="0 0 20 20" fill="none">
+      {heights.map((h, idx) => (
+        <rect
+          key={idx}
+          x={2 + idx * 4.5}
+          y={18 - h}
+          width={3}
+          height={h}
+          rx={0.5}
+          fill="currentColor"
+          opacity={idx < bars ? 1 : 0.25}
+        />
+      ))}
+    </svg>
   );
 }

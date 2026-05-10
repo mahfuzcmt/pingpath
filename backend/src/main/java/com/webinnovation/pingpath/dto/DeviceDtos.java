@@ -13,6 +13,7 @@ public final class DeviceDtos {
             UUID id,
             String imei,
             String name,
+            String simMsisdn,
             String vehiclePlate,
             String vehicleType,
             String protocol,
@@ -25,6 +26,8 @@ public final class DeviceDtos {
             Integer lastSpeed,
             Integer lastCourse,
             Integer lastVoltageMv,
+            Integer lastGsmSignal,
+            Integer lastEngineHoursSeconds,
             String iconColor
     ) {
         public static DeviceView of(Device d) {
@@ -32,6 +35,7 @@ public final class DeviceDtos {
                     d.id(),
                     d.imei(),
                     d.name(),
+                    d.simMsisdn(),
                     d.vehiclePlate(),
                     d.vehicleType(),
                     d.protocol(),
@@ -44,6 +48,8 @@ public final class DeviceDtos {
                     d.lastSpeed(),
                     d.lastCourse(),
                     d.lastVoltageMv(),
+                    d.lastGsmSignal(),
+                    d.lastEngineHoursSeconds(),
                     d.iconColor()
             );
         }

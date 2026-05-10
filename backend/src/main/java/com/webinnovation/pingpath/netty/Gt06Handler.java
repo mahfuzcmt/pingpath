@@ -111,7 +111,7 @@ public class Gt06Handler extends SimpleChannelInboundHandler<ByteBuf> {
             case PacketType.LOCATION_V18, PacketType.LOCATION_V3,
                  PacketType.LOCATION_V4, PacketType.LOCATION_4G ->
                     handleLocation(ctx, proto, serial, content);
-            case PacketType.HEARTBEAT -> handleHeartbeat(ctx, serial);
+            case PacketType.HEARTBEAT -> handleHeartbeat(ctx, serial, content);
             case PacketType.ALARM -> handleAlarm(ctx, serial, content);
             case PacketType.COMMAND_REPLY -> handleCommandReply(ctx, content);
             default -> {
@@ -263,12 +263,30 @@ public class Gt06Handler extends SimpleChannelInboundHandler<ByteBuf> {
         deviceCommandService.completeReply(serverFlag, new String(reply, java.nio.charset.StandardCharsets.US_ASCII));
     }
 
-    private void handleHeartbeat(ChannelHandlerContext ctx, int serial) {
+    private void handleHeartbeat(ChannelHandlerContext ctx, int serial, ByteBuf content) {
         ctx.writeAndFlush(packetEncoder.buildAck(PacketType.HEARTBEAT, serial));
         String imei = ctx.channel().attr(ChannelKeys.IMEI_KEY).get();
-        if (imei != null) {
-            ingestExecutor.execute(() -> deviceService.markOnline(imei));
-        }
+        if (imei == null) return;
+
+        // Snapshot the status block off the event loop. Older firmware sends a
+        // bare heartbeat (no status); decoder returns null in that case.
+        byte[] raw = new byte[content.readableBytes()];
+        content.getBytes(content.readerIndex(), raw);
+
+        ingestExecutor.execute(() -> {
+            try {
+                io.netty.buffer.ByteBuf detached = io.netty.buffer.Unpooled.wrappedBuffer(raw);
+                PacketDecoder.HeartbeatStatus status = packetDecoder.decodeHeartbeat(detached);
+                if (status != null) {
+                    deviceService.applyHeartbeatStatus(imei, status.gsmSignal());
+                } else {
+                    deviceService.markOnline(imei);
+                }
+            } catch (Exception e) {
+                log.warn("Heartbeat status decode failed for imei={}: {}", imei, e.getMessage());
+                deviceService.markOnline(imei);
+            }
+        });
     }
 
     @Override

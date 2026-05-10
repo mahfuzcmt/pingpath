@@ -23,4 +23,15 @@ public class DeviceService {
     public void markOnline(String imei) {
         deviceRepo.markOnline(imei, Instant.now());
     }
+
+    /**
+     * Apply a heartbeat status update — refreshes presence + GSM signal so the
+     * dashboard stays current for parked vehicles between location packets.
+     * ACC from the heartbeat is intentionally dropped: the device row tracks
+     * the last position's ACC, which is more authoritative than the heartbeat's
+     * coarse status byte.
+     */
+    public void applyHeartbeatStatus(String imei, Integer gsmSignal) {
+        deviceRepo.updateLastStatus(imei, gsmSignal, Instant.now());
+    }
 }

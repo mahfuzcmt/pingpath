@@ -21,6 +21,8 @@ const NAV: NavItem[] = [
   { href: "/dashboard/geofences", label: "nav.geofences", icon: <GeofenceIcon /> },
   { href: "/dashboard/trips", label: "nav.trips", icon: <TripsIcon /> },
   { href: "/dashboard/alarms", label: "nav.alarms", icon: <AlarmIcon /> },
+  { href: "/dashboard/rules", label: "nav.rules", icon: <RulesIcon /> },
+  { href: "/dashboard/scheduled", label: "nav.scheduled", icon: <ScheduledIcon /> },
   { href: "/dashboard/reports", label: "nav.reports", icon: <ReportIcon /> },
   { href: "/dashboard/audit-log", label: "nav.auditLog", icon: <AuditIcon />, adminOnly: true },
   { href: "/dashboard/settings", label: "nav.settings", icon: <SettingsIcon /> },
@@ -149,6 +151,22 @@ function ReportIcon() {
     <svg {...ICON_PROPS}>
       <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9l-6-6Z" />
       <path d="M14 3v6h6M8 13h8M8 17h6" />
+    </svg>
+  );
+}
+function RulesIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <path d="M9 11l3 3L22 4" />
+      <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+    </svg>
+  );
+}
+function ScheduledIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3 2" />
     </svg>
   );
 }

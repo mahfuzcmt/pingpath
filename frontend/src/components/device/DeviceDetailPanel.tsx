@@ -1,7 +1,7 @@
 "use client";
 
 import { useLocale } from "@/lib/i18n";
-import { formatDateTime, formatNumber, formatVoltage } from "@/lib/format";
+import { formatDateTime, formatEngineHours, formatGsmSignal, formatNumber, formatVoltage } from "@/lib/format";
 import type { DeviceView, LocationView } from "@/types/domain";
 
 interface Props {
@@ -89,7 +89,31 @@ export function DeviceDetailPanel({ device, location, onClose }: Props) {
                 <dd>{formatNumber(location.satellites, locale)}</dd>
               </div>
             )}
+            {!location.valid && (
+              <div className="data-row">
+                <dt>{t("fleet.cellFallback")}</dt>
+                <dd className="text-brand-700">●</dd>
+              </div>
+            )}
           </>
+        )}
+        {(location?.gsmSignal ?? device.lastGsmSignal) != null && (
+          <div className="data-row">
+            <dt>{t("fleet.gsm")}</dt>
+            <dd>{formatGsmSignal(location?.gsmSignal ?? device.lastGsmSignal, locale)}</dd>
+          </div>
+        )}
+        {(location?.engineHoursSeconds ?? device.lastEngineHoursSeconds) != null && (
+          <div className="data-row">
+            <dt>{t("fleet.engineHours")}</dt>
+            <dd>{formatEngineHours(location?.engineHoursSeconds ?? device.lastEngineHoursSeconds, locale)}</dd>
+          </div>
+        )}
+        {device.simMsisdn && (
+          <div className="data-row">
+            <dt>{t("fleet.sim")}</dt>
+            <dd className="font-mono text-[11px]">{device.simMsisdn}</dd>
+          </div>
         )}
         {device.vehiclePlate && (
           <div className="data-row">

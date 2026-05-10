@@ -134,6 +134,33 @@ public class AlarmRepository {
                 """, params, rowMapper);
     }
 
+    /** Total alarms for the org since {@code since}. */
+    public int countSince(UUID orgId, Instant since) {
+        Integer n = jdbc.queryForObject(
+                "SELECT COUNT(*)::int FROM alarms WHERE org_id = :orgId AND ts >= :since",
+                new MapSqlParameterSource("orgId", orgId).addValue("since", Timestamp.from(since)),
+                Integer.class);
+        return n == null ? 0 : n;
+    }
+
+    /** Critical alarms for the org since {@code since}. */
+    public int countCriticalSince(UUID orgId, Instant since) {
+        Integer n = jdbc.queryForObject(
+                "SELECT COUNT(*)::int FROM alarms WHERE org_id = :orgId AND ts >= :since AND severity = 'CRITICAL'",
+                new MapSqlParameterSource("orgId", orgId).addValue("since", Timestamp.from(since)),
+                Integer.class);
+        return n == null ? 0 : n;
+    }
+
+    /** Unacknowledged alarms for the org (any age) — feeds the alerts badge. */
+    public int countUnacknowledged(UUID orgId) {
+        Integer n = jdbc.queryForObject(
+                "SELECT COUNT(*)::int FROM alarms WHERE org_id = :orgId AND acknowledged = false",
+                new MapSqlParameterSource("orgId", orgId),
+                Integer.class);
+        return n == null ? 0 : n;
+    }
+
     public boolean acknowledge(UUID orgId, UUID alarmId, UUID userId) {
         int n = jdbc.update("""
                 UPDATE alarms

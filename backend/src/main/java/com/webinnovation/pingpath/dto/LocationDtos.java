@@ -21,7 +21,9 @@ public final class LocationDtos {
             boolean valid,
             Boolean accOn,
             Integer voltageMv,
-            Long mileageM
+            Long mileageM,
+            Integer gsmSignal,
+            Integer engineHoursSeconds
     ) {
         public static LocationView of(Location l) {
             return new LocationView(
@@ -37,7 +39,9 @@ public final class LocationDtos {
                     l.valid(),
                     l.accOn(),
                     l.voltageMv(),
-                    l.mileageM()
+                    l.mileageM(),
+                    l.gsmSignal(),
+                    l.engineHoursSeconds()
             );
         }
     }

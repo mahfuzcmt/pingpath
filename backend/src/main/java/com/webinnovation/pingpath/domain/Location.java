@@ -18,5 +18,7 @@ public record Location(
         boolean valid,
         Boolean accOn,
         Integer voltageMv,
-        Long mileageM
+        Long mileageM,
+        Integer gsmSignal,
+        Integer engineHoursSeconds
 ) {}

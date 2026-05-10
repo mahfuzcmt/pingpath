@@ -74,6 +74,7 @@ export interface DeviceView {
   id: string;
   imei: string;
   name: string | null;
+  simMsisdn: string | null;
   vehiclePlate: string | null;
   vehicleType: string | null;
   protocol: string | null;
@@ -86,6 +87,8 @@ export interface DeviceView {
   lastSpeed: number | null;
   lastCourse: number | null;
   lastVoltageMv: number | null;
+  lastGsmSignal: number | null;
+  lastEngineHoursSeconds: number | null;
   iconColor: string | null;
 }
 
@@ -106,6 +109,8 @@ export interface LocationView {
   voltageMv?: number | null;
   mileageMeters?: number | null;
   altitude?: number | null;
+  gsmSignal?: number | null;
+  engineHoursSeconds?: number | null;
 }
 
 export interface UserView {
@@ -168,7 +173,38 @@ export type AlarmType =
   | "COLLISION"
   | "ACC_ON"
   | "ACC_OFF"
-  | "LOW_BATTERY";
+  | "LOW_BATTERY"
+  | "CURFEW_VIOLATION";
+
+export type AlarmRuleType = "SPEED_OVER" | "VOLTAGE_UNDER" | "ACC_ON_DURING_WINDOW";
+
+export interface AlarmRuleView {
+  id: string;
+  name: string;
+  ruleType: AlarmRuleType;
+  threshold: number | null;
+  windowStart: string | null;
+  windowEnd: string | null;
+  cooldownSeconds: number;
+  severity: AlarmSeverity;
+  active: boolean;
+  appliesToAll: boolean;
+  assignedImeis: string[];
+  createdAt: string;
+}
+
+export interface AlarmRuleRequest {
+  name?: string;
+  ruleType?: AlarmRuleType;
+  threshold?: number | null;
+  windowStart?: string | null;
+  windowEnd?: string | null;
+  cooldownSeconds?: number;
+  severity?: AlarmSeverity;
+  active?: boolean;
+  appliesToAll?: boolean;
+  assignedImeis?: string[];
+}
 
 export type AlarmSeverity = "INFO" | "WARNING" | "CRITICAL";
 
@@ -184,6 +220,53 @@ export interface AlarmView {
   acknowledgedBy: string | null;
   acknowledgedAt: string | null;
   metadata: Record<string, unknown>;
+}
+
+export type ScheduleKind = "ONE_TIME" | "DAILY";
+export type ScheduledCommandStatus = "PENDING" | "SUCCEEDED" | "FAILED" | "CANCELLED";
+export type ScheduledCommandType = "CUT_FUEL" | "RESTORE_FUEL" | "QUERY_ADDRESS" | "RAW";
+
+export interface ScheduledCommandView {
+  id: string;
+  deviceImei: string;
+  commandType: ScheduledCommandType;
+  commandText: string;
+  scheduleKind: ScheduleKind;
+  runAt: string | null;
+  daysOfWeek: number | null;
+  timeOfDay: string | null;
+  nextRunAt: string;
+  status: ScheduledCommandStatus;
+  lastAttemptAt: string | null;
+  lastReply: string | null;
+  lastError: string | null;
+  attemptCount: number;
+  createdAt: string;
+}
+
+export interface ScheduleRequest {
+  deviceImei: string;
+  commandType: ScheduledCommandType;
+  rawCommand?: string;
+  devicePassword?: string;
+  scheduleKind: ScheduleKind;
+  runAt?: string;
+  daysOfWeek?: number | null;
+  timeOfDay?: string;
+}
+
+export interface KpiSnapshot {
+  devicesTotal: number;
+  devicesOnline: number;
+  devicesOffline: number;
+  devicesNeverConnected: number;
+  alarmsToday: number;
+  alarmsCriticalToday: number;
+  alarmsUnacknowledged: number;
+  tripsActive: number;
+  tripsCompletedToday: number;
+  distanceTodayMeters: number;
+  generatedAt: string;
 }
 
 export type TripStatus = "IN_PROGRESS" | "COMPLETED";

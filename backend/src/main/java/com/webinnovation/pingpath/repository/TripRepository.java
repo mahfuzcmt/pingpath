@@ -188,6 +188,34 @@ public class TripRepository {
                 """, params, ROW_MAPPER);
     }
 
+    /** Number of in-progress trips for the org. */
+    public int countActive(UUID orgId) {
+        Integer n = jdbc.queryForObject(
+                "SELECT COUNT(*)::int FROM trips WHERE org_id = :orgId AND status = 'IN_PROGRESS'",
+                new MapSqlParameterSource("orgId", orgId),
+                Integer.class);
+        return n == null ? 0 : n;
+    }
+
+    /** Trips completed in the org since {@code since}. */
+    public int countCompletedSince(UUID orgId, Instant since) {
+        Integer n = jdbc.queryForObject(
+                "SELECT COUNT(*)::int FROM trips WHERE org_id = :orgId AND status = 'COMPLETED' AND ended_at >= :since",
+                new MapSqlParameterSource("orgId", orgId).addValue("since", Timestamp.from(since)),
+                Integer.class);
+        return n == null ? 0 : n;
+    }
+
+    /** Sum of completed trip distance (meters) since {@code since}. */
+    public long sumDistanceSince(UUID orgId, Instant since) {
+        Long n = jdbc.queryForObject(
+                "SELECT COALESCE(SUM(distance_m), 0)::bigint FROM trips" +
+                        " WHERE org_id = :orgId AND status = 'COMPLETED' AND ended_at >= :since",
+                new MapSqlParameterSource("orgId", orgId).addValue("since", Timestamp.from(since)),
+                Long.class);
+        return n == null ? 0 : n;
+    }
+
     public List<Trip> listForDevice(UUID orgId, String imei, Instant from, Instant to) {
         var params = new MapSqlParameterSource()
                 .addValue("orgId", orgId)

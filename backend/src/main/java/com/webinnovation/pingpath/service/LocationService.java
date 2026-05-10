@@ -32,11 +32,14 @@ public class LocationService {
     private final ObjectMapper objectMapper;
     private final GeofenceService geofenceService;
     private final TripService tripService;
+    private final AlarmRuleService alarmRuleService;
 
     public void saveAndBroadcast(LocationData loc) {
         try {
             locationRepo.insert(loc);
 
+            Integer engineHoursSeconds = loc.getAccOnTimeSeconds() == null
+                    ? null : loc.getAccOnTimeSeconds().intValue();
             deviceRepo.updateLastPosition(
                     loc.getImei(),
                     loc.getLatitude(),
@@ -44,6 +47,8 @@ public class LocationService {
                     loc.getSpeed(),
                     loc.getCourse(),
                     loc.getVoltageMv(),
+                    loc.getGsmSignal(),
+                    engineHoursSeconds,
                     loc.getTimestamp()
             );
 
@@ -57,6 +62,7 @@ public class LocationService {
             // ingest virtual-thread executor — they share its budget, not the event loop.
             geofenceService.evaluate(loc);
             tripService.onLocation(loc);
+            alarmRuleService.evaluate(loc);
         } catch (Exception e) {
             log.error("saveAndBroadcast failed for imei={}: {}", loc.getImei(), e.getMessage(), e);
         }
@@ -76,6 +82,8 @@ public class LocationService {
         m.put("accOn", d.getAccOn());
         m.put("voltageMv", d.getVoltageMv());
         m.put("mileageMeters", d.getMileageMeters());
+        m.put("gsmSignal", d.getGsmSignal());
+        m.put("engineHoursSeconds", d.getAccOnTimeSeconds() == null ? null : d.getAccOnTimeSeconds().intValue());
         try {
             return objectMapper.writeValueAsString(m);
         } catch (JsonProcessingException e) {

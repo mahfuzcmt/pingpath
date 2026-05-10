@@ -22,6 +22,12 @@ public class LocationRepository {
 
     private final NamedParameterJdbcTemplate jdbc;
 
+    private static final String SELECT_FIELDS = """
+            id, device_imei, org_id, ts, received_at, latitude, longitude,
+            speed, course, altitude, satellites, valid, acc_on, voltage_mv, mileage_m,
+            gsm_signal, engine_hours_seconds
+            """;
+
     private static final RowMapper<Location> ROW_MAPPER = (rs, rn) -> new Location(
             rs.getLong("id"),
             rs.getString("device_imei"),
@@ -37,7 +43,9 @@ public class LocationRepository {
             rs.getBoolean("valid"),
             (Boolean) rs.getObject("acc_on"),
             (Integer) rs.getObject("voltage_mv"),
-            (Long) rs.getObject("mileage_m")
+            (Long) rs.getObject("mileage_m"),
+            (Integer) rs.getObject("gsm_signal"),
+            (Integer) rs.getObject("engine_hours_seconds")
     );
 
     /**
@@ -45,6 +53,7 @@ public class LocationRepository {
      * Called once per location packet — performance-critical (CLAUDE.md §3.2 rule 1).
      */
     public void insert(LocationData d) {
+        Integer engineHours = d.getAccOnTimeSeconds() == null ? null : d.getAccOnTimeSeconds().intValue();
         var params = new MapSqlParameterSource()
                 .addValue("imei", d.getImei())
                 .addValue("orgId", d.getOrgId())
@@ -58,30 +67,29 @@ public class LocationRepository {
                 .addValue("accOn", d.getAccOn())
                 .addValue("voltageMv", d.getVoltageMv())
                 .addValue("mileage", d.getMileageMeters())
+                .addValue("gsmSignal", d.getGsmSignal())
+                .addValue("engineHours", engineHours)
                 .addValue("rawPayload", d.getRawPayload());
 
         jdbc.update("""
                 INSERT INTO locations
                   (device_imei, org_id, ts, geom, latitude, longitude,
-                   speed, course, satellites, valid, acc_on, voltage_mv, mileage_m, raw_payload)
+                   speed, course, satellites, valid, acc_on, voltage_mv, mileage_m,
+                   gsm_signal, engine_hours_seconds, raw_payload)
                 VALUES
                   (:imei, :orgId, :ts,
                    ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography,
                    :lat, :lng, :speed, :course, :satellites, :valid,
-                   :accOn, :voltageMv, :mileage, :rawPayload)
+                   :accOn, :voltageMv, :mileage,
+                   :gsmSignal, :engineHours, :rawPayload)
                 """, params);
     }
 
     public Optional<Location> findLastForImei(String imei) {
         try {
-            Location l = jdbc.queryForObject("""
-                    SELECT id, device_imei, org_id, ts, received_at, latitude, longitude,
-                           speed, course, altitude, satellites, valid, acc_on, voltage_mv, mileage_m
-                    FROM locations
-                    WHERE device_imei = :imei
-                    ORDER BY ts DESC
-                    LIMIT 1
-                    """, new MapSqlParameterSource("imei", imei), ROW_MAPPER);
+            Location l = jdbc.queryForObject(
+                    "SELECT " + SELECT_FIELDS + " FROM locations WHERE device_imei = :imei ORDER BY ts DESC LIMIT 1",
+                    new MapSqlParameterSource("imei", imei), ROW_MAPPER);
             return Optional.ofNullable(l);
         } catch (EmptyResultDataAccessException e) {
             return Optional.empty();
@@ -95,25 +103,20 @@ public class LocationRepository {
                 .addValue("from", Timestamp.from(from))
                 .addValue("to", Timestamp.from(to))
                 .addValue("limit", limit);
-        return jdbc.query("""
-                SELECT id, device_imei, org_id, ts, received_at, latitude, longitude,
-                       speed, course, altitude, satellites, valid, acc_on, voltage_mv, mileage_m
-                FROM locations
-                WHERE org_id = :orgId AND device_imei = :imei
-                  AND ts >= :from AND ts < :to
-                ORDER BY ts ASC
-                LIMIT :limit
-                """, params, ROW_MAPPER);
+        return jdbc.query(
+                "SELECT " + SELECT_FIELDS + " FROM locations" +
+                        " WHERE org_id = :orgId AND device_imei = :imei" +
+                        " AND ts >= :from AND ts < :to ORDER BY ts ASC LIMIT :limit",
+                params, ROW_MAPPER);
     }
 
     public List<Location> findAllLastKnownForOrg(UUID orgId) {
         return jdbc.query("""
-                SELECT DISTINCT ON (l.device_imei)
-                       l.id, l.device_imei, l.org_id, l.ts, l.received_at, l.latitude, l.longitude,
-                       l.speed, l.course, l.altitude, l.satellites, l.valid, l.acc_on, l.voltage_mv, l.mileage_m
-                FROM locations l
-                WHERE l.org_id = :orgId
-                ORDER BY l.device_imei, l.ts DESC
-                """, new MapSqlParameterSource("orgId", orgId), ROW_MAPPER);
+                SELECT DISTINCT ON (device_imei) %s
+                FROM locations
+                WHERE org_id = :orgId
+                ORDER BY device_imei, ts DESC
+                """.formatted(SELECT_FIELDS),
+                new MapSqlParameterSource("orgId", orgId), ROW_MAPPER);
     }
 }

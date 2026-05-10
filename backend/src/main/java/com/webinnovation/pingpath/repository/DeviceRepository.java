@@ -25,7 +25,9 @@ public class DeviceRepository {
                    protocol, protocol_variant, model, status, last_seen_at,
                    ST_Y(last_location::geometry) AS last_lat,
                    ST_X(last_location::geometry) AS last_lng,
-                   last_speed, last_course, last_voltage_mv, icon_color,
+                   last_speed, last_course, last_voltage_mv,
+                   last_gsm_signal, last_engine_hours_seconds,
+                   icon_color,
                    created_at, updated_at
             """;
 
@@ -48,6 +50,8 @@ public class DeviceRepository {
             rs.getObject("last_speed") == null ? null : rs.getInt("last_speed"),
             rs.getObject("last_course") == null ? null : rs.getInt("last_course"),
             rs.getObject("last_voltage_mv") == null ? null : rs.getInt("last_voltage_mv"),
+            rs.getObject("last_gsm_signal") == null ? null : rs.getInt("last_gsm_signal"),
+            rs.getObject("last_engine_hours_seconds") == null ? null : rs.getInt("last_engine_hours_seconds"),
             rs.getString("icon_color"),
             rs.getObject("created_at", OffsetDateTime.class).toInstant(),
             rs.getObject("updated_at", OffsetDateTime.class).toInstant()
@@ -104,7 +108,8 @@ public class DeviceRepository {
     }
 
     public void updateLastPosition(String imei, double lat, double lng, int speed, int course,
-                                   Integer voltageMv, Instant ts) {
+                                   Integer voltageMv, Integer gsmSignal, Integer engineHoursSeconds,
+                                   Instant ts) {
         var params = new MapSqlParameterSource()
                 .addValue("imei", imei)
                 .addValue("lat", lat)
@@ -112,6 +117,8 @@ public class DeviceRepository {
                 .addValue("speed", speed)
                 .addValue("course", course)
                 .addValue("voltageMv", voltageMv)
+                .addValue("gsmSignal", gsmSignal)
+                .addValue("engineHours", engineHoursSeconds)
                 .addValue("ts", java.sql.Timestamp.from(ts));
         jdbc.update("""
                 UPDATE devices SET
@@ -121,9 +128,48 @@ public class DeviceRepository {
                   last_speed = :speed,
                   last_course = :course,
                   last_voltage_mv = COALESCE(:voltageMv, last_voltage_mv),
+                  last_gsm_signal = COALESCE(:gsmSignal, last_gsm_signal),
+                  last_engine_hours_seconds = COALESCE(:engineHours, last_engine_hours_seconds),
                   updated_at = now()
                 WHERE imei = :imei
                 """, params);
+    }
+
+    /**
+     * Apply a heartbeat-derived status update (no position). Heartbeats carry
+     * GSM strength independently of location packets, so we refresh the signal
+     * indicator for parked vehicles between position fixes.
+     */
+    public void updateLastStatus(String imei, Integer gsmSignal, Instant ts) {
+        var params = new MapSqlParameterSource()
+                .addValue("imei", imei)
+                .addValue("gsmSignal", gsmSignal)
+                .addValue("ts", java.sql.Timestamp.from(ts));
+        jdbc.update("""
+                UPDATE devices SET
+                  status = 'ONLINE',
+                  last_seen_at = :ts,
+                  last_gsm_signal = COALESCE(:gsmSignal, last_gsm_signal),
+                  updated_at = now()
+                WHERE imei = :imei
+                """, params);
+    }
+
+    /**
+     * Returns counts by status for the org. Keys are the literal status strings
+     * (ONLINE, OFFLINE, NEVER_CONNECTED). Statuses with zero devices are absent.
+     */
+    public java.util.Map<String, Integer> countByStatus(UUID orgId) {
+        return jdbc.query(
+                "SELECT status, COUNT(*)::int AS n FROM devices WHERE org_id = :orgId GROUP BY status",
+                new MapSqlParameterSource("orgId", orgId),
+                rs -> {
+                    java.util.Map<String, Integer> out = new java.util.HashMap<>();
+                    while (rs.next()) {
+                        out.put(rs.getString("status"), rs.getInt("n"));
+                    }
+                    return out;
+                });
     }
 
     public int markStaleOffline(int idleMinutes) {

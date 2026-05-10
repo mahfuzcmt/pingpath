@@ -22,6 +22,8 @@ public record Device(
         Integer lastSpeed,
         Integer lastCourse,
         Integer lastVoltageMv,
+        Integer lastGsmSignal,
+        Integer lastEngineHoursSeconds,
         String iconColor,
         Instant createdAt,
         Instant updatedAt

@@ -8,6 +8,7 @@ import { useSession } from "@/lib/session-context";
 import { useLocale } from "@/lib/i18n";
 import { DeviceList } from "@/components/device/DeviceList";
 import { DeviceBottomPanel } from "@/components/device/DeviceBottomPanel";
+import { KpiStrip } from "@/components/dashboard/KpiStrip";
 
 // Dynamic import for route history to avoid SSR issues
 const RouteHistoryPanel = dynamic(
@@ -33,6 +34,11 @@ export default function DashboardPage() {
     ? devices.find((d) => d.imei === selectedImei) ?? null
     : null;
 
+  // Live online/offline counts override the polled KPI values so the strip
+  // feels reactive — counts shift the moment a device goes online via WS.
+  const liveOnlineCount = devices.filter((d) => d.status === "ONLINE").length;
+  const liveOfflineCount = devices.filter((d) => d.status === "OFFLINE").length;
+
   return (
     <div className="flex h-full w-full">
       <DeviceList
@@ -49,6 +55,9 @@ export default function DashboardPage() {
           selectedImei={selectedImei}
           onSelect={setSelectedImei}
         />
+
+        {/* Live KPIs — floating overlay, collapsible */}
+        <KpiStrip liveOnlineCount={liveOnlineCount} liveOfflineCount={liveOfflineCount} />
 
         {/* Bottom details panel */}
         {selectedDevice && !showHistory && (

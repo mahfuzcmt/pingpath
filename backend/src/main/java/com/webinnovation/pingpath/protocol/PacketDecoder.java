@@ -163,12 +163,39 @@ public class PacketDecoder {
             loc.setAccOn((status & 0x02) != 0);
             int voltageLevel = content.readUnsignedByte();
             loc.setVoltageMv(voltageLevel * 1000);  // coarse 0-6 → 0-6000 mV (no precise value here)
-            content.readUnsignedByte();  // gsm strength — discarded for now
+            loc.setGsmSignal(content.readUnsignedByte());
             loc.setAlarmCode(content.readUnsignedByte());
             content.readUnsignedByte();  // language byte — discarded
         }
         return loc;
     }
+
+    /**
+     * Decode the 5-byte status block of a heartbeat (0x13) packet:
+     * <pre>
+     *   [device-status:1][voltage-level:1][gsm-strength:1][alarm-code:1][language:1]
+     * </pre>
+     * Returns null if the content is shorter than the status block (some firmware
+     * sends a bare heartbeat with only the serial). Status carries ACC bit, voltage
+     * level (coarse), GSM strength — everything we need to keep the device UI fresh
+     * between location packets.
+     */
+    public HeartbeatStatus decodeHeartbeat(ByteBuf content) {
+        if (content.readableBytes() < 5) return null;
+        int status = content.readUnsignedByte();
+        int voltageLevel = content.readUnsignedByte();
+        int gsm = content.readUnsignedByte();
+        int alarm = content.readUnsignedByte();
+        content.readUnsignedByte();  // language byte
+        boolean accOn = (status & 0x02) != 0;
+        return new HeartbeatStatus(accOn, voltageLevel, gsm, alarm);
+    }
+
+    /**
+     * Heartbeat status snapshot. voltageLevel is coarse 0-6, gsmSignal is 0-31
+     * (some firmware: 0-4). Both are best-effort indicators, not precise values.
+     */
+    public record HeartbeatStatus(boolean accOn, int voltageLevel, int gsmSignal, int alarmCode) {}
 
     private static java.time.Instant decodeDateTime(ByteBuf buf) {
         int yy = buf.readUnsignedByte();

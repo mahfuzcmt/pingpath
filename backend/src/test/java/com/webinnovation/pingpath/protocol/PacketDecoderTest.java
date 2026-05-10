@@ -133,6 +133,71 @@ class PacketDecoderTest {
     }
 
     @Test
+    void heartbeat_status_extracts_acc_and_gsm() {
+        // Heartbeat status block: [status:1][voltage:1][gsm:1][alarm:1][lang:1]
+        // status bit 1 = ACC on
+        ByteBuffer bb = ByteBuffer.allocate(5);
+        bb.put((byte) 0x02);  // ACC on (bit 1)
+        bb.put((byte) 4);     // voltage level
+        bb.put((byte) 28);    // GSM strength (out of 31 → strong)
+        bb.put((byte) 0);     // no alarm
+        bb.put((byte) 1);     // language byte
+        bb.flip();
+        ByteBuf content = Unpooled.wrappedBuffer(bb);
+        try {
+            PacketDecoder.HeartbeatStatus status = decoder.decodeHeartbeat(content);
+            assertThat(status).isNotNull();
+            assertThat(status.accOn()).isTrue();
+            assertThat(status.gsmSignal()).isEqualTo(28);
+            assertThat(status.voltageLevel()).isEqualTo(4);
+        } finally {
+            content.release();
+        }
+    }
+
+    @Test
+    void heartbeat_returns_null_when_status_block_missing() {
+        ByteBuf content = Unpooled.buffer(0);
+        try {
+            assertThat(decoder.decodeHeartbeat(content)).isNull();
+        } finally {
+            content.release();
+        }
+    }
+
+    @Test
+    void alarm_packet_captures_gsm_signal() {
+        // Build an alarm packet: header + lat/lng + LBS + status block (5 bytes)
+        ByteBuffer bb = ByteBuffer.allocate(64);
+        bb.put((byte) 26).put((byte) 5).put((byte) 7).put((byte) 0).put((byte) 0).put((byte) 0);
+        bb.put((byte) ((12 << 4) | 0x0C));
+        bb.putInt((int) (23.78 * 1_800_000));
+        bb.putInt((int) (90.42 * 1_800_000));
+        bb.put((byte) 0);
+        bb.putShort((short) (0x1000 | 0x0400 | 0x0800));   // valid + N + E
+        bb.putShort((short) 470);  // MCC
+        bb.put((byte) 1);          // MNC
+        bb.putShort((short) 0);    // LAC
+        bb.put((byte) 0).put((byte) 0).put((byte) 0);   // cell id
+        // Status block
+        bb.put((byte) 0x02);   // status: ACC on
+        bb.put((byte) 4);      // voltage level
+        bb.put((byte) 22);     // GSM
+        bb.put((byte) 4);      // alarm code: SOS
+        bb.put((byte) 0);      // language
+        bb.flip();
+        ByteBuf content = Unpooled.wrappedBuffer(bb);
+        try {
+            LocationData loc = decoder.decodeAlarm(content);
+            assertThat(loc.getGsmSignal()).isEqualTo(22);
+            assertThat(loc.getAlarmCode()).isEqualTo(4);
+            assertThat(loc.getAccOn()).isTrue();
+        } finally {
+            content.release();
+        }
+    }
+
+    @Test
     void north_east_flags_keep_coordinates_positive() {
         // GT06 devices: bit SET = North/East (coordinates positive)
         double targetLat = 23.7806;
