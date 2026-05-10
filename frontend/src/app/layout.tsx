@@ -1,28 +1,20 @@
 import type { Metadata, Viewport } from "next";
-import { Open_Sans, JetBrains_Mono, Hind_Siliguri } from "next/font/google";
 import { cookies } from "next/headers";
 import "./globals.css";
+
+// Self-hosted fonts via fontsource (no build-time fetches to fonts.gstatic.com).
+import "@fontsource-variable/open-sans/wght.css";
+import "@fontsource-variable/jetbrains-mono/wght.css";
+import "@fontsource/hind-siliguri/latin-400.css";
+import "@fontsource/hind-siliguri/latin-500.css";
+import "@fontsource/hind-siliguri/latin-600.css";
+import "@fontsource/hind-siliguri/latin-700.css";
+import "@fontsource/hind-siliguri/bengali-400.css";
+import "@fontsource/hind-siliguri/bengali-500.css";
+import "@fontsource/hind-siliguri/bengali-600.css";
+import "@fontsource/hind-siliguri/bengali-700.css";
+
 import { LocaleProvider } from "@/lib/i18n";
-
-const openSans = Open_Sans({
-  subsets: ["latin"],
-  weight: ["300", "400", "600", "700"],
-  variable: "--font-open-sans",
-  display: "swap",
-});
-
-const jetbrains = JetBrains_Mono({
-  subsets: ["latin"],
-  variable: "--font-jetbrains",
-  display: "swap",
-});
-
-const hindSiliguri = Hind_Siliguri({
-  subsets: ["bengali", "latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-hind-siliguri",
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   title: "PingPath — Fleet Tracking",
@@ -39,10 +31,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const locale = (cookieStore.get("pp_locale")?.value === "bn" ? "bn" : "en") as "en" | "bn";
 
   return (
-    <html
-      lang={locale}
-      className={`${openSans.variable} ${jetbrains.variable} ${hindSiliguri.variable}`}
-    >
+    <html lang={locale}>
       <body>
         <LocaleProvider initialLocale={locale}>{children}</LocaleProvider>
       </body>

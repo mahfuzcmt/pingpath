@@ -7,6 +7,9 @@
 @layer base {
   :root {
     color-scheme: light;
+    --font-open-sans: "Open Sans Variable";
+    --font-jetbrains: "JetBrains Mono Variable";
+    --font-hind-siliguri: "Hind Siliguri";
   }
 
   html,
