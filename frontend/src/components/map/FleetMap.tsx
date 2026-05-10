@@ -149,7 +149,9 @@ export function FleetMap({ devices, locations, selectedImei, onSelect }: FleetMa
   useEffect(() => {
     if (mapRef.current || !containerRef.current) return;
 
-    const map = L.map(containerRef.current, {
+    const container = containerRef.current;
+
+    const map = L.map(container, {
       center: DHAKA_CENTER,
       zoom: DEFAULT_ZOOM,
       zoomControl: true,
@@ -165,7 +167,20 @@ export function FleetMap({ devices, locations, selectedImei, onSelect }: FleetMa
 
     mapRef.current = map;
 
+    // Force map to recalculate size after a brief delay (container may not have final dimensions yet)
+    const timer = setTimeout(() => {
+      map.invalidateSize();
+    }, 100);
+
+    // Also use ResizeObserver to handle container size changes
+    const resizeObserver = new ResizeObserver(() => {
+      map.invalidateSize();
+    });
+    resizeObserver.observe(container);
+
     return () => {
+      clearTimeout(timer);
+      resizeObserver.disconnect();
       for (const marker of markersRef.current.values()) marker.remove();
       markersRef.current.clear();
       map.remove();
@@ -256,8 +271,8 @@ export function FleetMap({ devices, locations, selectedImei, onSelect }: FleetMa
   }, [selectedImei, locations]);
 
   return (
-    <div className="relative h-full w-full">
-      <div ref={containerRef} className="absolute inset-0" />
+    <div className="relative h-full w-full" style={{ minHeight: "400px" }}>
+      <div ref={containerRef} className="absolute inset-0" style={{ width: "100%", height: "100%" }} />
       <style jsx global>{`
         .pp-vehicle-icon {
           transition: transform 300ms ease-out;
