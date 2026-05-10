@@ -2,8 +2,10 @@ package com.webinnovation.pingpath.api;
 
 import com.webinnovation.pingpath.domain.Device;
 import com.webinnovation.pingpath.dto.DeviceDtos.DeviceView;
+import com.webinnovation.pingpath.dto.LocationDtos.LocationView;
 import com.webinnovation.pingpath.exception.NotFoundException;
 import com.webinnovation.pingpath.repository.DeviceRepository;
+import com.webinnovation.pingpath.repository.LocationRepository;
 import com.webinnovation.pingpath.security.TenantContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,6 +23,7 @@ import java.util.UUID;
 public class DeviceController {
 
     private final DeviceRepository deviceRepo;
+    private final LocationRepository locationRepo;
 
     @GetMapping
     public List<DeviceView> list(@RequestParam(value = "status", required = false) String status) {
@@ -37,5 +40,18 @@ public class DeviceController {
         Device d = deviceRepo.findByOrgAndImei(orgId, imei)
                 .orElseThrow(() -> new NotFoundException("device", imei));
         return DeviceView.of(d);
+    }
+
+    /**
+     * Returns the last known location for all devices in the org.
+     * Used by the dashboard map for initial load.
+     */
+    @GetMapping("/locations/last")
+    public List<LocationView> allLastLocations() {
+        UUID orgId = TenantContext.requireOrgId();
+        return locationRepo.findAllLastKnownForOrg(orgId)
+                .stream()
+                .map(LocationView::of)
+                .toList();
     }
 }
