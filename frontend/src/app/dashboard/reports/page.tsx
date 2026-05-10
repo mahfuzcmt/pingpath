@@ -57,7 +57,7 @@ export default function Page() {
       </div>
 
       <div className="mx-auto w-full max-w-3xl space-y-6 p-6">
-        <div className="card p-4">
+        <div className="panel p-4">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <label className="text-sm">
               <span className="mb-1 block text-xs text-ink-400">{t("common.from")}</span>
@@ -83,7 +83,7 @@ export default function Page() {
         </div>
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div className="card flex flex-col gap-3 p-4">
+          <div className="panel flex flex-col gap-3 p-4">
             <div className="font-display text-sm font-semibold">{t("reports.tripsReport")}</div>
             <button
               type="button"
@@ -94,7 +94,7 @@ export default function Page() {
               {busy === "trips" ? t("common.loading") : t("common.download")}
             </button>
           </div>
-          <div className="card flex flex-col gap-3 p-4">
+          <div className="panel flex flex-col gap-3 p-4">
             <div className="font-display text-sm font-semibold">{t("reports.alarmsReport")}</div>
             <button
               type="button"

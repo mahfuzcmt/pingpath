@@ -1,10 +1,28 @@
 import type { Metadata, Viewport } from "next";
+import { Open_Sans, JetBrains_Mono, Hind_Siliguri } from "next/font/google";
 import { cookies } from "next/headers";
 import "./globals.css";
 import { LocaleProvider } from "@/lib/i18n";
 
-// Use system fonts when Google Fonts are unavailable (e.g., restricted network)
-// CSS variables are set in globals.css with fallback system fonts
+const openSans = Open_Sans({
+  subsets: ["latin"],
+  weight: ["300", "400", "600", "700"],
+  variable: "--font-open-sans",
+  display: "swap",
+});
+
+const jetbrains = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-jetbrains",
+  display: "swap",
+});
+
+const hindSiliguri = Hind_Siliguri({
+  subsets: ["bengali", "latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-hind-siliguri",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "PingPath — Fleet Tracking",
@@ -13,7 +31,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0A1928",
+  themeColor: "#FFFFFF",
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
@@ -21,7 +39,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const locale = (cookieStore.get("pp_locale")?.value === "bn" ? "bn" : "en") as "en" | "bn";
 
   return (
-    <html lang={locale}>
+    <html
+      lang={locale}
+      className={`${openSans.variable} ${jetbrains.variable} ${hindSiliguri.variable}`}
+    >
       <body>
         <LocaleProvider initialLocale={locale}>{children}</LocaleProvider>
       </body>

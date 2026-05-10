@@ -9,7 +9,7 @@ export function LanguageToggle({ className = "" }: { className?: string }) {
     <button
       type="button"
       onClick={() => setLocale(next)}
-      className={`btn-ghost text-xs ${className}`}
+      className={`btn-ghost min-w-[56px] ${className}`}
       aria-label={`Switch to ${next === "bn" ? "Bengali" : "English"}`}
     >
       {t("lang.toggle")}

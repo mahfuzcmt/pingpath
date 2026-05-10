@@ -7,10 +7,16 @@ import { useAlarms } from "@/hooks/useAlarms";
 import { formatDateTime } from "@/lib/format";
 import type { AlarmSeverity, AlarmView } from "@/types/domain";
 
-const SEV_TONE: Record<AlarmSeverity, string> = {
-  CRITICAL: "border-alarm-red bg-alarm-red/15 text-alarm-red",
-  WARNING: "border-alarm-amber bg-alarm-amber/15 text-alarm-amber",
-  INFO: "border-brand-500 bg-brand-500/10 text-brand-500",
+const SEV_ACCENT: Record<AlarmSeverity, string> = {
+  CRITICAL: "border-l-alarm-red",
+  WARNING: "border-l-alarm-amber",
+  INFO: "border-l-brand-500",
+};
+
+const SEV_LABEL: Record<AlarmSeverity, string> = {
+  CRITICAL: "text-alarm-red",
+  WARNING: "text-alarm-amber",
+  INFO: "text-brand-500",
 };
 
 /**
@@ -60,18 +66,20 @@ export function AlarmBanner() {
   };
 
   return (
-    <div className="pointer-events-none fixed top-3 right-3 z-50 flex w-[360px] max-w-[90vw] flex-col gap-2">
+    <div className="pointer-events-none fixed top-3 right-3 z-50 flex w-[340px] max-w-[90vw] flex-col gap-2">
       {visible.map((a) => (
         <div
           key={a.id}
-          className={`pointer-events-auto card border-l-4 ${SEV_TONE[a.severity]} p-3 shadow-lg`}
+          className={`pointer-events-auto rounded-sm border border-surface-300 border-l-[3px] bg-white p-3 shadow-menu ${SEV_ACCENT[a.severity]}`}
         >
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <div className="font-display text-sm font-semibold">
-                {t("alarms.banner")} · {a.type}
+              <div className="text-xs font-semibold text-ink-900">
+                <span className={SEV_LABEL[a.severity]}>{a.severity}</span>
+                <span className="mx-1.5 text-ink-300">·</span>
+                <span>{a.type}</span>
               </div>
-              <div className="mt-0.5 truncate text-xs text-ink-100">
+              <div className="mt-0.5 truncate text-[11px] text-ink-700">
                 <span className="font-mono">{a.deviceImei}</span>
                 <span className="mx-1 text-ink-400">·</span>
                 <span>{formatDateTime(a.ts, locale)}</span>
@@ -80,23 +88,25 @@ export function AlarmBanner() {
             <button
               type="button"
               aria-label="dismiss"
-              className="text-ink-400 hover:text-ink-50"
+              className="btn-icon"
               onClick={() => setDismissed((prev) => new Set(prev).add(a.id))}
             >
-              ×
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <path d="M6 6l12 12M18 6 6 18" />
+              </svg>
             </button>
           </div>
           <div className="mt-2 flex items-center gap-2">
             <button
               type="button"
-              className="btn-primary px-3 py-1 text-xs"
+              className="btn-primary"
               disabled={busy.has(a.id)}
               onClick={() => onAck(a.id)}
             >
               {busy.has(a.id) ? t("common.loading") : t("common.acknowledge")}
             </button>
-            <span className="text-[11px] uppercase tracking-wide text-ink-400">
-              {a.severity}
+            <span className="text-[10px] uppercase tracking-wide text-ink-500">
+              {t("alarms.banner")}
             </span>
           </div>
         </div>
