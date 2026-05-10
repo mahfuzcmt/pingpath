@@ -24,7 +24,24 @@ class WsClient {
 
     this.connecting = (async () => {
       const token = await fetchWsToken();
-      const wsUrl = process.env.NEXT_PUBLIC_WS_BASE ?? "ws://localhost:8080/ws";
+
+      // Dynamically determine WebSocket URL based on current page location
+      const getWsUrl = (): string => {
+        if (process.env.NEXT_PUBLIC_WS_BASE) {
+          return process.env.NEXT_PUBLIC_WS_BASE;
+        }
+        // In browser, derive from current location
+        if (typeof window !== "undefined") {
+          const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
+          const host = window.location.host;
+          // WebSocket connects to backend on port 8080
+          const backendHost = host.replace(/:3000$/, ":8080");
+          return `${proto}//${backendHost}/ws`;
+        }
+        return "ws://localhost:8080/ws";
+      };
+
+      const wsUrl = getWsUrl();
 
       const client = new StompClient({
         brokerURL: wsUrl,
