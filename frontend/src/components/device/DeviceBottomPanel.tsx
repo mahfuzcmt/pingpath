@@ -1,7 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { useLocale } from "@/lib/i18n";
-import { formatEngineHours, formatGsmSignal, formatVoltage, gsmBars } from "@/lib/format";
+import { formatVoltage } from "@/lib/format";
 import type { DeviceView, LocationView } from "@/types/domain";
 
 interface Props {
@@ -11,293 +12,187 @@ interface Props {
   onViewHistory: () => void;
 }
 
-type DeviceState = "moving" | "stopped" | "idle" | "offline";
+type TabId = "data" | "graph" | "messages";
 
-function getDeviceState(device: DeviceView, location?: LocationView): DeviceState {
-  if (device.status !== "ONLINE") return "offline";
-  if (!location) return "idle";
-  if (location.speed > 2) return "moving";
-  if (location.accOn) return "idle";
-  return "stopped";
+function formatDateTime(ts: string | null | undefined): string {
+  if (!ts) return "—";
+  const date = new Date(ts);
+  return date.toLocaleString("en-GB", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  }).replace(",", "");
 }
 
 function formatOdometer(meters: number | undefined | null): string {
   if (meters == null) return "—";
-  const km = meters / 1000;
-  if (km >= 1000) {
-    return `${(km / 1000).toFixed(1)}k km`;
-  }
-  return `${km.toFixed(1)} km`;
+  return `${(meters / 1000).toFixed(0)} km`;
 }
 
-function formatDuration(lastSeenAt: string | null | undefined): string {
-  if (!lastSeenAt) return "";
-  const diff = Date.now() - new Date(lastSeenAt).getTime();
-  const seconds = Math.floor(diff / 1000);
-  const minutes = Math.floor(seconds / 60);
-  const hours = Math.floor(minutes / 60);
-  const days = Math.floor(hours / 24);
-
-  if (days > 0) return `${days}d ${hours % 24}h`;
-  if (hours > 0) return `${hours}h ${minutes % 60}m`;
-  if (minutes > 0) return `${minutes}m`;
-  return `${seconds}s`;
+function formatDuration(seconds: number): string {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  return `${h} h ${m} min`;
 }
 
 export function DeviceBottomPanel({ device, location, onClose, onViewHistory }: Props) {
   const { t, locale } = useLocale();
-  const state = getDeviceState(device, location);
-  const speed = location?.speed ?? 0;
-  // GSM falls back to the device's last known reading when the latest location
-  // packet doesn't carry one (location packets don't, but heartbeats and alarms do).
-  const gsm = location?.gsmSignal ?? device.lastGsmSignal ?? null;
-  const engineHours = location?.engineHoursSeconds ?? device.lastEngineHoursSeconds ?? null;
-  const usingCellFallback = location != null && !location.valid;
+  const [activeTab, setActiveTab] = useState<TabId>("data");
+
+  const isMoving = location && location.speed > 2;
+  const isOnline = device.status === "ONLINE";
+  const status = !isOnline ? "Offline" : isMoving ? "Moving" : location?.accOn ? "Idle" : "Stopped";
+
+  const tabs: { id: TabId; label: string }[] = [
+    { id: "data", label: "Data" },
+    { id: "graph", label: "Graph" },
+    { id: "messages", label: "Messages" },
+  ];
 
   return (
-    <div className="absolute bottom-0 left-0 right-0 z-10 border-t border-ink-400/20 bg-ink-900/95 backdrop-blur-md">
-      {/* Header row with name and status */}
-      <div className="flex items-center justify-between border-b border-ink-400/10 px-2 sm:px-4 py-2">
-        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-          {/* Vehicle icon - hidden on very small screens */}
-          <div className={`hidden sm:flex w-10 h-8 items-center justify-center rounded shrink-0 ${
-            state === "moving" ? "bg-alarm-green/20 text-alarm-green" :
-            state === "idle" ? "bg-brand-500/20 text-brand-500" :
-            state === "stopped" ? "bg-alarm-red/20 text-alarm-red" :
-            "bg-ink-700/50 text-ink-400"
-          }`}>
-            <svg className="w-6 h-5" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/>
-            </svg>
-          </div>
-
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              <span className="font-display text-sm sm:text-base font-semibold text-ink-50 truncate">
-                {device.name || device.vehiclePlate || device.imei.slice(-8)}
-              </span>
-              <span className={`shrink-0 px-1.5 sm:px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium uppercase ${
-                state === "moving" ? "bg-alarm-green/20 text-alarm-green" :
-                state === "idle" ? "bg-brand-500/20 text-brand-500" :
-                state === "stopped" ? "bg-alarm-red/20 text-alarm-red" :
-                "bg-ink-700/50 text-ink-400"
-              }`}>
-                {state === "moving" ? "Moving" :
-                 state === "idle" ? "Idle" :
-                 state === "stopped" ? "Stopped" :
-                 "Offline"}
-              </span>
-            </div>
-            <div className="flex items-center gap-2 text-[10px] sm:text-[11px] text-ink-400 truncate">
-              <span className="font-mono truncate">{device.imei}</span>
-              {device.vehiclePlate && (
-                <>
-                  <span className="hidden xs:inline">•</span>
-                  <span className="hidden xs:inline">{device.vehiclePlate}</span>
-                </>
-              )}
-            </div>
-          </div>
+    <div className="absolute bottom-0 left-0 right-0 z-10 border-t border-surface-300 bg-white shadow-lg">
+      {/* Tab bar */}
+      <div className="flex items-center justify-between border-b border-surface-300 bg-surface-100">
+        <div className="flex">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-4 py-2 text-xs font-medium transition ${
+                activeTab === tab.id
+                  ? "border-b-2 border-brand-500 bg-white text-ink-900"
+                  : "text-ink-500 hover:bg-white hover:text-ink-900"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
-
-        <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+        <div className="flex items-center gap-2 px-2">
           <button
             type="button"
             onClick={onViewHistory}
-            className="btn-primary px-2 sm:px-3 py-1.5 text-[10px] sm:text-xs"
+            className="btn-secondary text-xs"
           >
-            <span className="hidden sm:inline">{t("fleet.viewHistory")}</span>
-            <span className="sm:hidden">History</span>
+            View History
           </button>
           <button
             type="button"
             onClick={onClose}
-            className="btn-ghost px-1.5 sm:px-2 py-1.5 text-xs text-ink-400 hover:text-ink-100"
+            className="btn-icon text-ink-500 hover:text-ink-900"
           >
-            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
             </svg>
           </button>
         </div>
       </div>
 
-      {/* Stats row - horizontally scrollable on mobile */}
-      <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-ink-700 scrollbar-track-transparent">
-        <div className="flex items-stretch divide-x divide-ink-400/10 min-w-max">
-          {/* Speed */}
-          <StatCard
-            icon={
-              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-            }
-            label="Speed"
-            value={`${speed}`}
-            unit="kph"
-            color={speed > 60 ? "text-alarm-red" : speed > 30 ? "text-brand-500" : speed > 0 ? "text-alarm-green" : "text-ink-400"}
-          />
-
-          {/* Odometer */}
-          <StatCard
-            icon={
-              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-            }
-            label="Odometer"
-            value={formatOdometer(location?.mileageMeters)}
-            color="text-ink-50"
-          />
-
-          {/* Battery/Voltage */}
-          <StatCard
-            icon={
-              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-            }
-            label="Battery"
-            value={location?.voltageMv ? formatVoltage(location.voltageMv, locale) : "—"}
-            color={location?.voltageMv && location.voltageMv < 11000 ? "text-alarm-red" : "text-alarm-green"}
-          />
-
-          {/* Position - hidden on small screens */}
-          <div className="hidden md:block">
-            <StatCard
-              icon={
-                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              }
-              label="Position"
-              value={location ? `${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}` : "—"}
-              color="text-ink-50"
-              mono
-            />
+      {/* Tab content */}
+      {activeTab === "data" && (
+        <div className="flex divide-x divide-surface-200">
+          {/* Left data columns */}
+          <div className="flex-1 grid grid-cols-2 gap-x-8 p-3">
+            <DataRow icon="001" label="Odometer" value={formatOdometer(location?.mileageMeters)} />
+            <DataRow icon="📱" label="SIM card num..." value={device.simMsisdn || "—"} mono />
+            <DataRow icon="📶" label="Status" value={status} valueColor={isMoving ? "text-status-moving" : !isOnline ? "text-ink-400" : "text-status-stopped"} />
+            <DataRow icon="⛰" label="Altitude" value={location?.altitude != null ? `${location.altitude} m` : "0 m"} />
+            <DataRow icon="🧭" label="Angle" value={location?.course != null ? `${location.course} °` : "— °"} />
+            <DataRow icon="📍" label="Position" value={location ? `${location.latitude.toFixed(6)} °, ${location.longitude.toFixed(6)} °` : "—"} link />
+            <DataRow icon="🚗" label="Speed" value={`${location?.speed ?? 0} kph`} />
           </div>
 
-          {/* ACC Status */}
-          <StatCard
-            icon={
-              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-              </svg>
-            }
-            label="Ignition"
-            value={location?.accOn == null ? "—" : location.accOn ? "ON" : "OFF"}
-            color={location?.accOn ? "text-alarm-green" : "text-ink-400"}
-          />
+          {/* Middle data columns */}
+          <div className="flex-1 grid grid-cols-2 gap-x-8 p-3">
+            <DataRow icon="🕐" label="Time (position)" value={formatDateTime(location?.ts)} />
+            <DataRow icon="🕐" label="Time (server)" value={formatDateTime(location?.ts)} />
+            <DataRow icon="🔋" label="Battery Level" value={location?.voltageMv ? `${Math.min(100, Math.max(0, Math.round((location.voltageMv - 10000) / 50)))} %` : "— %"} />
+            <DataRow icon="🔑" label="Engine ACC" value={location?.accOn == null ? "—" : location.accOn ? "ON" : "OFF"} valueColor={location?.accOn ? "text-status-moving" : "text-ink-500"} />
+            <DataRow icon="⚡" label="External Power" value={location?.voltageMv ? "ON" : "—"} valueColor={location?.voltageMv ? "text-status-moving" : "text-ink-500"} />
+          </div>
 
-          {/* GPS Signal */}
-          <StatCard
-            icon={
-              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3c-.46-4.17-3.77-7.48-7.94-7.94V1h-2v2.06C6.83 3.52 3.52 6.83 3.06 11H1v2h2.06c.46 4.17 3.77 7.48 7.94 7.94V23h2v-2.06c4.17-.46 7.48-3.77 7.94-7.94H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/>
-              </svg>
-            }
-            label="GPS"
-            value={location?.valid ? "Valid" : usingCellFallback ? t("fleet.cellFallback") : t("fleet.noFix")}
-            subValue={location?.satellites != null ? `${location.satellites} sats` : undefined}
-            color={location?.valid ? "text-alarm-green" : usingCellFallback ? "text-brand-500" : "text-alarm-red"}
-          />
+          {/* Object control */}
+          <div className="w-48 p-3 border-r border-surface-200">
+            <div className="text-xs font-semibold text-ink-700 mb-2">Object control</div>
+            <div className="space-y-2">
+              <div>
+                <label className="text-[10px] text-ink-500">Template</label>
+                <select className="select w-full mt-0.5">
+                  <option>Custom</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-[10px] text-ink-500">Command</label>
+                <div className="flex gap-1 mt-0.5">
+                  <input type="text" className="input flex-1" placeholder="" />
+                  <button type="button" className="btn-icon border border-surface-300">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
 
-          {/* GSM Signal — bars-style indicator. Only renders when we have a value. */}
-          <StatCard
-            icon={<GsmBarsIcon bars={gsmBars(gsm)} />}
-            label={t("fleet.gsm")}
-            value={formatGsmSignal(gsm, locale)}
-            color={gsm == null ? "text-ink-400" : gsmBars(gsm) <= 1 ? "text-alarm-red" : gsmBars(gsm) === 2 ? "text-brand-500" : "text-alarm-green"}
-          />
-
-          {/* Engine hours — V4 location packets carry cumulative ACC-on time */}
-          <StatCard
-            icon={
-              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            }
-            label={t("fleet.engineHours")}
-            value={formatEngineHours(engineHours, locale)}
-            color="text-ink-50"
-          />
-
-          {/* SIM number — surfaces what the device is dialling out on */}
-          {device.simMsisdn && (
-            <StatCard
-              icon={
-                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                </svg>
-              }
-              label={t("fleet.sim")}
-              value={device.simMsisdn}
-              color="text-ink-50"
-              mono
-            />
-          )}
-
-          {/* Last Update */}
-          <StatCard
-            icon={
-              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            }
-            label="Last Update"
-            value={location?.ts ? formatDuration(location.ts) + " ago" : device.lastSeenAt ? formatDuration(device.lastSeenAt) + " ago" : "—"}
-            color="text-ink-50"
-          />
+          {/* Daily statistics */}
+          <div className="w-56 p-3">
+            <div className="text-xs font-semibold text-ink-700 mb-2">Daily statistics</div>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+              <span className="text-ink-500">Route length</span>
+              <span className="text-ink-900 font-medium text-right">316.84 km</span>
+              <span className="text-ink-500">Move duration</span>
+              <span className="text-ink-900 font-medium text-right">7 h 27 min</span>
+              <span className="text-ink-500">Stop duration</span>
+              <span className="text-ink-900 font-medium text-right">4 h 57 min</span>
+              <span className="text-ink-500">Top speed</span>
+              <span className="text-ink-900 font-medium text-right">114 kph</span>
+              <span className="text-ink-500">Average speed</span>
+              <span className="text-ink-900 font-medium text-right">42 kph</span>
+              <span className="text-ink-500">Fuel consumption</span>
+              <span className="text-ink-900 font-medium text-right">— liters</span>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
+
+      {activeTab === "graph" && (
+        <div className="p-4 text-center text-ink-500 text-sm">
+          Speed and sensor graphs will appear here
+        </div>
+      )}
+
+      {activeTab === "messages" && (
+        <div className="p-4 text-center text-ink-500 text-sm">
+          Device messages and commands log will appear here
+        </div>
+      )}
     </div>
   );
 }
 
-interface StatCardProps {
-  icon: React.ReactNode;
+interface DataRowProps {
+  icon: string;
   label: string;
   value: string;
-  unit?: string;
-  subValue?: string;
-  color?: string;
+  valueColor?: string;
   mono?: boolean;
+  link?: boolean;
 }
 
-function StatCard({ icon, label, value, unit, subValue, color = "text-ink-50", mono }: StatCardProps) {
+function DataRow({ icon, label, value, valueColor = "text-ink-900", mono, link }: DataRowProps) {
   return (
-    <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-3 min-w-[80px] sm:min-w-[100px]">
-      <div className="text-ink-400 shrink-0">{icon}</div>
-      <div className="min-w-0">
-        <div className="text-[9px] sm:text-[10px] uppercase tracking-wide text-ink-400 mb-0.5">{label}</div>
-        <div className={`flex items-baseline gap-1 ${mono ? "font-mono" : ""}`}>
-          <span className={`text-xs sm:text-sm font-semibold truncate ${color}`}>{value}</span>
-          {unit && <span className="text-[9px] sm:text-[10px] text-ink-400">{unit}</span>}
-        </div>
-        {subValue && <div className="text-[9px] sm:text-[10px] text-ink-400">{subValue}</div>}
-      </div>
+    <div className="flex items-center gap-2 py-0.5">
+      <span className="text-[10px] w-5 text-center">{icon}</span>
+      <span className="text-[11px] text-ink-500 w-24 truncate">{label}</span>
+      <span className={`text-[11px] font-medium ${valueColor} ${mono ? "font-mono" : ""} ${link ? "text-brand-500 underline cursor-pointer" : ""}`}>
+        {value}
+      </span>
     </div>
-  );
-}
-
-function GsmBarsIcon({ bars }: { bars: number }) {
-  // 4 stacked bars with increasing height; lit count comes from props
-  const heights = [4, 8, 12, 16];
-  return (
-    <svg className="w-4 h-4 sm:w-5 sm:h-5" viewBox="0 0 20 20" fill="none">
-      {heights.map((h, idx) => (
-        <rect
-          key={idx}
-          x={2 + idx * 4.5}
-          y={18 - h}
-          width={3}
-          height={h}
-          rx={0.5}
-          fill="currentColor"
-          opacity={idx < bars ? 1 : 0.25}
-        />
-      ))}
-    </svg>
   );
 }

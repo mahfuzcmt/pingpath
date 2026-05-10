@@ -106,7 +106,8 @@
       "WebFetch(domain:s1.gps-server.net)",
       "WebSearch",
       "Bash(git rm:*)",
-      "Bash(docker build:*)"
+      "Bash(docker build:*)",
+      "WebFetch(domain:docs.gps-server.net)"
     ]
   }
 }
