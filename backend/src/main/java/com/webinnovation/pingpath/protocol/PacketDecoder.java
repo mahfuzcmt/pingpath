@@ -163,7 +163,7 @@ public class PacketDecoder {
             loc.setAccOn((status & 0x02) != 0);
             int voltageLevel = content.readUnsignedByte();
             loc.setVoltageMv(voltageLevel * 1000);  // coarse 0-6 → 0-6000 mV (no precise value here)
-            loc.setGsmSignal(content.readUnsignedByte());
+            loc.setGsmSignal((int) content.readUnsignedByte());
             loc.setAlarmCode(content.readUnsignedByte());
             content.readUnsignedByte();  // language byte — discarded
         }
