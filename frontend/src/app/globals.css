@@ -1,4 +1,4 @@
-@import "mapbox-gl/dist/mapbox-gl.css";
+@import "leaflet/dist/leaflet.css";
 
 @tailwind base;
 @tailwind components;
@@ -199,10 +199,13 @@
   }
 }
 
-/* Mapbox/Leaflet attribution restyle */
-.mapboxgl-ctrl-bottom-right .mapboxgl-ctrl-attrib {
-  @apply !bg-white/85 !text-ink-700;
+/* Leaflet attribution and control restyle */
+.leaflet-control-attribution {
+  @apply !bg-white/85 !text-ink-700 !text-[10px];
 }
-.mapboxgl-ctrl-group {
+.leaflet-control-zoom {
   @apply !shadow-menu !border !border-surface-300;
+}
+.leaflet-control-zoom a {
+  @apply !bg-white !text-ink-700 hover:!bg-surface-100;
 }

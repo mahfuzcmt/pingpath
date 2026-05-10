@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useEffect, useRef, useMemo } from "react";
-import mapboxgl from "mapbox-gl";
-import "mapbox-gl/dist/mapbox-gl.css";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 import { useLocale } from "@/lib/i18n";
 import { useDeviceHistory, getDateRange } from "@/hooks/useDeviceHistory";
 import { formatDateTime, formatNumber } from "@/lib/format";
-import { DEFAULT_ZOOM, DHAKA_CENTER, MAPBOX_STYLE, expandBounds, mapboxToken } from "@/lib/mapbox";
+import { DEFAULT_ZOOM, DHAKA_CENTER, TILE_URL, TILE_ATTRIBUTION, expandBounds } from "@/lib/leaflet";
 import type { DeviceView, LocationView } from "@/types/domain";
 
 interface Props {
@@ -15,11 +15,6 @@ interface Props {
 }
 
 type Period = "1h" | "6h" | "24h" | "7d";
-
-const ROUTE_SOURCE = "device-route";
-const ROUTE_LAYER = "device-route-line";
-const POINTS_SOURCE = "device-points";
-const POINTS_LAYER = "device-points-circle";
 
 // Color based on speed (green = slow, yellow = medium, red = fast)
 function speedColor(speed: number): string {
@@ -32,9 +27,12 @@ function speedColor(speed: number): string {
 export function RouteHistoryPanel({ device, onClose }: Props) {
   const { t, locale } = useLocale();
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const mapRef = useRef<mapboxgl.Map | null>(null);
-  const markerRef = useRef<mapboxgl.Marker | null>(null);
-  const popupRef = useRef<mapboxgl.Popup | null>(null);
+  const mapRef = useRef<L.Map | null>(null);
+  const routeLayerRef = useRef<L.Polyline | null>(null);
+  const pointsLayerRef = useRef<L.LayerGroup | null>(null);
+  const markerRef = useRef<L.Marker | null>(null);
+  const startMarkerRef = useRef<L.Marker | null>(null);
+  const endMarkerRef = useRef<L.Marker | null>(null);
 
   const [period, setPeriod] = useState<Period>("24h");
   const [selectedPoint, setSelectedPoint] = useState<LocationView | null>(null);
@@ -52,29 +50,31 @@ export function RouteHistoryPanel({ device, onClose }: Props) {
     limit: 2000,
   });
 
-  // Debug logging
-  console.log("[RouteHistory] period:", period, "history count:", history.length, "loading:", loading, "error:", error);
-
   // Initialize map
   useEffect(() => {
     if (mapRef.current || !containerRef.current) return;
-    const token = mapboxToken();
-    if (!token) return;
 
-    mapboxgl.accessToken = token;
-    const map = new mapboxgl.Map({
-      container: containerRef.current,
-      style: MAPBOX_STYLE,
+    const map = L.map(containerRef.current, {
       center: DHAKA_CENTER,
       zoom: DEFAULT_ZOOM,
+      zoomControl: true,
     });
-    map.addControl(new mapboxgl.NavigationControl({ visualizePitch: false }), "bottom-right");
+
+    L.tileLayer(TILE_URL, {
+      attribution: TILE_ATTRIBUTION,
+      maxZoom: 19,
+    }).addTo(map);
+
+    map.zoomControl.setPosition('bottomright');
     mapRef.current = map;
 
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       markerRef.current?.remove();
-      popupRef.current?.remove();
+      startMarkerRef.current?.remove();
+      endMarkerRef.current?.remove();
+      routeLayerRef.current?.remove();
+      pointsLayerRef.current?.remove();
       map.remove();
       mapRef.current = null;
     };
@@ -85,131 +85,81 @@ export function RouteHistoryPanel({ device, onClose }: Props) {
     const map = mapRef.current;
     if (!map || history.length === 0) return;
 
-    const draw = () => {
-      // Sort by timestamp
-      const sorted = [...history].sort(
-        (a, b) => new Date(a.ts).getTime() - new Date(b.ts).getTime()
-      );
+    // Sort by timestamp
+    const sorted = [...history].sort(
+      (a, b) => new Date(a.ts).getTime() - new Date(b.ts).getTime()
+    );
 
-      const coords = sorted.map((p) => [p.longitude, p.latitude] as [number, number]);
+    const coords = sorted.map((p) => [p.latitude, p.longitude] as [number, number]);
 
-      // Route line
-      const lineGeo: GeoJSON.Feature = {
-        type: "Feature",
-        properties: {},
-        geometry: { type: "LineString", coordinates: coords },
-      };
+    // Remove old layers
+    routeLayerRef.current?.remove();
+    pointsLayerRef.current?.remove();
+    startMarkerRef.current?.remove();
+    endMarkerRef.current?.remove();
 
-      // Points for hover/click
-      const pointsGeo: GeoJSON.FeatureCollection = {
-        type: "FeatureCollection",
-        features: sorted.map((p, i) => ({
-          type: "Feature",
-          properties: {
-            index: i,
-            speed: p.speed,
-            ts: p.ts,
-            voltage: p.voltageMv,
-            accOn: p.accOn,
-          },
-          geometry: { type: "Point", coordinates: [p.longitude, p.latitude] },
-        })),
-      };
+    // Route line
+    const routeLine = L.polyline(coords, {
+      color: "#E8900A",
+      weight: 3,
+      opacity: 0.8,
+    }).addTo(map);
+    routeLayerRef.current = routeLine;
 
-      // Add/update sources
-      if (map.getSource(ROUTE_SOURCE)) {
-        (map.getSource(ROUTE_SOURCE) as mapboxgl.GeoJSONSource).setData(lineGeo);
+    // Points layer
+    const pointsGroup = L.layerGroup().addTo(map);
+    sorted.forEach((p, i) => {
+      const color = speedColor(p.speed);
+      const circle = L.circleMarker([p.latitude, p.longitude], {
+        radius: 5,
+        fillColor: color,
+        color: "#0A1928",
+        weight: 1,
+        fillOpacity: 1,
+      });
+      circle.on("click", () => setSelectedPoint(p));
+      circle.addTo(pointsGroup);
+    });
+    pointsLayerRef.current = pointsGroup;
+
+    // Start marker (green)
+    if (coords.length > 0) {
+      const startIcon = L.divIcon({
+        html: '<div style="width:16px;height:16px;border-radius:50%;background:#16A34A;border:2px solid #0A1928;"></div>',
+        className: '',
+        iconSize: [16, 16],
+        iconAnchor: [8, 8],
+      });
+      startMarkerRef.current = L.marker(coords[0], { icon: startIcon }).addTo(map);
+
+      // End marker (red)
+      const endIcon = L.divIcon({
+        html: '<div style="width:16px;height:16px;border-radius:50%;background:#DC2626;border:2px solid #0A1928;"></div>',
+        className: '',
+        iconSize: [16, 16],
+        iconAnchor: [8, 8],
+      });
+      endMarkerRef.current = L.marker(coords[coords.length - 1], { icon: endIcon }).addTo(map);
+
+      // Animated marker for playback
+      if (!markerRef.current) {
+        const playIcon = L.divIcon({
+          html: '<div style="width:20px;height:20px;border-radius:50%;background:#E8900A;border:3px solid #0A1928;box-shadow:0 0 10px rgba(232,144,10,0.8);"></div>',
+          className: '',
+          iconSize: [20, 20],
+          iconAnchor: [10, 10],
+        });
+        markerRef.current = L.marker(coords[0], { icon: playIcon }).addTo(map);
       } else {
-        map.addSource(ROUTE_SOURCE, { type: "geojson", data: lineGeo });
-        map.addLayer({
-          id: ROUTE_LAYER,
-          type: "line",
-          source: ROUTE_SOURCE,
-          paint: {
-            "line-color": "#E8900A",
-            "line-width": 3,
-            "line-opacity": 0.8,
-          },
-        });
+        markerRef.current.setLatLng(coords[0]);
       }
+    }
 
-      if (map.getSource(POINTS_SOURCE)) {
-        (map.getSource(POINTS_SOURCE) as mapboxgl.GeoJSONSource).setData(pointsGeo);
-      } else {
-        map.addSource(POINTS_SOURCE, { type: "geojson", data: pointsGeo });
-        map.addLayer({
-          id: POINTS_LAYER,
-          type: "circle",
-          source: POINTS_SOURCE,
-          paint: {
-            "circle-radius": 5,
-            "circle-color": [
-              "interpolate",
-              ["linear"],
-              ["get", "speed"],
-              0, "#16A34A",
-              30, "#E8900A",
-              60, "#DC2626",
-            ],
-            "circle-stroke-width": 1,
-            "circle-stroke-color": "#0A1928",
-          },
-        });
-
-        // Click handler for points
-        map.on("click", POINTS_LAYER, (e) => {
-          if (e.features && e.features[0]) {
-            const idx = e.features[0].properties?.index;
-            if (typeof idx === "number") {
-              setSelectedPoint(sorted[idx]);
-            }
-          }
-        });
-
-        map.on("mouseenter", POINTS_LAYER, () => {
-          map.getCanvas().style.cursor = "pointer";
-        });
-        map.on("mouseleave", POINTS_LAYER, () => {
-          map.getCanvas().style.cursor = "";
-        });
-      }
-
-      // Fit bounds
-      const bounds = expandBounds(coords, 0.01);
-      if (bounds) {
-        map.fitBounds(bounds, { padding: 60, duration: 600, maxZoom: 16 });
-      }
-
-      // Add start/end markers
-      if (coords.length > 0) {
-        // Start marker (green)
-        const startEl = document.createElement("div");
-        startEl.innerHTML = `<div style="width:16px;height:16px;border-radius:50%;background:#16A34A;border:2px solid #0A1928;"></div>`;
-        new mapboxgl.Marker({ element: startEl })
-          .setLngLat(coords[0])
-          .addTo(map);
-
-        // End marker (red)
-        const endEl = document.createElement("div");
-        endEl.innerHTML = `<div style="width:16px;height:16px;border-radius:50%;background:#DC2626;border:2px solid #0A1928;"></div>`;
-        new mapboxgl.Marker({ element: endEl })
-          .setLngLat(coords[coords.length - 1])
-          .addTo(map);
-
-        // Animated marker for playback
-        if (!markerRef.current) {
-          const el = document.createElement("div");
-          el.style.cssText =
-            "width:20px;height:20px;border-radius:50%;background:#E8900A;border:3px solid #0A1928;box-shadow:0 0 10px rgba(232,144,10,0.8);";
-          markerRef.current = new mapboxgl.Marker({ element: el })
-            .setLngLat(coords[0])
-            .addTo(map);
-        }
-      }
-    };
-
-    if (map.isStyleLoaded()) draw();
-    else map.once("load", draw);
+    // Fit bounds
+    const bounds = expandBounds(coords, 0.01);
+    if (bounds) {
+      map.fitBounds(bounds, { padding: [60, 60], maxZoom: 16 });
+    }
   }, [history]);
 
   // Playback animation
@@ -252,7 +202,7 @@ export function RouteHistoryPanel({ device, onClose }: Props) {
     const idx = Math.min(sorted.length - 1, Math.floor(progress * sorted.length));
     const point = sorted[idx];
     if (point) {
-      markerRef.current.setLngLat([point.longitude, point.latitude]);
+      markerRef.current.setLatLng([point.latitude, point.longitude]);
       setSelectedPoint(point);
     }
   }, [progress, history]);
@@ -304,12 +254,6 @@ export function RouteHistoryPanel({ device, onClose }: Props) {
       {/* Map */}
       <div className="relative flex-1">
         <div ref={containerRef} className="absolute inset-0" />
-
-        {!mapboxToken() && (
-          <div className="absolute inset-0 flex items-center justify-center bg-ink-950/70 text-sm">
-            NEXT_PUBLIC_MAPBOX_TOKEN is not configured.
-          </div>
-        )}
 
         {error && (
           <div className="absolute left-3 top-3 rounded bg-alarm-red/20 px-3 py-1 text-xs text-alarm-red">

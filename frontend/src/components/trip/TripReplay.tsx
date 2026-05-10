@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import mapboxgl from "mapbox-gl";
-import "mapbox-gl/dist/mapbox-gl.css";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 import { api } from "@/lib/api";
-import { DEFAULT_ZOOM, DHAKA_CENTER, MAPBOX_STYLE, expandBounds, mapboxToken } from "@/lib/mapbox";
+import { DEFAULT_ZOOM, DHAKA_CENTER, TILE_URL, TILE_ATTRIBUTION, expandBounds } from "@/lib/leaflet";
 import { useLocale } from "@/lib/i18n";
 import type { LocationView, TripView } from "@/types/domain";
 
@@ -12,10 +12,6 @@ interface Props {
   trip: TripView;
   onClose: () => void;
 }
-
-const ROUTE_SOURCE = "trip-route";
-const ROUTE_LAYER = "trip-route-line";
-const ROUTE_DONE_LAYER = "trip-route-done";
 
 /**
  * Loads the device's locations bounded by the trip's start/end timestamps
@@ -25,8 +21,12 @@ const ROUTE_DONE_LAYER = "trip-route-done";
 export function TripReplay({ trip, onClose }: Props) {
   const { t } = useLocale();
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const mapRef = useRef<mapboxgl.Map | null>(null);
-  const markerRef = useRef<mapboxgl.Marker | null>(null);
+  const mapRef = useRef<L.Map | null>(null);
+  const markerRef = useRef<L.Marker | null>(null);
+  const routeLineRef = useRef<L.Polyline | null>(null);
+  const doneLineRef = useRef<L.Polyline | null>(null);
+  const startMarkerRef = useRef<L.Marker | null>(null);
+  const endMarkerRef = useRef<L.Marker | null>(null);
   const rafRef = useRef<number | null>(null);
 
   const [path, setPath] = useState<LocationView[]>([]);
@@ -61,21 +61,28 @@ export function TripReplay({ trip, onClose }: Props) {
   // Init map
   useEffect(() => {
     if (mapRef.current || !containerRef.current) return;
-    const token = mapboxToken();
-    if (!token) return;
-    mapboxgl.accessToken = token;
-    const map = new mapboxgl.Map({
-      container: containerRef.current,
-      style: MAPBOX_STYLE,
+
+    const map = L.map(containerRef.current, {
       center: DHAKA_CENTER,
       zoom: DEFAULT_ZOOM,
+      zoomControl: true,
     });
-    map.addControl(new mapboxgl.NavigationControl({ visualizePitch: false }), "bottom-right");
+
+    L.tileLayer(TILE_URL, {
+      attribution: TILE_ATTRIBUTION,
+      maxZoom: 19,
+    }).addTo(map);
+
+    map.zoomControl.setPosition('bottomright');
     mapRef.current = map;
+
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       markerRef.current?.remove();
-      markerRef.current = null;
+      startMarkerRef.current?.remove();
+      endMarkerRef.current?.remove();
+      routeLineRef.current?.remove();
+      doneLineRef.current?.remove();
       map.remove();
       mapRef.current = null;
     };
@@ -86,72 +93,95 @@ export function TripReplay({ trip, onClose }: Props) {
     const map = mapRef.current;
     if (!map || path.length === 0) return;
 
-    const draw = () => {
-      const coords = path.map((p) => [p.longitude, p.latitude] as [number, number]);
-      const lineGeo = {
-        type: "Feature" as const,
-        properties: {},
-        geometry: { type: "LineString" as const, coordinates: coords },
-      };
+    // Sort by timestamp
+    const sorted = [...path].sort(
+      (a, b) => new Date(a.ts).getTime() - new Date(b.ts).getTime()
+    );
 
-      if (map.getSource(ROUTE_SOURCE)) {
-        (map.getSource(ROUTE_SOURCE) as mapboxgl.GeoJSONSource).setData(lineGeo);
-      } else {
-        map.addSource(ROUTE_SOURCE, { type: "geojson", data: lineGeo });
-        map.addLayer({
-          id: ROUTE_LAYER,
-          type: "line",
-          source: ROUTE_SOURCE,
-          paint: { "line-color": "#64748B", "line-width": 3, "line-opacity": 0.6 },
-        });
-        map.addSource("trip-route-done", {
-          type: "geojson",
-          data: { type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: [] } },
-        });
-        map.addLayer({
-          id: ROUTE_DONE_LAYER,
-          type: "line",
-          source: "trip-route-done",
-          paint: { "line-color": "#E8900A", "line-width": 4 },
-        });
-      }
+    const coords = sorted.map((p) => [p.latitude, p.longitude] as [number, number]);
 
-      const bounds = expandBounds(coords, 0.005);
-      if (bounds) map.fitBounds(bounds, { padding: 60, duration: 600, maxZoom: 15 });
+    // Remove old layers
+    routeLineRef.current?.remove();
+    doneLineRef.current?.remove();
+    startMarkerRef.current?.remove();
+    endMarkerRef.current?.remove();
 
+    // Full route line (muted)
+    const routeLine = L.polyline(coords, {
+      color: "#64748B",
+      weight: 3,
+      opacity: 0.6,
+    }).addTo(map);
+    routeLineRef.current = routeLine;
+
+    // Done portion (brand color, initially empty)
+    const doneLine = L.polyline([], {
+      color: "#E8900A",
+      weight: 4,
+      opacity: 1,
+    }).addTo(map);
+    doneLineRef.current = doneLine;
+
+    // Start marker (green)
+    if (coords.length > 0) {
+      const startIcon = L.divIcon({
+        html: '<div style="width:12px;height:12px;border-radius:50%;background:#16A34A;border:2px solid #0A1928;"></div>',
+        className: '',
+        iconSize: [12, 12],
+        iconAnchor: [6, 6],
+      });
+      startMarkerRef.current = L.marker(coords[0], { icon: startIcon }).addTo(map);
+
+      // End marker (red)
+      const endIcon = L.divIcon({
+        html: '<div style="width:12px;height:12px;border-radius:50%;background:#DC2626;border:2px solid #0A1928;"></div>',
+        className: '',
+        iconSize: [12, 12],
+        iconAnchor: [6, 6],
+      });
+      endMarkerRef.current = L.marker(coords[coords.length - 1], { icon: endIcon }).addTo(map);
+
+      // Animated marker
       if (!markerRef.current) {
-        const el = document.createElement("div");
-        el.style.cssText =
-          "width:14px;height:14px;border-radius:50%;background:#E8900A;border:2px solid #0A1928;box-shadow:0 0 8px rgba(232,144,10,0.6);";
-        markerRef.current = new mapboxgl.Marker({ element: el })
-          .setLngLat(coords[0])
-          .addTo(map);
+        const playIcon = L.divIcon({
+          html: '<div style="width:14px;height:14px;border-radius:50%;background:#E8900A;border:2px solid #0A1928;box-shadow:0 0 8px rgba(232,144,10,0.6);"></div>',
+          className: '',
+          iconSize: [14, 14],
+          iconAnchor: [7, 7],
+        });
+        markerRef.current = L.marker(coords[0], { icon: playIcon }).addTo(map);
       } else {
-        markerRef.current.setLngLat(coords[0]);
+        markerRef.current.setLatLng(coords[0]);
       }
-    };
+    }
 
-    if (map.isStyleLoaded()) draw();
-    else map.once("load", draw);
+    // Fit bounds
+    const bounds = expandBounds(coords, 0.005);
+    if (bounds) {
+      map.fitBounds(bounds, { padding: [60, 60], maxZoom: 15 });
+    }
   }, [path]);
 
   // Animate marker according to progress
   useEffect(() => {
     const map = mapRef.current;
     if (!map || path.length === 0) return;
-    const idx = Math.min(path.length - 1, Math.floor(progress * (path.length - 1)));
-    const point = path[idx];
+
+    // Sort by timestamp
+    const sorted = [...path].sort(
+      (a, b) => new Date(a.ts).getTime() - new Date(b.ts).getTime()
+    );
+
+    const idx = Math.min(sorted.length - 1, Math.floor(progress * (sorted.length - 1)));
+    const point = sorted[idx];
+
     if (markerRef.current) {
-      markerRef.current.setLngLat([point.longitude, point.latitude]);
+      markerRef.current.setLatLng([point.latitude, point.longitude]);
     }
-    const doneSource = map.getSource("trip-route-done") as mapboxgl.GeoJSONSource | undefined;
-    if (doneSource) {
-      const done = path.slice(0, idx + 1).map((p) => [p.longitude, p.latitude] as [number, number]);
-      doneSource.setData({
-        type: "Feature",
-        properties: {},
-        geometry: { type: "LineString", coordinates: done },
-      });
+
+    if (doneLineRef.current) {
+      const done = sorted.slice(0, idx + 1).map((p) => [p.latitude, p.longitude] as [number, number]);
+      doneLineRef.current.setLatLngs(done);
     }
   }, [progress, path]);
 
@@ -192,11 +222,6 @@ export function TripReplay({ trip, onClose }: Props) {
 
       <div className="relative flex-1">
         <div ref={containerRef} className="absolute inset-0" />
-        {!mapboxToken() && (
-          <div className="absolute inset-0 flex items-center justify-center bg-ink-950/70 text-sm">
-            NEXT_PUBLIC_MAPBOX_TOKEN is not configured.
-          </div>
-        )}
         {error && (
           <div className="absolute left-3 top-3 rounded bg-alarm-red/20 px-3 py-1 text-xs text-alarm-red">
             {error}
@@ -215,6 +240,14 @@ export function TripReplay({ trip, onClose }: Props) {
           disabled={path.length === 0}
         >
           {playing ? "❚❚" : "▶"}
+        </button>
+        <button
+          type="button"
+          className="btn-ghost px-2 py-1 text-sm"
+          onClick={() => setProgress(0)}
+          disabled={path.length === 0}
+        >
+          ⏮
         </button>
         <input
           type="range"

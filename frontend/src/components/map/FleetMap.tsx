@@ -1,9 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef } from "react";
-import mapboxgl from "mapbox-gl";
-import "mapbox-gl/dist/mapbox-gl.css";
-import { DEFAULT_ZOOM, DHAKA_CENTER, MAPBOX_STYLE, expandBounds, mapboxToken } from "@/lib/mapbox";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+import { DEFAULT_ZOOM, DHAKA_CENTER, TILE_URL, TILE_ATTRIBUTION, expandBounds } from "@/lib/leaflet";
 import type { DeviceView, LocationView } from "@/types/domain";
 
 interface FleetMapProps {
@@ -44,14 +44,6 @@ function getStatusText(device: DeviceView | undefined, location: LocationView | 
   return "Stopped";
 }
 
-const ARROW_SVG = (color: string) =>
-  `<svg width="28" height="28" viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg">
-     <g transform="translate(14 14)">
-       <circle r="13" fill="${color}" fill-opacity="0.18"/>
-       <path d="M0 -10 L7 8 L0 4 L-7 8 Z" fill="${color}" stroke="#0A1928" stroke-width="1.2" stroke-linejoin="round"/>
-     </g>
-   </svg>`;
-
 function getDeviceLabel(device: DeviceView | undefined): string {
   if (!device) return "Unknown";
   return device.name || device.vehiclePlate || device.imei.slice(-8);
@@ -63,11 +55,29 @@ function colorFor(device: DeviceView | undefined): string {
   return device.iconColor ?? "#E8900A";
 }
 
+// Create arrow SVG icon for vehicle marker
+function createArrowIcon(color: string, rotation: number, isSelected: boolean): L.DivIcon {
+  const size = isSelected ? 36 : 28;
+  const svg = `
+    <svg width="${size}" height="${size}" viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg">
+      <g transform="translate(14 14) rotate(${rotation})">
+        <circle r="13" fill="${color}" fill-opacity="0.18"/>
+        <path d="M0 -10 L7 8 L0 4 L-7 8 Z" fill="${color}" stroke="#0A1928" stroke-width="1.2" stroke-linejoin="round"/>
+      </g>
+    </svg>`;
+
+  return L.divIcon({
+    html: svg,
+    className: `pp-vehicle-icon ${isSelected ? 'pp-selected' : ''}`,
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+  });
+}
+
 export function FleetMap({ devices, locations, selectedImei, onSelect }: FleetMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const mapRef = useRef<mapboxgl.Map | null>(null);
-  const markersRef = useRef<Map<string, mapboxgl.Marker>>(new Map());
-  const popupRef = useRef<mapboxgl.Popup | null>(null);
+  const mapRef = useRef<L.Map | null>(null);
+  const markersRef = useRef<Map<string, L.Marker>>(new Map());
   const initialFitDoneRef = useRef(false);
 
   const deviceByImei = useMemo(() => {
@@ -138,34 +148,24 @@ export function FleetMap({ devices, locations, selectedImei, onSelect }: FleetMa
   // Init map once
   useEffect(() => {
     if (mapRef.current || !containerRef.current) return;
-    const token = mapboxToken();
-    if (!token) return;
-    mapboxgl.accessToken = token;
 
-    const map = new mapboxgl.Map({
-      container: containerRef.current,
-      style: MAPBOX_STYLE,
+    const map = L.map(containerRef.current, {
       center: DHAKA_CENTER,
       zoom: DEFAULT_ZOOM,
-      attributionControl: true,
+      zoomControl: true,
     });
-    map.addControl(new mapboxgl.NavigationControl({ visualizePitch: false }), "bottom-right");
 
-    // Close popup when clicking on the map (not on markers)
-    map.on("click", () => {
-      if (popupRef.current) {
-        popupRef.current.remove();
-        popupRef.current = null;
-      }
-    });
+    L.tileLayer(TILE_URL, {
+      attribution: TILE_ATTRIBUTION,
+      maxZoom: 19,
+    }).addTo(map);
+
+    // Move zoom control to bottom-right
+    map.zoomControl.setPosition('bottomright');
 
     mapRef.current = map;
 
     return () => {
-      if (popupRef.current) {
-        popupRef.current.remove();
-        popupRef.current = null;
-      }
       for (const marker of markersRef.current.values()) marker.remove();
       markersRef.current.clear();
       map.remove();
@@ -184,73 +184,41 @@ export function FleetMap({ devices, locations, selectedImei, onSelect }: FleetMa
       seen.add(imei);
       const device = deviceByImei.get(imei);
       const color = colorFor(device);
+      const isSelected = imei === selectedImei;
       let marker = markersRef.current.get(imei);
 
       const label = getDeviceLabel(device);
       const speed = loc.speed ?? 0;
+      const course = loc.course ?? 0;
 
       if (!marker) {
-        const el = document.createElement("div");
-        el.className = "pp-vehicle-marker";
-        el.style.cssText = "cursor:pointer;will-change:transform;display:flex;flex-direction:column;align-items:center;";
-        el.innerHTML = `
-          <div class="pp-arrow-wrapper">${ARROW_SVG(color)}</div>
-          <div class="pp-marker-label">
-            <span class="pp-label-name">${label}</span>
-            <span class="pp-label-speed">${speed} kph</span>
-          </div>
-        `;
-        el.dataset.imei = imei;
-        el.addEventListener("click", (e) => {
-          e.stopPropagation();
-
-          // Remove existing popup
-          if (popupRef.current) {
-            popupRef.current.remove();
-          }
-
-          // Create and show new popup
-          const popup = new mapboxgl.Popup({
-            closeButton: true,
-            closeOnClick: false,
-            maxWidth: "320px",
-            className: "pp-popup-container",
-            offset: [0, -10],
+        // Create new marker
+        const icon = createArrowIcon(color, course, isSelected);
+        marker = L.marker([loc.latitude, loc.longitude], { icon })
+          .addTo(map)
+          .bindPopup(createPopupContent(device, loc), {
+            maxWidth: 320,
+            className: 'pp-popup-container',
           })
-            .setLngLat([loc.longitude, loc.latitude])
-            .setHTML(createPopupContent(device, loc))
-            .addTo(map);
+          .bindTooltip(`<div class="pp-tooltip"><strong>${label}</strong><br/>${speed} kph</div>`, {
+            permanent: true,
+            direction: 'bottom',
+            offset: [0, 10],
+            className: 'pp-marker-tooltip',
+          });
 
-          popupRef.current = popup;
-
-          // Also select the device
+        marker.on('click', () => {
           onSelect(imei);
         });
 
-        marker = new mapboxgl.Marker({ element: el, rotationAlignment: "map", anchor: "top" })
-          .setLngLat([loc.longitude, loc.latitude])
-          .addTo(map);
         markersRef.current.set(imei, marker);
       } else {
-        // Animate to new position via CSS transition on the underlying transform
-        marker.setLngLat([loc.longitude, loc.latitude]);
-        const el = marker.getElement();
-        const svg = el.querySelector("svg path") as SVGPathElement | null;
-        if (svg) svg.setAttribute("fill", color);
-        // Update label text
-        const nameEl = el.querySelector(".pp-label-name");
-        const speedEl = el.querySelector(".pp-label-speed");
-        if (nameEl) nameEl.textContent = label;
-        if (speedEl) speedEl.textContent = `${speed} kph`;
+        // Update existing marker
+        marker.setLatLng([loc.latitude, loc.longitude]);
+        marker.setIcon(createArrowIcon(color, course, isSelected));
+        marker.setPopupContent(createPopupContent(device, loc));
+        marker.setTooltipContent(`<div class="pp-tooltip"><strong>${label}</strong><br/>${speed} kph</div>`);
       }
-      // Only rotate the arrow, not the label
-      const arrowWrapper = marker.getElement().querySelector(".pp-arrow-wrapper") as HTMLElement | null;
-      if (arrowWrapper) {
-        arrowWrapper.style.transform = `rotate(${loc.course || 0}deg)`;
-      }
-
-      const el = marker.getElement();
-      el.classList.toggle("pp-marker-selected", imei === selectedImei);
     }
 
     // Remove markers whose device disappeared from snapshot
@@ -264,104 +232,83 @@ export function FleetMap({ devices, locations, selectedImei, onSelect }: FleetMa
     // First-load fit-to-bounds
     if (!initialFitDoneRef.current && locations.size > 0) {
       const pts: Array<[number, number]> = [];
-      for (const l of locations.values()) pts.push([l.longitude, l.latitude]);
+      for (const l of locations.values()) pts.push([l.latitude, l.longitude]);
       const bounds = expandBounds(pts, 0.02);
       if (bounds) {
-        map.fitBounds(bounds, { padding: 60, duration: 600, maxZoom: 14 });
+        map.fitBounds(bounds, { padding: [60, 60], maxZoom: 14 });
       }
       initialFitDoneRef.current = true;
     }
-  }, [locations, deviceByImei, selectedImei, onSelect]);
+  }, [locations, deviceByImei, selectedImei, onSelect, createPopupContent]);
 
-  // Pan to selection and update popup
+  // Pan to selection
   useEffect(() => {
     if (!selectedImei) return;
     const map = mapRef.current;
     const loc = locations.get(selectedImei);
-    const device = deviceByImei.get(selectedImei);
+    const marker = markersRef.current.get(selectedImei);
     if (map && loc) {
-      map.easeTo({ center: [loc.longitude, loc.latitude], zoom: Math.max(map.getZoom(), 14), duration: 700 });
-
-      // Update popup content if it exists
-      if (popupRef.current) {
-        popupRef.current
-          .setLngLat([loc.longitude, loc.latitude])
-          .setHTML(createPopupContent(device, loc));
+      map.setView([loc.latitude, loc.longitude], Math.max(map.getZoom(), 14), { animate: true });
+      if (marker) {
+        marker.openPopup();
       }
     }
-  }, [selectedImei, locations, deviceByImei, createPopupContent]);
+  }, [selectedImei, locations]);
 
   return (
     <div className="relative h-full w-full">
       <div ref={containerRef} className="absolute inset-0" />
-      {!mapboxToken() && (
-        <div className="absolute inset-0 flex items-center justify-center bg-ink-950/70 text-sm text-ink-100">
-          NEXT_PUBLIC_MAPBOX_TOKEN is not configured.
-        </div>
-      )}
       <style jsx global>{`
-        .pp-vehicle-marker {
-          transition: transform 800ms ease-out;
-        }
-        .pp-arrow-wrapper {
+        .pp-vehicle-icon {
           transition: transform 300ms ease-out;
         }
-        .pp-marker-label {
-          margin-top: 2px;
-          padding: 2px 6px;
-          background: rgba(10, 25, 40, 0.9);
-          border-radius: 4px;
-          border: 1px solid rgba(100, 116, 139, 0.3);
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          white-space: nowrap;
-          font-family: 'Inter', sans-serif;
-        }
-        .pp-label-name {
-          font-size: 11px;
-          font-weight: 600;
-          color: #f1f5f9;
-          max-width: 80px;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .pp-label-speed {
-          font-size: 10px;
-          font-weight: 500;
-          color: #e8900a;
-          font-family: 'JetBrains Mono', monospace;
-        }
-        .pp-marker-selected {
+        .pp-vehicle-icon.pp-selected {
           filter: drop-shadow(0 0 6px #e8900a);
-          z-index: 2;
+          z-index: 1000 !important;
         }
-        .pp-marker-selected .pp-marker-label {
-          border-color: #e8900a;
-          background: rgba(232, 144, 10, 0.15);
+        .pp-marker-tooltip {
+          background: rgba(10, 25, 40, 0.9) !important;
+          border: 1px solid rgba(100, 116, 139, 0.3) !important;
+          border-radius: 4px !important;
+          color: #f1f5f9 !important;
+          font-family: 'Inter', sans-serif !important;
+          font-size: 11px !important;
+          padding: 4px 8px !important;
+          box-shadow: none !important;
+        }
+        .pp-marker-tooltip::before {
+          border-bottom-color: rgba(10, 25, 40, 0.9) !important;
+        }
+        .pp-tooltip strong {
+          color: #f1f5f9;
+          font-weight: 600;
         }
 
         /* Popup styles */
-        .pp-popup-container .mapboxgl-popup-content {
+        .pp-popup-container .leaflet-popup-content-wrapper {
           background: rgba(15, 39, 66, 0.98);
           border: 1px solid rgba(100, 116, 139, 0.3);
           border-radius: 8px;
           padding: 0;
           box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
         }
-        .pp-popup-container .mapboxgl-popup-close-button {
-          color: #94a3b8;
+        .pp-popup-container .leaflet-popup-content {
+          margin: 0;
+        }
+        .pp-popup-container .leaflet-popup-close-button {
+          color: #94a3b8 !important;
           font-size: 18px;
           padding: 4px 8px;
           right: 4px;
           top: 4px;
         }
-        .pp-popup-container .mapboxgl-popup-close-button:hover {
-          color: #f1f5f9;
-          background: transparent;
+        .pp-popup-container .leaflet-popup-close-button:hover {
+          color: #f1f5f9 !important;
         }
-        .pp-popup-container .mapboxgl-popup-tip {
-          border-top-color: rgba(15, 39, 66, 0.98);
+        .pp-popup-container .leaflet-popup-tip {
+          background: rgba(15, 39, 66, 0.98);
+          border: 1px solid rgba(100, 116, 139, 0.3);
+          box-shadow: none;
         }
         .pp-popup {
           font-family: 'Inter', sans-serif;

@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import mapboxgl from "mapbox-gl";
-import "mapbox-gl/dist/mapbox-gl.css";
-import { DEFAULT_ZOOM, DHAKA_CENTER, MAPBOX_STYLE, mapboxToken } from "@/lib/mapbox";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+import { DEFAULT_ZOOM, DHAKA_CENTER, TILE_URL, TILE_ATTRIBUTION } from "@/lib/leaflet";
 import { useLocale } from "@/lib/i18n";
 import type {
   GeofenceCreate,
@@ -17,38 +17,14 @@ interface Props {
   onCancel: () => void;
 }
 
-const CIRCLE_SOURCE = "geo-edit-circle";
-const POLY_SOURCE = "geo-edit-polygon";
-
-function circlePolygon(center: LatLng, radiusM: number): GeoJSON.Feature<GeoJSON.Polygon> {
-  // Approx geodesic circle as 64-vertex polygon. Good enough for visual edit;
-  // backend uses ST_Buffer over GEOGRAPHY for the canonical shape.
-  const points: [number, number][] = [];
-  const km = radiusM / 1000;
-  const earthKm = 6371;
-  const lat = (center.lat * Math.PI) / 180;
-  for (let i = 0; i <= 64; i++) {
-    const theta = (i * 2 * Math.PI) / 64;
-    const dLat = (km / earthKm) * Math.cos(theta);
-    const dLng = ((km / earthKm) * Math.sin(theta)) / Math.cos(lat);
-    points.push([
-      center.lng + (dLng * 180) / Math.PI,
-      center.lat + (dLat * 180) / Math.PI,
-    ]);
-  }
-  return {
-    type: "Feature",
-    properties: {},
-    geometry: { type: "Polygon", coordinates: [points] },
-  };
-}
-
 export function GeofenceEditor({ onSubmit, onCancel }: Props) {
   const { t } = useLocale();
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const mapRef = useRef<mapboxgl.Map | null>(null);
-  const centerMarkerRef = useRef<mapboxgl.Marker | null>(null);
-  const vertexMarkersRef = useRef<mapboxgl.Marker[]>([]);
+  const mapRef = useRef<L.Map | null>(null);
+  const circleRef = useRef<L.Circle | null>(null);
+  const polygonRef = useRef<L.Polygon | null>(null);
+  const centerMarkerRef = useRef<L.Marker | null>(null);
+  const vertexMarkersRef = useRef<L.Marker[]>([]);
 
   const [name, setName] = useState("");
   const [type, setType] = useState<GeofenceType>("CIRCLE");
@@ -64,40 +40,35 @@ export function GeofenceEditor({ onSubmit, onCancel }: Props) {
     const hasName = !!name.trim();
     const circleOk = type === "CIRCLE" ? (center !== null && radiusM > 0) : true;
     const polygonOk = type === "POLYGON" ? (polygon.length >= 3) : true;
-    const result = hasName && (type === "CIRCLE" ? circleOk : polygonOk);
-    console.log("[GeofenceEditor] canSave:", result, { hasName, type, center, radiusM, polygonLength: polygon.length });
-    return result;
+    return hasName && (type === "CIRCLE" ? circleOk : polygonOk);
   }, [name, type, center, radiusM, polygon]);
 
   // Init map
   useEffect(() => {
-    console.log("[GeofenceEditor] Init map effect - containerRef:", !!containerRef.current, "mapRef:", !!mapRef.current);
     if (mapRef.current || !containerRef.current) return;
-    const token = mapboxToken();
-    console.log("[GeofenceEditor] Token:", token ? "present" : "MISSING");
-    if (!token) return;
-    mapboxgl.accessToken = token;
-    try {
-      const map = new mapboxgl.Map({
-        container: containerRef.current,
-        style: MAPBOX_STYLE,
-        center: DHAKA_CENTER,
-        zoom: DEFAULT_ZOOM,
-      });
-      map.on("load", () => console.log("[GeofenceEditor] Map loaded successfully"));
-      map.on("error", (e) => console.error("[GeofenceEditor] Map error:", e));
-      map.addControl(new mapboxgl.NavigationControl({ visualizePitch: false }), "bottom-right");
-      mapRef.current = map;
-      console.log("[GeofenceEditor] Map created");
-    } catch (err) {
-      console.error("[GeofenceEditor] Map creation failed:", err);
-    }
+
+    const map = L.map(containerRef.current, {
+      center: DHAKA_CENTER,
+      zoom: DEFAULT_ZOOM,
+      zoomControl: true,
+    });
+
+    L.tileLayer(TILE_URL, {
+      attribution: TILE_ATTRIBUTION,
+      maxZoom: 19,
+    }).addTo(map);
+
+    map.zoomControl.setPosition('bottomright');
+    mapRef.current = map;
+
     return () => {
       centerMarkerRef.current?.remove();
       centerMarkerRef.current = null;
       for (const m of vertexMarkersRef.current) m.remove();
       vertexMarkersRef.current = [];
-      mapRef.current?.remove();
+      circleRef.current?.remove();
+      polygonRef.current?.remove();
+      map.remove();
       mapRef.current = null;
     };
   }, []);
@@ -105,13 +76,10 @@ export function GeofenceEditor({ onSubmit, onCancel }: Props) {
   // Click handler — depends on current type
   useEffect(() => {
     const map = mapRef.current;
-    if (!map) {
-      console.log("[GeofenceEditor] Map not ready for click handler");
-      return;
-    }
-    const onClick = (e: mapboxgl.MapMouseEvent) => {
-      const ll = { lat: e.lngLat.lat, lng: e.lngLat.lng };
-      console.log("[GeofenceEditor] Map clicked:", ll, "type:", type);
+    if (!map) return;
+
+    const onClick = (e: L.LeafletMouseEvent) => {
+      const ll = { lat: e.latlng.lat, lng: e.latlng.lng };
       if (type === "CIRCLE") {
         setCenter(ll);
       } else {
@@ -119,17 +87,7 @@ export function GeofenceEditor({ onSubmit, onCancel }: Props) {
       }
     };
 
-    // Ensure map is loaded before adding click handler
-    const addClickHandler = () => {
-      console.log("[GeofenceEditor] Adding click handler");
-      map.on("click", onClick);
-    };
-
-    if (map.loaded()) {
-      addClickHandler();
-    } else {
-      map.once("load", addClickHandler);
-    }
+    map.on("click", onClick);
 
     return () => {
       map.off("click", onClick);
@@ -140,108 +98,76 @@ export function GeofenceEditor({ onSubmit, onCancel }: Props) {
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
-    const apply = () => {
-      const data: GeoJSON.Feature<GeoJSON.Polygon> | GeoJSON.FeatureCollection =
-        type === "CIRCLE" && center
-          ? circlePolygon(center, radiusM)
-          : { type: "FeatureCollection", features: [] };
-      if (map.getSource(CIRCLE_SOURCE)) {
-        (map.getSource(CIRCLE_SOURCE) as mapboxgl.GeoJSONSource).setData(data);
-      } else {
-        map.addSource(CIRCLE_SOURCE, { type: "geojson", data });
-        map.addLayer({
-          id: `${CIRCLE_SOURCE}-fill`,
-          type: "fill",
-          source: CIRCLE_SOURCE,
-          paint: { "fill-color": color, "fill-opacity": 0.2 },
-        });
-        map.addLayer({
-          id: `${CIRCLE_SOURCE}-line`,
-          type: "line",
-          source: CIRCLE_SOURCE,
-          paint: { "line-color": color, "line-width": 2 },
-        });
-      }
+
+    // Remove old circle
+    circleRef.current?.remove();
+    centerMarkerRef.current?.remove();
+
+    if (type === "CIRCLE" && center) {
+      // Draw circle
+      const circle = L.circle([center.lat, center.lng], {
+        radius: radiusM,
+        color: color,
+        fillColor: color,
+        fillOpacity: 0.2,
+        weight: 2,
+      }).addTo(map);
+      circleRef.current = circle;
 
       // Center marker
-      if (type === "CIRCLE" && center) {
-        if (!centerMarkerRef.current) {
-          const el = document.createElement("div");
-          el.style.cssText =
-            "width:12px;height:12px;border-radius:50%;background:#E8900A;border:2px solid #0A1928;";
-          centerMarkerRef.current = new mapboxgl.Marker({ element: el })
-            .setLngLat([center.lng, center.lat])
-            .addTo(map);
-        } else {
-          centerMarkerRef.current.setLngLat([center.lng, center.lat]);
-        }
-      } else if (centerMarkerRef.current) {
-        centerMarkerRef.current.remove();
-        centerMarkerRef.current = null;
-      }
-    };
-    if (map.isStyleLoaded()) apply();
-    else map.once("load", apply);
+      const centerIcon = L.divIcon({
+        html: `<div style="width:12px;height:12px;border-radius:50%;background:${color};border:2px solid #0A1928;"></div>`,
+        className: '',
+        iconSize: [12, 12],
+        iconAnchor: [6, 6],
+      });
+      centerMarkerRef.current = L.marker([center.lat, center.lng], { icon: centerIcon }).addTo(map);
+    }
   }, [type, center, radiusM, color]);
 
   // Render polygon preview + vertex markers
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
-    const apply = () => {
-      const coords = polygon.map((p) => [p.lng, p.lat] as [number, number]);
-      const closed = coords.length >= 3 ? [...coords, coords[0]] : coords;
-      const data: GeoJSON.Feature<GeoJSON.Geometry> | GeoJSON.FeatureCollection =
-        type === "POLYGON" && coords.length > 0
-          ? coords.length >= 3
-            ? {
-                type: "Feature",
-                properties: {},
-                geometry: { type: "Polygon", coordinates: [closed] },
-              }
-            : {
-                type: "Feature",
-                properties: {},
-                geometry: { type: "LineString", coordinates: closed },
-              }
-          : { type: "FeatureCollection", features: [] };
 
-      if (map.getSource(POLY_SOURCE)) {
-        (map.getSource(POLY_SOURCE) as mapboxgl.GeoJSONSource).setData(data);
+    // Remove old polygon and markers
+    polygonRef.current?.remove();
+    for (const m of vertexMarkersRef.current) m.remove();
+    vertexMarkersRef.current = [];
+
+    if (type === "POLYGON" && polygon.length > 0) {
+      const coords = polygon.map((p) => [p.lat, p.lng] as [number, number]);
+
+      if (polygon.length >= 3) {
+        // Draw polygon
+        const poly = L.polygon(coords, {
+          color: color,
+          fillColor: color,
+          fillOpacity: 0.2,
+          weight: 2,
+        }).addTo(map);
+        polygonRef.current = poly;
       } else {
-        map.addSource(POLY_SOURCE, { type: "geojson", data });
-        map.addLayer({
-          id: `${POLY_SOURCE}-fill`,
-          type: "fill",
-          source: POLY_SOURCE,
-          paint: { "fill-color": color, "fill-opacity": 0.2 },
-          filter: ["==", ["geometry-type"], "Polygon"],
-        });
-        map.addLayer({
-          id: `${POLY_SOURCE}-line`,
-          type: "line",
-          source: POLY_SOURCE,
-          paint: { "line-color": color, "line-width": 2 },
-        });
+        // Draw polyline for incomplete polygon
+        const line = L.polyline(coords, {
+          color: color,
+          weight: 2,
+        }).addTo(map);
+        polygonRef.current = line as unknown as L.Polygon;
       }
 
       // Vertex markers
-      for (const m of vertexMarkersRef.current) m.remove();
-      vertexMarkersRef.current = [];
-      if (type === "POLYGON") {
-        polygon.forEach((p) => {
-          const el = document.createElement("div");
-          el.style.cssText =
-            "width:8px;height:8px;border-radius:50%;background:#E8900A;border:1.5px solid #0A1928;";
-          const m = new mapboxgl.Marker({ element: el })
-            .setLngLat([p.lng, p.lat])
-            .addTo(map);
-          vertexMarkersRef.current.push(m);
+      polygon.forEach((p) => {
+        const vertexIcon = L.divIcon({
+          html: `<div style="width:8px;height:8px;border-radius:50%;background:${color};border:1.5px solid #0A1928;"></div>`,
+          className: '',
+          iconSize: [8, 8],
+          iconAnchor: [4, 4],
         });
-      }
-    };
-    if (map.isStyleLoaded()) apply();
-    else map.once("load", apply);
+        const m = L.marker([p.lat, p.lng], { icon: vertexIcon }).addTo(map);
+        vertexMarkersRef.current.push(m);
+      });
+    }
   }, [type, polygon, color]);
 
   const handleSubmit = async () => {
@@ -390,13 +316,7 @@ export function GeofenceEditor({ onSubmit, onCancel }: Props) {
       </div>
 
       <div className="relative flex-1 bg-ink-900" style={{ minHeight: "400px" }}>
-        <div ref={containerRef} className="absolute inset-0 bg-blue-900/50" style={{ width: "100%", height: "100%" }} />
-        {/* Debug: if you see blue, container is rendering */}
-        {!mapboxToken() && (
-          <div className="absolute inset-0 flex items-center justify-center bg-ink-950/70 text-sm">
-            NEXT_PUBLIC_MAPBOX_TOKEN is not configured.
-          </div>
-        )}
+        <div ref={containerRef} className="absolute inset-0" style={{ width: "100%", height: "100%" }} />
       </div>
     </div>
   );
