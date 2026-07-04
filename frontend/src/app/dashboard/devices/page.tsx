@@ -167,7 +167,7 @@ function VehicleCard({
 
   return (
     <Link
-      href={`/dashboard?focus=${encodeURIComponent(d.imei)}`}
+      href={`/dashboard/devices/${encodeURIComponent(d.imei)}`}
       className="panel block p-3 transition hover:border-brand-400 hover:shadow-panel"
     >
       <div className="flex items-start gap-2">

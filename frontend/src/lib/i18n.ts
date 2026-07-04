@@ -54,6 +54,12 @@ const STRINGS = {
   "fleet.cellFallback": { en: "Cell-tower fix", bn: "সেল-টাওয়ার ফিক্স" },
   "fleet.noFix": { en: "No GPS fix", bn: "জিপিএস নেই" },
 
+  // ── Vehicle detail tabs (AutoNemo-aligned) ────────────────────────
+  "det.track": { en: "Track", bn: "ট্র্যাক" },
+  "det.calendar": { en: "Calendar", bn: "ক্যালেন্ডার" },
+  "det.history": { en: "History", bn: "ইতিহাস" },
+  "det.stats": { en: "Statistics", bn: "পরিসংখ্যান" },
+
   // ── Home summary (AutoNemo-aligned) ───────────────────────────────
   "home.fleetStatus": { en: "Fleet Status", bn: "ফ্লিট অবস্থা" },
   "home.vehicleStats": { en: "Single Vehicle Stats", bn: "একক যানবাহন পরিসংখ্যান" },
