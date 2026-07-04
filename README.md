@@ -1,8 +1,10 @@
-# PingPath
+# MotoLink
 
-Multi-tenant SaaS for vehicle GPS fleet tracking, built around the Concox GT06 hardware family. Targets the Bangladesh market: motorbike anti-theft, ride-sharing fleets, delivery riders, CNG/taxi operators, school vans, logistics.
+Multi-tenant SaaS for vehicle GPS fleet tracking, built around the Concox GT06 hardware family. Targets the Bangladesh market: motorbike anti-theft, ride-sharing fleets, delivery riders, CNG/taxi operators, school vans, logistics. Native Android + iOS apps for professional and corporate clients.
 
-See [`CLAUDE.md`](./CLAUDE.md) for the canonical product, architecture, and protocol specification. Read it before opening a PR.
+> **Branding note:** "MotoLink" is the customer-facing brand. Code is renamed to `motolink` (Java package `com.webinnovation.motolink`, `MotoLinkApplication`, Maven artifact, config prefix `motolink.*`). The Postgres DB name/user, Docker container names, `PINGPATH_*` env vars, domains, and Flyway migrations V1–V5 intentionally stay `pingpath` to avoid breaking the live VPS — see `CLAUDE.md` §1.
+
+See [`CLAUDE.md`](./CLAUDE.md) for the canonical product, architecture, and protocol specification. Read it before opening a PR. Competitor teardown: [`docs/COMPETITIVE_ANALYSIS.md`](./docs/COMPETITIVE_ANALYSIS.md).
 
 ---
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-GT06 device simulator for PingPath.
+GT06 device simulator for MotoLink.
 
 Sends a login (0x01) packet then periodic V3 location (0x22) and heartbeat (0x13)
 packets to the Netty server. Useful for end-to-end testing without real hardware.

@@ -49,7 +49,7 @@ export function Topbar({ user, orgId }: { user: UserView; orgId: string }) {
         className="flex h-full items-center gap-2 border-r border-surface-300 px-4 font-semibold tracking-tight text-ink-900"
       >
         <span className="inline-block h-2 w-2 rounded-full bg-brand-500" />
-        <span className="text-sm">PingPath</span>
+        <span className="text-sm">MotoLink</span>
       </Link>
 
       {/* Primary nav */}

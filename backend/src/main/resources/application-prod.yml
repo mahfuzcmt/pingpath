@@ -5,10 +5,12 @@ spring:
 logging:
   level:
     root: WARN
-    com.webinnovation.pingpath: INFO
+    com.webinnovation.motolink: INFO
 
-pingpath:
+motolink:
   cors:
-    allowed-origins: https://app.pingpath.com
+    # Env var name intentionally kept as PINGPATH_* (CLAUDE.md §1); the property
+    # prefix is motolink.*, so bind it explicitly rather than via relaxed binding.
+    allowed-origins: ${PINGPATH_CORS_ALLOWED_ORIGINS:https://app.pingpath.com}
   seed:
     enabled: false

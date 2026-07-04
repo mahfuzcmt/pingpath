@@ -4,13 +4,13 @@ spring:
 
 logging:
   level:
-    com.webinnovation.pingpath: DEBUG
-    com.webinnovation.pingpath.netty: DEBUG
-    com.webinnovation.pingpath.protocol: DEBUG
+    com.webinnovation.motolink: DEBUG
+    com.webinnovation.motolink.netty: DEBUG
+    com.webinnovation.motolink.protocol: DEBUG
 
-pingpath:
+motolink:
   cors:
-    allowed-origins: http://localhost:3000
+    allowed-origins: ${PINGPATH_CORS_ALLOWED_ORIGINS:http://localhost:3000}
   seed:
     enabled: true
     admin-email: admin@pingpath.local

@@ -42,7 +42,7 @@ export default function LoginPage() {
       <header className="absolute inset-x-0 top-0 z-10 flex items-center justify-between px-6 py-4">
         <div className="flex items-center gap-2 font-display text-lg font-semibold tracking-tight">
           <span className="inline-block h-2 w-2 rounded-full bg-brand-500" />
-          PingPath
+          MotoLink
         </div>
         <LanguageToggle />
       </header>

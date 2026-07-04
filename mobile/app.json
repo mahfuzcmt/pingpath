@@ -1,0 +1,35 @@
+{
+  "expo": {
+    "name": "MotoLink",
+    "slug": "motolink",
+    "scheme": "motolink",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "backgroundColor": "#0A1928",
+      "resizeMode": "contain"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.webinnovation.motolink",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "MotoLink uses your location to center the map on where you are."
+      }
+    },
+    "android": {
+      "package": "com.webinnovation.motolink",
+      "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-location",
+        { "locationWhenInUsePermission": "MotoLink uses your location to center the map on where you are." }
+      ]
+    ],
+    "experiments": { "typedRoutes": true }
+  }
+}

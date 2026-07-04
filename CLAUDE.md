@@ -1,4 +1,4 @@
-# CLAUDE.md — PingPath Vehicle GPS Tracking Platform
+# CLAUDE.md — MotoLink Vehicle GPS Tracking Platform
 
 > This file is the canonical specification for building the Vehicle GPS Tracking Platform with Claude Code.
 > When working in this codebase, Claude Code MUST read this file first and align all changes to its decisions.
@@ -8,19 +8,23 @@
 
 ## 1. Project Overview
 
-**Project Name:** PingPath
-**Product:** Multi-tenant SaaS platform for vehicle GPS fleet tracking, built around the Concox GT06 family of cellular GPS hardware trackers. Targets the Bangladesh market initially: motorbike anti-theft, ride-sharing fleets, delivery riders (Pathao/Foodpanda partners), CNG/taxi operators, school van services, logistics fleets.
+**Product Name (brand):** MotoLink
+
+**Naming (post-rebrand, 2026-07-03):** Code identifiers are now **`motolink`** — Java package `com.webinnovation.motolink`, main class `MotoLinkApplication`, Maven artifact/`finalName` `motolink`, `spring.application.name`, config-property prefix `motolink.*`, frontend package `motolink-frontend`. **Deliberately left as `pingpath`** (runtime/infra, to avoid breaking the live VPS): the Postgres database name + user (`pingpath`/`pingpath_dev`), Docker container/volume names, `PINGPATH_*` env-var names, domains (`api.pingpath.com`, `admin@pingpath.local`), and the Flyway migration files V1–V5 (untouched — editing an applied migration changes its checksum and breaks Flyway validation on the running DB). If/when those get renamed, it requires a coordinated VPS DB migration + redeploy. The repo directory is still named `pingpath/` (the working-copy path); renaming it is optional and cosmetic.
+
+**Product:** Multi-tenant SaaS platform for vehicle GPS fleet tracking, built around the Concox GT06 family of cellular GPS hardware trackers. Targets the Bangladesh market initially: motorbike anti-theft, ride-sharing fleets, delivery riders (Pathao/Foodpanda partners), CNG/taxi operators, school van services, logistics fleets. Native **Android + iOS** apps serve professional and corporate fleet clients (see §16 Phase 5).
 
 **Owner:** Mahfuz Ahmed — Web Innovation
 **Region:** Bangladesh (primary), with architecture that can serve other South Asian markets without rework.
 
 **Business model:**
-- One-time hardware sale: ৳3,000–8,000 per device + installation
+- One-time hardware sale: ৳3,000–8,000 per device + installation (benchmark: AutoNemo ৳4,000–9,000; see §23)
 - Recurring SaaS subscription: ৳200–500/month per vehicle
 - Tiered plans: Basic (live tracking + history), Pro (geofencing + alerts), Enterprise (API + multi-user + custom reports)
 
 **Why this exists:**
 - Existing Bangladesh GPS providers (FleetGuru, Tracker BD, Sebadex) ship dated UIs and English-only dashboards
+- The market leader, **AutoNemo, is a GPSWox white-label reseller** (Android pkg `com.autonemovtsgpswox.track`) — they rent a generic platform and cannot deeply customize it. MotoLink owns its full stack, which is the core competitive edge. See `docs/COMPETITIVE_ANALYSIS.md`.
 - Motorbike anti-theft is an underserved high-volume segment in Dhaka
 - bKash/Nagad billing integration is missing from international platforms (Wialon, GPSWox)
 - Bengali UI is required for last-mile workshop and end-user adoption
@@ -1731,7 +1735,21 @@ GitHub Actions:
 - **Geofence** — Geographic boundary that triggers alerts when crossed
 - **Heartbeat** — Periodic packet device sends to confirm the TCP connection is alive
 - **Hot path** — Code path that runs on every device packet; performance-critical
+- **White-label** — Reselling a third-party platform (e.g. GPSWox) under one's own brand; the opposite of MotoLink's owned-stack model
 
 ---
 
-*Last updated: 2026-05-07. Update the date when you change anything substantive.*
+## 23. Competitive Positioning
+
+Full teardown lives in [`docs/COMPETITIVE_ANALYSIS.md`](docs/COMPETITIVE_ANALYSIS.md). Summary:
+
+- **Primary competitor: AutoNemo (Autonemo Limited)** — claims 150+ corporate clients, BTRC/VTS/BASSIS certified, iOS + Android apps.
+- **They are a GPSWox white-label** (Android pkg `com.autonemovtsgpswox.track`). They rent a generic platform and can't deeply customize it — hence weak reviews on their reskinned UI and no native bKash billing.
+- **MotoLink's moat is owning the full stack** (Netty GT06 server → PostGIS → custom dashboard → custom apps). We build what they can't customize: Bengali-first UX, native bKash/Nagad, bespoke corporate self-service.
+- **Parity checklist** (match before/around launch): real-time track + route replay, fuel monitoring, geofence alerts, driver behavior, e-lock/immobilization (GT06 `DYD`/`HFYD`), fleet/vertical solutions (bike, school bus, asset). Fuel-sensor hardware and dashcam/video telematics are post-Phase-4 roadmap items.
+- **Pricing benchmark:** AutoNemo hardware ৳4,000–9,000 one-time; ~৳500/vehicle/month subscription. MotoLink's ৳200–500/month band is competitive.
+- **Non-code blocker for corporate:** BTRC/VTS-type certification is a trust prerequisite for corporate/government fleets — track as a business task.
+
+---
+
+*Last updated: 2026-07-03. Update the date when you change anything substantive.*

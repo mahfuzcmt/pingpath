@@ -1,6 +1,6 @@
 spring:
   application:
-    name: pingpath
+    name: motolink
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:dev}
   threads:
@@ -47,7 +47,7 @@ management:
     health:
       show-details: when-authorized
 
-pingpath:
+motolink:
   jwt:
     secret: ${JWT_SECRET:change-me-in-production-this-is-only-for-local-dev-32bytes}
     access-ttl-minutes: ${JWT_ACCESS_TTL_MINUTES:60}
@@ -65,7 +65,7 @@ pingpath:
 logging:
   level:
     root: INFO
-    com.webinnovation.pingpath: DEBUG
+    com.webinnovation.motolink: DEBUG
     org.springframework.security: INFO
     org.flywaydb: INFO
   pattern:

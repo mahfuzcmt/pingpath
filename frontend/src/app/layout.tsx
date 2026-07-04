@@ -17,7 +17,7 @@ import "@fontsource/hind-siliguri/bengali-700.css";
 import { LocaleProvider } from "@/lib/i18n";
 
 export const metadata: Metadata = {
-  title: "PingPath — Fleet Tracking",
+  title: "MotoLink — Fleet Tracking",
   description: "Multi-tenant GPS tracking for Bangladesh fleets.",
   icons: { icon: "/favicon.svg" },
 };

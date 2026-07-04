@@ -1,8 +1,8 @@
 {
-  "name": "pingpath-frontend",
+  "name": "motolink-frontend",
   "version": "0.1.0",
   "private": true,
-  "description": "PingPath dashboard — Next.js 15 App Router, Tailwind, Leaflet, STOMP WebSocket",
+  "description": "MotoLink dashboard — Next.js 15 App Router, Tailwind, Leaflet, STOMP WebSocket",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
