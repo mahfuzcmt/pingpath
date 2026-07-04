@@ -1,8 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useLocale } from "@/lib/i18n";
-import { formatRelative } from "@/lib/format";
+import { useLocale, type StringKey } from "@/lib/i18n";
+import { formatSince, vehicleState, VEHICLE_STATE_COLOR, type VehicleState } from "@/lib/format";
 import type { DeviceView, LocationView } from "@/types/domain";
 
 interface DeviceListProps {
@@ -12,39 +12,18 @@ interface DeviceListProps {
   onSelect: (imei: string | null) => void;
 }
 
-type StatusFilter = "all" | "moving" | "stopped" | "idle" | "offline";
+// Sidebar now uses the shared vehicleState() model (same as the Vehicles
+// screen and the map markers) instead of a private 4-state helper.
+type ChipId = VehicleState | "all";
 
-function deviceMode(d: DeviceView, live: LocationView | undefined): StatusFilter {
-  if (d.status !== "ONLINE") return "offline";
-  if (!live) return "idle";
-  if (live.speed > 2) return "moving";
-  if (live.accOn) return "idle";
-  return "stopped";
-}
-
-function formatDuration(ts: string | null | undefined): string {
-  if (!ts) return "";
-  const diff = Date.now() - new Date(ts).getTime();
-  const secs = Math.floor(diff / 1000);
-  if (secs < 60) return `${secs} s`;
-  const mins = Math.floor(secs / 60);
-  if (mins < 60) return `${mins} min ${secs % 60} s`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs} h ${mins % 60} min`;
-  const days = Math.floor(hrs / 24);
-  return `${days} d ${hrs % 24} h ${mins % 60} min`;
-}
-
-function getStatusLabel(mode: StatusFilter, ts: string | null | undefined): string {
-  const duration = formatDuration(ts);
-  switch (mode) {
-    case "moving": return `Moving ${duration}`;
-    case "stopped": return `Stopped ${duration}`;
-    case "idle": return `Engine idle ${duration}`;
-    case "offline": return `Offline ${duration}`;
-    default: return "";
-  }
-}
+const STATE_LABEL: Record<VehicleState, StringKey> = {
+  moving: "veh.moving",
+  idle: "veh.idle",
+  stopped: "veh.stopped",
+  offline: "veh.offline",
+  expired: "veh.expired",
+  nodata: "veh.nodata",
+};
 
 // Vehicle icon SVG based on type
 function VehicleIcon({ type, color }: { type?: string | null; color: string }) {
@@ -96,7 +75,7 @@ function BatteryIcon({ level }: { level?: number }) {
 export function DeviceList({ devices, locations, selectedImei, onSelect }: DeviceListProps) {
   const { t, locale } = useLocale();
   const [query, setQuery] = useState("");
-  const [filter, setFilter] = useState<StatusFilter>("all");
+  const [filter, setFilter] = useState<ChipId>("all");
   const [checkedDevices, setCheckedDevices] = useState<Set<string>>(new Set());
 
   const sorted = useMemo(() => {
@@ -111,7 +90,7 @@ export function DeviceList({ devices, locations, selectedImei, onSelect }: Devic
           if (!hit) return false;
         }
         if (filter === "all") return true;
-        return deviceMode(d, locations.get(d.imei)) === filter;
+        return vehicleState(d, locations.get(d.imei)) === filter;
       })
       .sort((a, b) => {
         if (a.status !== b.status) {
@@ -125,8 +104,10 @@ export function DeviceList({ devices, locations, selectedImei, onSelect }: Devic
   }, [devices, locations, query, filter]);
 
   const counts = useMemo(() => {
-    const c: Record<StatusFilter, number> = { all: devices.length, moving: 0, stopped: 0, idle: 0, offline: 0 };
-    for (const d of devices) c[deviceMode(d, locations.get(d.imei))]++;
+    const c: Record<ChipId, number> = {
+      all: devices.length, moving: 0, idle: 0, stopped: 0, offline: 0, expired: 0, nodata: 0,
+    };
+    for (const d of devices) c[vehicleState(d, locations.get(d.imei))]++;
     return c;
   }, [devices, locations]);
 
@@ -147,12 +128,14 @@ export function DeviceList({ devices, locations, selectedImei, onSelect }: Devic
     }
   };
 
-  const FILTERS: { id: StatusFilter; label: string; color: string }[] = [
-    { id: "all", label: "All", color: "" },
-    { id: "moving", label: "Moving", color: "text-status-moving" },
-    { id: "stopped", label: "Stopped", color: "text-status-stopped" },
-    { id: "idle", label: "Idle", color: "text-status-idle" },
-    { id: "offline", label: "Offline", color: "text-ink-400" },
+  const FILTERS: { id: ChipId; label: StringKey }[] = [
+    { id: "all", label: "veh.all" },
+    { id: "moving", label: "veh.moving" },
+    { id: "idle", label: "veh.idle" },
+    { id: "stopped", label: "veh.stopped" },
+    { id: "expired", label: "veh.expired" },
+    { id: "offline", label: "veh.offline" },
+    { id: "nodata", label: "veh.nodata" },
   ];
 
   return (
@@ -168,21 +151,20 @@ export function DeviceList({ devices, locations, selectedImei, onSelect }: Devic
         />
       </div>
 
-      {/* Status filter tabs */}
-      <div className="flex items-center border-b border-surface-300 bg-white">
+      {/* Status filter chips — shared 6-state model (matches Vehicles screen) */}
+      <div className="flex flex-wrap items-center gap-0.5 border-b border-surface-300 bg-white px-1.5 py-1">
         {FILTERS.map((f) => (
           <button
             key={f.id}
             type="button"
             onClick={() => setFilter(f.id)}
-            className={`flex items-center gap-1 px-3 py-2 text-xs font-medium transition ${
-              filter === f.id
-                ? "border-b-2 border-brand-500 text-ink-900"
-                : "text-ink-500 hover:text-ink-900"
-            }`}
+            className={filter === f.id ? "filter-chip-active" : "filter-chip"}
           >
-            <span className={f.color}>{f.label}</span>
-            <span className="text-[10px] text-ink-400">{counts[f.id]}</span>
+            {f.id !== "all" && (
+              <span className="status-dot" style={{ backgroundColor: VEHICLE_STATE_COLOR[f.id] }} />
+            )}
+            <span>{t(f.label)}</span>
+            <span className="text-ink-400">{counts[f.id]}</span>
           </button>
         ))}
       </div>
@@ -241,19 +223,8 @@ export function DeviceList({ devices, locations, selectedImei, onSelect }: Devic
           const ts = live?.ts ?? d.lastSeenAt;
           const selected = d.imei === selectedImei;
           const checked = checkedDevices.has(d.imei);
-          const mode = deviceMode(d, live);
-
-          const statusColor =
-            mode === "moving" ? "#4DA74D" :
-            mode === "idle" ? "#9440ED" :
-            mode === "stopped" ? "#CB4B4B" :
-            "#AFD8F8";
-
-          const statusTextColor =
-            mode === "moving" ? "text-status-moving" :
-            mode === "idle" ? "text-status-idle" :
-            mode === "stopped" ? "text-status-stopped" :
-            "text-ink-400";
+          const state = vehicleState(d, live);
+          const statusColor = VEHICLE_STATE_COLOR[state];
 
           return (
             <li
@@ -279,8 +250,8 @@ export function DeviceList({ devices, locations, selectedImei, onSelect }: Devic
                     <div className="truncate text-xs font-semibold text-ink-900">
                       {d.name || d.vehiclePlate || d.imei.slice(-8)}
                     </div>
-                    <div className={`text-[10px] ${statusTextColor}`}>
-                      {getStatusLabel(mode, ts)}
+                    <div className="text-[10px]" style={{ color: statusColor }}>
+                      {t(STATE_LABEL[state])} {formatSince(ts)}
                     </div>
                   </div>
                 </button>
