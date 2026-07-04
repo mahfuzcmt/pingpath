@@ -58,6 +58,24 @@ export function formatSince(ts: string | null | undefined): string {
   return `${s}s`;
 }
 
+/** Start of the current Asia/Dhaka day as a UTC ISO string (for "today" queries). */
+export function dhakaTodayStartIso(): string {
+  const DHAKA_OFFSET_MS = 6 * 3600 * 1000;
+  const shifted = new Date(Date.now() + DHAKA_OFFSET_MS);
+  shifted.setUTCHours(0, 0, 0, 0);
+  return new Date(shifted.getTime() - DHAKA_OFFSET_MS).toISOString();
+}
+
+/** Seconds → "2h 5m" / "45m" in the active locale's numerals. */
+export function formatDurationS(seconds: number | null | undefined, locale: Locale): string {
+  if (seconds == null || seconds < 0) return "—";
+  const s = Math.floor(seconds);
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  if (h > 0) return `${formatNumber(h, locale)}h ${formatNumber(m, locale)}m`;
+  return `${formatNumber(m, locale)}m`;
+}
+
 /** Date-only in Asia/Dhaka — for subscription "Expires on". Accepts yyyy-MM-dd or ISO. */
 export function formatDate(iso: string | null | undefined, locale: Locale): string {
   if (!iso) return "—";

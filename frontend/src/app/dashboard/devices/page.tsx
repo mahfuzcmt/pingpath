@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useDevices } from "@/hooks/useDevices";
 import { useLiveLocations } from "@/hooks/useLiveLocations";
@@ -54,6 +54,12 @@ export default function VehiclesPage() {
 
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<ChipId>("all");
+
+  // Deep-link from the Home fleet-status cards: /dashboard/devices?state=moving
+  useEffect(() => {
+    const s = new URLSearchParams(window.location.search).get("state");
+    if (s && CHIPS.some((c) => c.id === s)) setFilter(s as ChipId);
+  }, []);
 
   // State per device, computed once, reused for counts + filtering + cards.
   const withState = useMemo(

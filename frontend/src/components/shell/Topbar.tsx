@@ -16,7 +16,8 @@ interface NavItem {
 }
 
 const NAV: NavItem[] = [
-  { href: "/dashboard", label: "nav.dashboard", icon: <DashboardIcon /> },
+  { href: "/dashboard/home", label: "nav.home", icon: <HomeIcon /> },
+  { href: "/dashboard", label: "nav.map", icon: <DashboardIcon /> },
   { href: "/dashboard/devices", label: "nav.vehicles", icon: <DeviceIcon /> },
   { href: "/dashboard/geofences", label: "nav.geofences", icon: <GeofenceIcon /> },
   { href: "/dashboard/trips", label: "nav.trips", icon: <TripsIcon /> },
@@ -101,6 +102,15 @@ const ICON_PROPS = {
   strokeLinejoin: "round" as const,
 };
 
+function HomeIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <path d="M3 10.5 12 3l9 7.5" />
+      <path d="M5 9.5V21h14V9.5" />
+      <rect x="9.5" y="14" width="5" height="7" />
+    </svg>
+  );
+}
 function DashboardIcon() {
   return (
     <svg {...ICON_PROPS}>

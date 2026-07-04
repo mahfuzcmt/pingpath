@@ -16,6 +16,8 @@ const STRINGS = {
 
   // ── Nav ───────────────────────────────────────────────────────────
   "nav.dashboard": { en: "Dashboard", bn: "ড্যাশবোর্ড" },
+  "nav.home": { en: "Home", bn: "হোম" },
+  "nav.map": { en: "Map", bn: "মানচিত্র" },
   "nav.devices": { en: "Devices", bn: "ডিভাইস" },
   "nav.vehicles": { en: "Vehicles", bn: "যানবাহন" },
   "nav.geofences": { en: "Geofences", bn: "জিও-ফেন্স" },
@@ -51,6 +53,21 @@ const STRINGS = {
   "fleet.sim": { en: "SIM", bn: "সিম" },
   "fleet.cellFallback": { en: "Cell-tower fix", bn: "সেল-টাওয়ার ফিক্স" },
   "fleet.noFix": { en: "No GPS fix", bn: "জিপিএস নেই" },
+
+  // ── Home summary (AutoNemo-aligned) ───────────────────────────────
+  "home.fleetStatus": { en: "Fleet Status", bn: "ফ্লিট অবস্থা" },
+  "home.vehicleStats": { en: "Single Vehicle Stats", bn: "একক যানবাহন পরিসংখ্যান" },
+  "home.today": { en: "Today · Asia/Dhaka", bn: "আজ · এশিয়া/ঢাকা" },
+  "home.selectVehicle": { en: "Select a vehicle", bn: "যানবাহন নির্বাচন করুন" },
+  "home.routeLength": { en: "Route length", bn: "রুট দৈর্ঘ্য" },
+  "home.moveDuration": { en: "Move duration", bn: "চলার সময়" },
+  "home.idleDuration": { en: "Idle duration", bn: "নিষ্ক্রিয় সময়" },
+  "home.stopDuration": { en: "Stop duration", bn: "থামার সময়" },
+  "home.topSpeed": { en: "Top speed", bn: "সর্বোচ্চ গতি" },
+  "home.trips": { en: "Trips", bn: "ট্রিপ" },
+  "home.total": { en: "Total", bn: "মোট" },
+  "home.noVehicles": { en: "No vehicles yet.", bn: "এখনও কোনো যানবাহন নেই।" },
+  "home.fuelNote": { en: "Fuel cost needs per-vehicle fuel settings (not configured).", bn: "জ্বালানি খরচের জন্য প্রতি-যানবাহন সেটিংস প্রয়োজন (কনফিগার করা নেই)।" },
 
   // ── Vehicles screen (AutoNemo-aligned) ────────────────────────────
   "veh.title": { en: "Vehicles", bn: "যানবাহন" },
