@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useLocale, type StringKey } from "@/lib/i18n";
-import { formatSince, gsmBars, vehicleState, VEHICLE_STATE_COLOR, type VehicleState } from "@/lib/format";
+import { formatSince, formatVoltage, gsmBars, vehicleState, VEHICLE_STATE_COLOR, type VehicleState } from "@/lib/format";
 import type { DeviceView, LocationView } from "@/types/domain";
 
 interface DeviceListProps {
@@ -55,19 +55,6 @@ function SignalIcon({ bars, title }: { bars: number; title?: string }) {
           fill={i < bars ? "#4DA74D" : "#DDD"}
         />
       ))}
-    </svg>
-  );
-}
-
-// Battery icon
-function BatteryIcon({ level }: { level?: number }) {
-  const pct = level ?? 100;
-  const color = pct > 50 ? "#4DA74D" : pct > 20 ? "#EDC240" : "#CB4B4B";
-  return (
-    <svg width="16" height="10" viewBox="0 0 16 10" fill="none">
-      <rect x="0.5" y="0.5" width="13" height="9" rx="1" stroke="#999" />
-      <rect x="14" y="3" width="2" height="4" rx="0.5" fill="#999" />
-      <rect x="1.5" y="1.5" width={Math.max(0, (pct / 100) * 11)} height="7" rx="0.5" fill={color} />
     </svg>
   );
 }
@@ -263,7 +250,9 @@ export function DeviceList({ devices, locations, selectedImei, onSelect }: Devic
                     bars={gsmBars(d.lastGsmSignal)}
                     title={d.lastGsmSignal != null ? `GSM ${d.lastGsmSignal}/31` : "No GSM data"}
                   />
-                  <BatteryIcon level={live?.voltageMv ? Math.min(100, Math.round((live.voltageMv - 10000) / 50)) : undefined} />
+                  <span className="min-w-[36px] text-right font-mono text-[10px] text-ink-500" title="External voltage">
+                    {formatVoltage(live?.voltageMv ?? d.lastVoltageMv, locale)}
+                  </span>
                   <button type="button" className="text-ink-400 hover:text-ink-700">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
                       <circle cx="12" cy="5" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="12" cy="19" r="2" />
