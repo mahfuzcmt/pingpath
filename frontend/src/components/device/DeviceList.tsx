@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useLocale, type StringKey } from "@/lib/i18n";
-import { formatSince, vehicleState, VEHICLE_STATE_COLOR, type VehicleState } from "@/lib/format";
+import { formatSince, gsmBars, vehicleState, VEHICLE_STATE_COLOR, type VehicleState } from "@/lib/format";
 import type { DeviceView, LocationView } from "@/types/domain";
 
 interface DeviceListProps {
@@ -39,11 +39,11 @@ function VehicleIcon({ type, color }: { type?: string | null; color: string }) {
   );
 }
 
-// Signal strength icon
-function SignalIcon({ strength }: { strength: number }) {
-  const bars = Math.min(4, Math.max(0, Math.ceil(strength / 25)));
+// GSM signal strength icon — `bars` is 0-4 from gsmBars(device.lastGsmSignal).
+function SignalIcon({ bars, title }: { bars: number; title?: string }) {
   return (
     <svg width="14" height="12" viewBox="0 0 14 12" fill="none">
+      {title != null && <title>{title}</title>}
       {[0, 1, 2, 3].map((i) => (
         <rect
           key={i}
@@ -259,7 +259,10 @@ export function DeviceList({ devices, locations, selectedImei, onSelect }: Devic
                   <span className="min-w-[40px] text-right text-xs font-semibold text-ink-900">
                     {live?.speed ?? 0} kph
                   </span>
-                  <SignalIcon strength={80} />
+                  <SignalIcon
+                    bars={gsmBars(d.lastGsmSignal)}
+                    title={d.lastGsmSignal != null ? `GSM ${d.lastGsmSignal}/31` : "No GSM data"}
+                  />
                   <BatteryIcon level={live?.voltageMv ? Math.min(100, Math.round((live.voltageMv - 10000) / 50)) : undefined} />
                   <button type="button" className="text-ink-400 hover:text-ink-700">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
