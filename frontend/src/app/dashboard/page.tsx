@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { useDevices } from "@/hooks/useDevices";
 import { useLiveLocations } from "@/hooks/useLiveLocations";
@@ -29,6 +29,12 @@ export default function DashboardPage() {
   const { locations, error } = useLiveLocations(orgId);
   const [selectedImei, setSelectedImei] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState(false);
+
+  // Deep-link from the Vehicles screen: /dashboard?focus={imei} preselects it.
+  useEffect(() => {
+    const focus = new URLSearchParams(window.location.search).get("focus");
+    if (focus) setSelectedImei(focus);
+  }, []);
 
   const selectedDevice = selectedImei
     ? devices.find((d) => d.imei === selectedImei) ?? null

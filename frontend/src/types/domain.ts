@@ -90,6 +90,12 @@ export interface DeviceView {
   lastGsmSignal: number | null;
   lastEngineHoursSeconds: number | null;
   iconColor: string | null;
+  /** Last engine cut/restore state recorded after a DYD/HFYD command. */
+  engineLocked: boolean;
+  /** Current subscription status (ACTIVE, GRACE, SUSPENDED, …) or null if none. */
+  subscriptionStatus: string | null;
+  /** Subscription next-due date (ISO yyyy-MM-dd) or null if none. */
+  subscriptionExpiresAt: string | null;
 }
 
 /**

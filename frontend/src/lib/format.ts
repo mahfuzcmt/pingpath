@@ -1,6 +1,75 @@
 import type { Locale } from "./i18n";
+import type { DeviceView, LocationView } from "@/types/domain";
 
 const TIMEZONE = "Asia/Dhaka";
+
+/**
+ * AutoNemo-style single-bucket vehicle state (matches the filter chips on the
+ * Vehicles screen). Mirrors the 4-state motion model in the mobile app, plus
+ * the subscription "expired" and "no data" buckets AutoNemo distinguishes.
+ */
+export type VehicleState = "moving" | "idle" | "stopped" | "offline" | "expired" | "nodata";
+
+/** True if the device's subscription has lapsed (suspended/cancelled or past due). */
+export function isSubscriptionExpired(d: DeviceView): boolean {
+  if (d.subscriptionStatus === "SUSPENDED" || d.subscriptionStatus === "CANCELLED") return true;
+  if (d.subscriptionExpiresAt) {
+    // Compare Dhaka calendar dates; expiry is a yyyy-MM-dd date string.
+    const todayDhaka = new Date().toLocaleDateString("en-CA", { timeZone: TIMEZONE });
+    return d.subscriptionExpiresAt < todayDhaka;
+  }
+  return false;
+}
+
+/**
+ * Derive the vehicle's state. Precedence: no-data > expired > offline >
+ * motion (moving / idle / stopped). Buckets are mutually exclusive so the
+ * filter-chip counts sum to the fleet total.
+ */
+export function vehicleState(d: DeviceView, live?: LocationView | null): VehicleState {
+  if (d.status === "NEVER_CONNECTED" || !d.lastSeenAt) return "nodata";
+  if (isSubscriptionExpired(d)) return "expired";
+  if (d.status !== "ONLINE") return "offline";
+  const speed = live?.speed ?? d.lastSpeed ?? 0;
+  if (speed > 2) return "moving";
+  if (live?.accOn) return "idle";
+  return "stopped";
+}
+
+/** Hex color per state — for map/SVG fills that can't use CSS classes. */
+export const VEHICLE_STATE_COLOR: Record<VehicleState, string> = {
+  moving: "#4DA74D",
+  idle: "#9440ED",
+  stopped: "#CB4B4B",
+  offline: "#AFD8F8",
+  expired: "#6B7280",
+  nodata: "#EDC240",
+};
+
+/** Compact elapsed time "0h 18m" / "18m 2s" since a timestamp (AutoNemo "since"). */
+export function formatSince(ts: string | null | undefined): string {
+  if (!ts) return "—";
+  const secs = Math.max(0, Math.floor((Date.now() - new Date(ts).getTime()) / 1000));
+  const h = Math.floor(secs / 3600);
+  const m = Math.floor((secs % 3600) / 60);
+  const s = secs % 60;
+  if (h > 0) return `${h}h ${m}m`;
+  if (m > 0) return `${m}m ${s}s`;
+  return `${s}s`;
+}
+
+/** Date-only in Asia/Dhaka — for subscription "Expires on". Accepts yyyy-MM-dd or ISO. */
+export function formatDate(iso: string | null | undefined, locale: Locale): string {
+  if (!iso) return "—";
+  const tag = locale === "bn" ? "bn-BD" : "en-US";
+  const d = new Date(iso.length <= 10 ? `${iso}T00:00:00+06:00` : iso);
+  return new Intl.DateTimeFormat(tag, {
+    timeZone: TIMEZONE,
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+  }).format(d);
+}
 
 export function formatNumber(n: number, locale: Locale, opts?: Intl.NumberFormatOptions): string {
   const tag = locale === "bn" ? "bn-BD" : "en-US";

@@ -50,6 +50,7 @@ const config: Config = {
           idle: "#9440ED",
           stopped: "#CB4B4B",
           offline: "#AFD8F8",
+          expired: "#6B7280",
           nodata: "#EDC240",
         },
         alarm: {

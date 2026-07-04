@@ -17,7 +17,7 @@ interface NavItem {
 
 const NAV: NavItem[] = [
   { href: "/dashboard", label: "nav.dashboard", icon: <DashboardIcon /> },
-  { href: "/dashboard/devices", label: "nav.devices", icon: <DeviceIcon /> },
+  { href: "/dashboard/devices", label: "nav.vehicles", icon: <DeviceIcon /> },
   { href: "/dashboard/geofences", label: "nav.geofences", icon: <GeofenceIcon /> },
   { href: "/dashboard/trips", label: "nav.trips", icon: <TripsIcon /> },
   { href: "/dashboard/alarms", label: "nav.alarms", icon: <AlarmIcon /> },

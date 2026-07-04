@@ -17,6 +17,7 @@ const STRINGS = {
   // ── Nav ───────────────────────────────────────────────────────────
   "nav.dashboard": { en: "Dashboard", bn: "ড্যাশবোর্ড" },
   "nav.devices": { en: "Devices", bn: "ডিভাইস" },
+  "nav.vehicles": { en: "Vehicles", bn: "যানবাহন" },
   "nav.geofences": { en: "Geofences", bn: "জিও-ফেন্স" },
   "nav.trips": { en: "Trips", bn: "ট্রিপ" },
   "nav.alarms": { en: "Alarms", bn: "অ্যালার্ম" },
@@ -50,6 +51,22 @@ const STRINGS = {
   "fleet.sim": { en: "SIM", bn: "সিম" },
   "fleet.cellFallback": { en: "Cell-tower fix", bn: "সেল-টাওয়ার ফিক্স" },
   "fleet.noFix": { en: "No GPS fix", bn: "জিপিএস নেই" },
+
+  // ── Vehicles screen (AutoNemo-aligned) ────────────────────────────
+  "veh.title": { en: "Vehicles", bn: "যানবাহন" },
+  "veh.all": { en: "All", bn: "সব" },
+  "veh.moving": { en: "Moving", bn: "চলমান" },
+  "veh.idle": { en: "Idle", bn: "নিষ্ক্রিয়" },
+  "veh.stopped": { en: "Stopped", bn: "থেমে আছে" },
+  "veh.expired": { en: "Expired", bn: "মেয়াদোত্তীর্ণ" },
+  "veh.offline": { en: "Offline", bn: "অফলাইন" },
+  "veh.nodata": { en: "No Data", bn: "ডেটা নেই" },
+  "veh.since": { en: "since", bn: "থেকে" },
+  "veh.expiresOn": { en: "Expires", bn: "মেয়াদ" },
+  "veh.updated": { en: "Updated", bn: "আপডেট" },
+  "veh.locked": { en: "Engine locked", bn: "ইঞ্জিন লক" },
+  "veh.count": { en: "vehicles", bn: "যানবাহন" },
+  "veh.none": { en: "No vehicles match your filter.", bn: "কোনো যানবাহন মেলেনি।" },
 
   // ── Dashboard KPI strip ───────────────────────────────────────────
   "kpi.online": { en: "Online", bn: "অনলাইন" },

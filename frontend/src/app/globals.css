@@ -142,6 +142,7 @@
   .status-pill-idle { @apply bg-status-idle; }
   .status-pill-stopped { @apply bg-status-stopped; }
   .status-pill-offline { @apply bg-status-offline text-ink-900; }
+  .status-pill-expired { @apply bg-status-expired; }
   .status-pill-nodata { @apply bg-status-nodata text-ink-900; }
 
   .status-dot {
