@@ -10,6 +10,13 @@ export const TILE_URL_LIGHT = "https://{s}.basemaps.cartocdn.com/light_all/{z}/{
 export const TILE_URL_DARK = "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
 export const CARTO_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>';
 
+// Satellite imagery (Esri World Imagery — free with attribution). Powers the
+// AutoNemo-style Normal/Satellite map-view toggle.
+export const TILE_URL_SATELLITE =
+  "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
+export const SATELLITE_ATTRIBUTION =
+  "Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community";
+
 // Dhaka centre — used as initial map view when no devices yet have a fix.
 export const DHAKA_CENTER: [number, number] = [23.8103, 90.4125]; // [lat, lng] for Leaflet
 

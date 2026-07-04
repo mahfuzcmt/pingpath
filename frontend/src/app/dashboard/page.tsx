@@ -26,7 +26,7 @@ export default function DashboardPage() {
   const { orgId } = useSession();
   const { t } = useLocale();
   const { devices, loading } = useDevices();
-  const { locations, error } = useLiveLocations(orgId);
+  const { locations, error, refresh } = useLiveLocations(orgId);
   const [selectedImei, setSelectedImei] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState(false);
 
@@ -60,6 +60,7 @@ export default function DashboardPage() {
           locations={locations}
           selectedImei={selectedImei}
           onSelect={setSelectedImei}
+          onRefresh={refresh}
         />
 
         {/* Live KPIs — floating overlay, collapsible */}

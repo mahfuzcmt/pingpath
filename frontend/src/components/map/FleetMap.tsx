@@ -1,9 +1,18 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { DEFAULT_ZOOM, DHAKA_CENTER, TILE_URL, TILE_ATTRIBUTION, expandBounds } from "@/lib/leaflet";
+import {
+  DEFAULT_ZOOM,
+  DHAKA_CENTER,
+  TILE_URL,
+  TILE_ATTRIBUTION,
+  TILE_URL_SATELLITE,
+  SATELLITE_ATTRIBUTION,
+  expandBounds,
+} from "@/lib/leaflet";
+import { vehicleState, VEHICLE_STATE_COLOR, type VehicleState } from "@/lib/format";
 import type { DeviceView, LocationView } from "@/types/domain";
 
 interface FleetMapProps {
@@ -11,7 +20,20 @@ interface FleetMapProps {
   locations: Map<string, LocationView>;
   selectedImei: string | null;
   onSelect: (imei: string | null) => void;
+  /** AutoNemo "Refresh" control — re-pull last-known positions. */
+  onRefresh?: () => void | Promise<void>;
 }
+
+type BaseLayer = "normal" | "satellite";
+
+const STATE_TEXT: Record<VehicleState, string> = {
+  moving: "Moving",
+  idle: "Idle",
+  stopped: "Stopped",
+  offline: "Offline",
+  expired: "Expired",
+  nodata: "No Data",
+};
 
 function formatDateTime(ts: string | null | undefined): string {
   if (!ts) return "—";
@@ -28,31 +50,21 @@ function formatDateTime(ts: string | null | undefined): string {
   });
 }
 
-function getStatusColor(device: DeviceView | undefined, location: LocationView | undefined): string {
-  if (!device || device.status !== "ONLINE") return "#64748B"; // offline - gray
-  if (!location) return "#3B82F6"; // no location - blue/idle
-  if (location.speed > 2) return "#16A34A"; // moving - green
-  if (location.accOn) return "#3B82F6"; // idle - blue
-  return "#DC2626"; // stopped - red
+// Marker color + status text now follow the shared 6-state model, so the map
+// matches the Vehicles screen (green=moving, purple=idle, red=stopped, …).
+function markerColor(device: DeviceView | undefined, location: LocationView | undefined): string {
+  if (!device) return VEHICLE_STATE_COLOR.offline;
+  return VEHICLE_STATE_COLOR[vehicleState(device, location)];
 }
 
-function getStatusText(device: DeviceView | undefined, location: LocationView | undefined): string {
-  if (!device || device.status !== "ONLINE") return "Offline";
-  if (!location) return "Idle";
-  if (location.speed > 2) return "Moving";
-  if (location.accOn) return "Idle";
-  return "Stopped";
+function statusText(device: DeviceView | undefined, location: LocationView | undefined): string {
+  if (!device) return "Offline";
+  return STATE_TEXT[vehicleState(device, location)];
 }
 
 function getDeviceLabel(device: DeviceView | undefined): string {
   if (!device) return "Unknown";
   return device.name || device.vehiclePlate || device.imei.slice(-8);
-}
-
-function colorFor(device: DeviceView | undefined): string {
-  if (!device) return "#E8900A"; // brand-500
-  if (device.status === "OFFLINE") return "#64748B"; // ink-400
-  return device.iconColor ?? "#E8900A";
 }
 
 // Create arrow SVG icon for vehicle marker
@@ -74,11 +86,17 @@ function createArrowIcon(color: string, rotation: number, isSelected: boolean): 
   });
 }
 
-export function FleetMap({ devices, locations, selectedImei, onSelect }: FleetMapProps) {
+export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh }: FleetMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
   const initialFitDoneRef = useRef(false);
+  const tileLayerRef = useRef<L.TileLayer | null>(null);
+  const userMarkerRef = useRef<L.Marker | null>(null);
+
+  const [baseLayer, setBaseLayer] = useState<BaseLayer>("normal");
+  const [refreshing, setRefreshing] = useState(false);
+  const [locating, setLocating] = useState(false);
 
   const deviceByImei = useMemo(() => {
     const m = new Map<string, DeviceView>();
@@ -96,8 +114,8 @@ export function FleetMap({ devices, locations, selectedImei, onSelect }: FleetMa
     const speed = location?.speed ?? 0;
     const course = location?.course ?? 0;
     const dateTime = formatDateTime(location?.ts || device?.lastSeenAt);
-    const status = getStatusText(device, location);
-    const statusColor = getStatusColor(device, location);
+    const status = statusText(device, location);
+    const statusColor = markerColor(device, location);
     const accStatus = location?.accOn == null ? "—" : location.accOn ? "ON" : "OFF";
     const voltage = location?.voltageMv ? (location.voltageMv / 1000).toFixed(1) + "V" : "—";
 
@@ -157,12 +175,8 @@ export function FleetMap({ devices, locations, selectedImei, onSelect }: FleetMa
       zoomControl: true,
     });
 
-    L.tileLayer(TILE_URL, {
-      attribution: TILE_ATTRIBUTION,
-      maxZoom: 19,
-    }).addTo(map);
-
-    // Move zoom control to bottom-right
+    // Move zoom control to bottom-right. The tile layer is added by the
+    // base-layer effect below so the Normal/Satellite toggle can swap it.
     map.zoomControl.setPosition('bottomright');
 
     mapRef.current = map;
@@ -188,6 +202,54 @@ export function FleetMap({ devices, locations, selectedImei, onSelect }: FleetMa
     };
   }, []);
 
+  // Base layer (Normal / Satellite). Owns the tile layer so the toggle can swap
+  // it; runs on mount to create the initial layer too.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    tileLayerRef.current?.remove();
+    const layer =
+      baseLayer === "satellite"
+        ? L.tileLayer(TILE_URL_SATELLITE, { attribution: SATELLITE_ATTRIBUTION, maxZoom: 19 })
+        : L.tileLayer(TILE_URL, { attribution: TILE_ATTRIBUTION, maxZoom: 19 });
+    layer.addTo(map);
+    layer.bringToBack();
+    tileLayerRef.current = layer;
+  }, [baseLayer]);
+
+  const handleRefresh = useCallback(async () => {
+    if (!onRefresh) return;
+    setRefreshing(true);
+    try {
+      await onRefresh();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [onRefresh]);
+
+  const handleLocate = useCallback(() => {
+    const map = mapRef.current;
+    if (!map || typeof navigator === "undefined" || !navigator.geolocation) return;
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setLocating(false);
+        const { latitude, longitude } = pos.coords;
+        map.setView([latitude, longitude], Math.max(map.getZoom(), 15), { animate: true });
+        const icon = L.divIcon({
+          html: '<div style="width:14px;height:14px;border-radius:50%;background:#2B82D4;border:3px solid #fff;box-shadow:0 0 0 2px rgba(43,130,212,.4)"></div>',
+          className: "pp-user-loc",
+          iconSize: [14, 14],
+          iconAnchor: [7, 7],
+        });
+        if (userMarkerRef.current) userMarkerRef.current.setLatLng([latitude, longitude]);
+        else userMarkerRef.current = L.marker([latitude, longitude], { icon, interactive: false }).addTo(map);
+      },
+      () => setLocating(false),
+      { enableHighAccuracy: true, timeout: 8000 },
+    );
+  }, []);
+
   // Sync markers with locations
   useEffect(() => {
     const map = mapRef.current;
@@ -198,7 +260,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect }: FleetMa
     for (const [imei, loc] of locations.entries()) {
       seen.add(imei);
       const device = deviceByImei.get(imei);
-      const color = colorFor(device);
+      const color = markerColor(device, loc);
       const isSelected = imei === selectedImei;
       let marker = markersRef.current.get(imei);
 
@@ -273,6 +335,61 @@ export function FleetMap({ devices, locations, selectedImei, onSelect }: FleetMa
   return (
     <div className="relative h-full w-full" style={{ minHeight: "400px" }}>
       <div ref={containerRef} className="absolute inset-0" style={{ width: "100%", height: "100%" }} />
+
+      {/* Map-view toggle (top-right) — AutoNemo Normal / Satellite */}
+      <div className="absolute right-3 top-3 z-[1000] flex overflow-hidden rounded-md border border-surface-300 bg-white text-xs shadow-menu">
+        {(["normal", "satellite"] as BaseLayer[]).map((k) => (
+          <button
+            key={k}
+            type="button"
+            onClick={() => setBaseLayer(k)}
+            className={
+              baseLayer === k
+                ? "bg-brand-500 px-2.5 py-1 font-semibold capitalize text-white"
+                : "px-2.5 py-1 capitalize text-ink-700 transition hover:bg-surface-100"
+            }
+          >
+            {k}
+          </button>
+        ))}
+      </div>
+
+      {/* Control cluster (bottom-right, above the zoom control) */}
+      <div className="absolute bottom-[92px] right-3 z-[1000] flex flex-col gap-1.5">
+        <button
+          type="button"
+          onClick={handleRefresh}
+          disabled={!onRefresh || refreshing}
+          title="Refresh positions"
+          className="flex h-9 w-9 items-center justify-center rounded-md border border-surface-300 bg-white text-ink-700 shadow-menu transition hover:bg-surface-100 disabled:opacity-60"
+        >
+          <svg
+            width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+            className={refreshing ? "animate-spin" : ""}
+          >
+            <path d="M23 4v6h-6M1 20v-6h6" />
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+          </svg>
+        </button>
+        <button
+          type="button"
+          onClick={handleLocate}
+          disabled={locating}
+          title="Locate me"
+          className="flex h-9 w-9 items-center justify-center rounded-md border border-surface-300 bg-white text-ink-700 shadow-menu transition hover:bg-surface-100 disabled:opacity-60"
+        >
+          <svg
+            width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+            className={locating ? "animate-pulse" : ""}
+          >
+            <circle cx="12" cy="12" r="3" />
+            <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
+          </svg>
+        </button>
+      </div>
+
       <style jsx global>{`
         .pp-vehicle-icon {
           transition: transform 300ms ease-out;

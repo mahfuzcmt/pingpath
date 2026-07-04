@@ -34,22 +34,35 @@ export function useLiveLocations(orgId: string) {
     setBumpId((n) => n + 1);
   }, []);
 
+  /** Re-pull the last-known snapshot (the map's "Refresh" control). */
+  const refresh = useCallback(async () => {
+    try {
+      const r = await api.get<LocationView[]>("/devices/locations/last");
+      if (!mounted.current) return;
+      setLocations((prev) => {
+        const next = new Map(prev);
+        for (const l of r.data) {
+          const existing = next.get(l.imei);
+          if (!existing || new Date(l.ts).getTime() >= new Date(existing.ts).getTime()) {
+            next.set(l.imei, l);
+          }
+        }
+        return next;
+      });
+      setBumpId((n) => n + 1);
+      setLoaded(true);
+      setError(null);
+    } catch (err) {
+      if (mounted.current) setError(err instanceof Error ? err.message : "snapshot failed");
+    }
+  }, []);
+
   useEffect(() => {
     mounted.current = true;
     let unsub: (() => void) | null = null;
 
     (async () => {
-      try {
-        const r = await api.get<LocationView[]>("/devices/locations/last");
-        if (!mounted.current) return;
-        const m = new Map<string, LocationView>();
-        for (const l of r.data) m.set(l.imei, l);
-        setLocations(m);
-        setLoaded(true);
-      } catch (err) {
-        if (mounted.current) setError(err instanceof Error ? err.message : "snapshot failed");
-        setLoaded(true);
-      }
+      await refresh();
 
       try {
         unsub = await subscribeLocations(orgId, (loc) => {
@@ -66,7 +79,7 @@ export function useLiveLocations(orgId: string) {
       mounted.current = false;
       unsub?.();
     };
-  }, [orgId, upsert]);
+  }, [orgId, upsert, refresh]);
 
-  return { locations, loaded, error, bumpId };
+  return { locations, loaded, error, bumpId, refresh };
 }
