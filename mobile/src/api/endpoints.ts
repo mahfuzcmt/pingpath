@@ -87,6 +87,19 @@ export async function tripsForDevice(
   return r.data;
 }
 
+// ----- Push notifications -----
+export async function registerPushToken(
+  token: string,
+  platform: "ANDROID" | "IOS",
+): Promise<void> {
+  await api.post("/users/me/push-tokens", { token, platform });
+}
+
+/** Token goes in the query string — Expo tokens contain reserved chars like [ ]. */
+export async function unregisterPushToken(token: string): Promise<void> {
+  await api.delete("/users/me/push-tokens", { params: { token } });
+}
+
 // ----- Alarms -----
 export async function listAlarms(onlyUnacked = false, limit = 100): Promise<AlarmView[]> {
   const r = await api.get<AlarmView[]>("/alarms", {

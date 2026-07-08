@@ -61,6 +61,12 @@ motolink:
     enabled: ${PINGPATH_SEED_ENABLED:false}
     admin-email: ${PINGPATH_SEED_ADMIN_EMAIL:admin@pingpath.local}
     admin-password: ${PINGPATH_SEED_ADMIN_PASSWORD:changeme}
+  push:
+    # Alarm push notifications via the Expo Push Service (relays to FCM/APNs).
+    enabled: ${PINGPATH_PUSH_ENABLED:true}
+    expo-url: https://exp.host/--/api/v2/push/send
+    # Optional Expo access token (Expo dashboard → Access tokens); blank = unauthenticated.
+    access-token: ${PINGPATH_EXPO_ACCESS_TOKEN:}
 
 logging:
   level:

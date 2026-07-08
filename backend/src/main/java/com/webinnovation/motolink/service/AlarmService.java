@@ -33,6 +33,7 @@ public class AlarmService {
     private final StringRedisTemplate redis;
     private final ObjectMapper objectMapper;
     private final SmsService smsService;
+    private final PushService pushService;
 
     public Alarm raise(UUID orgId, String imei, AlarmType type, AlarmSeverity severity,
                        Instant ts, Double lat, Double lng, Map<String, Object> metadata) {
@@ -43,6 +44,10 @@ public class AlarmService {
         if (severity == AlarmSeverity.CRITICAL) {
             // Phase 3: stub log-only — Phase 4 will resolve owner contacts.
             smsService.sendAlarmSms(a, null, severity + " " + type + " on " + imei);
+        }
+        if (severity != AlarmSeverity.INFO) {
+            // WARNING/CRITICAL only — pushing every ACC_ON/OFF would spam owners.
+            pushService.sendAlarmPush(a);
         }
         return a;
     }

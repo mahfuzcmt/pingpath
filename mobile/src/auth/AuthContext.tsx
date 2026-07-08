@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useMemo, useRef, useState 
 import * as SecureStore from "expo-secure-store";
 import { tokenStore } from "@/api/client";
 import { login as loginRequest } from "@/api/endpoints";
+import { unregisterAlarmPush } from "@/push";
 import { disconnectWs } from "@/ws/stomp";
 import type { OrgSummary, TokenPair, UserSummary } from "@/types";
 
@@ -51,6 +52,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function doSignOut(): Promise<void> {
+    // Best-effort; needs the auth header, so it must run before tokens clear.
+    await unregisterAlarmPush();
     tokenStore.clear();
     disconnectWs();
     await Promise.all([

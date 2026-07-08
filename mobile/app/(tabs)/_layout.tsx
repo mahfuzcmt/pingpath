@@ -1,6 +1,7 @@
 import { Redirect, Tabs } from "expo-router";
 import { Pressable, Text } from "react-native";
 import { useAuth } from "@/auth/AuthContext";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { colors, space } from "@/theme";
 
 function TabIcon({ emoji }: { emoji: string }) {
@@ -18,6 +19,7 @@ function SignOut() {
 
 export default function TabsLayout() {
   const { status } = useAuth();
+  usePushNotifications(status === "authed");
   if (status === "anon") return <Redirect href="/login" />;
 
   return (

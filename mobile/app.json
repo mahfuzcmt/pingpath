@@ -28,6 +28,10 @@
       [
         "expo-location",
         { "locationWhenInUsePermission": "MotoLink uses your location to center the map on where you are." }
+      ],
+      [
+        "expo-notifications",
+        { "color": "#E8900A" }
       ]
     ],
     "experiments": { "typedRoutes": true }
