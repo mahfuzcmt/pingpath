@@ -207,7 +207,7 @@ pingpath/
 │   │   │   ├── ReportService.java      # daily / monthly PDF + Excel
 │   │   │   ├── BillingService.java     # bKash subscription
 │   │   │   ├── SmsService.java         # SSL Wireless integration
-│   │   │   ├── PushService.java        # FCM
+│   │   │   ├── PushService.java        # Expo Push Service (relays FCM/APNs)
 │   │   │   ├── DeviceProvisioningService.java  # SMS-based GT06 config
 │   │   │   └── DeviceCommandService.java       # 0x80 packet builder + dispatcher
 │   │   │
@@ -687,7 +687,11 @@ raw = readUInt32(buf)
 degrees = raw / 1800000.0    // direct division
 ```
 
-**Sign:** Latitude/longitude byte 1 of course-status field — bit 2 = N/S, bit 3 = E/W. **0 = north/east**, **1 = south/west** (yes, inverted from intuition).
+**Sign:** Course-status field, byte 1 — the hemisphere bits are **asymmetric** (per the Concox doc and Traccar's `Gt06ProtocolDecoder`; corrected 2026-07-08, commit `ef669db` fixed the code but not this doc):
+- **Latitude, bit 10 (0x0400): 0 = South, 1 = North** — a Dhaka device sends 1
+- **Longitude, bit 11 (0x0800): 0 = East, 1 = West** — a Dhaka device sends 0
+
+Getting this symmetric ("bit set = N/E") puts every Bangladesh vehicle at (23.78, −90.42) — the Gulf of Mexico.
 
 ### 6.4 Login Handler (0x01) — Detailed
 
@@ -760,7 +764,8 @@ public LocationData decode(ByteBuf buf, int protocolNumber) {
     int courseStatus = buf.readUnsignedShort();
     loc.setCourse(courseStatus & 0x03FF);
     loc.setValid((courseStatus & 0x1000) != 0);
-    boolean south = (courseStatus & 0x0400) != 0;
+    // Asymmetric hemisphere bits (see §6.3): lat bit CLEAR = south, lng bit SET = west
+    boolean south = (courseStatus & 0x0400) == 0;
     boolean west  = (courseStatus & 0x0800) != 0;
 
     double lat, lon;
@@ -1549,11 +1554,11 @@ GitHub Actions:
 
 **Goal:** End-user (vehicle owner) mobile app.
 
-- [ ] React Native (Expo) project setup
-- [ ] Login + JWT
-- [ ] Live map screen with own vehicles
-- [ ] Trip history screen
-- [ ] Push notifications via FCM for alarms
+- [x] React Native (Expo) project setup
+- [x] Login + JWT
+- [x] Live map screen with own vehicles
+- [x] Trip history screen
+- [x] Push notifications for alarms — via **Expo Push Service** (relays through FCM on Android / APNs on iOS). Chosen over direct FCM so the backend needs no Firebase credentials and the app stays Expo Go-compatible (no native build). Backend `PushService` POSTs to `exp.host`; tokens live in `push_tokens` (V7), registered via `POST/DELETE /users/me/push-tokens`; WARNING/CRITICAL alarms only.
 - [ ] Geofence creation (basic)
 - [ ] iOS + Android builds via EAS Build
 
@@ -1752,4 +1757,4 @@ Full teardown lives in [`docs/COMPETITIVE_ANALYSIS.md`](docs/COMPETITIVE_ANALYSI
 
 ---
 
-*Last updated: 2026-07-03. Update the date when you change anything substantive.*
+*Last updated: 2026-07-08. Update the date when you change anything substantive.*
