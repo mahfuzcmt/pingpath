@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useAuth } from "@/auth/AuthContext";
 import { useDevices } from "@/hooks/useDevices";
@@ -54,6 +54,17 @@ export default function HomeScreen() {
           <Kpi label="Fleet dist." value={fmtDistance(kpis.distanceTodayMeters)} />
         </View>
       ) : null}
+
+      <Pressable
+        style={({ pressed }) => [styles.linkRow, pressed && { opacity: 0.8 }]}
+        onPress={() => router.push("/geofences")}
+      >
+        <View style={{ flex: 1 }}>
+          <Text style={styles.linkTitle}>🛡️ Geofences</Text>
+          <Text style={styles.linkSub}>Zone entry/exit alerts for your vehicles</Text>
+        </View>
+        <Text style={styles.linkArrow}>›</Text>
+      </Pressable>
 
       <Text style={styles.section}>Single vehicle stats</Text>
       {devices.length > 0 ? (
@@ -162,6 +173,20 @@ const styles = StyleSheet.create({
   },
   kpiValue: { color: colors.text, fontSize: 15, fontWeight: "700" },
   kpiLabel: { color: colors.textFaint, fontSize: 10, textAlign: "center" },
+  linkRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: space.sm,
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: space.md,
+    marginTop: space.sm,
+  },
+  linkTitle: { color: colors.text, fontSize: 14, fontWeight: "700" },
+  linkSub: { color: colors.textFaint, fontSize: 12, marginTop: 2 },
+  linkArrow: { color: colors.textFaint, fontSize: 22, fontWeight: "300" },
   picker: { gap: space.sm, paddingVertical: space.xs, paddingRight: space.md },
   statsCard: {
     backgroundColor: colors.surface,

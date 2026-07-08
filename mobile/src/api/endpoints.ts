@@ -3,7 +3,10 @@ import type {
   AlarmView,
   CommandResponse,
   DeviceView,
+  GeofenceNotifyOn,
+  GeofenceView,
   KpiSnapshot,
+  LatLng,
   LocationView,
   LoginResponse,
   TripView,
@@ -85,6 +88,35 @@ export async function tripsForDevice(
     params: { from: fromIso, to: toIso },
   });
   return r.data;
+}
+
+// ----- Geofences -----
+export async function listGeofences(): Promise<GeofenceView[]> {
+  const r = await api.get<GeofenceView[]>("/geofences");
+  return r.data;
+}
+
+/** Circle geofence — the only shape the mobile app creates (polygon is web-only). */
+export async function createCircleGeofence(req: {
+  name: string;
+  center: LatLng;
+  radiusM: number;
+  notifyOn: GeofenceNotifyOn;
+  imeis: string[];
+}): Promise<GeofenceView> {
+  const r = await api.post<GeofenceView>("/geofences", {
+    name: req.name,
+    type: "CIRCLE",
+    notifyOn: req.notifyOn,
+    center: req.center,
+    radiusM: req.radiusM,
+    imeis: req.imeis,
+  });
+  return r.data;
+}
+
+export async function deleteGeofence(id: string): Promise<void> {
+  await api.delete(`/geofences/${id}`);
 }
 
 // ----- Push notifications -----

@@ -18,6 +18,12 @@ export interface MapPoint {
   course?: number;
 }
 
+export interface MapCircle {
+  lat: number;
+  lng: number;
+  radiusM: number;
+}
+
 interface Props {
   vehicles?: MapVehicle[];
   /** Route polyline as [lng, lat] pairs (trip playback). */
@@ -26,8 +32,12 @@ interface Props {
   moving?: MapPoint | null;
   /** Center command; bump `nonce` to re-issue the same center. */
   center?: { lat: number; lng: number; zoom?: number; nonce?: number } | null;
+  /** Circle overlay (geofence preview); null clears it. */
+  circle?: MapCircle | null;
   fitRoute?: boolean;
   onSelect?: (imei: string) => void;
+  /** Fires when the user taps empty map (not a marker). */
+  onMapPress?: (p: { lat: number; lng: number }) => void;
 }
 
 // Bangladesh default view.
@@ -107,6 +117,29 @@ function buildHtml(token: string): string {
       const el = moving.getElement().querySelector('.veh');
       if(el) el.style.transform='rotate('+(pt.course||0)+'deg)';
     },
+    setCircle(c){
+      const empty = { type:'FeatureCollection', features: [] };
+      let data = empty;
+      if(c){
+        // Approximate the circle as a 64-gon (planar offsets are fine at city scale).
+        const pts = [];
+        const dLat = c.radiusM / 111320;
+        const dLng = c.radiusM / (111320 * Math.cos(c.lat * Math.PI / 180));
+        for(let i = 0; i <= 64; i++){
+          const a = (i / 64) * 2 * Math.PI;
+          pts.push([c.lng + dLng * Math.cos(a), c.lat + dLat * Math.sin(a)]);
+        }
+        data = { type:'Feature', geometry:{ type:'Polygon', coordinates:[pts] } };
+      }
+      if(map.getSource('circle')){ map.getSource('circle').setData(data); }
+      else if(c){
+        map.addSource('circle',{type:'geojson',data});
+        map.addLayer({id:'circle-fill',type:'fill',source:'circle',
+          paint:{'fill-color':'${colors.brand}','fill-opacity':0.15}});
+        map.addLayer({id:'circle-line',type:'line',source:'circle',
+          paint:{'line-color':'${colors.brand}','line-width':2}});
+      }
+    },
     center(lat,lng,zoom){ map.flyTo({center:[lng,lat], zoom: zoom||14, duration:800}); },
     fit(coords){
       if(!coords.length) return;
@@ -114,6 +147,7 @@ function buildHtml(token: string): string {
       map.fitBounds(b,{padding:60, duration:600, maxZoom:15});
     }
   };
+  map.on('click', (e) => post({type:'mapclick', lat:e.lngLat.lat, lng:e.lngLat.lng}));
   map.on('load', () => post({type:'ready'}));
 </script></body></html>`;
 }
@@ -123,18 +157,31 @@ export default function WebMap({
   route,
   moving,
   center,
+  circle,
   fitRoute,
   onSelect,
+  onMapPress,
 }: Props) {
   const ref = useRef<WebView>(null);
   const [ready, setReady] = useState(false);
+  // Commands issued before the map's 'ready' message are queued, not dropped.
+  const pending = useRef<string[]>([]);
 
   const run = useCallback(
     (js: string) => {
       if (ready) ref.current?.injectJavaScript(js + ";true;");
+      else pending.current.push(js);
     },
     [ready],
   );
+
+  useEffect(() => {
+    if (ready && pending.current.length > 0) {
+      const queued = pending.current;
+      pending.current = [];
+      queued.forEach((js) => ref.current?.injectJavaScript(js + ";true;"));
+    }
+  }, [ready]);
 
   useEffect(() => {
     if (vehicles) run(`window.MLMap.setVehicles(${JSON.stringify(vehicles)})`);
@@ -155,17 +202,29 @@ export default function WebMap({
     if (center) run(`window.MLMap.center(${center.lat},${center.lng},${center.zoom ?? 14})`);
   }, [center, run]);
 
+  useEffect(() => {
+    if (circle !== undefined) run(`window.MLMap.setCircle(${JSON.stringify(circle ?? null)})`);
+  }, [circle, run]);
+
   const onMessage = useCallback(
     (e: WebViewMessageEvent) => {
       try {
-        const msg = JSON.parse(e.nativeEvent.data) as { type: string; imei?: string };
+        const msg = JSON.parse(e.nativeEvent.data) as {
+          type: string;
+          imei?: string;
+          lat?: number;
+          lng?: number;
+        };
         if (msg.type === "ready") setReady(true);
         else if (msg.type === "select" && msg.imei) onSelect?.(msg.imei);
+        else if (msg.type === "mapclick" && msg.lat != null && msg.lng != null) {
+          onMapPress?.({ lat: msg.lat, lng: msg.lng });
+        }
       } catch {
         /* ignore */
       }
     },
-    [onSelect],
+    [onSelect, onMapPress],
   );
 
   return (

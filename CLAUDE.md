@@ -1559,7 +1559,7 @@ GitHub Actions:
 - [x] Live map screen with own vehicles
 - [x] Trip history screen
 - [x] Push notifications for alarms — via **Expo Push Service** (relays through FCM on Android / APNs on iOS). Chosen over direct FCM so the backend needs no Firebase credentials and the app stays Expo Go-compatible (no native build). Backend `PushService` POSTs to `exp.host`; tokens live in `push_tokens` (V7), registered via `POST/DELETE /users/me/push-tokens`; WARNING/CRITICAL alarms only.
-- [ ] Geofence creation (basic)
+- [x] Geofence creation (basic) — circle-only on mobile: tap-to-place center on the WebView map, radius presets, notify-on choice, fleet assignment (preselects all vehicles). List screen with delete. Polygon drawing stays web-dashboard-only.
 - [ ] iOS + Android builds via EAS Build
 
 **Exit criteria:** APK installable, owner sees own bike live on map, gets push when SOS button pressed.

@@ -25,6 +25,24 @@ export default function RootLayout() {
               headerTintColor: colors.text,
             }}
           />
+          <Stack.Screen
+            name="geofences"
+            options={{
+              headerShown: true,
+              headerTitle: "Geofences",
+              headerStyle: { backgroundColor: colors.surface },
+              headerTintColor: colors.text,
+            }}
+          />
+          <Stack.Screen
+            name="geofence-new"
+            options={{
+              headerShown: true,
+              headerTitle: "New geofence",
+              headerStyle: { backgroundColor: colors.surface },
+              headerTintColor: colors.text,
+            }}
+          />
         </Stack>
       </AuthProvider>
     </SafeAreaProvider>

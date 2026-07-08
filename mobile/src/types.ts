@@ -136,6 +136,29 @@ export interface AlarmView {
   metadata: Record<string, unknown>;
 }
 
+export interface LatLng {
+  lat: number;
+  lng: number;
+}
+
+export type GeofenceType = "CIRCLE" | "POLYGON";
+export type GeofenceNotifyOn = "ENTER" | "EXIT" | "BOTH";
+
+/** Mirrors backend dto.GeofenceDtos.GeofenceView. */
+export interface GeofenceView {
+  id: string;
+  name: string;
+  type: GeofenceType;
+  notifyOn: GeofenceNotifyOn;
+  color: string | null;
+  active: boolean;
+  center: LatLng | null; // CIRCLE only
+  radiusM: number | null; // CIRCLE only
+  polygon: LatLng[]; // POLYGON only
+  createdAt: string;
+  updatedAt: string;
+}
+
 export type TripStatus = "IN_PROGRESS" | "COMPLETED";
 
 /** Mirrors backend dto.TripDtos.TripView — the "moving history" record. */
