@@ -40,7 +40,9 @@ class PacketDecoderTest {
         bb.putInt((int) (latRaw & 0xFFFFFFFFL));
         bb.putInt((int) (lngRaw & 0xFFFFFFFFL));
         bb.put((byte) 42);                    // speed
-        bb.putShort((short) (0x1000 | 0x0400 | 0x0800 | 90));   // valid + north + east + course=90
+        // Hemisphere bits are asymmetric (Concox doc / Traccar):
+        // bit10 (0x0400): 1 = North; bit11 (0x0800): 0 = East
+        bb.putShort((short) (0x1000 | 0x0400 | 90));   // valid + north + east + course=90
         bb.putShort((short) 470);             // MCC
         bb.put((byte) 1);                     // MNC
         bb.putShort((short) 0x1234);          // LAC
@@ -85,7 +87,7 @@ class PacketDecoderTest {
         bb.putInt((int) raw);
         bb.putInt(0);                  // longitude 0
         bb.put((byte) 0);              // speed
-        bb.putShort((short) (0x1000 | 0x0400 | 0x0800));   // valid + north + east
+        bb.putShort((short) (0x1000 | 0x0400));   // valid + north (bit11 clear = east)
         bb.putShort((short) 0);        // MCC etc...
         bb.put((byte) 0);
         bb.putShort((short) 0);
@@ -103,8 +105,10 @@ class PacketDecoderTest {
 
     @Test
     void south_west_flags_negate_coordinates() {
-        // GT06 devices: bit CLEAR = South/West (coordinates negative)
-        // bit SET = North/East (coordinates positive)
+        // GT06 hemisphere bits are ASYMMETRIC (Concox course-status byte 1,
+        // matches Traccar): bit10 (0x0400) 0 = South / 1 = North,
+        //                   bit11 (0x0800) 0 = East  / 1 = West.
+        // So "south + west" = bit10 CLEAR + bit11 SET.
         double targetLat = 23.7806;
         double targetLng = 90.4193;
         long latRaw = (long) (targetLat * 1_800_000);
@@ -116,7 +120,7 @@ class PacketDecoderTest {
         bb.putInt((int) latRaw);
         bb.putInt((int) lngRaw);
         bb.put((byte) 0);
-        bb.putShort((short) 0x1000);  // valid only, N/S and E/W bits CLEAR = South + West
+        bb.putShort((short) (0x1000 | 0x0800));  // valid + south (bit10 clear) + west (bit11 set)
         bb.putShort((short) 0); bb.put((byte) 0); bb.putShort((short) 0);
         bb.put((byte) 0).put((byte) 0).put((byte) 0);
         bb.put((byte) 0); bb.put((byte) 0); bb.put((byte) 0); bb.putInt(0);
@@ -174,7 +178,7 @@ class PacketDecoderTest {
         bb.putInt((int) (23.78 * 1_800_000));
         bb.putInt((int) (90.42 * 1_800_000));
         bb.put((byte) 0);
-        bb.putShort((short) (0x1000 | 0x0400 | 0x0800));   // valid + N + E
+        bb.putShort((short) (0x1000 | 0x0400));   // valid + north (bit11 clear = east)
         bb.putShort((short) 470);  // MCC
         bb.put((byte) 1);          // MNC
         bb.putShort((short) 0);    // LAC
@@ -199,7 +203,8 @@ class PacketDecoderTest {
 
     @Test
     void north_east_flags_keep_coordinates_positive() {
-        // GT06 devices: bit SET = North/East (coordinates positive)
+        // "north + east" = bit10 (0x0400) SET + bit11 (0x0800) CLEAR —
+        // what a real GT06 in Dhaka (23.78N, 90.42E) actually sends.
         double targetLat = 23.7806;
         double targetLng = 90.4193;
         long latRaw = (long) (targetLat * 1_800_000);
@@ -211,7 +216,7 @@ class PacketDecoderTest {
         bb.putInt((int) latRaw);
         bb.putInt((int) lngRaw);
         bb.put((byte) 0);
-        bb.putShort((short) (0x1000 | 0x0400 | 0x0800));  // valid + north + east bits SET
+        bb.putShort((short) (0x1000 | 0x0400));  // valid + north (bit11 clear = east)
         bb.putShort((short) 0); bb.put((byte) 0); bb.putShort((short) 0);
         bb.put((byte) 0).put((byte) 0).put((byte) 0);
         bb.put((byte) 0); bb.put((byte) 0); bb.put((byte) 0); bb.putInt(0);
