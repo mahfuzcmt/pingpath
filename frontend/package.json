@@ -15,8 +15,10 @@
     "@fontsource-variable/open-sans": "^5.2.7",
     "@fontsource/hind-siliguri": "^5.2.7",
     "@stomp/stompjs": "^7.0.0",
+    "@types/leaflet.gridlayer.googlemutant": "^0.4.11",
     "axios": "^1.7.7",
     "leaflet": "^1.9.4",
+    "leaflet.gridlayer.googlemutant": "^0.16.0",
     "next": "^15.1.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"

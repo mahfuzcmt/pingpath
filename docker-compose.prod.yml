@@ -79,6 +79,7 @@ services:
         NEXT_PUBLIC_API_BASE: ${NEXT_PUBLIC_API_BASE:-/api/proxy}
         NEXT_PUBLIC_WS_BASE: ${NEXT_PUBLIC_WS_BASE}
         NEXT_PUBLIC_MAPBOX_TOKEN: ${NEXT_PUBLIC_MAPBOX_TOKEN}
+        NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: ${NEXT_PUBLIC_GOOGLE_MAPS_API_KEY:-}
     container_name: pingpath-frontend
     restart: unless-stopped
     depends_on:

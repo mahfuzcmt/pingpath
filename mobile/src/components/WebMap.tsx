@@ -41,15 +41,28 @@ interface Props {
 }
 
 // Bangladesh default view.
-const DEFAULT = { lat: 23.685, lng: 90.3563, zoom: 6.3 };
-const MAPBOX_TOKEN = process.env.EXPO_PUBLIC_MAPBOX_TOKEN ?? "";
+const DEFAULT = { lat: 23.685, lng: 90.3563, zoom: 7 };
+const GOOGLE_MAPS_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
 
-function buildHtml(token: string): string {
+// The WebView page gets this origin (via `baseUrl`) so a referrer-restricted
+// Google key works: add https://mobile.pingpath.app/* to the key's allowed
+// referrers in Google Cloud Console. Domain doesn't need to exist.
+const MAP_REFERRER = "https://mobile.pingpath.app/";
+
+// Leaflet in the WebView, mirroring the web dashboard (frontend/src/lib/leaflet.ts):
+// Google Maps base layer via GoogleMutant when a key is configured (OSM misses
+// Bangladesh roads/POIs), free OSM tiles otherwise or when Google fails to load.
+function buildHtml(googleKey: string): string {
+  const googleScripts = googleKey
+    ? `<script src="https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(googleKey)}"></script>
+<script src="https://unpkg.com/leaflet.gridlayer.googlemutant@0.14.1/dist/Leaflet.GoogleMutant.js"></script>`
+    : "";
   return `<!doctype html><html><head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-<link href="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.css" rel="stylesheet"/>
-<script src="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.js"></script>
+<link href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" rel="stylesheet"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+${googleScripts}
 <style>
   html,body,#map{margin:0;height:100%;width:100%;background:${colors.bg}}
   .veh{width:26px;height:26px;cursor:pointer;transform-origin:center}
@@ -61,23 +74,45 @@ function buildHtml(token: string): string {
 <script>
   const RN = window.ReactNativeWebView;
   const post = (o) => RN && RN.postMessage(JSON.stringify(o));
-  mapboxgl.accessToken = ${JSON.stringify(token)};
-  const map = new mapboxgl.Map({
-    container:'map', style:'mapbox://styles/mapbox/dark-v11',
-    center:[${DEFAULT.lng},${DEFAULT.lat}], zoom:${DEFAULT.zoom}, attributionControl:false
+  const map = L.map('map', {
+    center:[${DEFAULT.lat},${DEFAULT.lng}], zoom:${DEFAULT.zoom},
+    zoomControl:false, attributionControl:true
   });
-  const markers = {};       // imei -> mapboxgl.Marker
-  let moving = null;         // playback marker
+  map.attributionControl.setPrefix(false);
 
-  function arrowEl(color, course, label){
-    const wrap = document.createElement('div');
-    const a = document.createElement('div');
-    a.className='veh';
-    a.style.transform='rotate('+(course||0)+'deg)';
-    a.innerHTML='<svg width="26" height="26" viewBox="0 0 24 24"><path d="M12 2 L19 21 L12 16 L5 21 Z" fill="'+color+'" stroke="#0A1928" stroke-width="1.2"/></svg>';
-    wrap.appendChild(a);
-    if(label){ const l=document.createElement('div'); l.className='lbl'; l.textContent=label; wrap.appendChild(l); }
-    return wrap;
+  function osmLayer(){
+    return L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      {maxZoom:19, attribution:'&copy; OpenStreetMap'});
+  }
+  let base;
+  try {
+    if(window.google && window.google.maps && L.gridLayer.googleMutant){
+      base = L.gridLayer.googleMutant({type:'roadmap', maxZoom:21});
+    }
+  } catch(e){ base = null; }
+  if(!base) base = osmLayer();
+  base.addTo(map);
+  // Google key rejected (bad key / referrer) — swap to OSM so the map still works.
+  window.gm_authFailure = function(){ map.removeLayer(base); base = osmLayer().addTo(map); };
+
+  const markers = {};       // imei -> L.Marker
+  let moving = null;         // playback marker
+  let route = null;          // trip polyline
+  let circle = null;         // geofence preview
+
+  function arrowHtml(color, course, label){
+    return '<div class="veh" style="transform:rotate('+(course||0)+'deg)">'
+      + '<svg width="26" height="26" viewBox="0 0 24 24"><path d="M12 2 L19 21 L12 16 L5 21 Z" fill="'+color+'" stroke="#0A1928" stroke-width="1.2"/></svg>'
+      + '</div>'
+      + (label ? '<div class="lbl">'+label.replace(/[<>&]/g,'')+'</div>' : '');
+  }
+  function arrowIcon(color, course, label){
+    return L.divIcon({className:'', iconSize:[26,26], iconAnchor:[13,13],
+      html: arrowHtml(color, course, label)});
+  }
+  function rotate(marker, course){
+    const el = marker.getElement() && marker.getElement().querySelector('.veh');
+    if(el) el.style.transform = 'rotate('+(course||0)+'deg)';
   }
 
   window.MLMap = {
@@ -86,14 +121,13 @@ function buildHtml(token: string): string {
       list.forEach(v => {
         seen[v.imei]=1;
         if(markers[v.imei]){
-          markers[v.imei].setLngLat([v.lng,v.lat]);
-          const el = markers[v.imei].getElement().querySelector('.veh');
-          if(el) el.style.transform='rotate('+(v.course||0)+'deg)';
+          markers[v.imei].setLatLng([v.lat,v.lng]);
+          rotate(markers[v.imei], v.course);
         } else {
-          const el = arrowEl(v.color, v.course, v.label);
-          el.addEventListener('click', () => post({type:'select', imei:v.imei}));
-          markers[v.imei] = new mapboxgl.Marker({element:el, anchor:'center'})
-            .setLngLat([v.lng,v.lat]).addTo(map);
+          const m = L.marker([v.lat,v.lng], {icon: arrowIcon(v.color, v.course, v.label)});
+          m.on('click', () => post({type:'select', imei:v.imei}));
+          m.addTo(map);
+          markers[v.imei] = m;
         }
       });
       Object.keys(markers).forEach(imei => {
@@ -101,54 +135,33 @@ function buildHtml(token: string): string {
       });
     },
     setRoute(coords){
-      const data = { type:'Feature', geometry:{ type:'LineString', coordinates:coords } };
-      if(map.getSource('route')) { map.getSource('route').setData(data); }
-      else {
-        map.addSource('route',{type:'geojson',data});
-        map.addLayer({id:'route',type:'line',source:'route',
-          paint:{'line-color':'${colors.brand}','line-width':4,'line-opacity':0.9}});
-      }
+      const latlngs = coords.map(c => [c[1], c[0]]);   // [lng,lat] -> [lat,lng]
+      if(route){ route.setLatLngs(latlngs); }
+      else { route = L.polyline(latlngs, {color:'${colors.brand}', weight:4, opacity:0.9}).addTo(map); }
     },
     setMoving(pt){
       if(!pt){ if(moving){moving.remove(); moving=null;} return; }
-      if(moving){ moving.setLngLat([pt.lng,pt.lat]); }
-      else { moving = new mapboxgl.Marker({element:arrowEl('#fff', pt.course||0,''),anchor:'center'})
-               .setLngLat([pt.lng,pt.lat]).addTo(map); }
-      const el = moving.getElement().querySelector('.veh');
-      if(el) el.style.transform='rotate('+(pt.course||0)+'deg)';
+      if(moving){ moving.setLatLng([pt.lat,pt.lng]); rotate(moving, pt.course); }
+      else { moving = L.marker([pt.lat,pt.lng],
+               {icon: arrowIcon('#fff', pt.course||0, ''), interactive:false}).addTo(map); }
     },
     setCircle(c){
-      const empty = { type:'FeatureCollection', features: [] };
-      let data = empty;
-      if(c){
-        // Approximate the circle as a 64-gon (planar offsets are fine at city scale).
-        const pts = [];
-        const dLat = c.radiusM / 111320;
-        const dLng = c.radiusM / (111320 * Math.cos(c.lat * Math.PI / 180));
-        for(let i = 0; i <= 64; i++){
-          const a = (i / 64) * 2 * Math.PI;
-          pts.push([c.lng + dLng * Math.cos(a), c.lat + dLat * Math.sin(a)]);
-        }
-        data = { type:'Feature', geometry:{ type:'Polygon', coordinates:[pts] } };
-      }
-      if(map.getSource('circle')){ map.getSource('circle').setData(data); }
-      else if(c){
-        map.addSource('circle',{type:'geojson',data});
-        map.addLayer({id:'circle-fill',type:'fill',source:'circle',
-          paint:{'fill-color':'${colors.brand}','fill-opacity':0.15}});
-        map.addLayer({id:'circle-line',type:'line',source:'circle',
-          paint:{'line-color':'${colors.brand}','line-width':2}});
+      if(!c){ if(circle){circle.remove(); circle=null;} return; }
+      if(circle){ circle.setLatLng([c.lat,c.lng]); circle.setRadius(c.radiusM); }
+      else {
+        circle = L.circle([c.lat,c.lng], {radius:c.radiusM,
+          color:'${colors.brand}', weight:2, fillColor:'${colors.brand}', fillOpacity:0.15}).addTo(map);
       }
     },
-    center(lat,lng,zoom){ map.flyTo({center:[lng,lat], zoom: zoom||14, duration:800}); },
+    center(lat,lng,zoom){ map.flyTo([lat,lng], zoom||14, {duration:0.8}); },
     fit(coords){
       if(!coords.length) return;
-      const b = coords.reduce((bb,c)=>bb.extend(c), new mapboxgl.LngLatBounds(coords[0],coords[0]));
-      map.fitBounds(b,{padding:60, duration:600, maxZoom:15});
+      const b = L.latLngBounds(coords.map(c => [c[1], c[0]]));
+      map.fitBounds(b, {padding:[60,60], maxZoom:15});
     }
   };
-  map.on('click', (e) => post({type:'mapclick', lat:e.lngLat.lat, lng:e.lngLat.lng}));
-  map.on('load', () => post({type:'ready'}));
+  map.on('click', (e) => post({type:'mapclick', lat:e.latlng.lat, lng:e.latlng.lng}));
+  map.whenReady(() => post({type:'ready'}));
 </script></body></html>`;
 }
 
@@ -233,7 +246,7 @@ export default function WebMap({
         ref={ref}
         style={styles.fill}
         originWhitelist={["*"]}
-        source={{ html: buildHtml(MAPBOX_TOKEN) }}
+        source={{ html: buildHtml(GOOGLE_MAPS_API_KEY), baseUrl: MAP_REFERRER }}
         onMessage={onMessage}
         javaScriptEnabled
         domStorageEnabled
