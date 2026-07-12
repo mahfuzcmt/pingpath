@@ -9,7 +9,7 @@ Tabs: **Home · Map · Vehicles · Alerts**.
 - **Login** — email/password → JWT (access + refresh), stored in `expo-secure-store`.
 - **Home** — fleet status counts (Moving/Idle/Stopped/Offline), KPI strip (alarms, trips,
   fleet distance today), and per-vehicle "today" stats picker.
-- **Map** — live fleet on Mapbox, **Refresh** + **Locate Me**, live WS updates.
+- **Map** — live fleet on Google Maps, **Refresh** + **Locate Me**, live WS updates.
 - **Vehicles** — search + Moving/Idle/Stopped/Offline filters, status pills, tap → detail.
 - **Alerts** — live alarm list with acknowledge.
 - **Vehicle detail** (`device/[imei]`) with in-screen tabs:
@@ -21,11 +21,14 @@ Tabs: **Home · Map · Vehicles · Alerts**.
 
 ## Stack
 Expo Router (file-based) · TypeScript strict · axios (with refresh interceptor) ·
-`@stomp/stompjs` over the RN WebSocket · Mapbox GL JS inside `react-native-webview`.
+`@stomp/stompjs` over the RN WebSocket · Leaflet + Google Maps (GoogleMutant) inside
+`react-native-webview`.
 
-> **Map choice:** the map is Mapbox GL JS hosted in a WebView — same vendor/style as the web
-> dashboard, and it runs in **Expo Go with no native build**. `src/components/WebMap.tsx` is
-> isolated so it can later be swapped for native `@rnmapbox/maps` if higher marker counts demand it.
+> **Map choice:** the map is Leaflet hosted in a WebView with a Google Maps base layer —
+> same engine/base map as the web dashboard (OSM's Bangladesh coverage misses roads/POIs),
+> and it runs in **Expo Go with no native build**. Without a key it falls back to free OSM
+> tiles. `src/components/WebMap.tsx` is isolated so it can later be swapped for the native
+> Google Maps SDK (`react-native-maps`) if higher marker counts demand it.
 
 ## Setup
 ```bash
@@ -40,7 +43,7 @@ npm start                 # scan the QR with Expo Go, or press a/i for emulator
 |---|---|
 | `EXPO_PUBLIC_API_BASE` | Backend REST base incl. `/api/v1`. Emulator→`10.0.2.2`, device→LAN IP. |
 | `EXPO_PUBLIC_WS_BASE` | STOMP endpoint, e.g. `ws://10.0.2.2:8080/ws`. |
-| `EXPO_PUBLIC_MAPBOX_TOKEN` | Mapbox public token (same one the web app uses). |
+| `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY` | Google Maps JS API key (same one the web app uses). Empty → free OSM fallback. Referrer-restricted keys must allow `https://mobile.pingpath.app/*`. |
 
 The backend must be reachable from the phone/emulator. For a physical device, run the backend
 on your machine and use its LAN IP (e.g. `http://192.168.0.10:8080/api/v1`), same Wi‑Fi.

@@ -47,7 +47,7 @@
 | Frontend framework | Next.js | 15.x (App Router) | SSR + RSC, file-based routing |
 | Frontend language | TypeScript | 5.x (strict mode) | No `any` allowed |
 | UI framework | Tailwind CSS | 3.4.x | Utility-first, no design system framework |
-| Map library | Mapbox GL JS | 3.x | Best vector rendering, supports custom styles |
+| Map library | Leaflet + Google Maps base layer | Leaflet 1.9.x, `leaflet.gridlayer.googlemutant` 0.14.x | Switched from OSM tiles 2026-07-12: OSM misses Bangladesh roads/buildings/POIs. Google JS API rendered as a Leaflet layer (web `frontend/src/lib/leaflet.ts`, mobile WebView `mobile/src/components/WebMap.tsx`); free OSM/Esri fallback when `*_GOOGLE_MAPS_API_KEY` is unset. Mapbox no longer used. |
 | WebSocket client | @stomp/stompjs | 7.x | STOMP over WebSocket, matches Spring's broker |
 | Mobile (Phase 5) | React Native + Expo | 51.x | Cross-platform end-user app |
 | Container | Docker | 24+ | Local dev + production parity |

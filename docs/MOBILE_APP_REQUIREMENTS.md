@@ -29,7 +29,7 @@ Brand header ("motolink" logo) with a **filter** icon on Map/Alerts.
 
 ## 3. Map (live fleet)  *(S1, T1, T15, T17)*
 
-Full-screen Google-style map (MotoLink uses **Mapbox** per CLAUDE.md §2).
+Full-screen map (MotoLink uses **Google Maps** as base layer since 2026-07-12 — OSM/Mapbox data misses Bangladesh roads/POIs; free OSM fallback when no key).
 - Vehicle markers = colored vehicle icon rotated by course; label = plate.
 - Controls (bottom): **Refresh** · **Locate Me** (center on user GPS) · **zoom + / −**.
 - Top: **Map View** dropdown (Normal/Satellite) · **Show Traffic** checkbox · **filter** icon.
