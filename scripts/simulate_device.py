@@ -75,7 +75,9 @@ def build_location_v3(lat: float, lng: float, speed: int, course: int, serial: i
 
     gps_byte = (12 << 4) | 0x0C  # 12-byte gps info length, 12 satellites
     course_status = (course & 0x03FF) | 0x1000  # GPS valid bit
-    if south:
+    # Hemisphere bits are ASYMMETRIC (CLAUDE.md §6.3): lat bit 10 SET = North,
+    # lng bit 11 SET = West. A Dhaka device sends lat-bit 1, lng-bit 0.
+    if not south:
         course_status |= 0x0400
     if west:
         course_status |= 0x0800
