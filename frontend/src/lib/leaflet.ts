@@ -69,15 +69,36 @@ function loadGoogleMaps(): Promise<boolean> {
  * Create the base map layer. Async because the Google JS API loads lazily;
  * callers should guard against the map being torn down before it resolves.
  */
+type GoogleMutantCtor = new (opts: { type: string; maxZoom: number }) => L.GridLayer;
+
 export async function createBaseLayer(kind: BaseLayerKind = "street"): Promise<L.GridLayer> {
   if (await loadGoogleMaps()) {
-    // Attaches L.gridLayer.googleMutant; import lazily so the plugin (which
-    // touches window) never runs during SSR and stays out of the no-key path.
-    await import("leaflet.gridlayer.googlemutant");
-    return L.gridLayer.googleMutant({
-      type: kind === "satellite" ? "hybrid" : "roadmap",
-      maxZoom: 21,
-    });
+    // Import lazily so the plugin (which touches window) never runs during SSR
+    // and stays out of the no-key path. Do NOT use the L.gridLayer.googleMutant
+    // factory: in v0.16 it references L.GridLayer.GoogleMutant, which neither
+    // the ESM build (class is a default export) nor the browser/UMD build
+    // (assigns onto module exports, not the app's L) ever sets on our Leaflet
+    // instance — "GoogleMutant is not a constructor" at runtime.
+    const mod = (await import("leaflet.gridlayer.googlemutant")) as unknown;
+    // Webpack bundles the "browser" (UMD) build, whose exports are
+    // { L: { GridLayer: { GoogleMutant } } } — and under CJS interop `default`
+    // is that same object. The ESM build instead default-exports the class.
+    // Probe every shape and take whatever is actually a constructor.
+    const fromExports = (o: unknown): GoogleMutantCtor | undefined => {
+      if (typeof o === "function") return o as GoogleMutantCtor;
+      const cls = (o as { L?: { GridLayer?: { GoogleMutant?: unknown } } } | null | undefined)
+        ?.L?.GridLayer?.GoogleMutant;
+      return typeof cls === "function" ? (cls as GoogleMutantCtor) : undefined;
+    };
+    const GoogleMutant =
+      fromExports(mod) ?? fromExports((mod as { default?: unknown } | null)?.default);
+    if (GoogleMutant) {
+      return new GoogleMutant({
+        type: kind === "satellite" ? "hybrid" : "roadmap",
+        maxZoom: 21,
+      });
+    }
+    // Unexpected plugin shape — fall through to the free tile fallback.
   }
   return kind === "satellite"
     ? L.tileLayer(TILE_URL_SATELLITE, { attribution: SATELLITE_ATTRIBUTION, maxZoom: 19 })
