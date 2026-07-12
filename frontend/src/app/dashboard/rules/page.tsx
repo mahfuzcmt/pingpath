@@ -41,7 +41,7 @@ export default function RulesPage() {
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-auto">
         {loading && <div className="px-4 py-6 text-sm text-ink-400">{t("common.loading")}</div>}
         {error && <div className="px-4 py-6 text-sm text-alarm-red">{error}</div>}
         {!loading && rules.length === 0 && (
@@ -49,7 +49,7 @@ export default function RulesPage() {
         )}
 
         {rules.length > 0 && (
-          <table className="w-full text-sm">
+          <table className="w-full min-w-[760px] text-sm">
             <thead className="sticky top-0 z-10 bg-white text-left text-xs uppercase text-ink-500">
               <tr>
                 <th className="px-4 py-2">{t("rules.name")}</th>

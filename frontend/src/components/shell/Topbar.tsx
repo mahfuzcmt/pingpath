@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { logout } from "@/lib/auth";
@@ -36,14 +37,40 @@ export function Topbar({ user, orgId }: { user: UserView; orgId: string }) {
   const { role } = useSession();
   const isAdmin = role === "ORG_ADMIN" || role === "SUPER_ADMIN";
   const items = NAV.filter((n) => !n.adminOnly || isAdmin);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  // Close the mobile menu whenever navigation happens.
+  useEffect(() => setMenuOpen(false), [pathname]);
 
   async function onSignOut() {
     await logout();
     router.replace("/login");
   }
 
+  const isActive = (href: string) =>
+    href === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(href);
+
   return (
-    <header className="flex h-9 shrink-0 items-stretch border-b border-surface-300 bg-white">
+    <header className="relative flex h-9 shrink-0 items-stretch border-b border-surface-300 bg-white">
+      {/* Mobile: hamburger */}
+      <button
+        type="button"
+        onClick={() => setMenuOpen((o) => !o)}
+        className="flex w-10 shrink-0 items-center justify-center border-r border-surface-300 text-ink-700 transition hover:bg-surface-100 md:hidden"
+        aria-label="Menu"
+        aria-expanded={menuOpen}
+      >
+        {menuOpen ? (
+          <svg {...ICON_PROPS} width={16} height={16}>
+            <path d="M18 6 6 18M6 6l12 12" />
+          </svg>
+        ) : (
+          <svg {...ICON_PROPS} width={16} height={16}>
+            <path d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        )}
+      </button>
+
       {/* Logo */}
       <Link
         href="/dashboard"
@@ -53,32 +80,27 @@ export function Topbar({ user, orgId }: { user: UserView; orgId: string }) {
         <span className="text-sm">MotoLink</span>
       </Link>
 
-      {/* Primary nav */}
-      <nav className="flex items-stretch">
-        {items.map((item) => {
-          const active =
-            item.href === "/dashboard"
-              ? pathname === "/dashboard"
-              : pathname.startsWith(item.href);
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={active ? "topnav-item-active" : "topnav-item"}
-              title={t(item.label)}
-            >
-              <span className="text-ink-500">{item.icon}</span>
-              <span className="hidden md:inline">{t(item.label)}</span>
-            </Link>
-          );
-        })}
+      {/* Primary nav — hidden on mobile (hamburger menu instead); icon-only
+          until lg so all 11 items fit on tablet widths. */}
+      <nav className="hidden items-stretch md:flex">
+        {items.map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            className={isActive(item.href) ? "topnav-item-active" : "topnav-item"}
+            title={t(item.label)}
+          >
+            <span className="text-ink-500">{item.icon}</span>
+            <span className="hidden lg:inline">{t(item.label)}</span>
+          </Link>
+        ))}
       </nav>
 
       {/* Right side: lang + user + logout */}
       <div className="ml-auto flex items-center gap-1 pr-3">
         <LanguageToggle />
-        <div className="mx-2 h-5 w-px bg-surface-300" />
-        <div className="text-right text-[11px] leading-tight" title={orgId}>
+        <div className="mx-2 hidden h-5 w-px bg-surface-300 sm:block" />
+        <div className="hidden text-right text-[11px] leading-tight sm:block" title={orgId}>
           <div className="font-semibold text-ink-900">{user.fullName ?? user.email}</div>
           <div className="text-ink-500">{user.role.replace("_", " ")}</div>
         </div>
@@ -86,6 +108,32 @@ export function Topbar({ user, orgId }: { user: UserView; orgId: string }) {
           <LogoutIcon />
         </button>
       </div>
+
+      {/* Mobile menu: backdrop + dropdown panel */}
+      {menuOpen && (
+        <>
+          <div
+            className="fixed inset-0 top-9 z-40 bg-ink-950/40 md:hidden"
+            onClick={() => setMenuOpen(false)}
+          />
+          <nav className="absolute left-0 top-full z-50 w-64 max-w-[85vw] border-b border-r border-surface-300 bg-white shadow-menu md:hidden">
+            {items.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`flex items-center gap-2.5 border-b border-surface-100 px-4 py-2.5 text-xs font-semibold transition ${
+                  isActive(item.href)
+                    ? "bg-brand-50 text-ink-900"
+                    : "text-ink-700 hover:bg-surface-100"
+                }`}
+              >
+                <span className="text-ink-500">{item.icon}</span>
+                {t(item.label)}
+              </Link>
+            ))}
+          </nav>
+        </>
+      )}
     </header>
   );
 }

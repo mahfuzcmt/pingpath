@@ -192,8 +192,8 @@ export function GeofenceEditor({ onSubmit, onCancel }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 z-40 flex bg-ink-950">
-      <div className="flex w-80 shrink-0 flex-col gap-3 border-r border-ink-400/15 p-4">
+    <div className="fixed inset-0 z-40 flex flex-col bg-ink-950 md:flex-row">
+      <div className="flex max-h-[45vh] w-full shrink-0 flex-col gap-3 overflow-y-auto border-b border-ink-400/15 p-4 md:max-h-none md:w-80 md:border-b-0 md:border-r">
         <div className="flex items-center justify-between">
           <div className="font-display text-sm font-semibold">{t("geo.new")}</div>
           <button type="button" className="text-ink-400 hover:text-ink-50" onClick={onCancel}>
@@ -314,7 +314,7 @@ export function GeofenceEditor({ onSubmit, onCancel }: Props) {
         </div>
       </div>
 
-      <div className="relative flex-1 bg-ink-900" style={{ minHeight: "400px" }}>
+      <div className="relative min-h-[240px] flex-1 bg-ink-900 md:min-h-[400px]">
         <div ref={containerRef} className="absolute inset-0" style={{ width: "100%", height: "100%" }} />
       </div>
     </div>

@@ -55,7 +55,7 @@ export function AlarmList({ alarms, loading, onAcknowledge }: AlarmListProps) {
         </label>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-auto">
         {loading && (
           <div className="px-3 py-4 text-xs text-ink-500">{t("common.loading")}</div>
         )}
@@ -63,7 +63,7 @@ export function AlarmList({ alarms, loading, onAcknowledge }: AlarmListProps) {
           <div className="px-3 py-12 text-center text-xs text-ink-500">{t("common.empty")}</div>
         )}
         {!loading && filtered.length > 0 && (
-          <table className="data-table">
+          <table className="data-table min-w-[560px]">
             <thead>
               <tr>
                 <th>{t("alarms.severity")}</th>

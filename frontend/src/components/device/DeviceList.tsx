@@ -126,7 +126,7 @@ export function DeviceList({ devices, locations, selectedImei, onSelect }: Devic
   ];
 
   return (
-    <div className="flex h-full min-h-0 w-[320px] flex-col border-r border-surface-300 bg-white">
+    <div className="flex h-full min-h-0 w-full flex-col border-r border-surface-300 bg-white">
       {/* Search */}
       <div className="border-b border-surface-300 px-2 py-2">
         <input

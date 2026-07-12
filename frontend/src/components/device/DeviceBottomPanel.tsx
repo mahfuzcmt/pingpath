@@ -95,9 +95,9 @@ export function DeviceBottomPanel({ device, location, onClose, onViewHistory }: 
 
       {/* Tab content */}
       {activeTab === "data" && (
-        <div className="flex divide-x divide-surface-200">
+        <div className="flex max-h-[50vh] flex-col divide-y divide-surface-200 overflow-y-auto md:max-h-none md:flex-row md:divide-x md:divide-y-0 md:overflow-visible">
           {/* Left data columns */}
-          <div className="flex-1 grid grid-cols-2 gap-x-8 p-3">
+          <div className="flex-1 grid grid-cols-1 gap-x-8 p-3 sm:grid-cols-2">
             <DataRow icon="001" label="Odometer" value={formatOdometer(location?.mileageMeters)} />
             <DataRow icon="📱" label="SIM card num..." value={device.simMsisdn || "—"} mono />
             <DataRow icon="📶" label="Status" value={status} valueColor={isMoving ? "text-status-moving" : !isOnline ? "text-ink-400" : "text-status-stopped"} />
@@ -108,7 +108,7 @@ export function DeviceBottomPanel({ device, location, onClose, onViewHistory }: 
           </div>
 
           {/* Middle data columns */}
-          <div className="flex-1 grid grid-cols-2 gap-x-8 p-3">
+          <div className="flex-1 grid grid-cols-1 gap-x-8 p-3 sm:grid-cols-2">
             <DataRow icon="🕐" label="Time (position)" value={formatDateTime(location?.ts)} />
             <DataRow icon="🕐" label="Time (server)" value={formatDateTime(location?.ts)} />
             <DataRow icon="🔋" label="Battery Level" value={location?.voltageMv ? `${Math.min(100, Math.max(0, Math.round((location.voltageMv - 10000) / 50)))} %` : "— %"} />
@@ -117,7 +117,7 @@ export function DeviceBottomPanel({ device, location, onClose, onViewHistory }: 
           </div>
 
           {/* Object control */}
-          <div className="w-48 p-3 border-r border-surface-200">
+          <div className="w-full p-3 md:w-48 md:border-r md:border-surface-200">
             <div className="text-xs font-semibold text-ink-700 mb-2">Object control</div>
             <div className="space-y-2">
               <div>
@@ -141,7 +141,7 @@ export function DeviceBottomPanel({ device, location, onClose, onViewHistory }: 
           </div>
 
           {/* Daily statistics */}
-          <div className="w-56 p-3">
+          <div className="w-full p-3 md:w-56">
             <div className="text-xs font-semibold text-ink-700 mb-2">Daily statistics</div>
             <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
               <span className="text-ink-500">Route length</span>
