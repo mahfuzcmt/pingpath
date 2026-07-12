@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { api } from "@/lib/api";
-import { DEFAULT_ZOOM, DHAKA_CENTER, TILE_URL, TILE_ATTRIBUTION, expandBounds } from "@/lib/leaflet";
+import { DEFAULT_ZOOM, DHAKA_CENTER, createBaseLayer, expandBounds } from "@/lib/leaflet";
 import { useLocale } from "@/lib/i18n";
 import type { LocationView, TripView } from "@/types/domain";
 
@@ -68,10 +68,9 @@ export function TripReplay({ trip, onClose }: Props) {
       zoomControl: true,
     });
 
-    L.tileLayer(TILE_URL, {
-      attribution: TILE_ATTRIBUTION,
-      maxZoom: 19,
-    }).addTo(map);
+    createBaseLayer("street").then((layer) => {
+      if (mapRef.current === map) layer.addTo(map);
+    });
 
     map.zoomControl.setPosition('bottomright');
     mapRef.current = map;

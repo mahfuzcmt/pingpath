@@ -104,6 +104,10 @@ if [[ ! -f "$ENV_FILE" ]]; then
   read -r MAPBOX_TOKEN
   [[ -n "$MAPBOX_TOKEN" ]] || fail "Mapbox token is required for the frontend build."
 
+  printf "Google Maps JS API key (press Enter to skip — dashboard falls back to OSM tiles): "
+  read -r GOOGLE_MAPS_API_KEY
+  GOOGLE_MAPS_API_KEY="${GOOGLE_MAPS_API_KEY:-}"
+
   printf "SSL Wireless SMS API token (press Enter to skip — alarms won't dispatch SMS): "
   read -r SSL_SMS_API_TOKEN
   SSL_SMS_API_TOKEN="${SSL_SMS_API_TOKEN:-}"
@@ -129,6 +133,7 @@ PINGPATH_CORS_ALLOWED_ORIGINS=http://$PUBLIC_IP:$FRONTEND_PORT
 NEXT_PUBLIC_API_BASE=/api/proxy
 NEXT_PUBLIC_WS_BASE=ws://$PUBLIC_IP:$BACKEND_PORT/ws
 NEXT_PUBLIC_MAPBOX_TOKEN=$MAPBOX_TOKEN
+NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=$GOOGLE_MAPS_API_KEY
 
 # Frontend runtime
 SESSION_COOKIE_NAME=pp_session

@@ -6,7 +6,7 @@ import "leaflet/dist/leaflet.css";
 import { useLocale } from "@/lib/i18n";
 import { useDeviceHistory, getDateRange } from "@/hooks/useDeviceHistory";
 import { formatDateTime, formatNumber } from "@/lib/format";
-import { DEFAULT_ZOOM, DHAKA_CENTER, TILE_URL, TILE_ATTRIBUTION, expandBounds } from "@/lib/leaflet";
+import { DEFAULT_ZOOM, DHAKA_CENTER, createBaseLayer, expandBounds } from "@/lib/leaflet";
 import type { DeviceView, LocationView } from "@/types/domain";
 
 interface Props {
@@ -60,10 +60,9 @@ export function RouteHistoryPanel({ device, onClose }: Props) {
       zoomControl: true,
     });
 
-    L.tileLayer(TILE_URL, {
-      attribution: TILE_ATTRIBUTION,
-      maxZoom: 19,
-    }).addTo(map);
+    createBaseLayer("street").then((layer) => {
+      if (mapRef.current === map) layer.addTo(map);
+    });
 
     map.zoomControl.setPosition('bottomright');
     mapRef.current = map;

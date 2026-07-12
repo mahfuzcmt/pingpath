@@ -3,15 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import {
-  DEFAULT_ZOOM,
-  DHAKA_CENTER,
-  TILE_URL,
-  TILE_ATTRIBUTION,
-  TILE_URL_SATELLITE,
-  SATELLITE_ATTRIBUTION,
-  expandBounds,
-} from "@/lib/leaflet";
+import { DEFAULT_ZOOM, DHAKA_CENTER, createBaseLayer, expandBounds } from "@/lib/leaflet";
 import { vehicleState, VEHICLE_STATE_COLOR, type VehicleState } from "@/lib/format";
 import type { DeviceView, LocationView } from "@/types/domain";
 
@@ -91,7 +83,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
   const initialFitDoneRef = useRef(false);
-  const tileLayerRef = useRef<L.TileLayer | null>(null);
+  const tileLayerRef = useRef<L.GridLayer | null>(null);
   const userMarkerRef = useRef<L.Marker | null>(null);
 
   const [baseLayer, setBaseLayer] = useState<BaseLayer>("normal");
@@ -207,14 +199,18 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
-    tileLayerRef.current?.remove();
-    const layer =
-      baseLayer === "satellite"
-        ? L.tileLayer(TILE_URL_SATELLITE, { attribution: SATELLITE_ATTRIBUTION, maxZoom: 19 })
-        : L.tileLayer(TILE_URL, { attribution: TILE_ATTRIBUTION, maxZoom: 19 });
-    layer.addTo(map);
-    layer.bringToBack();
-    tileLayerRef.current = layer;
+    let cancelled = false;
+    createBaseLayer(baseLayer === "satellite" ? "satellite" : "street").then((layer) => {
+      // Guard: toggle changed again or map unmounted while Google API loaded.
+      if (cancelled || mapRef.current !== map) return;
+      tileLayerRef.current?.remove();
+      layer.addTo(map);
+      layer.bringToBack();
+      tileLayerRef.current = layer;
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [baseLayer]);
 
   const handleRefresh = useCallback(async () => {
