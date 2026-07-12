@@ -44,13 +44,19 @@ public final class DeviceDtos {
             String iconColor,
             boolean engineLocked,
             String subscriptionStatus,
-            LocalDate subscriptionExpiresAt
+            LocalDate subscriptionExpiresAt,
+            /** End of the latest completed trip — null while driving or if unknown. */
+            Instant parkedSince
     ) {
         public static DeviceView of(Device d) {
-            return of(d, null);
+            return of(d, null, null);
         }
 
         public static DeviceView of(Device d, SubInfo sub) {
+            return of(d, sub, null);
+        }
+
+        public static DeviceView of(Device d, SubInfo sub, Instant parkedSince) {
             return new DeviceView(
                     d.id(),
                     d.imei(),
@@ -73,7 +79,8 @@ public final class DeviceDtos {
                     d.iconColor(),
                     d.engineLocked(),
                     sub == null ? null : sub.status(),
-                    sub == null ? null : sub.nextDueAt()
+                    sub == null ? null : sub.nextDueAt(),
+                    parkedSince
             );
         }
     }

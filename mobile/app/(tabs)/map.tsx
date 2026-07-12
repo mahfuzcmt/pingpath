@@ -8,9 +8,12 @@ import { useLiveLocations } from "@/hooks/useLiveLocations";
 import { useDevices } from "@/hooks/useDevices";
 import WebMap, { MapVehicle } from "@/components/WebMap";
 import { motionColor, motionOf } from "@/format";
+import { useSpeedLimits } from "@/hooks/useSpeedLimits";
+import { useI18n } from "@/i18n";
 import { colors, radius, space } from "@/theme";
 
 export default function MapScreen() {
+  const { t } = useI18n();
   const { org } = useAuth();
   const orgId = org?.id ?? null;
   const router = useRouter();
@@ -21,6 +24,7 @@ export default function MapScreen() {
   const [trafficAvailable, setTrafficAvailable] = useState(false);
 
   const byImei = useMemo(() => new Map(devices.map((d) => [d.imei, d])), [devices]);
+  const speedLimits = useSpeedLimits();
 
   const vehicles = useMemo<MapVehicle[]>(() => {
     const out: MapVehicle[] = [];
@@ -28,19 +32,21 @@ export default function MapScreen() {
       if (!loc.valid) continue;
       const d = byImei.get(loc.imei);
       const motion = d ? motionOf(d, loc) : loc.speed > 3 ? "MOVING" : "STOPPED";
+      const overspeed = speedLimits.isOverspeed(loc.imei, loc.speed);
       out.push({
         imei: loc.imei,
         lat: loc.latitude,
         lng: loc.longitude,
         course: loc.course,
-        color: motionColor(motion),
+        color: overspeed ? colors.danger : motionColor(motion),
         label: d?.vehiclePlate ?? d?.name ?? loc.imei.slice(-6),
         vehicleType: d?.vehicleType,
         iconColor: d?.iconColor,
+        overspeed,
       });
     }
     return out;
-  }, [locations, byImei]);
+  }, [locations, byImei, speedLimits]);
 
   const locateMe = useCallback(async () => {
     const { status } = await Location.requestForegroundPermissionsAsync();
@@ -62,7 +68,7 @@ export default function MapScreen() {
       <SafeAreaView edges={["top"]} style={styles.topOverlay} pointerEvents="box-none">
         <View style={styles.badge}>
           <Text style={styles.badgeBrand}>MotoLink</Text>
-          <Text style={styles.badgeCount}>{vehicles.length} live</Text>
+          <Text style={styles.badgeCount}>{vehicles.length} {t("common.live")}</Text>
         </View>
         {trafficAvailable && (
           <Pressable
@@ -72,7 +78,7 @@ export default function MapScreen() {
             <Text style={[styles.trafficBox, showTraffic && styles.trafficBoxOn]}>
               {showTraffic ? "✓" : " "}
             </Text>
-            <Text style={styles.badgeBrand}>Traffic</Text>
+            <Text style={styles.badgeBrand}>{t("map.traffic")}</Text>
           </Pressable>
         )}
       </SafeAreaView>

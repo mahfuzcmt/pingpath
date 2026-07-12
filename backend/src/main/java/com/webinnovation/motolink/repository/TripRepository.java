@@ -10,8 +10,11 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -214,6 +217,76 @@ public class TripRepository {
                 new MapSqlParameterSource("orgId", orgId).addValue("since", Timestamp.from(since)),
                 Long.class);
         return n == null ? 0 : n;
+    }
+
+    /**
+     * Parking state per device: imei → end time of its latest trip. A device whose
+     * latest trip is still IN_PROGRESS is absent from the map (it is driving), as is
+     * a device with no trips at all (parking time unknown).
+     */
+    public Map<String, Instant> parkedSinceByImei(UUID orgId) {
+        Map<String, Instant> out = new HashMap<>();
+        jdbc.query("""
+                SELECT DISTINCT ON (device_imei) device_imei, status, ended_at
+                FROM trips
+                WHERE org_id = :orgId
+                ORDER BY device_imei, started_at DESC
+                """, new MapSqlParameterSource("orgId", orgId), rs -> {
+            if ("COMPLETED".equals(rs.getString("status"))) {
+                OffsetDateTime endedAt = rs.getObject("ended_at", OffsetDateTime.class);
+                if (endedAt != null) out.put(rs.getString("device_imei"), endedAt.toInstant());
+            }
+        });
+        return out;
+    }
+
+    /** Single-device variant of {@link #parkedSinceByImei}. */
+    public Optional<Instant> parkedSinceForImei(UUID orgId, String imei) {
+        List<Instant> rows = jdbc.query("""
+                SELECT status, ended_at
+                FROM trips
+                WHERE org_id = :orgId AND device_imei = :imei
+                ORDER BY started_at DESC
+                LIMIT 1
+                """,
+                new MapSqlParameterSource("orgId", orgId).addValue("imei", imei),
+                (rs, rn) -> {
+                    if (!"COMPLETED".equals(rs.getString("status"))) return null;
+                    OffsetDateTime endedAt = rs.getObject("ended_at", OffsetDateTime.class);
+                    return endedAt == null ? null : endedAt.toInstant();
+                });
+        return rows.isEmpty() ? Optional.empty() : Optional.ofNullable(rows.get(0));
+    }
+
+    /** One aggregate row per Dhaka-local day that had completed trips. */
+    public record DailyAgg(LocalDate day, int trips, long distanceM, long durationS, long idleS, int maxSpeed) {}
+
+    public List<DailyAgg> dailyAggregates(UUID orgId, String imei, Instant from, Instant to, String zoneId) {
+        var params = new MapSqlParameterSource()
+                .addValue("orgId", orgId)
+                .addValue("imei", imei)
+                .addValue("from", Timestamp.from(from))
+                .addValue("to", Timestamp.from(to))
+                .addValue("tz", zoneId);
+        return jdbc.query("""
+                SELECT (started_at AT TIME ZONE :tz)::date AS day,
+                       COUNT(*)::int                        AS trips,
+                       COALESCE(SUM(distance_m), 0)::bigint AS dist,
+                       COALESCE(SUM(COALESCE(duration_s, 0)), 0)::bigint AS dur,
+                       COALESCE(SUM(idle_time_s), 0)::bigint AS idle,
+                       COALESCE(MAX(max_speed), 0)::int      AS maxspd
+                FROM trips
+                WHERE org_id = :orgId AND device_imei = :imei AND status = 'COMPLETED'
+                  AND started_at >= :from AND started_at < :to
+                GROUP BY 1
+                ORDER BY 1
+                """, params, (rs, rn) -> new DailyAgg(
+                rs.getObject("day", LocalDate.class),
+                rs.getInt("trips"),
+                rs.getLong("dist"),
+                rs.getLong("dur"),
+                rs.getLong("idle"),
+                rs.getInt("maxspd")));
     }
 
     public List<Trip> listForDevice(UUID orgId, String imei, Instant from, Instant to) {

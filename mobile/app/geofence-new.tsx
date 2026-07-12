@@ -7,17 +7,19 @@ import { useDevices } from "@/hooks/useDevices";
 import WebMap, { MapVehicle } from "@/components/WebMap";
 import { Chip, Field, PrimaryButton } from "@/ui";
 import { fmtDistance } from "@/format";
+import { useI18n, type StringKey } from "@/i18n";
 import { colors, radius, space } from "@/theme";
 import type { GeofenceNotifyOn, LatLng, LocationView } from "@/types";
 
 const RADIUS_PRESETS = [100, 250, 500, 1000, 2000, 5000];
-const NOTIFY_OPTIONS: { value: GeofenceNotifyOn; label: string }[] = [
-  { value: "BOTH", label: "Enter + exit" },
-  { value: "ENTER", label: "Enter only" },
-  { value: "EXIT", label: "Exit only" },
+const NOTIFY_OPTIONS: { value: GeofenceNotifyOn; label: StringKey }[] = [
+  { value: "BOTH", label: "geo.enterExit" },
+  { value: "ENTER", label: "geo.enterOnly" },
+  { value: "EXIT", label: "geo.exitOnly" },
 ];
 
 export default function GeofenceNewScreen() {
+  const { t } = useI18n();
   const router = useRouter();
   const { devices } = useDevices();
 
@@ -89,15 +91,15 @@ export default function GeofenceNewScreen() {
 
   async function submit() {
     if (!name.trim()) {
-      setError("Give the geofence a name.");
+      setError(t("geo.errName"));
       return;
     }
     if (!center) {
-      setError("Tap the map to place the zone center.");
+      setError(t("geo.tapCenter"));
       return;
     }
     if (imeis.size === 0) {
-      setError("Select at least one vehicle to watch.");
+      setError(t("geo.errVehicles"));
       return;
     }
     setSubmitting(true);
@@ -133,35 +135,35 @@ export default function GeofenceNewScreen() {
         <View style={styles.mapHint} pointerEvents="none">
           <Text style={styles.mapHintText}>
             {center
-              ? `Center set · ${fmtDistance(radiusM)} radius`
-              : "Tap the map to place the zone center"}
+              ? `${t("geo.centerSet")} · ${t("geo.radius")} ${fmtDistance(radiusM)}`
+              : t("geo.tapCenter")}
           </Text>
         </View>
       </View>
 
       <ScrollView style={styles.form} contentContainerStyle={styles.formContent}>
-        <Field label="Name" placeholder="e.g. Home parking" value={name} onChangeText={setName} />
+        <Field label={t("geo.name")} placeholder={t("geo.namePlaceholder")} value={name} onChangeText={setName} />
 
-        <Text style={styles.label}>Radius</Text>
+        <Text style={styles.label}>{t("geo.radius")}</Text>
         <View style={styles.chips}>
           {RADIUS_PRESETS.map((r) => (
             <Chip key={r} label={fmtDistance(r)} active={r === radiusM} onPress={() => setRadiusM(r)} />
           ))}
         </View>
 
-        <Text style={styles.label}>Notify</Text>
+        <Text style={styles.label}>{t("geo.notify")}</Text>
         <View style={styles.chips}>
           {NOTIFY_OPTIONS.map((o) => (
             <Chip
               key={o.value}
-              label={o.label}
+              label={t(o.label)}
               active={o.value === notifyOn}
               onPress={() => setNotifyOn(o.value)}
             />
           ))}
         </View>
 
-        <Text style={styles.label}>Vehicles to watch</Text>
+        <Text style={styles.label}>{t("geo.watchVehicles")}</Text>
         <View style={styles.chips}>
           {devices.map((d) => (
             <Chip
@@ -171,11 +173,11 @@ export default function GeofenceNewScreen() {
               onPress={() => toggleImei(d.imei)}
             />
           ))}
-          {devices.length === 0 ? <Text style={styles.dim}>No vehicles in this account.</Text> : null}
+          {devices.length === 0 ? <Text style={styles.dim}>{t("veh.noneInAccount")}</Text> : null}
         </View>
 
         {error ? <Text style={styles.error}>{error}</Text> : null}
-        <PrimaryButton label="Create geofence" onPress={() => void submit()} loading={submitting} />
+        <PrimaryButton label={t("geo.create")} onPress={() => void submit()} loading={submitting} />
       </ScrollView>
     </View>
   );

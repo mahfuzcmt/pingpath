@@ -11,8 +11,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.webinnovation.motolink.dto.ReportDtos.MonthlySummary;
+import com.webinnovation.motolink.exception.DomainException;
+
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.time.YearMonth;
+import java.time.format.DateTimeParseException;
 import java.util.UUID;
 
 @RestController
@@ -44,6 +49,32 @@ public class ReportController {
         LocalDate to = LocalDate.parse(toIso);
         byte[] body = service.alarmsCsv(orgId, from, to).getBytes(StandardCharsets.UTF_8);
         return csv(body, "alarms_" + from + "_" + to + ".csv");
+    }
+
+    @GetMapping("/monthly-summary")
+    public MonthlySummary monthlySummary(
+            @RequestParam(name = "device") String imei,
+            @RequestParam(name = "month") String month) {
+        UUID orgId = TenantContext.requireOrgId();
+        return service.monthlySummary(orgId, imei, parseMonth(month));
+    }
+
+    @GetMapping(value = "/monthly-summary.csv", produces = "text/csv;charset=UTF-8")
+    public ResponseEntity<byte[]> monthlySummaryCsv(
+            @RequestParam(name = "device") String imei,
+            @RequestParam(name = "month") String month) {
+        UUID orgId = TenantContext.requireOrgId();
+        YearMonth ym = parseMonth(month);
+        byte[] body = service.monthlySummaryCsv(orgId, imei, ym).getBytes(StandardCharsets.UTF_8);
+        return csv(body, "monthly_" + ym + "_" + imei + ".csv");
+    }
+
+    private static YearMonth parseMonth(String month) {
+        try {
+            return YearMonth.parse(month);
+        } catch (DateTimeParseException e) {
+            throw new DomainException("INVALID_MONTH", "month must be yyyy-MM");
+        }
     }
 
     private ResponseEntity<byte[]> csv(byte[] body, String filename) {

@@ -2,6 +2,7 @@ import { Redirect, Tabs } from "expo-router";
 import { Pressable, Text } from "react-native";
 import { useAuth } from "@/auth/AuthContext";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { useI18n } from "@/i18n";
 import { colors, space } from "@/theme";
 
 function TabIcon({ emoji }: { emoji: string }) {
@@ -10,15 +11,17 @@ function TabIcon({ emoji }: { emoji: string }) {
 
 function SignOut() {
   const { signOut } = useAuth();
+  const { t } = useI18n();
   return (
     <Pressable onPress={() => void signOut()} hitSlop={12} style={{ paddingHorizontal: space.md }}>
-      <Text style={{ color: colors.brand, fontSize: 13, fontWeight: "600" }}>Sign out</Text>
+      <Text style={{ color: colors.brand, fontSize: 13, fontWeight: "600" }}>{t("auth.signOut")}</Text>
     </Pressable>
   );
 }
 
 export default function TabsLayout() {
   const { status } = useAuth();
+  const { t } = useI18n();
   usePushNotifications(status === "authed");
   if (status === "anon") return <Redirect href="/login" />;
 
@@ -34,19 +37,19 @@ export default function TabsLayout() {
     >
       <Tabs.Screen
         name="index"
-        options={{ title: "Home", tabBarIcon: () => <TabIcon emoji="🏠" />, headerRight: () => <SignOut /> }}
+        options={{ title: t("tab.home"), tabBarIcon: () => <TabIcon emoji="🏠" />, headerRight: () => <SignOut /> }}
       />
       <Tabs.Screen
         name="map"
-        options={{ title: "Map", headerShown: false, tabBarIcon: () => <TabIcon emoji="🗺️" /> }}
+        options={{ title: t("tab.map"), headerShown: false, tabBarIcon: () => <TabIcon emoji="🗺️" /> }}
       />
       <Tabs.Screen
         name="vehicles"
-        options={{ title: "Vehicles", tabBarIcon: () => <TabIcon emoji="🚗" />, headerRight: () => <SignOut /> }}
+        options={{ title: t("tab.vehicles"), tabBarIcon: () => <TabIcon emoji="🚗" />, headerRight: () => <SignOut /> }}
       />
       <Tabs.Screen
         name="alerts"
-        options={{ title: "Alerts", tabBarIcon: () => <TabIcon emoji="🔔" />, headerRight: () => <SignOut /> }}
+        options={{ title: t("tab.alerts"), tabBarIcon: () => <TabIcon emoji="🔔" />, headerRight: () => <SignOut /> }}
       />
     </Tabs>
   );

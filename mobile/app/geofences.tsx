@@ -5,16 +5,18 @@ import { deleteGeofence, listGeofences } from "@/api/endpoints";
 import { extractError } from "@/api/client";
 import { EmptyState, Pill, PrimaryButton } from "@/ui";
 import { fmtDistance } from "@/format";
+import { useI18n, type StringKey } from "@/i18n";
 import { colors, radius, space } from "@/theme";
 import type { GeofenceView } from "@/types";
 
-const NOTIFY_LABEL: Record<GeofenceView["notifyOn"], string> = {
-  ENTER: "on enter",
-  EXIT: "on exit",
-  BOTH: "enter + exit",
+const NOTIFY_KEY: Record<GeofenceView["notifyOn"], StringKey> = {
+  ENTER: "geo.onEnter",
+  EXIT: "geo.onExit",
+  BOTH: "geo.enterExit",
 };
 
 export default function GeofencesScreen() {
+  const { t } = useI18n();
   const router = useRouter();
   const [fences, setFences] = useState<GeofenceView[]>([]);
   const [loading, setLoading] = useState(false);
@@ -40,10 +42,10 @@ export default function GeofencesScreen() {
   );
 
   function confirmDelete(g: GeofenceView) {
-    Alert.alert("Delete geofence?", `"${g.name}" will stop firing alerts.`, [
-      { text: "Cancel", style: "cancel" },
+    Alert.alert(t("geo.deleteTitle"), `"${g.name}" ${t("geo.deleteMsg")}`, [
+      { text: t("common.cancel"), style: "cancel" },
       {
-        text: "Delete",
+        text: t("common.delete"),
         style: "destructive",
         onPress: () => {
           void (async () => {
@@ -67,7 +69,7 @@ export default function GeofencesScreen() {
         contentContainerStyle={styles.list}
         refreshControl={<RefreshControl refreshing={loading} onRefresh={reload} tintColor={colors.brand} />}
         ListEmptyComponent={
-          loading ? null : <EmptyState text="No geofences yet. Create one to get zone entry/exit alerts." />
+          loading ? null : <EmptyState text={`${t("geo.none")} ${t("geo.createHint")}`} />
         }
         ListHeaderComponent={error ? <Text style={styles.error}>{error}</Text> : null}
         renderItem={({ item }) => (
@@ -76,14 +78,14 @@ export default function GeofencesScreen() {
               <Text style={styles.name}>{item.name}</Text>
               <Text style={styles.meta}>
                 {item.type === "CIRCLE" && item.radiusM != null
-                  ? `Circle · ${fmtDistance(item.radiusM)} radius`
-                  : `Polygon · ${item.polygon.length} points`}
+                  ? `${t("geo.circle")} · ${t("geo.radius")} ${fmtDistance(item.radiusM)}`
+                  : `${t("geo.polygon")} · ${item.polygon.length} ${t("geo.points")}`}
                 {"  ·  "}
-                {NOTIFY_LABEL[item.notifyOn]}
+                {t(NOTIFY_KEY[item.notifyOn])}
               </Text>
             </View>
             <Pill
-              label={item.active ? "Active" : "Off"}
+              label={item.active ? t("geo.active") : t("geo.off")}
               color={item.active ? colors.ok : colors.textFaint}
             />
             <Pressable onPress={() => confirmDelete(item)} hitSlop={10} style={styles.deleteBtn}>
@@ -93,7 +95,7 @@ export default function GeofencesScreen() {
         )}
       />
       <View style={styles.footer}>
-        <PrimaryButton label="New geofence" onPress={() => router.push("/geofence-new")} />
+        <PrimaryButton label={t("geo.new")} onPress={() => router.push("/geofence-new")} />
       </View>
     </View>
   );

@@ -3,6 +3,7 @@ import { useAuth } from "@/auth/AuthContext";
 import { useAlarms } from "@/hooks/useAlarms";
 import { EmptyState, Loading } from "@/ui";
 import { fmtAgo, severityColor } from "@/format";
+import { useI18n } from "@/i18n";
 import { colors, radius, space } from "@/theme";
 import type { AlarmView } from "@/types";
 
@@ -14,24 +15,23 @@ function alarmLabel(type: string): string {
 }
 
 export default function AlertsScreen() {
+  const { t } = useI18n();
   const { org } = useAuth();
   const { alarms, loading, reload, acknowledge } = useAlarms(org?.id ?? null);
 
-  if (loading && alarms.length === 0) return <Loading label="Loading alerts…" />;
+  if (loading && alarms.length === 0) return <Loading label={t("alerts.loading")} />;
 
   return (
     <View style={styles.screen}>
       <View style={styles.disclaimer}>
-        <Text style={styles.disclaimerText}>
-          Some alerts may be delayed due to GPS coverage, network, or battery conditions.
-        </Text>
+        <Text style={styles.disclaimerText}>{t("alerts.disclaimer")}</Text>
       </View>
       <FlatList
         data={alarms}
         keyExtractor={(a) => a.id}
         contentContainerStyle={styles.list}
         refreshControl={<RefreshControl refreshing={loading} onRefresh={reload} tintColor={colors.brand} />}
-        ListEmptyComponent={<EmptyState text="No alerts." />}
+        ListEmptyComponent={<EmptyState text={t("alerts.none")} />}
         renderItem={({ item }) => <AlarmCard alarm={item} onAck={() => acknowledge(item.id)} />}
       />
     </View>
@@ -39,6 +39,7 @@ export default function AlertsScreen() {
 }
 
 function AlarmCard({ alarm, onAck }: { alarm: AlarmView; onAck: () => void }) {
+  const { t } = useI18n();
   const color = severityColor(alarm.severity);
   return (
     <View style={styles.card}>
@@ -55,10 +56,10 @@ function AlarmCard({ alarm, onAck }: { alarm: AlarmView; onAck: () => void }) {
           </Text>
         ) : null}
         {alarm.acknowledged ? (
-          <Text style={styles.acked}>✓ Acknowledged</Text>
+          <Text style={styles.acked}>✓ {t("alerts.acked")}</Text>
         ) : (
           <Pressable onPress={onAck} style={({ pressed }) => [styles.ackBtn, pressed && { opacity: 0.7 }]}>
-            <Text style={styles.ackText}>Acknowledge</Text>
+            <Text style={styles.ackText}>{t("alerts.acknowledge")}</Text>
           </Pressable>
         )}
       </View>

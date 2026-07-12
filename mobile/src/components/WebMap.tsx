@@ -16,6 +16,8 @@ export interface MapVehicle {
   vehicleType?: string | null;
   /** Body tint of the silhouette (device icon color). */
   iconColor?: string | null;
+  /** Above the configured SPEED_OVER threshold — red body + blinking marker. */
+  overspeed?: boolean;
 }
 
 export interface MapPoint {
@@ -82,6 +84,8 @@ ${googleScripts}
        font:700 10px ui-monospace,monospace;color:#fff;letter-spacing:.3px;
        padding:2px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.55);
        box-shadow:0 1px 4px rgba(10,25,40,.35);white-space:nowrap}
+  .ovs{animation:mlblink 1s step-start infinite}
+  @keyframes mlblink{50%{opacity:.25}}
 </style></head><body>
 <div id="map"></div>
 <script>
@@ -136,8 +140,8 @@ ${googleScripts}
     CNG: function(c){ return '<path d="M12 4 C16 4 18 7 18 11 L18 31 C18 34.5 15.5 36 12 36 C8.5 36 6 34.5 6 31 L6 11 C6 7 8 4 12 4 Z" fill="'+c+'" stroke="#0A1928" stroke-width="1.2"/><path d="M8.5 9 Q12 6.5 15.5 9 L15.5 13 L8.5 13 Z" fill="#fff" fill-opacity="0.75"/><rect x="8.5" y="27" width="7" height="6" rx="2" fill="#0A1928" fill-opacity="0.45"/>'; }
   };
   function vehHtml(v){
-    const body = (BODY[v.vehicleType]||BODY.CAR)(v.iconColor||'#E8900A');
-    return '<div class="vwrap">'
+    const body = (BODY[v.vehicleType]||BODY.CAR)(v.overspeed ? '#DC2626' : (v.iconColor||'#E8900A'));
+    return '<div class="vwrap'+(v.overspeed?' ovs':'')+'">'
       + (v.label ? '<div class="lbl" style="background:'+(v.color||'#0F2742')+'">'+esc(v.label)+'</div>' : '')
       + '<div class="veh" style="transform:rotate('+(v.course||0)+'deg)">'
       + '<svg width="40" height="40" viewBox="0 0 40 40"><g transform="translate(8 0)">'+body+'</g></svg>'
@@ -146,7 +150,7 @@ ${googleScripts}
   function vehIcon(v){
     return L.divIcon({className:'', iconSize:[40,40], iconAnchor:[20,20], html: vehHtml(v)});
   }
-  function vehSig(v){ return [v.vehicleType,v.iconColor,v.color,v.label].join('|'); }
+  function vehSig(v){ return [v.vehicleType,v.iconColor,v.color,v.label,v.overspeed?1:0].join('|'); }
 
   // Playback marker keeps the plain arrow (it marks a route position, not a vehicle).
   function arrowIcon(color, course){

@@ -270,23 +270,6 @@ export function GeofenceEditor({ onSubmit, onCancel }: Props) {
           {type === "CIRCLE" ? t("geo.clickToSetCenter") : t("geo.clickToAddVertex")}
         </div>
 
-        {/* Debug: Show what's needed for save */}
-        <div className="text-xs text-ink-400 space-y-1">
-          <div className={name.trim() ? "text-alarm-green" : "text-alarm-red"}>
-            {name.trim() ? "✓" : "✗"} Name: {name.trim() || "(empty)"}
-          </div>
-          {type === "CIRCLE" && (
-            <div className={center ? "text-alarm-green" : "text-alarm-red"}>
-              {center ? "✓" : "✗"} Center: {center ? `${center.lat.toFixed(4)}, ${center.lng.toFixed(4)}` : "(click map)"}
-            </div>
-          )}
-          {type === "POLYGON" && (
-            <div className={polygon.length >= 3 ? "text-alarm-green" : "text-alarm-red"}>
-              {polygon.length >= 3 ? "✓" : "✗"} Vertices: {polygon.length}/3 minimum
-            </div>
-          )}
-        </div>
-
         {type === "POLYGON" && polygon.length > 0 && (
           <button
             type="button"

@@ -1,5 +1,6 @@
 import { api } from "./client";
 import type {
+  AlarmRuleView,
   AlarmView,
   CommandResponse,
   DeviceView,
@@ -130,6 +131,12 @@ export async function registerPushToken(
 /** Token goes in the query string — Expo tokens contain reserved chars like [ ]. */
 export async function unregisterPushToken(token: string): Promise<void> {
   await api.delete("/users/me/push-tokens", { params: { token } });
+}
+
+// ----- Alarm rules (overspeed thresholds) -----
+export async function listAlarmRules(): Promise<AlarmRuleView[]> {
+  const r = await api.get<AlarmRuleView[]>("/alarm-rules");
+  return r.data;
 }
 
 // ----- Alarms -----

@@ -1,8 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useLocale } from "@/lib/i18n";
-import { formatVoltage } from "@/lib/format";
+import { useTrips } from "@/hooks/useTrips";
+import { useLocationHistory } from "@/hooks/useLocationHistory";
+import { cutFuel, restoreFuel, queryAddress, sendRawCommand } from "@/lib/deviceCommands";
+import { extractError } from "@/lib/api";
+import { dhakaTodayStartIso, formatDurationS, formatNumber, formatSince } from "@/lib/format";
+import { TimeSeriesChart, chartColors } from "@/components/charts/TimeSeriesChart";
 import type { DeviceView, LocationView } from "@/types/domain";
 
 interface Props {
@@ -12,7 +17,8 @@ interface Props {
   onViewHistory: () => void;
 }
 
-type TabId = "data" | "graph" | "messages";
+type TabId = "data" | "graph";
+type CommandTemplate = "custom" | "cut" | "restore" | "address";
 
 function formatDateTime(ts: string | null | undefined): string {
   if (!ts) return "—";
@@ -33,12 +39,6 @@ function formatOdometer(meters: number | undefined | null): string {
   return `${(meters / 1000).toFixed(0)} km`;
 }
 
-function formatDuration(seconds: number): string {
-  const h = Math.floor(seconds / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  return `${h} h ${m} min`;
-}
-
 export function DeviceBottomPanel({ device, location, onClose, onViewHistory }: Props) {
   const { t, locale } = useLocale();
   const [activeTab, setActiveTab] = useState<TabId>("data");
@@ -47,10 +47,73 @@ export function DeviceBottomPanel({ device, location, onClose, onViewHistory }: 
   const isOnline = device.status === "ONLINE";
   const status = !isOnline ? "Offline" : isMoving ? "Moving" : location?.accOn ? "Idle" : "Stopped";
 
+  // Today (Asia/Dhaka) — shared by the stats block and the graphs.
+  const range = useMemo(() => ({ from: dhakaTodayStartIso(), to: new Date().toISOString() }), []);
+  const { trips } = useTrips({ imei: device.imei, fromIso: range.from, toIso: range.to });
+
+  const stats = useMemo(() => {
+    const distanceM = trips.reduce((s, tr) => s + tr.distanceM, 0);
+    const durationS = trips.reduce((s, tr) => s + (tr.durationS ?? 0), 0);
+    const idleS = trips.reduce((s, tr) => s + tr.idleTimeS, 0);
+    const maxSpeed = trips.reduce((m, tr) => Math.max(m, tr.maxSpeed), 0);
+    const avgSpeed = durationS > 0 ? Math.round(distanceM / 1000 / (durationS / 3600)) : 0;
+    const elapsedS = Math.max(0, (Date.now() - new Date(range.from).getTime()) / 1000);
+    return {
+      distanceM,
+      moveS: Math.max(0, durationS - idleS),
+      stopS: Math.max(0, elapsedS - durationS),
+      maxSpeed,
+      avgSpeed,
+    };
+  }, [trips, range.from]);
+
+  // Graph data — only fetched while the Graph tab is open.
+  const { locations: graphLocs, loading: graphLoading } = useLocationHistory(
+    activeTab === "graph" ? device.imei : null,
+    range.from,
+    range.to,
+  );
+  const speedPoints = useMemo(
+    () => graphLocs.map((l) => ({ t: Date.parse(l.ts), v: l.speed })),
+    [graphLocs],
+  );
+  const voltagePoints = useMemo(
+    () =>
+      graphLocs
+        .filter((l) => l.voltageMv != null)
+        .map((l) => ({ t: Date.parse(l.ts), v: (l.voltageMv as number) / 1000 })),
+    [graphLocs],
+  );
+
+  // Object control.
+  const [template, setTemplate] = useState<CommandTemplate>("custom");
+  const [rawText, setRawText] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [cmdMsg, setCmdMsg] = useState<string | null>(null);
+
+  async function sendCommand() {
+    if (busy) return;
+    if (template === "custom" && !rawText.trim()) return;
+    if (template === "cut" && !window.confirm(t("panel.confirmCut"))) return;
+    setBusy(true);
+    setCmdMsg(null);
+    try {
+      const res =
+        template === "cut" ? await cutFuel(device.imei)
+        : template === "restore" ? await restoreFuel(device.imei)
+        : template === "address" ? await queryAddress(device.imei)
+        : await sendRawCommand(device.imei, rawText.trim());
+      setCmdMsg(res.ok ? res.reply ?? t("panel.commandSent") : res.error ?? t("panel.commandFailed"));
+    } catch (e) {
+      setCmdMsg(extractError(e).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   const tabs: { id: TabId; label: string }[] = [
-    { id: "data", label: "Data" },
-    { id: "graph", label: "Graph" },
-    { id: "messages", label: "Messages" },
+    { id: "data", label: t("panel.data") },
+    { id: "graph", label: t("panel.graph") },
   ];
 
   return (
@@ -79,7 +142,7 @@ export function DeviceBottomPanel({ device, location, onClose, onViewHistory }: 
             onClick={onViewHistory}
             className="btn-secondary text-xs"
           >
-            View History
+            {t("fleet.viewHistory")}
           </button>
           <button
             type="button"
@@ -105,6 +168,9 @@ export function DeviceBottomPanel({ device, location, onClose, onViewHistory }: 
             <DataRow icon="🧭" label="Angle" value={location?.course != null ? `${location.course} °` : "— °"} />
             <DataRow icon="📍" label="Position" value={location ? `${location.latitude.toFixed(6)} °, ${location.longitude.toFixed(6)} °` : "—"} link />
             <DataRow icon="🚗" label="Speed" value={`${location?.speed ?? 0} kph`} />
+            {device.parkedSince && !isMoving && (
+              <DataRow icon="🅿️" label="Parked for" value={formatSince(device.parkedSince)} />
+            )}
           </div>
 
           {/* Middle data columns */}
@@ -117,59 +183,99 @@ export function DeviceBottomPanel({ device, location, onClose, onViewHistory }: 
           </div>
 
           {/* Object control */}
-          <div className="w-full p-3 md:w-48 md:border-r md:border-surface-200">
-            <div className="text-xs font-semibold text-ink-700 mb-2">Object control</div>
+          <div className="w-full p-3 md:w-52 md:border-r md:border-surface-200">
+            <div className="text-xs font-semibold text-ink-700 mb-2">{t("panel.objectControl")}</div>
             <div className="space-y-2">
               <div>
-                <label className="text-[10px] text-ink-500">Template</label>
-                <select className="select w-full mt-0.5">
-                  <option>Custom</option>
+                <label className="text-[10px] text-ink-500">{t("panel.template")}</label>
+                <select
+                  className="select w-full mt-0.5"
+                  value={template}
+                  onChange={(e) => {
+                    setTemplate(e.target.value as CommandTemplate);
+                    setCmdMsg(null);
+                  }}
+                >
+                  <option value="custom">{t("panel.custom")}</option>
+                  <option value="cut">{t("panel.cutEngine")}</option>
+                  <option value="restore">{t("panel.restoreEngine")}</option>
+                  <option value="address">{t("panel.queryAddress")}</option>
                 </select>
               </div>
               <div>
-                <label className="text-[10px] text-ink-500">Command</label>
+                <label className="text-[10px] text-ink-500">{t("panel.command")}</label>
                 <div className="flex gap-1 mt-0.5">
-                  <input type="text" className="input flex-1" placeholder="" />
-                  <button type="button" className="btn-icon border border-surface-300">
+                  <input
+                    type="text"
+                    className="input flex-1 font-mono disabled:bg-surface-100"
+                    placeholder={template === "custom" ? "SPDADD,ON,10,2#" : ""}
+                    value={template === "custom" ? rawText : template === "cut" ? "DYD" : template === "restore" ? "HFYD" : "DWXX"}
+                    disabled={template !== "custom"}
+                    onChange={(e) => setRawText(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") void sendCommand(); }}
+                  />
+                  <button
+                    type="button"
+                    disabled={busy || (template === "custom" && !rawText.trim())}
+                    onClick={() => void sendCommand()}
+                    className="btn-icon border border-surface-300 disabled:opacity-40"
+                  >
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" />
                     </svg>
                   </button>
                 </div>
               </div>
+              {cmdMsg && <div className="text-[10px] text-ink-600 break-words">{cmdMsg}</div>}
             </div>
           </div>
 
           {/* Daily statistics */}
           <div className="w-full p-3 md:w-56">
-            <div className="text-xs font-semibold text-ink-700 mb-2">Daily statistics</div>
+            <div className="text-xs font-semibold text-ink-700 mb-2">{t("panel.dailyStats")}</div>
             <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-              <span className="text-ink-500">Route length</span>
-              <span className="text-ink-900 font-medium text-right">316.84 km</span>
-              <span className="text-ink-500">Move duration</span>
-              <span className="text-ink-900 font-medium text-right">7 h 27 min</span>
-              <span className="text-ink-500">Stop duration</span>
-              <span className="text-ink-900 font-medium text-right">4 h 57 min</span>
-              <span className="text-ink-500">Top speed</span>
-              <span className="text-ink-900 font-medium text-right">114 kph</span>
-              <span className="text-ink-500">Average speed</span>
-              <span className="text-ink-900 font-medium text-right">42 kph</span>
-              <span className="text-ink-500">Fuel consumption</span>
-              <span className="text-ink-900 font-medium text-right">— liters</span>
+              <span className="text-ink-500">{t("home.routeLength")}</span>
+              <span className="text-ink-900 font-medium text-right">
+                {formatNumber(stats.distanceM / 1000, locale, { maximumFractionDigits: 1 })} km
+              </span>
+              <span className="text-ink-500">{t("home.moveDuration")}</span>
+              <span className="text-ink-900 font-medium text-right">{formatDurationS(stats.moveS, locale)}</span>
+              <span className="text-ink-500">{t("home.stopDuration")}</span>
+              <span className="text-ink-900 font-medium text-right">{formatDurationS(stats.stopS, locale)}</span>
+              <span className="text-ink-500">{t("trips.maxSpeed")}</span>
+              <span className="text-ink-900 font-medium text-right">{stats.maxSpeed} {t("fleet.kmh")}</span>
+              <span className="text-ink-500">{t("trips.avgSpeed")}</span>
+              <span className="text-ink-900 font-medium text-right">{stats.avgSpeed} {t("fleet.kmh")}</span>
             </div>
           </div>
         </div>
       )}
 
       {activeTab === "graph" && (
-        <div className="p-4 text-center text-ink-500 text-sm">
-          Speed and sensor graphs will appear here
-        </div>
-      )}
-
-      {activeTab === "messages" && (
-        <div className="p-4 text-center text-ink-500 text-sm">
-          Device messages and commands log will appear here
+        <div className="max-h-[50vh] overflow-y-auto p-3">
+          {graphLoading ? (
+            <div className="p-4 text-center text-xs text-ink-400">…</div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+              <TimeSeriesChart
+                points={speedPoints}
+                color={chartColors.speed}
+                title={t("fleet.speed")}
+                unit={t("fleet.kmh")}
+                yFromZero
+                emptyText={t("graph.noData")}
+                formatValue={(v) => String(Math.round(v))}
+              />
+              <TimeSeriesChart
+                points={voltagePoints}
+                color={chartColors.voltage}
+                title={t("fleet.voltage")}
+                unit="V"
+                emptyText={t("graph.noData")}
+                formatValue={(v) => v.toFixed(1)}
+              />
+            </div>
+          )}
         </div>
       )}
     </div>

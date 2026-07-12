@@ -16,11 +16,21 @@ import {
   sameDay,
   weekday,
 } from "@/dateRange";
+import { useI18n, type StringKey } from "@/i18n";
 import { colors, radius, space } from "@/theme";
 
 // Saturday-first weekday headers (Bangladesh week convention).
 const WD = ["Sa", "Su", "Mo", "Tu", "We", "Th", "Fr"];
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+const PRESET_KEY: Record<PresetKey, StringKey> = {
+  today: "preset.today",
+  yesterday: "preset.yesterday",
+  thisWeek: "preset.thisWeek",
+  lastWeek: "preset.lastWeek",
+  last7: "preset.last7",
+  last30: "preset.last30",
+};
 
 type Cell = { day: DayParts } | null;
 
@@ -34,6 +44,7 @@ export default function DateRangePicker({
   onApply: (r: DateRange) => void;
   onClose: () => void;
 }) {
+  const { t } = useI18n();
   const today = dhakaParts();
   const [view, setView] = useState({ y: today.y, m: today.m });
   const [start, setStart] = useState<DayParts | null>(null);
@@ -104,7 +115,7 @@ export default function DateRangePicker({
           <View style={styles.presetRow}>
             {PRESETS.map((p) => (
               <Pressable key={p.key} onPress={() => applyPreset(p.key)} style={styles.preset}>
-                <Text style={styles.presetText}>{p.label}</Text>
+                <Text style={styles.presetText}>{t(PRESET_KEY[p.key])}</Text>
               </Pressable>
             ))}
           </View>
@@ -160,7 +171,7 @@ export default function DateRangePicker({
 
           <View style={styles.timeRow}>
             <View style={styles.timeField}>
-              <Text style={styles.timeLabel}>Start time</Text>
+              <Text style={styles.timeLabel}>{t("cal.startTime")}</Text>
               <TextInput
                 value={startTime}
                 onChangeText={setStartTime}
@@ -172,7 +183,7 @@ export default function DateRangePicker({
               />
             </View>
             <View style={styles.timeField}>
-              <Text style={styles.timeLabel}>End time</Text>
+              <Text style={styles.timeLabel}>{t("cal.endTime")}</Text>
               <TextInput
                 value={endTime}
                 onChangeText={setEndTime}
@@ -188,19 +199,19 @@ export default function DateRangePicker({
           <Text style={styles.selInfo}>
             {start
               ? `${fmtDay(start)}${end && !sameDay(start, end) ? ` – ${fmtDay(end)}` : ""}`
-              : "Tap a day, then a second day for a range."}
+              : t("cal.tapRange")}
           </Text>
 
           <View style={styles.actions}>
             <Pressable onPress={onClose} style={[styles.btn, styles.btnGhost]}>
-              <Text style={styles.btnGhostText}>Cancel</Text>
+              <Text style={styles.btnGhostText}>{t("common.cancel")}</Text>
             </Pressable>
             <Pressable
               onPress={applyCustom}
               disabled={!start}
               style={[styles.btn, styles.btnPrimary, !start && { opacity: 0.5 }]}
             >
-              <Text style={styles.btnPrimaryText}>Apply</Text>
+              <Text style={styles.btnPrimaryText}>{t("common.apply")}</Text>
             </Pressable>
           </View>
         </View>
