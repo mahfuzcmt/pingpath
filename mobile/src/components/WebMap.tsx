@@ -8,8 +8,14 @@ export interface MapVehicle {
   lat: number;
   lng: number;
   course: number;
+  /** Status color — used for the plate-label pill background. */
   color: string;
+  /** Label text shown above the marker (vehicle number). */
   label: string;
+  /** Marker silhouette: CAR | MOTORBIKE | TRUCK | BUS | CNG (default CAR). */
+  vehicleType?: string | null;
+  /** Body tint of the silhouette (device icon color). */
+  iconColor?: string | null;
 }
 
 export interface MapPoint {
@@ -35,6 +41,10 @@ interface Props {
   /** Circle overlay (geofence preview); null clears it. */
   circle?: MapCircle | null;
   fitRoute?: boolean;
+  /** Google live-traffic overlay (only effective on the Google base layer). */
+  showTraffic?: boolean;
+  /** Reports whether the traffic overlay is available (Google base active). */
+  onTrafficAvailable?: (available: boolean) => void;
   onSelect?: (imei: string) => void;
   /** Fires when the user taps empty map (not a marker). */
   onMapPress?: (p: { lat: number; lng: number }) => void;
@@ -65,10 +75,13 @@ function buildHtml(googleKey: string): string {
 ${googleScripts}
 <style>
   html,body,#map{margin:0;height:100%;width:100%;background:${colors.bg}}
-  .veh{width:26px;height:26px;cursor:pointer;transform-origin:center}
+  .vwrap{position:relative;width:40px;height:40px}
+  .veh{width:40px;height:40px;cursor:pointer;transform-origin:center}
   .veh svg{display:block;filter:drop-shadow(0 1px 2px rgba(0,0,0,.6))}
-  .lbl{font:600 10px system-ui;color:#fff;background:rgba(15,39,66,.85);
-       padding:1px 5px;border-radius:6px;transform:translateY(-4px);white-space:nowrap}
+  .lbl{position:absolute;bottom:calc(100% - 2px);left:50%;transform:translateX(-50%);
+       font:700 10px ui-monospace,monospace;color:#fff;letter-spacing:.3px;
+       padding:2px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.55);
+       box-shadow:0 1px 4px rgba(10,25,40,.35);white-space:nowrap}
 </style></head><body>
 <div id="map"></div>
 <script>
@@ -92,23 +105,55 @@ ${googleScripts}
   } catch(e){ base = null; }
   if(!base) base = osmLayer();
   base.addTo(map);
+
+  // Google live-traffic overlay — only exists on the GoogleMutant base layer.
+  let traffic = false;
+  function applyTraffic(){
+    if(!base || !base.addGoogleLayer) return;
+    if(traffic) base.addGoogleLayer('TrafficLayer');
+    else base.removeGoogleLayer('TrafficLayer');
+  }
   // Google key rejected (bad key / referrer) — swap to OSM so the map still works.
-  window.gm_authFailure = function(){ map.removeLayer(base); base = osmLayer().addTo(map); };
+  window.gm_authFailure = function(){
+    map.removeLayer(base); base = osmLayer().addTo(map);
+    post({type:'traffic', available:false});
+  };
 
   const markers = {};       // imei -> L.Marker
   let moving = null;         // playback marker
   let route = null;          // trip polyline
   let circle = null;         // geofence preview
 
-  function arrowHtml(color, course, label){
-    return '<div class="veh" style="transform:rotate('+(course||0)+'deg)">'
-      + '<svg width="26" height="26" viewBox="0 0 24 24"><path d="M12 2 L19 21 L12 16 L5 21 Z" fill="'+color+'" stroke="#0A1928" stroke-width="1.2"/></svg>'
-      + '</div>'
-      + (label ? '<div class="lbl">'+label.replace(/[<>&]/g,'')+'</div>' : '');
+  function esc(s){ return String(s==null?'':s).replace(/[<>&]/g,''); }
+
+  // Top-view vehicle silhouettes (24x40, pointing north) — mirrors the web
+  // dashboard's frontend/src/lib/vehicleIcons.ts.
+  const BODY = {
+    CAR: function(c){ return '<rect x="5" y="4" width="14" height="32" rx="5.5" fill="'+c+'" stroke="#0A1928" stroke-width="1.2"/><rect x="7" y="10" width="10" height="6" rx="2" fill="#fff" fill-opacity="0.75"/><rect x="7" y="26" width="10" height="5" rx="2" fill="#fff" fill-opacity="0.45"/>'; },
+    MOTORBIKE: function(c){ return '<rect x="9" y="6" width="6" height="28" rx="3" fill="'+c+'" stroke="#0A1928" stroke-width="1.2"/><rect x="4" y="9" width="16" height="2.5" rx="1.2" fill="#0A1928"/><circle cx="12" cy="7" r="2.6" fill="#fff" fill-opacity="0.75"/><rect x="9.5" y="23" width="5" height="7" rx="2" fill="#0A1928" fill-opacity="0.55"/>'; },
+    TRUCK: function(c){ return '<rect x="4" y="3" width="16" height="12" rx="3" fill="'+c+'" stroke="#0A1928" stroke-width="1.2"/><rect x="6" y="6" width="12" height="4" rx="1.5" fill="#fff" fill-opacity="0.75"/><rect x="4" y="16" width="16" height="21" rx="2" fill="'+c+'" stroke="#0A1928" stroke-width="1.2"/><line x1="4" y1="26" x2="20" y2="26" stroke="#0A1928" stroke-width="1" stroke-opacity="0.4"/>'; },
+    BUS: function(c){ return '<rect x="4.5" y="3" width="15" height="34" rx="4" fill="'+c+'" stroke="#0A1928" stroke-width="1.2"/><rect x="6.5" y="7" width="11" height="4.5" rx="1.5" fill="#fff" fill-opacity="0.75"/><rect x="6.5" y="15" width="11" height="14" rx="1.5" fill="#fff" fill-opacity="0.35"/><rect x="6.5" y="31" width="11" height="3.5" rx="1.5" fill="#fff" fill-opacity="0.5"/>'; },
+    CNG: function(c){ return '<path d="M12 4 C16 4 18 7 18 11 L18 31 C18 34.5 15.5 36 12 36 C8.5 36 6 34.5 6 31 L6 11 C6 7 8 4 12 4 Z" fill="'+c+'" stroke="#0A1928" stroke-width="1.2"/><path d="M8.5 9 Q12 6.5 15.5 9 L15.5 13 L8.5 13 Z" fill="#fff" fill-opacity="0.75"/><rect x="8.5" y="27" width="7" height="6" rx="2" fill="#0A1928" fill-opacity="0.45"/>'; }
+  };
+  function vehHtml(v){
+    const body = (BODY[v.vehicleType]||BODY.CAR)(v.iconColor||'#E8900A');
+    return '<div class="vwrap">'
+      + (v.label ? '<div class="lbl" style="background:'+(v.color||'#0F2742')+'">'+esc(v.label)+'</div>' : '')
+      + '<div class="veh" style="transform:rotate('+(v.course||0)+'deg)">'
+      + '<svg width="40" height="40" viewBox="0 0 40 40"><g transform="translate(8 0)">'+body+'</g></svg>'
+      + '</div></div>';
   }
-  function arrowIcon(color, course, label){
+  function vehIcon(v){
+    return L.divIcon({className:'', iconSize:[40,40], iconAnchor:[20,20], html: vehHtml(v)});
+  }
+  function vehSig(v){ return [v.vehicleType,v.iconColor,v.color,v.label].join('|'); }
+
+  // Playback marker keeps the plain arrow (it marks a route position, not a vehicle).
+  function arrowIcon(color, course){
     return L.divIcon({className:'', iconSize:[26,26], iconAnchor:[13,13],
-      html: arrowHtml(color, course, label)});
+      html: '<div class="veh" style="width:26px;height:26px;transform:rotate('+(course||0)+'deg)">'
+        + '<svg width="26" height="26" viewBox="0 0 24 24"><path d="M12 2 L19 21 L12 16 L5 21 Z" fill="'+color+'" stroke="#0A1928" stroke-width="1.2"/></svg>'
+        + '</div>'});
   }
   function rotate(marker, course){
     const el = marker.getElement() && marker.getElement().querySelector('.veh');
@@ -120,20 +165,24 @@ ${googleScripts}
       const seen = {};
       list.forEach(v => {
         seen[v.imei]=1;
-        if(markers[v.imei]){
-          markers[v.imei].setLatLng([v.lat,v.lng]);
-          rotate(markers[v.imei], v.course);
+        const m = markers[v.imei];
+        if(m){
+          m.setLatLng([v.lat,v.lng]);
+          if(m._mlSig !== vehSig(v)){ m.setIcon(vehIcon(v)); m._mlSig = vehSig(v); }
+          rotate(m, v.course);
         } else {
-          const m = L.marker([v.lat,v.lng], {icon: arrowIcon(v.color, v.course, v.label)});
-          m.on('click', () => post({type:'select', imei:v.imei}));
-          m.addTo(map);
-          markers[v.imei] = m;
+          const nm = L.marker([v.lat,v.lng], {icon: vehIcon(v)});
+          nm._mlSig = vehSig(v);
+          nm.on('click', () => post({type:'select', imei:v.imei}));
+          nm.addTo(map);
+          markers[v.imei] = nm;
         }
       });
       Object.keys(markers).forEach(imei => {
         if(!seen[imei]){ markers[imei].remove(); delete markers[imei]; }
       });
     },
+    setTraffic(on){ traffic = !!on; applyTraffic(); },
     setRoute(coords){
       const latlngs = coords.map(c => [c[1], c[0]]);   // [lng,lat] -> [lat,lng]
       if(route){ route.setLatLngs(latlngs); }
@@ -161,7 +210,7 @@ ${googleScripts}
     }
   };
   map.on('click', (e) => post({type:'mapclick', lat:e.latlng.lat, lng:e.latlng.lng}));
-  map.whenReady(() => post({type:'ready'}));
+  map.whenReady(() => post({type:'ready', google: !!(base && base.addGoogleLayer)}));
 </script></body></html>`;
 }
 
@@ -172,6 +221,8 @@ export default function WebMap({
   center,
   circle,
   fitRoute,
+  showTraffic,
+  onTrafficAvailable,
   onSelect,
   onMapPress,
 }: Props) {
@@ -219,6 +270,10 @@ export default function WebMap({
     if (circle !== undefined) run(`window.MLMap.setCircle(${JSON.stringify(circle ?? null)})`);
   }, [circle, run]);
 
+  useEffect(() => {
+    if (showTraffic !== undefined) run(`window.MLMap.setTraffic(${showTraffic ? "true" : "false"})`);
+  }, [showTraffic, run]);
+
   const onMessage = useCallback(
     (e: WebViewMessageEvent) => {
       try {
@@ -227,9 +282,15 @@ export default function WebMap({
           imei?: string;
           lat?: number;
           lng?: number;
+          google?: boolean;
+          available?: boolean;
         };
-        if (msg.type === "ready") setReady(true);
-        else if (msg.type === "select" && msg.imei) onSelect?.(msg.imei);
+        if (msg.type === "ready") {
+          setReady(true);
+          onTrafficAvailable?.(msg.google === true);
+        } else if (msg.type === "traffic") {
+          onTrafficAvailable?.(msg.available === true);
+        } else if (msg.type === "select" && msg.imei) onSelect?.(msg.imei);
         else if (msg.type === "mapclick" && msg.lat != null && msg.lng != null) {
           onMapPress?.({ lat: msg.lat, lng: msg.lng });
         }
@@ -237,7 +298,7 @@ export default function WebMap({
         /* ignore */
       }
     },
-    [onSelect, onMapPress],
+    [onSelect, onMapPress, onTrafficAvailable],
   );
 
   return (

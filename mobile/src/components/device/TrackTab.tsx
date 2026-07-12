@@ -31,6 +31,8 @@ export default function TrackTab({ imei, orgId }: { imei: string; orgId: string 
         course: loc.course,
         color: motionColor(motionOf(device, loc)),
         label: device.vehiclePlate ?? device.name ?? imei.slice(-6),
+        vehicleType: device.vehicleType,
+        iconColor: device.iconColor,
       },
     ];
   }, [loc, device, imei]);

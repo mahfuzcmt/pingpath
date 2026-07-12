@@ -17,6 +17,8 @@ export default function MapScreen() {
   const { locations, refresh } = useLiveLocations(orgId);
   const { devices } = useDevices();
   const [center, setCenter] = useState<{ lat: number; lng: number; zoom: number; nonce: number } | null>(null);
+  const [showTraffic, setShowTraffic] = useState(false);
+  const [trafficAvailable, setTrafficAvailable] = useState(false);
 
   const byImei = useMemo(() => new Map(devices.map((d) => [d.imei, d])), [devices]);
 
@@ -33,6 +35,8 @@ export default function MapScreen() {
         course: loc.course,
         color: motionColor(motion),
         label: d?.vehiclePlate ?? d?.name ?? loc.imei.slice(-6),
+        vehicleType: d?.vehicleType,
+        iconColor: d?.iconColor,
       });
     }
     return out;
@@ -50,6 +54,8 @@ export default function MapScreen() {
       <WebMap
         vehicles={vehicles}
         center={center}
+        showTraffic={showTraffic}
+        onTrafficAvailable={setTrafficAvailable}
         onSelect={(imei) => router.push({ pathname: "/device/[imei]", params: { imei } })}
       />
 
@@ -58,6 +64,17 @@ export default function MapScreen() {
           <Text style={styles.badgeBrand}>MotoLink</Text>
           <Text style={styles.badgeCount}>{vehicles.length} live</Text>
         </View>
+        {trafficAvailable && (
+          <Pressable
+            onPress={() => setShowTraffic((v) => !v)}
+            style={({ pressed }) => [styles.badge, pressed && { opacity: 0.7 }]}
+          >
+            <Text style={[styles.trafficBox, showTraffic && styles.trafficBoxOn]}>
+              {showTraffic ? "✓" : " "}
+            </Text>
+            <Text style={styles.badgeBrand}>Traffic</Text>
+          </Pressable>
+        )}
       </SafeAreaView>
 
       <SafeAreaView edges={["bottom"]} style={styles.controls} pointerEvents="box-none">
@@ -78,7 +95,29 @@ function MapButton({ label, onPress }: { label: string; onPress: () => void }) {
 
 const styles = StyleSheet.create({
   fill: { flex: 1, backgroundColor: colors.bg },
-  topOverlay: { position: "absolute", top: 0, left: 0, right: 0, alignItems: "flex-start", padding: space.md },
+  topOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    padding: space.md,
+  },
+  trafficBox: {
+    width: 16,
+    height: 16,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    borderRadius: 3,
+    color: colors.brand,
+    fontSize: 11,
+    fontWeight: "800",
+    textAlign: "center",
+    lineHeight: 14,
+  },
+  trafficBoxOn: { borderColor: colors.brand },
   badge: {
     flexDirection: "row",
     alignItems: "center",
