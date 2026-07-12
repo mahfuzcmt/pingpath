@@ -7,11 +7,14 @@ import { useLiveLocations } from "@/hooks/useLiveLocations";
 import { useKpis } from "@/hooks/useKpis";
 import { useDeviceTodayStats } from "@/hooks/useDeviceTodayStats";
 import { Chip, Loading } from "@/ui";
+import { LanguageToggle } from "@/components/LanguageToggle";
 import { fmtDistance, fmtDuration, motionColor, motionOf } from "@/format";
+import { useI18n } from "@/i18n";
 import { colors, radius, space } from "@/theme";
 import type { MotionStatus } from "@/types";
 
 export default function HomeScreen() {
+  const { t } = useI18n();
   const { org, user } = useAuth();
   const router = useRouter();
   const { devices, loading, reload } = useDevices();
@@ -27,7 +30,7 @@ export default function HomeScreen() {
 
   const selectedImei = picked ?? devices[0]?.imei ?? null;
 
-  if (loading && devices.length === 0) return <Loading label="Loading dashboard…" />;
+  if (loading && devices.length === 0) return <Loading label={t("home.loading")} />;
 
   return (
     <ScrollView
@@ -35,23 +38,28 @@ export default function HomeScreen() {
       contentContainerStyle={styles.content}
       refreshControl={<RefreshControl refreshing={loading} onRefresh={reload} tintColor={colors.brand} />}
     >
-      <Text style={styles.hello}>{org?.name ?? "Fleet"}</Text>
-      {user?.fullName ? <Text style={styles.sub}>{user.fullName}</Text> : null}
+      <View style={styles.headerRow}>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.hello}>{org?.name ?? t("home.fleet")}</Text>
+          {user?.fullName ? <Text style={styles.sub}>{user.fullName}</Text> : null}
+        </View>
+        <LanguageToggle />
+      </View>
 
-      <Text style={styles.section}>Fleet status</Text>
+      <Text style={styles.section}>{t("home.fleetStatus")}</Text>
       <View style={styles.grid}>
-        <StatusCard label="Moving" value={counts.MOVING} color={motionColor("MOVING")} />
-        <StatusCard label="Idle" value={counts.IDLE} color={motionColor("IDLE")} />
-        <StatusCard label="Stopped" value={counts.STOPPED} color={motionColor("STOPPED")} />
-        <StatusCard label="Offline" value={counts.OFFLINE} color={motionColor("OFFLINE")} />
+        <StatusCard label={t("state.moving")} value={counts.MOVING} color={motionColor("MOVING")} />
+        <StatusCard label={t("state.idle")} value={counts.IDLE} color={motionColor("IDLE")} />
+        <StatusCard label={t("state.stopped")} value={counts.STOPPED} color={motionColor("STOPPED")} />
+        <StatusCard label={t("state.offline")} value={counts.OFFLINE} color={motionColor("OFFLINE")} />
       </View>
 
       {kpis ? (
         <View style={styles.kpiRow}>
-          <Kpi label="Alarms today" value={kpis.alarmsToday} accent={kpis.alarmsCriticalToday > 0} />
-          <Kpi label="Unack" value={kpis.alarmsUnacknowledged} accent={kpis.alarmsUnacknowledged > 0} />
-          <Kpi label="Trips today" value={kpis.tripsCompletedToday} />
-          <Kpi label="Fleet dist." value={fmtDistance(kpis.distanceTodayMeters)} />
+          <Kpi label={t("home.alarmsToday")} value={kpis.alarmsToday} accent={kpis.alarmsCriticalToday > 0} />
+          <Kpi label={t("home.unacked")} value={kpis.alarmsUnacknowledged} accent={kpis.alarmsUnacknowledged > 0} />
+          <Kpi label={t("home.tripsToday")} value={kpis.tripsCompletedToday} />
+          <Kpi label={t("home.fleetDistance")} value={fmtDistance(kpis.distanceTodayMeters)} />
         </View>
       ) : null}
 
@@ -60,13 +68,13 @@ export default function HomeScreen() {
         onPress={() => router.push("/geofences")}
       >
         <View style={{ flex: 1 }}>
-          <Text style={styles.linkTitle}>🛡️ Geofences</Text>
-          <Text style={styles.linkSub}>Zone entry/exit alerts for your vehicles</Text>
+          <Text style={styles.linkTitle}>🛡️ {t("home.geofences")}</Text>
+          <Text style={styles.linkSub}>{t("home.geofenceSub")}</Text>
         </View>
         <Text style={styles.linkArrow}>›</Text>
       </Pressable>
 
-      <Text style={styles.section}>Single vehicle stats</Text>
+      <Text style={styles.section}>{t("home.vehicleStats")}</Text>
       {devices.length > 0 ? (
         <>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.picker}>
@@ -84,30 +92,31 @@ export default function HomeScreen() {
           ) : null}
         </>
       ) : (
-        <Text style={styles.empty}>No vehicles yet.</Text>
+        <Text style={styles.empty}>{t("home.noVehicles")}</Text>
       )}
     </ScrollView>
   );
 }
 
 function SingleVehicleStats({ imei, onOpen }: { imei: string; onOpen: () => void }) {
+  const { t } = useI18n();
   const { stats, loading } = useDeviceTodayStats(imei);
   return (
     <View style={styles.statsCard}>
       {loading ? (
-        <Text style={styles.loadingText}>Loading today…</Text>
+        <Text style={styles.loadingText}>{t("home.loadingToday")}</Text>
       ) : (
         <View style={styles.statsGrid}>
-          <Metric label="Route length" value={fmtDistance(stats.distanceM)} />
-          <Metric label="Trips" value={String(stats.trips)} />
-          <Metric label="Move time" value={fmtDuration(stats.moveS)} />
-          <Metric label="Idle time" value={fmtDuration(stats.idleS)} />
-          <Metric label="Top speed" value={`${stats.maxSpeed} km/h`} />
-          <Metric label="Avg speed" value={`${stats.avgSpeed} km/h`} />
+          <Metric label={t("home.routeLength")} value={fmtDistance(stats.distanceM)} />
+          <Metric label={t("home.trips")} value={String(stats.trips)} />
+          <Metric label={t("home.moveDuration")} value={fmtDuration(stats.moveS)} />
+          <Metric label={t("home.idleDuration")} value={fmtDuration(stats.idleS)} />
+          <Metric label={t("home.topSpeed")} value={`${stats.maxSpeed} ${t("veh.kmh")}`} />
+          <Metric label={t("hist.avgSpeed")} value={`${stats.avgSpeed} ${t("veh.kmh")}`} />
         </View>
       )}
       <Text style={styles.openLink} onPress={onOpen}>
-        Open vehicle →
+        {t("home.openVehicle")}
       </Text>
     </View>
   );
@@ -144,6 +153,7 @@ function Metric({ label, value }: { label: string; value: string }) {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
   content: { padding: space.md, gap: space.sm, paddingBottom: space.xl },
+  headerRow: { flexDirection: "row", alignItems: "flex-start", gap: space.sm },
   hello: { color: colors.text, fontSize: 22, fontWeight: "800" },
   sub: { color: colors.textFaint, fontSize: 14, marginTop: -4 },
   section: { color: colors.textDim, fontSize: 13, fontWeight: "700", marginTop: space.md },

@@ -101,6 +101,7 @@ export default function DashboardPage() {
           selectedImei={selectedImei}
           onSelect={setSelectedImei}
           onRefresh={refresh}
+          showSearch
         />
 
         {/* Live KPIs — floating overlay, collapsible */}

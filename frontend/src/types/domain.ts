@@ -96,6 +96,8 @@ export interface DeviceView {
   subscriptionStatus: string | null;
   /** Subscription next-due date (ISO yyyy-MM-dd) or null if none. */
   subscriptionExpiresAt: string | null;
+  /** End of the latest completed trip (ISO) — null while driving or if unknown. */
+  parkedSince: string | null;
 }
 
 /**
@@ -284,6 +286,34 @@ export interface KpiSnapshot {
   tripsCompletedToday: number;
   distanceTodayMeters: number;
   generatedAt: string;
+}
+
+/** Mirrors backend dto.ReportDtos.MonthlyDay. */
+export interface MonthlyDayRow {
+  date: string;
+  trips: number;
+  distanceM: number;
+  drivingS: number;
+  idleS: number;
+  stoppedS: number;
+  maxSpeed: number;
+}
+
+export interface MonthlyTotals {
+  trips: number;
+  distanceM: number;
+  drivingS: number;
+  idleS: number;
+  stoppedS: number;
+  maxSpeed: number;
+}
+
+/** Mirrors backend dto.ReportDtos.MonthlySummary (GET /reports/monthly-summary). */
+export interface MonthlySummary {
+  deviceImei: string;
+  month: string;
+  days: MonthlyDayRow[];
+  totals: MonthlyTotals;
 }
 
 export type TripStatus = "IN_PROGRESS" | "COMPLETED";

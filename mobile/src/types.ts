@@ -87,6 +87,21 @@ export interface DeviceView {
   subscriptionStatus: string | null;
   /** Subscription next-due date (ISO yyyy-MM-dd) or null if none. */
   subscriptionExpiresAt: string | null;
+  /** End of the latest completed trip (ISO) — null while driving or if unknown. */
+  parkedSince: string | null;
+}
+
+export type AlarmRuleType = "SPEED_OVER" | "VOLTAGE_UNDER" | "ACC_ON_DURING_WINDOW";
+
+/** Subset of backend dto.AlarmRuleDtos used for overspeed highlighting. */
+export interface AlarmRuleView {
+  id: string;
+  name: string;
+  ruleType: AlarmRuleType;
+  threshold: number | null;
+  active: boolean;
+  appliesToAll: boolean;
+  assignedImeis: string[];
 }
 
 /** Mirrors backend dto.LocationDtos.LocationView and the WS LocationEvent. */

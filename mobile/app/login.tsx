@@ -11,10 +11,13 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "@/auth/AuthContext";
 import { extractError } from "@/api/client";
 import { Field, PrimaryButton } from "@/ui";
+import { LanguageToggle } from "@/components/LanguageToggle";
+import { useI18n } from "@/i18n";
 import { colors, space } from "@/theme";
 
 export default function Login() {
   const { status, signIn } = useAuth();
+  const { t } = useI18n();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -38,6 +41,9 @@ export default function Login() {
 
   return (
     <SafeAreaView style={styles.safe}>
+      <View style={styles.langRow}>
+        <LanguageToggle />
+      </View>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={styles.container}
@@ -46,11 +52,11 @@ export default function Login() {
           <View style={styles.dot} />
           <Text style={styles.brandText}>MotoLink</Text>
         </View>
-        <Text style={styles.tagline}>Fleet tracking</Text>
+        <Text style={styles.tagline}>{t("auth.tagline")}</Text>
 
         <View style={styles.form}>
           <Field
-            label="Email"
+            label={t("auth.email")}
             value={email}
             onChangeText={setEmail}
             autoCapitalize="none"
@@ -59,14 +65,14 @@ export default function Login() {
             placeholder="you@company.com"
           />
           <Field
-            label="Password"
+            label={t("auth.password")}
             value={password}
             onChangeText={setPassword}
             secureTextEntry
             placeholder="••••••••"
           />
           {error ? <Text style={styles.error}>{error}</Text> : null}
-          <PrimaryButton label="Sign in" onPress={submit} loading={busy} disabled={!canSubmit} />
+          <PrimaryButton label={t("auth.signIn")} onPress={submit} loading={busy} disabled={!canSubmit} />
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -75,6 +81,7 @@ export default function Login() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
+  langRow: { alignItems: "flex-end", paddingHorizontal: space.md, paddingTop: space.md },
   container: { flex: 1, justifyContent: "center", padding: space.xl, gap: space.lg },
   brand: { flexDirection: "row", alignItems: "center", gap: space.sm },
   dot: { width: 12, height: 12, borderRadius: 6, backgroundColor: colors.brand },

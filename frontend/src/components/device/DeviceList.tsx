@@ -3,7 +3,10 @@
 import { useMemo, useState } from "react";
 import { useLocale, type StringKey } from "@/lib/i18n";
 import { formatSince, formatVoltage, gsmBars, vehicleState, VEHICLE_STATE_COLOR, type VehicleState } from "@/lib/format";
+import { useSpeedLimits } from "@/hooks/useSpeedLimits";
 import type { DeviceView, LocationView } from "@/types/domain";
+
+const OVERSPEED_COLOR = "#DC2626";
 
 interface DeviceListProps {
   devices: DeviceView[];
@@ -64,9 +67,12 @@ export function DeviceList({ devices, locations, selectedImei, onSelect }: Devic
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<ChipId>("all");
   const [checkedDevices, setCheckedDevices] = useState<Set<string>>(new Set());
+  const speedLimits = useSpeedLimits();
 
   const sorted = useMemo(() => {
     const q = query.trim().toLowerCase();
+    const over = (d: DeviceView) =>
+      speedLimits.isOverspeed(d.imei, locations.get(d.imei)?.speed ?? d.lastSpeed);
     return devices
       .filter((d) => {
         if (q) {
@@ -80,6 +86,10 @@ export function DeviceList({ devices, locations, selectedImei, onSelect }: Devic
         return vehicleState(d, locations.get(d.imei)) === filter;
       })
       .sort((a, b) => {
+        // Overspeeding vehicles surface at the top of the list.
+        const ao = over(a);
+        const bo = over(b);
+        if (ao !== bo) return ao ? -1 : 1;
         if (a.status !== b.status) {
           if (a.status === "ONLINE") return -1;
           if (b.status === "ONLINE") return 1;
@@ -88,7 +98,7 @@ export function DeviceList({ devices, locations, selectedImei, onSelect }: Devic
         const bt = b.lastSeenAt ? new Date(b.lastSeenAt).getTime() : 0;
         return bt - at;
       });
-  }, [devices, locations, query, filter]);
+  }, [devices, locations, query, filter, speedLimits]);
 
   const counts = useMemo(() => {
     const c: Record<ChipId, number> = {
@@ -211,7 +221,10 @@ export function DeviceList({ devices, locations, selectedImei, onSelect }: Devic
           const selected = d.imei === selectedImei;
           const checked = checkedDevices.has(d.imei);
           const state = vehicleState(d, live);
-          const statusColor = VEHICLE_STATE_COLOR[state];
+          const overspeed = speedLimits.isOverspeed(d.imei, live?.speed ?? d.lastSpeed);
+          const statusColor = overspeed ? OVERSPEED_COLOR : VEHICLE_STATE_COLOR[state];
+          // Real parking duration (trip end) when stopped; falls back to last-fix age.
+          const sinceTs = state === "moving" || state === "idle" ? ts : d.parkedSince ?? ts;
 
           return (
             <li
@@ -232,18 +245,26 @@ export function DeviceList({ devices, locations, selectedImei, onSelect }: Devic
                   onClick={() => onSelect(selected ? null : d.imei)}
                   className="flex min-w-0 flex-1 items-center gap-2"
                 >
-                  <VehicleIcon type={d.vehicleType} color={statusColor} />
+                  <span className={overspeed ? "animate-pulse" : undefined}>
+                    <VehicleIcon type={d.vehicleType} color={statusColor} />
+                  </span>
                   <div className="min-w-0 flex-1">
-                    <div className="truncate text-xs font-semibold text-ink-900">
+                    <div
+                      className={`truncate text-xs font-semibold ${overspeed ? "" : "text-ink-900"}`}
+                      style={{ color: overspeed ? OVERSPEED_COLOR : undefined }}
+                    >
                       {d.name || d.vehiclePlate || d.imei.slice(-8)}
                     </div>
                     <div className="text-[10px]" style={{ color: statusColor }}>
-                      {t(STATE_LABEL[state])} {formatSince(ts)}
+                      {overspeed ? "Overspeed" : t(STATE_LABEL[state])} {formatSince(sinceTs)}
                     </div>
                   </div>
                 </button>
                 <div className="flex items-center gap-2">
-                  <span className="min-w-[40px] text-right text-xs font-semibold text-ink-900">
+                  <span
+                    className={`min-w-[40px] text-right text-xs font-semibold ${overspeed ? "animate-pulse" : "text-ink-900"}`}
+                    style={{ color: overspeed ? OVERSPEED_COLOR : undefined }}
+                  >
                     {live?.speed ?? 0} kph
                   </span>
                   <SignalIcon

@@ -7,6 +7,7 @@ import DateRangePicker from "@/components/device/DateRangePicker";
 import { EmptyState, Loading } from "@/ui";
 import { fmtDateTime, fmtDistance, fmtDuration, fmtTime } from "@/format";
 import { presetRange, type DateRange } from "@/dateRange";
+import { useI18n } from "@/i18n";
 import { colors, radius, space } from "@/theme";
 import type { LocationView, TripView } from "@/types";
 
@@ -14,6 +15,7 @@ const SPEEDS = [1, 2, 4] as const;
 
 /** Trip list + route replay (play/pause/speed, live km/h). */
 export default function HistoryTab({ imei }: { imei: string }) {
+  const { t } = useI18n();
   const [range, setRange] = useState<DateRange>(() => presetRange("last7"));
   const [pickerOpen, setPickerOpen] = useState(false);
 
@@ -109,7 +111,7 @@ export default function HistoryTab({ imei }: { imei: string }) {
         <View style={styles.header}>
           <Pressable style={styles.rangeBtn} onPress={() => setPickerOpen(true)}>
             <Text style={styles.rangeBtnText}>📅  {range.label}</Text>
-            <Text style={styles.rangeBtnHint}>Change ▾</Text>
+            <Text style={styles.rangeBtnHint}>{t("hist.change")} ▾</Text>
           </Pressable>
           <View style={styles.mapBox}>
             <WebMap route={route} moving={moving} fitRoute={!playing} />
@@ -117,7 +119,7 @@ export default function HistoryTab({ imei }: { imei: string }) {
               <View style={styles.hud} pointerEvents="box-none">
                 <View style={styles.kmphBox}>
                   <Text style={styles.kmph}>{currentKmph}</Text>
-                  <Text style={styles.kmphUnit}>km/h</Text>
+                  <Text style={styles.kmphUnit}>{t("veh.kmh")}</Text>
                 </View>
                 <View style={styles.playbar}>
                   <CtlBtn label="⏮" onPress={() => setIdx(0)} />
@@ -134,18 +136,18 @@ export default function HistoryTab({ imei }: { imei: string }) {
           {selected ? (
             <TripSummary trip={selected} loading={loadingPoints} />
           ) : (
-            <Text style={styles.hint}>Select a trip below to replay it on the map.</Text>
+            <Text style={styles.hint}>{t("hist.selectTrip")}</Text>
           )}
-          <Text style={styles.sectionTitle}>Trips · {range.label}</Text>
+          <Text style={styles.sectionTitle}>{t("home.trips")} · {range.label}</Text>
         </View>
       }
       ListEmptyComponent={
         loading ? (
-          <Loading label="Loading trips…" />
+          <Loading label={t("hist.loadingTrips")} />
         ) : error ? (
           <EmptyState text={error} />
         ) : (
-          <EmptyState text={`No trips for ${range.label}.`} />
+          <EmptyState text={t("hist.noTrips")} />
         )
       }
       renderItem={({ item }) => (
@@ -165,30 +167,32 @@ export default function HistoryTab({ imei }: { imei: string }) {
 }
 
 function TripSummary({ trip, loading }: { trip: TripView; loading: boolean }) {
+  const { t } = useI18n();
   return (
     <View style={styles.summary}>
       <View style={styles.summaryRow}>
-        <Stat label="Distance" value={fmtDistance(trip.distanceM)} />
-        <Stat label="Duration" value={fmtDuration(trip.durationS)} />
-        <Stat label="Max" value={`${trip.maxSpeed} km/h`} />
-        <Stat label="Avg" value={`${trip.avgSpeed} km/h`} />
+        <Stat label={t("hist.distance")} value={fmtDistance(trip.distanceM)} />
+        <Stat label={t("hist.duration")} value={fmtDuration(trip.durationS)} />
+        <Stat label={t("hist.max")} value={`${trip.maxSpeed} ${t("veh.kmh")}`} />
+        <Stat label={t("hist.avg")} value={`${trip.avgSpeed} ${t("veh.kmh")}`} />
       </View>
       <View style={styles.timeline}>
         <Text style={styles.tlLine}>
-          <Text style={styles.tlDot}>▶ </Text>Start {fmtDateTime(trip.startedAt)}
+          <Text style={styles.tlDot}>▶ </Text>{t("hist.start")} {fmtDateTime(trip.startedAt)}
           {trip.startLat != null ? `  (${trip.startLat.toFixed(4)}, ${trip.startLng?.toFixed(4)})` : ""}
         </Text>
         <Text style={styles.tlLine}>
-          <Text style={styles.tlDot}>⏹ </Text>End {fmtDateTime(trip.endedAt)}
+          <Text style={styles.tlDot}>⏹ </Text>{t("hist.end")} {fmtDateTime(trip.endedAt)}
           {trip.endLat != null ? `  (${trip.endLat.toFixed(4)}, ${trip.endLng?.toFixed(4)})` : ""}
         </Text>
       </View>
-      {loading ? <Text style={styles.loadingPts}>Loading route…</Text> : null}
+      {loading ? <Text style={styles.loadingPts}>{t("hist.loadingRoute")}</Text> : null}
     </View>
   );
 }
 
 function TripRow({ trip, active, onPress }: { trip: TripView; active: boolean; onPress: () => void }) {
+  const { t } = useI18n();
   return (
     <Pressable
       onPress={onPress}
@@ -199,11 +203,11 @@ function TripRow({ trip, active, onPress }: { trip: TripView; active: boolean; o
           {fmtTime(trip.startedAt)} → {fmtTime(trip.endedAt)}
         </Text>
         <Text style={styles.tripSub}>
-          {fmtDistance(trip.distanceM)} · {fmtDuration(trip.durationS)} · max {trip.maxSpeed} km/h
+          {fmtDistance(trip.distanceM)} · {fmtDuration(trip.durationS)} · {t("hist.max")} {trip.maxSpeed} {t("veh.kmh")}
         </Text>
       </View>
       <Text style={[styles.tripStatus, trip.status === "IN_PROGRESS" && { color: colors.ok }]}>
-        {trip.status === "IN_PROGRESS" ? "live" : "▸"}
+        {trip.status === "IN_PROGRESS" ? t("common.live") : "▸"}
       </Text>
     </Pressable>
   );

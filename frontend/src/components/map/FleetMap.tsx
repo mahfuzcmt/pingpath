@@ -11,8 +11,9 @@ import {
   layerSupportsTraffic,
   setLayerTraffic,
 } from "@/lib/leaflet";
-import { vehicleState, VEHICLE_STATE_COLOR, type VehicleState } from "@/lib/format";
+import { formatSince, vehicleState, VEHICLE_STATE_COLOR, type VehicleState } from "@/lib/format";
 import { buildVehicleSvg } from "@/lib/vehicleIcons";
+import { useSpeedLimits } from "@/hooks/useSpeedLimits";
 import type { DeviceView, LocationView } from "@/types/domain";
 
 interface FleetMapProps {
@@ -22,6 +23,16 @@ interface FleetMapProps {
   onSelect: (imei: string | null) => void;
   /** AutoNemo "Refresh" control — re-pull last-known positions. */
   onRefresh?: () => void | Promise<void>;
+  /** Address search box (geocoding). Off by default — single-vehicle embeds don't need it. */
+  showSearch?: boolean;
+}
+
+const OVERSPEED_COLOR = "#DC2626";
+
+interface GeocodeResult {
+  label: string;
+  lat: number;
+  lng: number;
 }
 
 type BaseLayer = "normal" | "satellite";
@@ -68,11 +79,12 @@ function createVehicleIcon(
   bodyColor: string,
   rotation: number,
   isSelected: boolean,
+  isOverspeed = false,
 ): L.DivIcon {
   const size = isSelected ? 46 : 38;
   return L.divIcon({
-    html: buildVehicleSvg(vehicleType, bodyColor, rotation, size),
-    className: `pp-vehicle-icon ${isSelected ? 'pp-selected' : ''}`,
+    html: buildVehicleSvg(vehicleType, isOverspeed ? OVERSPEED_COLOR : bodyColor, rotation, size),
+    className: `pp-vehicle-icon ${isSelected ? 'pp-selected' : ''} ${isOverspeed ? 'pp-overspeed' : ''}`,
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2],
   });
@@ -84,13 +96,14 @@ function plateLabelHtml(device: DeviceView | undefined, stateColor: string): str
   return `<div class="pp-plate" style="background:${stateColor}">${text}</div>`;
 }
 
-export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh }: FleetMapProps) {
+export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh, showSearch = false }: FleetMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
   const initialFitDoneRef = useRef(false);
   const tileLayerRef = useRef<L.GridLayer | null>(null);
   const userMarkerRef = useRef<L.Marker | null>(null);
+  const searchMarkerRef = useRef<L.Marker | null>(null);
 
   const [baseLayer, setBaseLayer] = useState<BaseLayer>("normal");
   const [refreshing, setRefreshing] = useState(false);
@@ -98,6 +111,11 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
   const [showTraffic, setShowTraffic] = useState(false);
   const [trafficAvailable, setTrafficAvailable] = useState(false);
   const showTrafficRef = useRef(showTraffic);
+  const [searchQ, setSearchQ] = useState("");
+  const [searching, setSearching] = useState(false);
+  const [searchResults, setSearchResults] = useState<GeocodeResult[]>([]);
+
+  const speedLimits = useSpeedLimits();
 
   const deviceByImei = useMemo(() => {
     const m = new Map<string, DeviceView>();
@@ -115,10 +133,17 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
     const speed = location?.speed ?? 0;
     const course = location?.course ?? 0;
     const dateTime = formatDateTime(location?.ts || device?.lastSeenAt);
-    const status = statusText(device, location);
-    const statusColor = markerColor(device, location);
+    const overspeed = device != null && speedLimits.isOverspeed(device.imei, location?.speed);
+    const status = overspeed ? "Overspeed" : statusText(device, location);
+    const statusColor = overspeed ? OVERSPEED_COLOR : markerColor(device, location);
     const accStatus = location?.accOn == null ? "—" : location.accOn ? "ON" : "OFF";
     const voltage = location?.voltageMv ? (location.voltageMv / 1000).toFixed(1) + "V" : "—";
+    const parkedRow = device?.parkedSince && speed <= 2
+      ? `<div class="pp-popup-row">
+           <span class="pp-popup-label">Parked for</span>
+           <span class="pp-popup-value">${formatSince(device.parkedSince)}</span>
+         </div>`
+      : "";
 
     return `
       <div class="pp-popup">
@@ -155,6 +180,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
             <span class="pp-popup-label">Battery</span>
             <span class="pp-popup-value">${voltage}</span>
           </div>
+          ${parkedRow}
           <div class="pp-popup-row pp-popup-row-full">
             <span class="pp-popup-label">Last Update</span>
             <span class="pp-popup-value">${dateTime}</span>
@@ -162,7 +188,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
         </div>
       </div>
     `;
-  }, []);
+  }, [speedLimits]);
 
   // Init map once
   useEffect(() => {
@@ -274,7 +300,8 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
     for (const [imei, loc] of locations.entries()) {
       seen.add(imei);
       const device = deviceByImei.get(imei);
-      const color = markerColor(device, loc);
+      const isOverspeed = speedLimits.isOverspeed(imei, loc.speed);
+      const color = isOverspeed ? OVERSPEED_COLOR : markerColor(device, loc);
       const isSelected = imei === selectedImei;
       let marker = markersRef.current.get(imei);
 
@@ -283,7 +310,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
 
       if (!marker) {
         // Create new marker
-        const icon = createVehicleIcon(device?.vehicleType, bodyColor, course, isSelected);
+        const icon = createVehicleIcon(device?.vehicleType, bodyColor, course, isSelected, isOverspeed);
         marker = L.marker([loc.latitude, loc.longitude], { icon })
           .addTo(map)
           .bindPopup(createPopupContent(device, loc), {
@@ -305,7 +332,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
       } else {
         // Update existing marker
         marker.setLatLng([loc.latitude, loc.longitude]);
-        marker.setIcon(createVehicleIcon(device?.vehicleType, bodyColor, course, isSelected));
+        marker.setIcon(createVehicleIcon(device?.vehicleType, bodyColor, course, isSelected, isOverspeed));
         marker.setPopupContent(createPopupContent(device, loc));
         marker.setTooltipContent(plateLabelHtml(device, color));
       }
@@ -329,7 +356,47 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
       }
       initialFitDoneRef.current = true;
     }
-  }, [locations, deviceByImei, selectedImei, onSelect, createPopupContent]);
+  }, [locations, deviceByImei, selectedImei, onSelect, createPopupContent, speedLimits]);
+
+  // Address search (Nominatim; biased to the current viewport). Free, no key —
+  // matches the OSM fallback strategy of lib/leaflet.ts.
+  const runSearch = useCallback(async () => {
+    const q = searchQ.trim();
+    if (!q) return;
+    setSearching(true);
+    try {
+      let url = `https://nominatim.openstreetmap.org/search?format=json&limit=5&q=${encodeURIComponent(q)}`;
+      const map = mapRef.current;
+      if (map) {
+        const b = map.getBounds();
+        url += `&viewbox=${b.getWest()},${b.getNorth()},${b.getEast()},${b.getSouth()}`;
+      }
+      const res = await fetch(url, { headers: { Accept: "application/json" } });
+      const data = (await res.json()) as Array<{ display_name: string; lat: string; lon: string }>;
+      setSearchResults(
+        data.map((r) => ({ label: r.display_name, lat: parseFloat(r.lat), lng: parseFloat(r.lon) })),
+      );
+    } catch {
+      setSearchResults([]);
+    } finally {
+      setSearching(false);
+    }
+  }, [searchQ]);
+
+  const gotoSearchResult = useCallback((r: GeocodeResult) => {
+    const map = mapRef.current;
+    if (!map) return;
+    map.setView([r.lat, r.lng], Math.max(map.getZoom(), 16), { animate: true });
+    const icon = L.divIcon({
+      html: '<div class="pp-search-pin"></div>',
+      className: "",
+      iconSize: [16, 16],
+      iconAnchor: [8, 8],
+    });
+    if (searchMarkerRef.current) searchMarkerRef.current.setLatLng([r.lat, r.lng]);
+    else searchMarkerRef.current = L.marker([r.lat, r.lng], { icon, interactive: false }).addTo(map);
+    setSearchResults([]);
+  }, []);
 
   // Pan to selection
   useEffect(() => {
@@ -348,6 +415,56 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
   return (
     <div className="relative h-full w-full" style={{ minHeight: "400px" }}>
       <div ref={containerRef} className="absolute inset-0" style={{ width: "100%", height: "100%" }} />
+
+      {/* Address search (top-left) */}
+      {showSearch && (
+        <div className="absolute left-3 top-3 z-[1000] w-64">
+          <div className="flex overflow-hidden rounded-md border border-surface-300 bg-white shadow-menu">
+            <input
+              type="search"
+              className="min-w-0 flex-1 px-2.5 py-1.5 text-xs text-ink-900 outline-none placeholder:text-ink-400"
+              placeholder="Search address…"
+              value={searchQ}
+              onChange={(e) => setSearchQ(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") void runSearch();
+                if (e.key === "Escape") setSearchResults([]);
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => void runSearch()}
+              disabled={searching || !searchQ.trim()}
+              className="px-2.5 text-ink-500 transition hover:text-ink-900 disabled:opacity-50"
+              title="Search"
+            >
+              <svg
+                width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                strokeWidth="2" strokeLinecap="round"
+                className={searching ? "animate-pulse" : ""}
+              >
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+            </button>
+          </div>
+          {searchResults.length > 0 && (
+            <ul className="mt-1 max-h-56 overflow-y-auto rounded-md border border-surface-300 bg-white shadow-menu">
+              {searchResults.map((r, i) => (
+                <li key={i}>
+                  <button
+                    type="button"
+                    onClick={() => gotoSearchResult(r)}
+                    className="block w-full border-b border-surface-100 px-2.5 py-1.5 text-left text-[11px] text-ink-700 transition last:border-b-0 hover:bg-surface-100"
+                  >
+                    {r.label}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
 
       {/* Map controls (top-right) — Normal / Satellite + Show Traffic */}
       <div className="absolute right-3 top-3 z-[1000] flex items-center gap-2">
@@ -423,6 +540,24 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
         .pp-vehicle-icon.pp-selected {
           filter: drop-shadow(0 0 6px #e8900a);
           z-index: 1000 !important;
+        }
+        /* Overspeed: red marker that blinks until speed drops below the rule threshold */
+        .pp-vehicle-icon.pp-overspeed {
+          animation: pp-blink 1s step-start infinite;
+          filter: drop-shadow(0 0 6px #dc2626);
+        }
+        @keyframes pp-blink {
+          50% {
+            opacity: 0.25;
+          }
+        }
+        .pp-search-pin {
+          width: 14px;
+          height: 14px;
+          border-radius: 50%;
+          background: #e8900a;
+          border: 3px solid #fff;
+          box-shadow: 0 0 0 2px rgba(232, 144, 10, 0.45);
         }
         /* Plate-number pill above each vehicle (AutoNemo-style) */
         .pp-plate-tooltip {

@@ -14,7 +14,10 @@ import {
   vehicleState,
   type VehicleState,
 } from "@/lib/format";
+import { useSpeedLimits, type SpeedLimits } from "@/hooks/useSpeedLimits";
 import type { DeviceView, LocationView } from "@/types/domain";
+
+const OVERSPEED_COLOR = "#DC2626";
 
 type ChipId = VehicleState | "all";
 
@@ -54,6 +57,7 @@ export default function VehiclesPage() {
 
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<ChipId>("all");
+  const speedLimits = useSpeedLimits();
 
   // Deep-link from the Home fleet-status cards: /dashboard/devices?state=moving
   useEffect(() => {
@@ -88,11 +92,15 @@ export default function VehiclesPage() {
         );
       })
       .sort((a, b) => {
+        // Overspeeding vehicles surface at the top of the grid.
+        const ao = speedLimits.isOverspeed(a.d.imei, a.live?.speed ?? a.d.lastSpeed);
+        const bo = speedLimits.isOverspeed(b.d.imei, b.live?.speed ?? b.d.lastSpeed);
+        if (ao !== bo) return ao ? -1 : 1;
         const at = a.live?.ts ?? a.d.lastSeenAt ?? "";
         const bt = b.live?.ts ?? b.d.lastSeenAt ?? "";
         return bt < at ? -1 : bt > at ? 1 : 0;
       });
-  }, [withState, filter, query]);
+  }, [withState, filter, query, speedLimits]);
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-surface-50">
@@ -138,7 +146,15 @@ export default function VehiclesPage() {
         ) : (
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
             {visible.map(({ d, live, state }) => (
-              <VehicleCard key={d.imei} device={d} live={live} state={state} t={t} locale={locale} />
+              <VehicleCard
+                key={d.imei}
+                device={d}
+                live={live}
+                state={state}
+                t={t}
+                locale={locale}
+                speedLimits={speedLimits}
+              />
             ))}
           </div>
         )}
@@ -153,41 +169,63 @@ function VehicleCard({
   state,
   t,
   locale,
+  speedLimits,
 }: {
   device: DeviceView;
   live: LocationView | undefined;
   state: VehicleState;
   t: (k: StringKey) => string;
   locale: "en" | "bn";
+  speedLimits: SpeedLimits;
 }) {
   const ts = live?.ts ?? d.lastSeenAt;
   const speed = live?.speed ?? d.lastSpeed ?? 0;
   const accOn = live?.accOn ?? null;
-  const color = VEHICLE_STATE_COLOR[state];
+  const overspeed = speedLimits.isOverspeed(d.imei, speed);
+  const color = overspeed ? OVERSPEED_COLOR : VEHICLE_STATE_COLOR[state];
+  // Real parking duration (latest trip end) when not moving; falls back to fix age.
+  const sinceTs = state === "moving" || state === "idle" ? ts : d.parkedSince ?? ts;
 
   return (
     <Link
       href={`/dashboard/devices/${encodeURIComponent(d.imei)}`}
-      className="panel block p-3 transition hover:border-brand-400 hover:shadow-panel"
+      className={`panel block p-3 transition hover:border-brand-400 hover:shadow-panel ${
+        overspeed ? "border-status-stopped" : ""
+      }`}
     >
       <div className="flex items-start gap-2">
-        <VehicleIcon color={color} />
+        <span className={overspeed ? "animate-pulse" : undefined}>
+          <VehicleIcon color={color} />
+        </span>
         <div className="min-w-0 flex-1">
-          <div className="truncate text-xs font-semibold text-ink-900">
+          <div
+            className={`truncate text-xs font-semibold ${overspeed ? "animate-pulse" : "text-ink-900"}`}
+            style={{ color: overspeed ? OVERSPEED_COLOR : undefined }}
+          >
             {d.name || d.vehiclePlate || d.imei.slice(-8)}
           </div>
           {d.vehiclePlate && d.name && (
-            <div className="truncate font-mono text-[10px] text-ink-500">{d.vehiclePlate}</div>
+            <div
+              className={`truncate font-mono text-[10px] ${overspeed ? "" : "text-ink-500"}`}
+              style={{ color: overspeed ? OVERSPEED_COLOR : undefined }}
+            >
+              {d.vehiclePlate}
+            </div>
           )}
         </div>
-        <span className={`status-pill ${STATE_PILL[state]}`}>{t(STATE_LABEL[state])}</span>
+        <span className={`status-pill ${overspeed ? "status-pill-stopped" : STATE_PILL[state]}`}>
+          {overspeed ? "Overspeed" : t(STATE_LABEL[state])}
+        </span>
       </div>
 
       <div className="mt-2 flex items-center justify-between">
         <span className="text-[11px] text-ink-600">
-          {t(STATE_LABEL[state])} {t("veh.since")} {formatSince(ts)}
+          {t(STATE_LABEL[state])} {t("veh.since")} {formatSince(sinceTs)}
         </span>
-        <span className="text-xs font-semibold text-ink-900">
+        <span
+          className={`text-xs font-semibold ${overspeed ? "animate-pulse" : "text-ink-900"}`}
+          style={{ color: overspeed ? OVERSPEED_COLOR : undefined }}
+        >
           {speed} <span className="text-[10px] font-normal text-ink-500">{t("fleet.kmh")}</span>
         </span>
       </div>

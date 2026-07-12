@@ -54,6 +54,22 @@ const STRINGS = {
   "fleet.cellFallback": { en: "Cell-tower fix", bn: "সেল-টাওয়ার ফিক্স" },
   "fleet.noFix": { en: "No GPS fix", bn: "জিপিএস নেই" },
 
+  // ── Map bottom panel ──────────────────────────────────────────────
+  "panel.data": { en: "Data", bn: "ডেটা" },
+  "panel.graph": { en: "Graph", bn: "গ্রাফ" },
+  "panel.objectControl": { en: "Object control", bn: "অবজেক্ট নিয়ন্ত্রণ" },
+  "panel.template": { en: "Template", bn: "টেমপ্লেট" },
+  "panel.command": { en: "Command", bn: "কমান্ড" },
+  "panel.custom": { en: "Custom", bn: "কাস্টম" },
+  "panel.cutEngine": { en: "Cut engine", bn: "ইঞ্জিন বন্ধ করুন" },
+  "panel.restoreEngine": { en: "Restore engine", bn: "ইঞ্জিন চালু করুন" },
+  "panel.queryAddress": { en: "Query address", bn: "ঠিকানা জিজ্ঞাসা" },
+  "panel.confirmCut": { en: "Cut the engine now?", bn: "এখনই ইঞ্জিন বন্ধ করবেন?" },
+  "panel.commandSent": { en: "Command sent", bn: "কমান্ড পাঠানো হয়েছে" },
+  "panel.commandFailed": { en: "Command failed", bn: "কমান্ড ব্যর্থ হয়েছে" },
+  "panel.dailyStats": { en: "Daily statistics", bn: "দৈনিক পরিসংখ্যান" },
+  "graph.noData": { en: "No data for today yet", bn: "আজকের জন্য এখনও ডেটা নেই" },
+
   // ── Vehicle detail tabs (AutoNemo-aligned) ────────────────────────
   "det.track": { en: "Track", bn: "ট্র্যাক" },
   "det.calendar": { en: "Calendar", bn: "ক্যালেন্ডার" },
@@ -164,6 +180,15 @@ const STRINGS = {
   "reports.title": { en: "Reports", bn: "রিপোর্ট" },
   "reports.tripsReport": { en: "Trips report", bn: "ট্রিপ রিপোর্ট" },
   "reports.alarmsReport": { en: "Alarms report", bn: "অ্যালার্ম রিপোর্ট" },
+  "reports.monthly": { en: "Monthly driving & stoppage", bn: "মাসিক ড্রাইভিং ও থামার রিপোর্ট" },
+  "reports.month": { en: "Month", bn: "মাস" },
+  "reports.vehicle": { en: "Vehicle", bn: "যানবাহন" },
+  "reports.view": { en: "View", bn: "দেখুন" },
+  "reports.date": { en: "Date", bn: "তারিখ" },
+  "reports.driving": { en: "Driving", bn: "চলমান" },
+  "reports.idle": { en: "Idle", bn: "নিষ্ক্রিয়" },
+  "reports.stopped": { en: "Stopped", bn: "থেমে" },
+  "reports.none": { en: "No data for this month", bn: "এই মাসের জন্য কোনো ডেটা নেই" },
 
   "lang.toggle": { en: "বাংলা", bn: "English" },
 

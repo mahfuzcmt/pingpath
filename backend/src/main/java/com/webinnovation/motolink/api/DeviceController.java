@@ -8,6 +8,7 @@ import com.webinnovation.motolink.exception.NotFoundException;
 import com.webinnovation.motolink.repository.DeviceRepository;
 import com.webinnovation.motolink.repository.SubscriptionRepository;
 import com.webinnovation.motolink.repository.SubscriptionRepository.SubInfo;
+import com.webinnovation.motolink.repository.TripRepository;
 import com.webinnovation.motolink.security.TenantContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -31,6 +33,7 @@ public class DeviceController {
 
     private final DeviceRepository deviceRepo;
     private final SubscriptionRepository subscriptionRepo;
+    private final TripRepository tripRepo;
 
     @GetMapping
     public List<DeviceView> list(@RequestParam(value = "status", required = false) String status) {
@@ -39,7 +42,10 @@ public class DeviceController {
                 ? deviceRepo.listForOrg(orgId)
                 : deviceRepo.listForOrgByStatus(orgId, status);
         Map<String, SubInfo> subs = subscriptionRepo.latestByOrg(orgId);
-        return devices.stream().map(d -> DeviceView.of(d, subs.get(d.imei()))).toList();
+        Map<String, Instant> parked = tripRepo.parkedSinceByImei(orgId);
+        return devices.stream()
+                .map(d -> DeviceView.of(d, subs.get(d.imei()), parked.get(d.imei())))
+                .toList();
     }
 
     @GetMapping("/{imei}")
@@ -47,7 +53,9 @@ public class DeviceController {
         UUID orgId = TenantContext.requireOrgId();
         Device d = deviceRepo.findByOrgAndImei(orgId, imei)
                 .orElseThrow(() -> new NotFoundException("device", imei));
-        return DeviceView.of(d, subscriptionRepo.latestForImei(orgId, imei).orElse(null));
+        return DeviceView.of(d,
+                subscriptionRepo.latestForImei(orgId, imei).orElse(null),
+                tripRepo.parkedSinceForImei(orgId, imei).orElse(null));
     }
 
     private static final Set<String> VEHICLE_TYPES = Set.of("MOTORBIKE", "CAR", "TRUCK", "CNG", "BUS");
@@ -68,6 +76,8 @@ public class DeviceController {
         if (updated == 0) throw new NotFoundException("device", imei);
         Device d = deviceRepo.findByOrgAndImei(orgId, imei)
                 .orElseThrow(() -> new NotFoundException("device", imei));
-        return DeviceView.of(d, subscriptionRepo.latestForImei(orgId, imei).orElse(null));
+        return DeviceView.of(d,
+                subscriptionRepo.latestForImei(orgId, imei).orElse(null),
+                tripRepo.parkedSinceForImei(orgId, imei).orElse(null));
     }
 }

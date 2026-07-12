@@ -5,11 +5,22 @@ import { cutFuel, restoreFuel } from "@/api/endpoints";
 import { extractError } from "@/api/client";
 import WebMap, { MapVehicle } from "@/components/WebMap";
 import { Loading, Metric, Section } from "@/ui";
-import { fmtVoltage, motionColor, motionOf } from "@/format";
+import {
+  fmtSince,
+  fmtVoltage,
+  motionColor,
+  motionOf,
+  subscriptionDaysLeft,
+  subscriptionExpired,
+} from "@/format";
+import { useSpeedLimits } from "@/hooks/useSpeedLimits";
+import { useI18n } from "@/i18n";
 import { colors, radius, space } from "@/theme";
 
 export default function TrackTab({ imei, orgId }: { imei: string; orgId: string | null }) {
+  const { t } = useI18n();
   const { device, loc, loading, reloadDevice } = useDeviceLive(imei, orgId);
+  const speedLimits = useSpeedLimits();
   const [center, setCenter] = useState<{ lat: number; lng: number; zoom: number; nonce: number } | null>(null);
   const [busy, setBusy] = useState(false);
   const centered = useRef(false);
@@ -23,28 +34,30 @@ export default function TrackTab({ imei, orgId }: { imei: string; orgId: string 
 
   const vehicles = useMemo<MapVehicle[]>(() => {
     if (!loc || !device) return [];
+    const overspeed = speedLimits.isOverspeed(imei, loc.speed);
     return [
       {
         imei,
         lat: loc.latitude,
         lng: loc.longitude,
         course: loc.course,
-        color: motionColor(motionOf(device, loc)),
+        color: overspeed ? colors.danger : motionColor(motionOf(device, loc)),
         label: device.vehiclePlate ?? device.name ?? imei.slice(-6),
         vehicleType: device.vehicleType,
         iconColor: device.iconColor,
+        overspeed,
       },
     ];
-  }, [loc, device, imei]);
+  }, [loc, device, imei, speedLimits]);
 
   async function runCommand(kind: "cut" | "restore") {
     setBusy(true);
     try {
       const res = kind === "cut" ? await cutFuel(imei) : await restoreFuel(imei);
-      Alert.alert(res.ok ? "Command sent" : "Command failed", res.reply ?? res.error ?? "");
+      Alert.alert(res.ok ? t("track.cmdSent") : t("track.cmdFailed"), res.reply ?? res.error ?? "");
       if (res.ok) await reloadDevice(); // pick up the new engine_locked state
     } catch (e) {
-      Alert.alert("Error", extractError(e).message);
+      Alert.alert(t("common.error"), extractError(e).message);
     } finally {
       setBusy(false);
     }
@@ -53,51 +66,85 @@ export default function TrackTab({ imei, orgId }: { imei: string; orgId: string 
   function confirm(kind: "cut" | "restore") {
     const cut = kind === "cut";
     Alert.alert(
-      cut ? "Cut engine?" : "Restore engine?",
-      cut ? "This immobilises the vehicle immediately." : "This re-enables the engine.",
+      cut ? t("track.confirmCutTitle") : t("track.confirmRestoreTitle"),
+      cut ? t("track.confirmCutMsg") : t("track.confirmRestoreMsg"),
       [
-        { text: "Cancel", style: "cancel" },
-        { text: cut ? "Cut engine" : "Restore", style: cut ? "destructive" : "default", onPress: () => runCommand(kind) },
+        { text: t("common.cancel"), style: "cancel" },
+        {
+          text: cut ? t("track.cutEngine") : t("track.restore"),
+          style: cut ? "destructive" : "default",
+          onPress: () => runCommand(kind),
+        },
       ],
     );
   }
 
-  if (loading && !device) return <Loading label="Loading device…" />;
+  if (loading && !device) return <Loading label={t("track.loadingDevice")} />;
 
   const speed = loc?.speed ?? device?.lastSpeed ?? 0;
+  const overspeeding = speedLimits.isOverspeed(imei, speed);
+  const expired = device ? subscriptionExpired(device) : false;
+  const daysLeft = device ? subscriptionDaysLeft(device) : null;
+  const expiringSoon = !expired && daysLeft != null && daysLeft <= 7;
+  const motion = device ? motionOf(device, loc) : "OFFLINE";
+  const parked = (motion === "STOPPED" || motion === "OFFLINE") && device?.parkedSince;
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
+      {/* AutoNemo-style renewal banner */}
+      {(expired || expiringSoon) && (
+        <View style={[styles.banner, { borderColor: expired ? colors.danger : colors.warn }]}>
+          <Text style={[styles.bannerTitle, { color: expired ? colors.danger : colors.warn }]}>
+            {expired ? t("sub.expired") : t("sub.expiringSoon")}
+            {device?.subscriptionExpiresAt ? ` · ${device.subscriptionExpiresAt}` : ""}
+          </Text>
+          <Text style={styles.bannerNote}>{t("sub.renewNote")}</Text>
+        </View>
+      )}
+
       <View style={styles.mapBox}>
         <WebMap vehicles={vehicles} center={center} />
-        <View style={styles.speedo}>
-          <Text style={styles.speedoVal}>{speed}</Text>
-          <Text style={styles.speedoUnit}>km/h</Text>
+        <View style={[styles.speedo, overspeeding && { borderColor: colors.danger }]}>
+          <Text style={[styles.speedoVal, overspeeding && { color: colors.danger }]}>{speed}</Text>
+          <Text style={styles.speedoUnit}>{t("veh.kmh")}</Text>
         </View>
       </View>
 
-      <Section title="Telemetry">
-        <Metric label="Ignition" value={loc?.accOn == null ? "—" : loc.accOn ? "ON" : "OFF"} />
-        <Metric label="GPS sats" value={loc?.satellites != null ? String(loc.satellites) : "—"} />
+      {parked ? (
+        <Text style={styles.parked}>
+          {t("veh.parkedFor")} {fmtSince(device?.parkedSince)}
+        </Text>
+      ) : null}
+
+      <Section title={t("track.telemetry")}>
+        <Metric label={t("track.ignition")} value={loc?.accOn == null ? "—" : loc.accOn ? t("common.on") : t("common.off")} />
+        <Metric label={t("track.gpsSats")} value={loc?.satellites != null ? String(loc.satellites) : "—"} />
         <Metric label="GSM" value={device?.lastGsmSignal != null ? String(device.lastGsmSignal) : "—"} />
-        <Metric label="Voltage" value={fmtVoltage(loc?.voltageMv ?? device?.lastVoltageMv)} />
-        <Metric label="Course" value={loc ? `${loc.course}°` : "—"} />
-        <Metric label="Fix" value={loc ? (loc.valid ? "Valid" : "Invalid") : "—"} />
+        <Metric label={t("track.voltage")} value={fmtVoltage(loc?.voltageMv ?? device?.lastVoltageMv)} />
+        <Metric label={t("track.course")} value={loc ? `${loc.course}°` : "—"} />
+        <Metric label={t("track.fix")} value={loc ? (loc.valid ? t("track.fixValid") : t("track.fixInvalid")) : "—"} />
       </Section>
 
-      <Section title="Engine control">
+      <Section title={t("track.engineControl")}>
         <View style={styles.lockRow}>
-          <Text style={styles.lockLabel}>Current state</Text>
+          <Text style={styles.lockLabel}>{t("track.currentState")}</Text>
           <Text style={[styles.lockValue, { color: device?.engineLocked ? colors.danger : colors.ok }]}>
-            {device?.engineLocked ? "🔒 Locked" : "Unlocked"}
+            {device?.engineLocked ? `🔒 ${t("track.locked")}` : t("track.unlocked")}
           </Text>
         </View>
         <View style={styles.actions}>
-          <ActionBtn label="Cut engine" tone="danger" disabled={busy} onPress={() => confirm("cut")} />
-          <ActionBtn label="Restore engine" tone="ok" disabled={busy} onPress={() => confirm("restore")} />
+          <ActionBtn label={t("track.cutEngine")} tone="danger" disabled={busy} onPress={() => confirm("cut")} />
+          <ActionBtn label={t("track.restoreEngine")} tone="ok" disabled={busy} onPress={() => confirm("restore")} />
         </View>
       </Section>
-      <Text style={styles.note}>Sends GT06 DYD / HFYD to the device (default password). Reply is shown when the device answers.</Text>
+      <Text style={styles.note}>{t("track.gt06Note")}</Text>
+
+      {(device?.subscriptionStatus || device?.subscriptionExpiresAt) && (
+        <Section title={t("sub.title")}>
+          <Metric label={t("sub.status")} value={device?.subscriptionStatus ?? "—"} />
+          <Metric label={t("sub.expiresOn")} value={device?.subscriptionExpiresAt ?? "—"} />
+        </Section>
+      )}
     </ScrollView>
   );
 }
@@ -129,6 +176,18 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
   content: { gap: space.md, paddingBottom: space.xl },
   mapBox: { height: 300, backgroundColor: colors.bg },
+  banner: {
+    marginHorizontal: space.md,
+    marginTop: space.md,
+    borderWidth: 1,
+    borderRadius: radius.md,
+    backgroundColor: colors.surface,
+    padding: space.md,
+    gap: 4,
+  },
+  bannerTitle: { fontSize: 13, fontWeight: "800" },
+  bannerNote: { color: colors.textDim, fontSize: 12 },
+  parked: { color: colors.textDim, fontSize: 12, paddingHorizontal: space.md },
   speedo: {
     position: "absolute",
     right: space.md,

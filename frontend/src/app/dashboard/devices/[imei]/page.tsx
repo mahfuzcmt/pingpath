@@ -12,13 +12,15 @@ import TrackTab from "@/components/device/detail/TrackTab";
 import CalendarTab from "@/components/device/detail/CalendarTab";
 import HistoryTab from "@/components/device/detail/HistoryTab";
 import StatisticsTab from "@/components/device/detail/StatisticsTab";
+import GraphTab from "@/components/device/detail/GraphTab";
 import type { DetailRange } from "@/components/device/detail/types";
 
-type Tab = "track" | "calendar" | "history" | "stats";
+type Tab = "track" | "calendar" | "history" | "graph" | "stats";
 const TABS: { id: Tab; label: StringKey }[] = [
   { id: "track", label: "det.track" },
   { id: "calendar", label: "det.calendar" },
   { id: "history", label: "det.history" },
+  { id: "graph", label: "panel.graph" },
   { id: "stats", label: "det.stats" },
 ];
 
@@ -112,6 +114,7 @@ export default function DeviceDetailPage() {
           />
         )}
         {tab === "history" && <HistoryTab imei={imei} range={range} />}
+        {tab === "graph" && <GraphTab imei={imei} />}
         {tab === "stats" && <StatisticsTab device={device} orgId={orgId} />}
       </div>
     </div>
