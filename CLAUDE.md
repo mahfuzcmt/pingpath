@@ -821,27 +821,33 @@ public LocationData decode(ByteBuf buf, int protocolNumber) {
 
 ### 6.6 CRC-ITU (X.25 CRC-16)
 
-**This is NOT standard CRC-16.** Use Traccar's exact implementation:
+**This is NOT standard CRC-16 — and it is the REFLECTED (X.25) variant.** An earlier
+revision of this section showed the MSB-first non-reflected table; that variant
+produces different values and real Concox devices reject it (corrected 2026-07-12
+after `scripts/simulate_device.py` shipped with the non-reflected version and every
+simulator frame was dropped with "CRC mismatch"). The shipped
+`netty/ChecksumUtil.java` is the reference:
 
 ```java
 public final class ChecksumUtil {
     private static final int[] TABLE = new int[256];
     static {
+        // Reflected polynomial 0x8408 (0x1021 bit-reversed), init 0xFFFF, XOR-out 0xFFFF
         for (int i = 0; i < 256; i++) {
-            int crc = i << 8;
+            int crc = i;
             for (int j = 0; j < 8; j++) {
-                crc = (crc & 0x8000) != 0 ? (crc << 1) ^ 0x1021 : crc << 1;
+                crc = (crc & 1) != 0 ? (crc >>> 1) ^ 0x8408 : crc >>> 1;
             }
-            TABLE[i] = crc & 0xFFFF;
+            TABLE[i] = crc;
         }
     }
 
     public static int crcItu(ByteBuf buf, int offset, int length) {
         int crc = 0xFFFF;
         for (int i = 0; i < length; i++) {
-            crc = TABLE[((crc >> 8) ^ buf.getByte(offset + i)) & 0xFF] ^ (crc << 8);
+            crc = (crc >>> 8) ^ TABLE[(crc ^ buf.getByte(offset + i)) & 0xFF];
         }
-        return (~crc) & 0xFFFF;
+        return crc ^ 0xFFFF;
     }
 }
 ```

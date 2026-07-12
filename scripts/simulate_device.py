@@ -20,19 +20,16 @@ import sys
 import time
 from datetime import datetime, timezone
 
-# CRC-ITU (X.25 CRC-16): poly 0x1021, init 0xFFFF, no reflection, XOR-out 0xFFFF.
-CRC_TABLE: list[int] = []
-for i in range(256):
-    crc = i << 8
-    for _ in range(8):
-        crc = ((crc << 1) ^ 0x1021) if (crc & 0x8000) else (crc << 1)
-    CRC_TABLE.append(crc & 0xFFFF)
-
-
+# CRC-ITU as GT06 hardware actually computes it: CRC-16/X-25 — REFLECTED,
+# poly 0x1021 (0x8408 bit-reversed), init 0xFFFF, XOR-out 0xFFFF. The MSB-first
+# non-reflected variant looks similar but produces different values; the backend
+# (verified against real Concox trackers) rejects those frames with CRC mismatch.
 def crc_itu(data: bytes) -> int:
     crc = 0xFFFF
     for b in data:
-        crc = (CRC_TABLE[((crc >> 8) ^ b) & 0xFF] ^ ((crc << 8) & 0xFFFF)) & 0xFFFF
+        crc ^= b
+        for _ in range(8):
+            crc = (crc >> 1) ^ 0x8408 if crc & 1 else crc >> 1
     return (~crc) & 0xFFFF
 
 
