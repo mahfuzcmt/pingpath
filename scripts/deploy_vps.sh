@@ -155,6 +155,23 @@ EOF
 else
   log "Reusing existing $ENV_FILE."
   PRINT_BOOTSTRAP_CREDS=no
+
+  # Upsert vars introduced after the first deploy (the block above only runs
+  # when .env is first generated). NEXT_PUBLIC_* values are baked into the
+  # frontend bundle at build time, so the rebuild below picks them up.
+  if ! grep -q '^NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=..*' "$ENV_FILE"; then
+    if [[ -z "${GOOGLE_MAPS_API_KEY:-}" ]]; then
+      printf "Google Maps JS API key (press Enter to skip — dashboard falls back to OSM tiles): "
+      read -r GOOGLE_MAPS_API_KEY
+    fi
+    if [[ -n "${GOOGLE_MAPS_API_KEY:-}" ]]; then
+      sed -i '/^NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=/d' "$ENV_FILE"
+      printf 'NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=%s\n' "$GOOGLE_MAPS_API_KEY" >> "$ENV_FILE"
+      log "Added NEXT_PUBLIC_GOOGLE_MAPS_API_KEY to $ENV_FILE."
+    else
+      warn "No Google Maps key set — dashboard keeps the OSM fallback map."
+    fi
+  fi
 fi
 
 # ---------------------------------------------------------------------------
