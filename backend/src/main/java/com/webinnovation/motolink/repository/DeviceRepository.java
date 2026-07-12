@@ -173,6 +173,25 @@ public class DeviceRepository {
                 });
     }
 
+    /** Partial profile update — null params keep the current value (scoped by org). */
+    public int updateProfile(UUID orgId, String imei, String name, String vehiclePlate,
+                             String vehicleType, String iconColor) {
+        return jdbc.update("""
+                UPDATE devices SET
+                  name = COALESCE(:name, name),
+                  vehicle_plate = COALESCE(:plate, vehicle_plate),
+                  vehicle_type = COALESCE(:type, vehicle_type),
+                  icon_color = COALESCE(:color, icon_color),
+                  updated_at = now()
+                WHERE org_id = :orgId AND imei = :imei
+                """, new MapSqlParameterSource("orgId", orgId)
+                .addValue("imei", imei)
+                .addValue("name", name)
+                .addValue("plate", vehiclePlate)
+                .addValue("type", vehicleType)
+                .addValue("color", iconColor));
+    }
+
     /** Records the engine cut/restore state after a successful command (scoped by org). */
     public int setEngineLocked(UUID orgId, String imei, boolean locked) {
         return jdbc.update("""

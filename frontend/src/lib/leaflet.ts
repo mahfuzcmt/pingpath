@@ -71,6 +71,28 @@ function loadGoogleMaps(): Promise<boolean> {
  */
 type GoogleMutantCtor = new (opts: { type: string; maxZoom: number }) => L.GridLayer;
 
+// GoogleMutant instance surface we use beyond L.GridLayer.
+interface GoogleMutantLayer extends L.GridLayer {
+  addGoogleLayer(name: string): void;
+  removeGoogleLayer(name: string): void;
+}
+
+function isGoogleMutant(layer: L.GridLayer | null | undefined): layer is GoogleMutantLayer {
+  return typeof (layer as GoogleMutantLayer | null | undefined)?.addGoogleLayer === "function";
+}
+
+/** Whether the base layer can render Google's live traffic overlay. */
+export function layerSupportsTraffic(layer: L.GridLayer | null | undefined): boolean {
+  return isGoogleMutant(layer);
+}
+
+/** Toggle Google's TrafficLayer on a mutant base layer. No-op on tile fallbacks. */
+export function setLayerTraffic(layer: L.GridLayer | null | undefined, enabled: boolean): void {
+  if (!isGoogleMutant(layer)) return;
+  if (enabled) layer.addGoogleLayer("TrafficLayer");
+  else layer.removeGoogleLayer("TrafficLayer");
+}
+
 export async function createBaseLayer(kind: BaseLayerKind = "street"): Promise<L.GridLayer> {
   if (await loadGoogleMaps()) {
     // Import lazily so the plugin (which touches window) never runs during SSR

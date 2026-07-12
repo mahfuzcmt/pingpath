@@ -3,8 +3,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { DEFAULT_ZOOM, DHAKA_CENTER, createBaseLayer, expandBounds } from "@/lib/leaflet";
+import {
+  DEFAULT_ZOOM,
+  DHAKA_CENTER,
+  createBaseLayer,
+  expandBounds,
+  layerSupportsTraffic,
+  setLayerTraffic,
+} from "@/lib/leaflet";
 import { vehicleState, VEHICLE_STATE_COLOR, type VehicleState } from "@/lib/format";
+import { buildVehicleSvg } from "@/lib/vehicleIcons";
 import type { DeviceView, LocationView } from "@/types/domain";
 
 interface FleetMapProps {
@@ -54,28 +62,26 @@ function statusText(device: DeviceView | undefined, location: LocationView | und
   return STATE_TEXT[vehicleState(device, location)];
 }
 
-function getDeviceLabel(device: DeviceView | undefined): string {
-  if (!device) return "Unknown";
-  return device.name || device.vehiclePlate || device.imei.slice(-8);
-}
-
-// Create arrow SVG icon for vehicle marker
-function createArrowIcon(color: string, rotation: number, isSelected: boolean): L.DivIcon {
-  const size = isSelected ? 36 : 28;
-  const svg = `
-    <svg width="${size}" height="${size}" viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg">
-      <g transform="translate(14 14) rotate(${rotation})">
-        <circle r="13" fill="${color}" fill-opacity="0.18"/>
-        <path d="M0 -10 L7 8 L0 4 L-7 8 Z" fill="${color}" stroke="#0A1928" stroke-width="1.2" stroke-linejoin="round"/>
-      </g>
-    </svg>`;
-
+// Vehicle marker: top-view silhouette by vehicle type, rotated to the course.
+function createVehicleIcon(
+  vehicleType: string | null | undefined,
+  bodyColor: string,
+  rotation: number,
+  isSelected: boolean,
+): L.DivIcon {
+  const size = isSelected ? 46 : 38;
   return L.divIcon({
-    html: svg,
+    html: buildVehicleSvg(vehicleType, bodyColor, rotation, size),
     className: `pp-vehicle-icon ${isSelected ? 'pp-selected' : ''}`,
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2],
   });
+}
+
+// Plate-number pill shown permanently above the marker (AutoNemo-style).
+function plateLabelHtml(device: DeviceView | undefined, stateColor: string): string {
+  const text = device?.vehiclePlate || device?.name || device?.imei.slice(-8) || "—";
+  return `<div class="pp-plate" style="background:${stateColor}">${text}</div>`;
 }
 
 export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh }: FleetMapProps) {
@@ -89,6 +95,9 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
   const [baseLayer, setBaseLayer] = useState<BaseLayer>("normal");
   const [refreshing, setRefreshing] = useState(false);
   const [locating, setLocating] = useState(false);
+  const [showTraffic, setShowTraffic] = useState(false);
+  const [trafficAvailable, setTrafficAvailable] = useState(false);
+  const showTrafficRef = useRef(showTraffic);
 
   const deviceByImei = useMemo(() => {
     const m = new Map<string, DeviceView>();
@@ -207,11 +216,20 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
       layer.addTo(map);
       layer.bringToBack();
       tileLayerRef.current = layer;
+      // Traffic only exists on the Google base layer, not the OSM fallback.
+      setTrafficAvailable(layerSupportsTraffic(layer));
+      setLayerTraffic(layer, showTrafficRef.current);
     });
     return () => {
       cancelled = true;
     };
   }, [baseLayer]);
+
+  // Toggle Google's live traffic overlay on the current base layer.
+  useEffect(() => {
+    showTrafficRef.current = showTraffic;
+    setLayerTraffic(tileLayerRef.current, showTraffic);
+  }, [showTraffic]);
 
   const handleRefresh = useCallback(async () => {
     if (!onRefresh) return;
@@ -260,24 +278,23 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
       const isSelected = imei === selectedImei;
       let marker = markersRef.current.get(imei);
 
-      const label = getDeviceLabel(device);
-      const speed = loc.speed ?? 0;
       const course = loc.course ?? 0;
+      const bodyColor = device?.iconColor || "#E8900A";
 
       if (!marker) {
         // Create new marker
-        const icon = createArrowIcon(color, course, isSelected);
+        const icon = createVehicleIcon(device?.vehicleType, bodyColor, course, isSelected);
         marker = L.marker([loc.latitude, loc.longitude], { icon })
           .addTo(map)
           .bindPopup(createPopupContent(device, loc), {
             maxWidth: 320,
             className: 'pp-popup-container',
           })
-          .bindTooltip(`<div class="pp-tooltip"><strong>${label}</strong><br/>${speed} kph</div>`, {
+          .bindTooltip(plateLabelHtml(device, color), {
             permanent: true,
-            direction: 'bottom',
-            offset: [0, 10],
-            className: 'pp-marker-tooltip',
+            direction: 'top',
+            offset: [0, -22],
+            className: 'pp-plate-tooltip',
           });
 
         marker.on('click', () => {
@@ -288,9 +305,9 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
       } else {
         // Update existing marker
         marker.setLatLng([loc.latitude, loc.longitude]);
-        marker.setIcon(createArrowIcon(color, course, isSelected));
+        marker.setIcon(createVehicleIcon(device?.vehicleType, bodyColor, course, isSelected));
         marker.setPopupContent(createPopupContent(device, loc));
-        marker.setTooltipContent(`<div class="pp-tooltip"><strong>${label}</strong><br/>${speed} kph</div>`);
+        marker.setTooltipContent(plateLabelHtml(device, color));
       }
     }
 
@@ -332,22 +349,35 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
     <div className="relative h-full w-full" style={{ minHeight: "400px" }}>
       <div ref={containerRef} className="absolute inset-0" style={{ width: "100%", height: "100%" }} />
 
-      {/* Map-view toggle (top-right) — AutoNemo Normal / Satellite */}
-      <div className="absolute right-3 top-3 z-[1000] flex overflow-hidden rounded-md border border-surface-300 bg-white text-xs shadow-menu">
-        {(["normal", "satellite"] as BaseLayer[]).map((k) => (
-          <button
-            key={k}
-            type="button"
-            onClick={() => setBaseLayer(k)}
-            className={
-              baseLayer === k
-                ? "bg-brand-500 px-2.5 py-1 font-semibold capitalize text-white"
-                : "px-2.5 py-1 capitalize text-ink-700 transition hover:bg-surface-100"
-            }
-          >
-            {k}
-          </button>
-        ))}
+      {/* Map controls (top-right) — Normal / Satellite + Show Traffic */}
+      <div className="absolute right-3 top-3 z-[1000] flex items-center gap-2">
+        {trafficAvailable && (
+          <label className="flex cursor-pointer items-center gap-1.5 rounded-md border border-surface-300 bg-white px-2.5 py-1 text-xs font-semibold text-ink-900 shadow-menu">
+            <input
+              type="checkbox"
+              checked={showTraffic}
+              onChange={(e) => setShowTraffic(e.target.checked)}
+              className="h-3.5 w-3.5 accent-brand-500"
+            />
+            Show Traffic
+          </label>
+        )}
+        <div className="flex overflow-hidden rounded-md border border-surface-300 bg-white text-xs shadow-menu">
+          {(["normal", "satellite"] as BaseLayer[]).map((k) => (
+            <button
+              key={k}
+              type="button"
+              onClick={() => setBaseLayer(k)}
+              className={
+                baseLayer === k
+                  ? "bg-brand-500 px-2.5 py-1 font-semibold capitalize text-white"
+                  : "px-2.5 py-1 capitalize text-ink-700 transition hover:bg-surface-100"
+              }
+            >
+              {k}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Control cluster (bottom-right, above the zoom control) */}
@@ -394,22 +424,27 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           filter: drop-shadow(0 0 6px #e8900a);
           z-index: 1000 !important;
         }
-        .pp-marker-tooltip {
-          background: rgba(10, 25, 40, 0.9) !important;
-          border: 1px solid rgba(100, 116, 139, 0.3) !important;
-          border-radius: 4px !important;
-          color: #f1f5f9 !important;
-          font-family: 'Inter', sans-serif !important;
-          font-size: 11px !important;
-          padding: 4px 8px !important;
+        /* Plate-number pill above each vehicle (AutoNemo-style) */
+        .pp-plate-tooltip {
+          background: transparent !important;
+          border: none !important;
           box-shadow: none !important;
+          padding: 0 !important;
         }
-        .pp-marker-tooltip::before {
-          border-bottom-color: rgba(10, 25, 40, 0.9) !important;
+        .pp-plate-tooltip::before {
+          display: none !important;
         }
-        .pp-tooltip strong {
-          color: #f1f5f9;
-          font-weight: 600;
+        .pp-plate {
+          color: #fff;
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 10px;
+          font-weight: 700;
+          letter-spacing: 0.3px;
+          padding: 2px 9px;
+          border-radius: 9999px;
+          border: 1px solid rgba(255, 255, 255, 0.55);
+          box-shadow: 0 1px 4px rgba(10, 25, 40, 0.35);
+          white-space: nowrap;
         }
 
         /* Popup styles */

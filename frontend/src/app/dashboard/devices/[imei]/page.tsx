@@ -7,6 +7,7 @@ import { useDevices } from "@/hooks/useDevices";
 import { useSession } from "@/lib/session-context";
 import { useLocale, type StringKey } from "@/lib/i18n";
 import { dhakaTodayStartIso, vehicleState, VEHICLE_STATE_COLOR } from "@/lib/format";
+import { DeviceEditModal } from "@/components/device/DeviceEditModal";
 import TrackTab from "@/components/device/detail/TrackTab";
 import CalendarTab from "@/components/device/detail/CalendarTab";
 import HistoryTab from "@/components/device/detail/HistoryTab";
@@ -26,11 +27,12 @@ export default function DeviceDetailPage() {
   const imei = params.imei;
   const { orgId } = useSession();
   const { t } = useLocale();
-  const { devices, loading } = useDevices();
+  const { devices, loading, setDevices } = useDevices();
 
   const device = useMemo(() => devices.find((d) => d.imei === imei) ?? null, [devices, imei]);
 
   const [tab, setTab] = useState<Tab>("track");
+  const [editing, setEditing] = useState(false);
   const [range, setRange] = useState<DetailRange>(() => ({
     from: dhakaTodayStartIso(),
     to: new Date().toISOString(),
@@ -60,7 +62,28 @@ export default function DeviceDetailPage() {
           </div>
           <div className="font-mono text-[10px] text-ink-500">{device.imei}</div>
         </div>
+        <button
+          type="button"
+          className="btn-ghost ml-auto"
+          onClick={() => setEditing(true)}
+          title={t("veh.edit")}
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+          </svg>
+          {t("veh.edit")}
+        </button>
       </div>
+
+      {editing && (
+        <DeviceEditModal
+          device={device}
+          onClose={() => setEditing(false)}
+          onSaved={(updated) =>
+            setDevices((prev) => prev.map((d) => (d.imei === updated.imei ? updated : d)))
+          }
+        />
+      )}
 
       {/* Tabs */}
       <div className="tab-bar shrink-0">

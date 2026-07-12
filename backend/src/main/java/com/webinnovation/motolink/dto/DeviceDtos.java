@@ -11,6 +11,17 @@ public final class DeviceDtos {
 
     private DeviceDtos() {}
 
+    /**
+     * Partial update — null fields are left unchanged. vehicleType drives the
+     * map marker picture on the dashboards; iconColor tints it.
+     */
+    public record DeviceUpdateRequest(
+            String name,
+            String vehiclePlate,
+            String vehicleType,
+            String iconColor
+    ) {}
+
     public record DeviceView(
             UUID id,
             String imei,

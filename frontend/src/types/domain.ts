@@ -99,6 +99,17 @@ export interface DeviceView {
 }
 
 /**
+ * Mirrors backend `dto.DeviceDtos.DeviceUpdateRequest` (PATCH /devices/{imei}).
+ * Null/omitted fields keep their current value.
+ */
+export interface DeviceUpdateRequest {
+  name?: string | null;
+  vehiclePlate?: string | null;
+  vehicleType?: string | null;
+  iconColor?: string | null;
+}
+
+/**
  * Mirrors backend `dto.LocationDtos.LocationView` AND the Redis-published
  * LocationEvent shape (LocationService.toJson). Both use latitude/longitude.
  */

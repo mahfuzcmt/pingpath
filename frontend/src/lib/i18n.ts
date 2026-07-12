@@ -90,6 +90,16 @@ const STRINGS = {
   "veh.locked": { en: "Engine locked", bn: "ইঞ্জিন লক" },
   "veh.count": { en: "vehicles", bn: "যানবাহন" },
   "veh.none": { en: "No vehicles match your filter.", bn: "কোনো যানবাহন মেলেনি।" },
+  "veh.edit": { en: "Edit vehicle", bn: "যানবাহন সম্পাদনা" },
+  "veh.name": { en: "Name", bn: "নাম" },
+  "veh.plate": { en: "Vehicle number", bn: "গাড়ির নম্বর" },
+  "veh.icon": { en: "Map icon", bn: "মানচিত্র আইকন" },
+  "veh.iconColor": { en: "Icon color", bn: "আইকনের রং" },
+  "veh.type.CAR": { en: "Car", bn: "গাড়ি" },
+  "veh.type.MOTORBIKE": { en: "Motorbike", bn: "মোটরবাইক" },
+  "veh.type.TRUCK": { en: "Truck", bn: "ট্রাক" },
+  "veh.type.BUS": { en: "Bus", bn: "বাস" },
+  "veh.type.CNG": { en: "CNG", bn: "সিএনজি" },
 
   // ── Dashboard KPI strip ───────────────────────────────────────────
   "kpi.online": { en: "Online", bn: "অনলাইন" },
