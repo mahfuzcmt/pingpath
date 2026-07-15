@@ -130,7 +130,7 @@ export async function createBaseLayer(kind: BaseLayerKind = "street"): Promise<L
 // Dhaka centre — used as initial map view when no devices yet have a fix.
 export const DHAKA_CENTER: [number, number] = [23.8103, 90.4125]; // [lat, lng] for Leaflet
 
-export const DEFAULT_ZOOM = 11;
+export const DEFAULT_ZOOM = 14;
 
 /** Bounds expansion helper: returns [[minLat, minLng], [maxLat, maxLng]] padded. */
 export function expandBounds(

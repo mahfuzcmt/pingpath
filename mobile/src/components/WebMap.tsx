@@ -53,7 +53,7 @@ interface Props {
 }
 
 // Bangladesh default view.
-const DEFAULT = { lat: 23.685, lng: 90.3563, zoom: 7 };
+const DEFAULT = { lat: 23.685, lng: 90.3563, zoom: 10 };
 const GOOGLE_MAPS_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
 
 // The WebView page gets this origin (via `baseUrl`) so a referrer-restricted
