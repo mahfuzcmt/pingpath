@@ -584,28 +584,28 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
 
         /* Popup styles */
         .pp-popup-container .leaflet-popup-content-wrapper {
-          background: rgba(15, 39, 66, 0.98);
-          border: 1px solid rgba(100, 116, 139, 0.3);
+          background: rgba(255, 255, 255, 0.98);
+          border: 1px solid #e2e8f0;
           border-radius: 8px;
           padding: 0;
-          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+          box-shadow: 0 10px 25px rgba(10, 25, 40, 0.15);
         }
         .pp-popup-container .leaflet-popup-content {
           margin: 0;
         }
         .pp-popup-container .leaflet-popup-close-button {
-          color: #94a3b8 !important;
+          color: #64748b !important;
           font-size: 18px;
           padding: 4px 8px;
           right: 4px;
           top: 4px;
         }
         .pp-popup-container .leaflet-popup-close-button:hover {
-          color: #f1f5f9 !important;
+          color: #0f2742 !important;
         }
         .pp-popup-container .leaflet-popup-tip {
-          background: rgba(15, 39, 66, 0.98);
-          border: 1px solid rgba(100, 116, 139, 0.3);
+          background: rgba(255, 255, 255, 0.98);
+          border: 1px solid #e2e8f0;
           box-shadow: none;
         }
         .pp-popup {
@@ -618,12 +618,12 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           justify-content: space-between;
           gap: 12px;
           padding: 12px 14px;
-          border-bottom: 1px solid rgba(100, 116, 139, 0.2);
+          border-bottom: 1px solid #e2e8f0;
         }
         .pp-popup-name {
           font-size: 14px;
           font-weight: 600;
-          color: #f1f5f9;
+          color: #0f2742;
         }
         .pp-popup-status {
           font-size: 10px;
@@ -654,7 +654,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
         }
         .pp-popup-value {
           font-size: 12px;
-          color: #e2e8f0;
+          color: #334155;
           font-weight: 500;
         }
         .pp-popup-value.pp-mono {
@@ -669,7 +669,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
         .pp-popup-value.pp-speed small {
           font-size: 10px;
           font-weight: 400;
-          color: #94a3b8;
+          color: #64748b;
         }
       `}</style>
     </div>

@@ -31,6 +31,34 @@ export const SATELLITE_ATTRIBUTION =
 
 export const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
 
+// Google's "Silver" style — renders the roadmap in whites/light grays so the
+// dashboard map reads as light mode. Applied to the street layer only;
+// satellite imagery is left unstyled.
+export const GOOGLE_LIGHT_STYLES = [
+  { elementType: "geometry", stylers: [{ color: "#f5f5f5" }] },
+  { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: "#616161" }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: "#f5f5f5" }] },
+  {
+    featureType: "administrative.land_parcel",
+    elementType: "labels.text.fill",
+    stylers: [{ color: "#bdbdbd" }],
+  },
+  { featureType: "poi", elementType: "geometry", stylers: [{ color: "#eeeeee" }] },
+  { featureType: "poi", elementType: "labels.text.fill", stylers: [{ color: "#757575" }] },
+  { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#e5e5e5" }] },
+  { featureType: "poi.park", elementType: "labels.text.fill", stylers: [{ color: "#9e9e9e" }] },
+  { featureType: "road", elementType: "geometry", stylers: [{ color: "#ffffff" }] },
+  { featureType: "road.arterial", elementType: "labels.text.fill", stylers: [{ color: "#757575" }] },
+  { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#dadada" }] },
+  { featureType: "road.highway", elementType: "labels.text.fill", stylers: [{ color: "#616161" }] },
+  { featureType: "road.local", elementType: "labels.text.fill", stylers: [{ color: "#9e9e9e" }] },
+  { featureType: "transit.line", elementType: "geometry", stylers: [{ color: "#e5e5e5" }] },
+  { featureType: "transit.station", elementType: "geometry", stylers: [{ color: "#eeeeee" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#c9c9c9" }] },
+  { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#9e9e9e" }] },
+];
+
 export type BaseLayerKind = "street" | "satellite";
 
 declare global {
@@ -69,7 +97,11 @@ function loadGoogleMaps(): Promise<boolean> {
  * Create the base map layer. Async because the Google JS API loads lazily;
  * callers should guard against the map being torn down before it resolves.
  */
-type GoogleMutantCtor = new (opts: { type: string; maxZoom: number }) => L.GridLayer;
+type GoogleMutantCtor = new (opts: {
+  type: string;
+  maxZoom: number;
+  styles?: Array<Record<string, unknown>>;
+}) => L.GridLayer;
 
 // GoogleMutant instance surface we use beyond L.GridLayer.
 interface GoogleMutantLayer extends L.GridLayer {
@@ -118,13 +150,16 @@ export async function createBaseLayer(kind: BaseLayerKind = "street"): Promise<L
       return new GoogleMutant({
         type: kind === "satellite" ? "hybrid" : "roadmap",
         maxZoom: 21,
+        ...(kind === "street" ? { styles: GOOGLE_LIGHT_STYLES } : {}),
       });
     }
     // Unexpected plugin shape — fall through to the free tile fallback.
   }
+  // Fallback street layer uses Carto's light (white) theme to match the
+  // Google silver style above; plain OSM tiles are too colorful.
   return kind === "satellite"
     ? L.tileLayer(TILE_URL_SATELLITE, { attribution: SATELLITE_ATTRIBUTION, maxZoom: 19 })
-    : L.tileLayer(TILE_URL, { attribution: TILE_ATTRIBUTION, maxZoom: 19 });
+    : L.tileLayer(TILE_URL_LIGHT, { attribution: CARTO_ATTRIBUTION, maxZoom: 19 });
 }
 
 // Dhaka centre — used as initial map view when no devices yet have a fix.
