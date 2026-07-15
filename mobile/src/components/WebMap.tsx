@@ -76,7 +76,7 @@ function buildHtml(googleKey: string): string {
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 ${googleScripts}
 <style>
-  html,body,#map{margin:0;height:100%;width:100%;background:#f5f5f5}
+  html,body,#map{margin:0;height:100%;width:100%;background:${colors.bg}}
   .vwrap{position:relative;width:40px;height:40px}
   .veh{width:40px;height:40px;cursor:pointer;transform-origin:center}
   .veh svg{display:block;filter:drop-shadow(0 1px 2px rgba(0,0,0,.6))}
@@ -97,37 +97,14 @@ ${googleScripts}
   });
   map.attributionControl.setPrefix(false);
 
-  // Google "Silver" style — white/light-gray roadmap, mirrors the web
-  // dashboard's GOOGLE_LIGHT_STYLES in frontend/src/lib/leaflet.ts.
-  const LIGHT_STYLES = [
-    {elementType:'geometry',stylers:[{color:'#f5f5f5'}]},
-    {elementType:'labels.icon',stylers:[{visibility:'off'}]},
-    {elementType:'labels.text.fill',stylers:[{color:'#616161'}]},
-    {elementType:'labels.text.stroke',stylers:[{color:'#f5f5f5'}]},
-    {featureType:'administrative.land_parcel',elementType:'labels.text.fill',stylers:[{color:'#bdbdbd'}]},
-    {featureType:'poi',elementType:'geometry',stylers:[{color:'#eeeeee'}]},
-    {featureType:'poi',elementType:'labels.text.fill',stylers:[{color:'#757575'}]},
-    {featureType:'poi.park',elementType:'geometry',stylers:[{color:'#e5e5e5'}]},
-    {featureType:'poi.park',elementType:'labels.text.fill',stylers:[{color:'#9e9e9e'}]},
-    {featureType:'road',elementType:'geometry',stylers:[{color:'#ffffff'}]},
-    {featureType:'road.arterial',elementType:'labels.text.fill',stylers:[{color:'#757575'}]},
-    {featureType:'road.highway',elementType:'geometry',stylers:[{color:'#dadada'}]},
-    {featureType:'road.highway',elementType:'labels.text.fill',stylers:[{color:'#616161'}]},
-    {featureType:'road.local',elementType:'labels.text.fill',stylers:[{color:'#9e9e9e'}]},
-    {featureType:'transit.line',elementType:'geometry',stylers:[{color:'#e5e5e5'}]},
-    {featureType:'transit.station',elementType:'geometry',stylers:[{color:'#eeeeee'}]},
-    {featureType:'water',elementType:'geometry',stylers:[{color:'#c9c9c9'}]},
-    {featureType:'water',elementType:'labels.text.fill',stylers:[{color:'#9e9e9e'}]}
-  ];
-  // Carto light (white) tiles for the no-Google fallback, matching the style above.
   function osmLayer(){
-    return L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-      {maxZoom:19, attribution:'&copy; OpenStreetMap &copy; CARTO'});
+    return L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      {maxZoom:19, attribution:'&copy; OpenStreetMap'});
   }
   let base;
   try {
     if(window.google && window.google.maps && L.gridLayer.googleMutant){
-      base = L.gridLayer.googleMutant({type:'roadmap', maxZoom:21, styles:LIGHT_STYLES});
+      base = L.gridLayer.googleMutant({type:'roadmap', maxZoom:21});
     }
   } catch(e){ base = null; }
   if(!base) base = osmLayer();
@@ -343,5 +320,4 @@ export default function WebMap({
   );
 }
 
-// Light background so the map area doesn't flash dark before the WebView loads.
-const styles = StyleSheet.create({ fill: { flex: 1, backgroundColor: "#f5f5f5" } });
+const styles = StyleSheet.create({ fill: { flex: 1, backgroundColor: colors.bg } });
