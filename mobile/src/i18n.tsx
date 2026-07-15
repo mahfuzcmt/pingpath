@@ -30,6 +30,8 @@ const STRINGS = {
   "tab.map": { en: "Map", bn: "মানচিত্র" },
   "tab.vehicles": { en: "Vehicles", bn: "যানবাহন" },
   "tab.alerts": { en: "Alerts", bn: "সতর্কতা" },
+  "tab.more": { en: "More", bn: "আরও" },
+  "more.language": { en: "Language", bn: "ভাষা" },
 
   // ── Login ─────────────────────────────────────────────────────────
   "auth.signIn": { en: "Sign in", bn: "সাইন ইন" },
@@ -220,6 +222,9 @@ const STRINGS = {
   "map.traffic": { en: "Traffic", bn: "ট্রাফিক" },
   "map.refresh": { en: "Refresh", bn: "রিফ্রেশ" },
   "map.locateMe": { en: "Locate Me", bn: "আমার অবস্থান" },
+  "map.view": { en: "Map View", bn: "মানচিত্র ভিউ" },
+  "map.normal": { en: "Normal", bn: "সাধারণ" },
+  "map.satellite": { en: "Satellite", bn: "স্যাটেলাইট" },
 
   // ── Statistics tab ────────────────────────────────────────────────
   "stats.loading": { en: "Loading statistics…", bn: "পরিসংখ্যান লোড হচ্ছে…" },

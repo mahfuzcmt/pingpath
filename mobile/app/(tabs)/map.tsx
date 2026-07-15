@@ -22,6 +22,8 @@ export default function MapScreen() {
   const { devices } = useDevices();
   const [center, setCenter] = useState<{ lat: number; lng: number; zoom: number; nonce: number } | null>(null);
   const [zoomStep, setZoomStep] = useState<{ dir: 1 | -1; nonce: number } | null>(null);
+  const [baseLayer, setBaseLayer] = useState<"street" | "satellite">("street");
+  const [viewMenuOpen, setViewMenuOpen] = useState(false);
   const [showTraffic, setShowTraffic] = useState(false);
   const [trafficAvailable, setTrafficAvailable] = useState(false);
 
@@ -67,15 +69,42 @@ export default function MapScreen() {
         vehicles={vehicles}
         center={center}
         zoomStep={zoomStep}
+        baseLayer={baseLayer}
         showTraffic={showTraffic}
         onTrafficAvailable={setTrafficAvailable}
         onSelect={(imei) => router.push({ pathname: "/device/[imei]", params: { imei } })}
       />
 
       <SafeAreaView edges={["top"]} style={styles.topOverlay} pointerEvents="box-none">
-        <View style={styles.pill}>
-          <Text style={styles.pillBrand}>MotoLink</Text>
-          <Text style={styles.pillCount}>{vehicles.length} {t("common.live")}</Text>
+        <View>
+          <Pressable
+            onPress={() => setViewMenuOpen((v) => !v)}
+            style={({ pressed }) => [styles.pill, pressed && { opacity: 0.7 }]}
+          >
+            <Text style={styles.pillLabel}>
+              {t("map.view")}: {baseLayer === "street" ? t("map.normal") : t("map.satellite")}
+            </Text>
+            <Ionicons name={viewMenuOpen ? "chevron-up" : "chevron-down"} size={14} color={colors.text} />
+          </Pressable>
+          {viewMenuOpen && (
+            <View style={styles.viewMenu}>
+              {(["street", "satellite"] as const).map((k) => (
+                <Pressable
+                  key={k}
+                  onPress={() => {
+                    setBaseLayer(k);
+                    setViewMenuOpen(false);
+                  }}
+                  style={({ pressed }) => [styles.viewMenuItem, pressed && { opacity: 0.7 }]}
+                >
+                  <Text style={[styles.pillLabel, baseLayer === k && { color: colors.brand }]}>
+                    {k === "street" ? t("map.normal") : t("map.satellite")}
+                  </Text>
+                  {baseLayer === k && <Ionicons name="checkmark" size={16} color={colors.brand} />}
+                </Pressable>
+              ))}
+            </View>
+          )}
         </View>
         {trafficAvailable && (
           <Pressable
@@ -149,9 +178,26 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     elevation: 3,
   },
-  pillBrand: { color: colors.text, fontWeight: "800" },
-  pillCount: { color: colors.brand, fontWeight: "600", fontSize: 12 },
   pillLabel: { color: colors.text, fontWeight: "600", fontSize: 14 },
+  viewMenu: {
+    marginTop: space.xs,
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    paddingVertical: 4,
+    minWidth: 160,
+    shadowColor: "#0F2742",
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
+  },
+  viewMenuItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: space.lg,
+    paddingVertical: 10,
+  },
   controls: {
     position: "absolute",
     bottom: 0,

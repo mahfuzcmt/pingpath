@@ -42,6 +42,8 @@ interface Props {
   center?: { lat: number; lng: number; zoom?: number; nonce?: number } | null;
   /** Zoom step command (+1 / -1); bump `nonce` to re-issue. */
   zoomStep?: { dir: 1 | -1; nonce: number } | null;
+  /** Base layer kind — Normal (street) or Satellite. Default street. */
+  baseLayer?: "street" | "satellite";
   /** Circle overlay (geofence preview); null clears it. */
   circle?: MapCircle | null;
   fitRoute?: boolean;
@@ -99,17 +101,25 @@ ${googleScripts}
   });
   map.attributionControl.setPrefix(false);
 
-  function osmLayer(){
-    return L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-      {maxZoom:19, attribution:'&copy; OpenStreetMap'});
-  }
-  let base;
-  try {
-    if(window.google && window.google.maps && L.gridLayer.googleMutant){
-      base = L.gridLayer.googleMutant({type:'roadmap', maxZoom:21});
+  // Base layer factory — Google (roadmap/hybrid) when the JS API loaded,
+  // free OSM / Esri satellite tiles otherwise. Mirrors the web dashboard's
+  // createBaseLayer in frontend/src/lib/leaflet.ts.
+  let googleOk = false;
+  try { googleOk = !!(window.google && window.google.maps && L.gridLayer.googleMutant); } catch(e){}
+  function makeBase(kind){
+    if(googleOk){
+      try {
+        return L.gridLayer.googleMutant({type: kind==='satellite'?'hybrid':'roadmap', maxZoom:21});
+      } catch(e){}
     }
-  } catch(e){ base = null; }
-  if(!base) base = osmLayer();
+    return kind==='satellite'
+      ? L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+          {maxZoom:19, attribution:'Tiles &copy; Esri'})
+      : L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+          {maxZoom:19, attribution:'&copy; OpenStreetMap'});
+  }
+  let baseKind = 'street';
+  let base = makeBase(baseKind);
   base.addTo(map);
 
   // Google live-traffic overlay — only exists on the GoogleMutant base layer.
@@ -119,9 +129,10 @@ ${googleScripts}
     if(traffic) base.addGoogleLayer('TrafficLayer');
     else base.removeGoogleLayer('TrafficLayer');
   }
-  // Google key rejected (bad key / referrer) — swap to OSM so the map still works.
+  // Google key rejected (bad key / referrer) — swap to free tiles so the map still works.
   window.gm_authFailure = function(){
-    map.removeLayer(base); base = osmLayer().addTo(map);
+    googleOk = false;
+    map.removeLayer(base); base = makeBase(baseKind).addTo(map);
     post({type:'traffic', available:false});
   };
 
@@ -210,6 +221,14 @@ ${googleScripts}
     },
     center(lat,lng,zoom){ map.flyTo([lat,lng], zoom||14, {duration:0.8}); },
     zoomBy(d){ map.setZoom(map.getZoom()+d); },
+    setBase(kind){
+      if(kind === baseKind) return;
+      baseKind = kind;
+      map.removeLayer(base);
+      base = makeBase(kind).addTo(map);
+      applyTraffic();
+      post({type:'traffic', available: !!(base && base.addGoogleLayer)});
+    },
     fit(coords){
       if(!coords.length) return;
       const b = L.latLngBounds(coords.map(c => [c[1], c[0]]));
@@ -227,6 +246,7 @@ export default function WebMap({
   moving,
   center,
   zoomStep,
+  baseLayer,
   circle,
   fitRoute,
   showTraffic,
@@ -277,6 +297,10 @@ export default function WebMap({
   useEffect(() => {
     if (zoomStep) run(`window.MLMap.zoomBy(${zoomStep.dir})`);
   }, [zoomStep, run]);
+
+  useEffect(() => {
+    if (baseLayer) run(`window.MLMap.setBase(${JSON.stringify(baseLayer)})`);
+  }, [baseLayer, run]);
 
   useEffect(() => {
     if (circle !== undefined) run(`window.MLMap.setCircle(${JSON.stringify(circle ?? null)})`);

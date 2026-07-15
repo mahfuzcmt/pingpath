@@ -64,6 +64,13 @@ export default function TabsLayout() {
           headerRight: () => <SignOut />,
         }}
       />
+      <Tabs.Screen
+        name="more"
+        options={{
+          title: t("tab.more"),
+          tabBarIcon: ({ color }) => <Ionicons name="ellipsis-horizontal" size={22} color={color} />,
+        }}
+      />
     </Tabs>
   );
 }
