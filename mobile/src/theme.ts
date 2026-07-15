@@ -1,24 +1,25 @@
 /**
- * Brand tokens from CLAUDE.md §10.1 (mission-control dark theme).
- * Kept in one place so screens stay visually consistent with the web dashboard.
+ * Brand tokens — light theme matching the AutoNemo-style mobile reference
+ * (white app chrome, dark ink text, brand orange accents). The web dashboard
+ * keeps its own palette; these are mobile-only.
  */
 export const colors = {
   brand: "#E8900A", // primary orange
   brandDim: "#7A4A05",
 
-  bg: "#0A1928", // app background (ink.950)
-  surface: "#0F2742", // cards (ink.900)
-  surfaceAlt: "#13324f",
-  border: "#1e3a5c",
+  bg: "#F5F6F8", // app background (light gray)
+  surface: "#FFFFFF", // cards, header, tab bar
+  surfaceAlt: "#F1F5F9",
+  border: "#E2E8F0",
 
-  text: "#F1F5F9", // ink.50
-  textDim: "#CBD5E1", // ink.100
-  textFaint: "#64748B", // ink.400
+  text: "#0F2742", // ink.900
+  textDim: "#475569",
+  textFaint: "#94A3B8",
 
   ok: "#16A34A",
   warn: "#F59E0B",
   danger: "#DC2626",
-  offline: "#64748B",
+  offline: "#94A3B8",
 } as const;
 
 export const radius = { sm: 8, md: 12, lg: 16 } as const;

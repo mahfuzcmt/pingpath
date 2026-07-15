@@ -218,6 +218,8 @@ const STRINGS = {
 
   // ── Map ───────────────────────────────────────────────────────────
   "map.traffic": { en: "Traffic", bn: "ট্রাফিক" },
+  "map.refresh": { en: "Refresh", bn: "রিফ্রেশ" },
+  "map.locateMe": { en: "Locate Me", bn: "আমার অবস্থান" },
 
   // ── Statistics tab ────────────────────────────────────────────────
   "stats.loading": { en: "Loading statistics…", bn: "পরিসংখ্যান লোড হচ্ছে…" },

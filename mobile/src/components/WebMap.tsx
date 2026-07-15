@@ -40,6 +40,8 @@ interface Props {
   moving?: MapPoint | null;
   /** Center command; bump `nonce` to re-issue the same center. */
   center?: { lat: number; lng: number; zoom?: number; nonce?: number } | null;
+  /** Zoom step command (+1 / -1); bump `nonce` to re-issue. */
+  zoomStep?: { dir: 1 | -1; nonce: number } | null;
   /** Circle overlay (geofence preview); null clears it. */
   circle?: MapCircle | null;
   fitRoute?: boolean;
@@ -207,6 +209,7 @@ ${googleScripts}
       }
     },
     center(lat,lng,zoom){ map.flyTo([lat,lng], zoom||14, {duration:0.8}); },
+    zoomBy(d){ map.setZoom(map.getZoom()+d); },
     fit(coords){
       if(!coords.length) return;
       const b = L.latLngBounds(coords.map(c => [c[1], c[0]]));
@@ -223,6 +226,7 @@ export default function WebMap({
   route,
   moving,
   center,
+  zoomStep,
   circle,
   fitRoute,
   showTraffic,
@@ -269,6 +273,10 @@ export default function WebMap({
   useEffect(() => {
     if (center) run(`window.MLMap.center(${center.lat},${center.lng},${center.zoom ?? 14})`);
   }, [center, run]);
+
+  useEffect(() => {
+    if (zoomStep) run(`window.MLMap.zoomBy(${zoomStep.dir})`);
+  }, [zoomStep, run]);
 
   useEffect(() => {
     if (circle !== undefined) run(`window.MLMap.setCircle(${JSON.stringify(circle ?? null)})`);

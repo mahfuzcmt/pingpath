@@ -1,13 +1,10 @@
 import { Redirect, Tabs } from "expo-router";
 import { Pressable, Text } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "@/auth/AuthContext";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { useI18n } from "@/i18n";
 import { colors, space } from "@/theme";
-
-function TabIcon({ emoji }: { emoji: string }) {
-  return <Text style={{ fontSize: 18 }}>{emoji}</Text>;
-}
 
 function SignOut() {
   const { signOut } = useAuth();
@@ -31,25 +28,41 @@ export default function TabsLayout() {
         headerStyle: { backgroundColor: colors.surface },
         headerTintColor: colors.text,
         tabBarStyle: { backgroundColor: colors.surface, borderTopColor: colors.border },
-        tabBarActiveTintColor: colors.brand,
+        tabBarActiveTintColor: colors.text,
         tabBarInactiveTintColor: colors.textFaint,
       }}
     >
       <Tabs.Screen
         name="index"
-        options={{ title: t("tab.home"), tabBarIcon: () => <TabIcon emoji="🏠" />, headerRight: () => <SignOut /> }}
+        options={{
+          title: t("tab.home"),
+          tabBarIcon: ({ color }) => <Ionicons name="home-outline" size={22} color={color} />,
+          headerRight: () => <SignOut />,
+        }}
       />
       <Tabs.Screen
         name="map"
-        options={{ title: t("tab.map"), headerShown: false, tabBarIcon: () => <TabIcon emoji="🗺️" /> }}
+        options={{
+          title: t("tab.map"),
+          headerShown: false,
+          tabBarIcon: ({ color }) => <Ionicons name="location-outline" size={22} color={color} />,
+        }}
       />
       <Tabs.Screen
         name="vehicles"
-        options={{ title: t("tab.vehicles"), tabBarIcon: () => <TabIcon emoji="🚗" />, headerRight: () => <SignOut /> }}
+        options={{
+          title: t("tab.vehicles"),
+          tabBarIcon: ({ color }) => <Ionicons name="car-outline" size={22} color={color} />,
+          headerRight: () => <SignOut />,
+        }}
       />
       <Tabs.Screen
         name="alerts"
-        options={{ title: t("tab.alerts"), tabBarIcon: () => <TabIcon emoji="🔔" />, headerRight: () => <SignOut /> }}
+        options={{
+          title: t("tab.alerts"),
+          tabBarIcon: ({ color }) => <Ionicons name="notifications-outline" size={22} color={color} />,
+          headerRight: () => <SignOut />,
+        }}
       />
     </Tabs>
   );
