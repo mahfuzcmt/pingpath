@@ -53,6 +53,24 @@ export async function restoreFuel(imei: string, devicePassword?: string): Promis
   return r.data;
 }
 
+/** Query device address/location (GT06 DWXX command). */
+export async function queryAddress(imei: string, devicePassword?: string): Promise<CommandResponse> {
+  const r = await api.post<CommandResponse>(`/devices/${imei}/commands/query-address`, { devicePassword });
+  return r.data;
+}
+
+/** Reboot/reset the GT06 device. */
+export async function rebootDevice(imei: string, devicePassword?: string): Promise<CommandResponse> {
+  const r = await api.post<CommandResponse>(`/devices/${imei}/commands/reboot`, { devicePassword });
+  return r.data;
+}
+
+/** Send a raw GT06 command (escape hatch for advanced users). */
+export async function sendRawCommand(imei: string, command: string, timeoutMs = 30000): Promise<CommandResponse> {
+  const r = await api.post<CommandResponse>(`/devices/${imei}/commands/raw`, { command, timeoutMs });
+  return r.data;
+}
+
 // ----- Dashboard KPIs -----
 export async function getKpis(): Promise<KpiSnapshot> {
   const r = await api.get<KpiSnapshot>("/dashboard/kpis");
