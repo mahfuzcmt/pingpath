@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -26,9 +26,23 @@ export default function MapScreen() {
   const [viewMenuOpen, setViewMenuOpen] = useState(false);
   const [showTraffic, setShowTraffic] = useState(false);
   const [trafficAvailable, setTrafficAvailable] = useState(false);
+  const [fitVehicles, setFitVehicles] = useState<{ nonce: number } | null>(null);
+  const initialFitDone = useRef(false);
 
   const byImei = useMemo(() => new Map(devices.map((d) => [d.imei, d])), [devices]);
   const speedLimits = useSpeedLimits();
+
+  // Auto-fit map to show all vehicles on initial load
+  useEffect(() => {
+    if (!initialFitDone.current && locations.size > 0) {
+      // Small delay to ensure WebMap has received the vehicles
+      const timer = setTimeout(() => {
+        setFitVehicles({ nonce: Date.now() });
+        initialFitDone.current = true;
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [locations.size]);
 
   const vehicles = useMemo<MapVehicle[]>(() => {
     const out: MapVehicle[] = [];
@@ -63,6 +77,10 @@ export default function MapScreen() {
     setZoomStep({ dir, nonce: Date.now() });
   }, []);
 
+  const fitAll = useCallback(() => {
+    setFitVehicles({ nonce: Date.now() });
+  }, []);
+
   return (
     <View style={styles.fill}>
       <WebMap
@@ -71,6 +89,7 @@ export default function MapScreen() {
         zoomStep={zoomStep}
         baseLayer={baseLayer}
         showTraffic={showTraffic}
+        fitVehicles={fitVehicles}
         onTrafficAvailable={setTrafficAvailable}
         onSelect={(imei) => router.push({ pathname: "/device/[imei]", params: { imei } })}
       />
@@ -123,6 +142,10 @@ export default function MapScreen() {
         <Pressable onPress={refresh} style={({ pressed }) => [styles.pill, pressed && { opacity: 0.7 }]}>
           <Ionicons name="refresh" size={16} color={colors.text} />
           <Text style={styles.pillLabel}>{t("map.refresh")}</Text>
+        </Pressable>
+        <Pressable onPress={fitAll} style={({ pressed }) => [styles.pill, pressed && { opacity: 0.7 }]}>
+          <Ionicons name="scan-outline" size={16} color={colors.text} />
+          <Text style={styles.pillLabel}>{t("map.fitAll")}</Text>
         </Pressable>
         <Pressable onPress={locateMe} style={({ pressed }) => [styles.pill, pressed && { opacity: 0.7 }]}>
           <Ionicons name="locate-outline" size={16} color={colors.text} />

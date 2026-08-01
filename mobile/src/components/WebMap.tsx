@@ -47,6 +47,8 @@ interface Props {
   /** Circle overlay (geofence preview); null clears it. */
   circle?: MapCircle | null;
   fitRoute?: boolean;
+  /** Auto-fit map to show all vehicles; bump `nonce` to re-trigger. */
+  fitVehicles?: { nonce: number } | null;
   /** Google live-traffic overlay (only effective on the Google base layer). */
   showTraffic?: boolean;
   /** Reports whether the traffic overlay is available (Google base active). */
@@ -304,6 +306,33 @@ ${googleScripts}
       if(!coords.length) return;
       const b = L.latLngBounds(coords.map(c => [c[1], c[0]]));
       map.fitBounds(b, {padding:[60,60], maxZoom:15});
+    },
+    fitVehicles(){
+      const imeis = Object.keys(markers);
+      if(imeis.length === 0) return;
+      const pts = imeis.map(imei => markers[imei].getLatLng());
+      if(pts.length === 1){
+        // Single vehicle: zoom in close
+        map.setView(pts[0], 16, {animate:true});
+      } else {
+        // Multiple vehicles: calculate optimal zoom based on spread
+        const b = L.latLngBounds(pts);
+        const latSpread = b.getNorth() - b.getSouth();
+        const lngSpread = b.getEast() - b.getWest();
+        const maxSpread = Math.max(latSpread, lngSpread);
+        // Dynamic zoom based on spread
+        let maxZoom = 15;
+        if(maxSpread < 0.002) maxZoom = 17;
+        else if(maxSpread < 0.005) maxZoom = 16;
+        else if(maxSpread < 0.02) maxZoom = 15;
+        else if(maxSpread < 0.05) maxZoom = 14;
+        else if(maxSpread < 0.1) maxZoom = 13;
+        else if(maxSpread < 0.3) maxZoom = 12;
+        else if(maxSpread < 0.6) maxZoom = 11;
+        else if(maxSpread < 1.0) maxZoom = 10;
+        else maxZoom = 9;
+        map.fitBounds(b.pad(0.1), {maxZoom:maxZoom, animate:true});
+      }
     }
   };
   map.on('click', (e) => post({type:'mapclick', lat:e.latlng.lat, lng:e.latlng.lng}));
@@ -320,6 +349,7 @@ export default function WebMap({
   baseLayer,
   circle,
   fitRoute,
+  fitVehicles,
   showTraffic,
   onTrafficAvailable,
   onSelect,
@@ -380,6 +410,10 @@ export default function WebMap({
   useEffect(() => {
     if (showTraffic !== undefined) run(`window.MLMap.setTraffic(${showTraffic ? "true" : "false"})`);
   }, [showTraffic, run]);
+
+  useEffect(() => {
+    if (fitVehicles) run(`window.MLMap.fitVehicles()`);
+  }, [fitVehicles, run]);
 
   const onMessage = useCallback(
     (e: WebViewMessageEvent) => {

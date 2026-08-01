@@ -254,6 +254,7 @@ const STRINGS = {
   // ── Map ───────────────────────────────────────────────────────────
   "map.traffic": { en: "Traffic", bn: "ট্রাফিক" },
   "map.refresh": { en: "Refresh", bn: "রিফ্রেশ" },
+  "map.fitAll": { en: "Fit All", bn: "সব দেখুন" },
   "map.locateMe": { en: "Locate Me", bn: "আমার অবস্থান" },
   "map.view": { en: "Map View", bn: "মানচিত্র ভিউ" },
   "map.normal": { en: "Normal", bn: "সাধারণ" },

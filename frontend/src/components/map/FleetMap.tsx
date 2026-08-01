@@ -8,6 +8,7 @@ import {
   DHAKA_CENTER,
   createBaseLayer,
   expandBounds,
+  calculateFitZoom,
   layerSupportsTraffic,
   setLayerTraffic,
 } from "@/lib/leaflet";
@@ -290,6 +291,26 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
     );
   }, []);
 
+  // Fit map to show all vehicles
+  const handleFitAll = useCallback(() => {
+    const map = mapRef.current;
+    if (!map || locations.size === 0) return;
+
+    const pts: Array<[number, number]> = [];
+    for (const l of locations.values()) pts.push([l.latitude, l.longitude]);
+
+    const optimalZoom = calculateFitZoom(pts);
+
+    if (pts.length === 1) {
+      map.setView(pts[0], optimalZoom, { animate: true });
+    } else {
+      const bounds = expandBounds(pts, 0.005);
+      if (bounds) {
+        map.fitBounds(bounds, { padding: [60, 60], maxZoom: optimalZoom, animate: true });
+      }
+    }
+  }, [locations]);
+
   // Sync markers with locations
   useEffect(() => {
     const map = mapRef.current;
@@ -346,13 +367,23 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
       }
     }
 
-    // First-load fit-to-bounds
+    // First-load fit-to-bounds — dynamically zoom based on vehicle spread
     if (!initialFitDoneRef.current && locations.size > 0) {
       const pts: Array<[number, number]> = [];
       for (const l of locations.values()) pts.push([l.latitude, l.longitude]);
-      const bounds = expandBounds(pts, 0.02);
-      if (bounds) {
-        map.fitBounds(bounds, { padding: [60, 60], maxZoom: 14 });
+
+      // Calculate optimal zoom: close for 1 vehicle, wider for spread-out fleet
+      const optimalZoom = calculateFitZoom(pts);
+
+      if (pts.length === 1) {
+        // Single vehicle: center directly with close zoom
+        map.setView(pts[0], optimalZoom, { animate: false });
+      } else {
+        // Multiple vehicles: fit bounds with dynamic maxZoom
+        const bounds = expandBounds(pts, 0.005); // smaller padding for tighter fit
+        if (bounds) {
+          map.fitBounds(bounds, { padding: [60, 60], maxZoom: optimalZoom });
+        }
       }
       initialFitDoneRef.current = true;
     }
@@ -513,6 +544,20 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           >
             <path d="M23 4v6h-6M1 20v-6h6" />
             <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+          </svg>
+        </button>
+        <button
+          type="button"
+          onClick={handleFitAll}
+          disabled={locations.size === 0}
+          title="Fit all vehicles"
+          className="flex h-9 w-9 items-center justify-center rounded-md border border-surface-300 bg-white text-ink-700 shadow-menu transition hover:bg-surface-100 disabled:opacity-60"
+        >
+          <svg
+            width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+          >
+            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
           </svg>
         </button>
         <button

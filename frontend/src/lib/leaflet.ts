@@ -153,3 +153,40 @@ export function expandBounds(
     [maxLat + paddingDeg, maxLng + paddingDeg],
   ];
 }
+
+/**
+ * Calculate the optimal maxZoom based on vehicle positions.
+ * - Single vehicle: zoom in close (16)
+ * - Multiple vehicles nearby: moderate zoom (14-15)
+ * - Vehicles spread across city/region: lower zoom (10-12)
+ */
+export function calculateFitZoom(pts: Array<[number, number]>): number {
+  if (pts.length === 0) return DEFAULT_ZOOM;
+  if (pts.length === 1) return 16; // Single vehicle — zoom in close
+
+  // Calculate the geographic spread (in degrees)
+  let minLat = pts[0][0], maxLat = pts[0][0];
+  let minLng = pts[0][1], maxLng = pts[0][1];
+  for (const [lat, lng] of pts) {
+    if (lat < minLat) minLat = lat;
+    if (lat > maxLat) maxLat = lat;
+    if (lng < minLng) minLng = lng;
+    if (lng > maxLng) maxLng = lng;
+  }
+
+  const latSpread = maxLat - minLat;
+  const lngSpread = maxLng - minLng;
+  const maxSpread = Math.max(latSpread, lngSpread);
+
+  // Dynamic zoom based on spread (rough heuristics for Bangladesh scale)
+  // ~0.001° ≈ 100m, ~0.01° ≈ 1km, ~0.1° ≈ 10km, ~1° ≈ 100km
+  if (maxSpread < 0.002) return 17;      // < 200m — very close
+  if (maxSpread < 0.005) return 16;      // < 500m — same area
+  if (maxSpread < 0.02) return 15;       // < 2km — neighborhood
+  if (maxSpread < 0.05) return 14;       // < 5km — part of city
+  if (maxSpread < 0.1) return 13;        // < 10km — city scale
+  if (maxSpread < 0.3) return 12;        // < 30km — metro area
+  if (maxSpread < 0.6) return 11;        // < 60km — regional
+  if (maxSpread < 1.0) return 10;        // < 100km — large region
+  return 9;                              // > 100km — country scale
+}
