@@ -32,71 +32,123 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-ink-950">
-      {/* Subtle radial gradient for the mission-control look */}
+    <main className="relative min-h-screen overflow-hidden bg-[#0a1520]">
+      {/* Branded GPS background */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(232,144,10,0.08),transparent_55%),radial-gradient(circle_at_75%_85%,rgba(15,39,66,0.6),transparent_60%)]"
+        className="pointer-events-none absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: "url('/login-bg.svg')" }}
+      />
+
+      {/* Additional overlay for depth */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[#0a1520]/80 via-transparent to-[#0a1520]/60"
       />
 
       <header className="absolute inset-x-0 top-0 z-10 flex items-center justify-between px-6 py-4">
-        <div className="flex items-center gap-2 font-display text-lg font-semibold tracking-tight">
-          <span className="inline-block h-2 w-2 rounded-full bg-brand-500" />
-          MotoLink
+        <div className="flex items-center gap-3">
+          {/* MotoLink Logo */}
+          <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-brand-500 shadow-lg shadow-brand-500/30">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="white"/>
+              <circle cx="12" cy="9" r="3" fill="#2B82D4"/>
+            </svg>
+          </div>
+          <div>
+            <div className="font-display text-lg font-bold tracking-tight text-white">
+              MotoLink
+            </div>
+            <div className="text-[10px] font-medium tracking-widest text-brand-400 uppercase">
+              GPS Tracking
+            </div>
+          </div>
         </div>
         <LanguageToggle />
       </header>
 
       <div className="relative z-0 flex min-h-screen items-center justify-center px-4">
-        <div className="panel w-full max-w-md p-8 shadow-2xl">
-          <h1 className="font-display text-2xl font-semibold">{t("auth.signIn")}</h1>
-          <p className="mt-1 text-sm text-ink-400">
-            {t("nav.dashboard")} · {t("fleet.title")}
-          </p>
+        <div className="w-full max-w-md">
+          {/* Branding above form */}
+          <div className="mb-8 text-center">
+            <h2 className="text-3xl font-bold text-white tracking-tight">
+              {t("auth.signIn")}
+            </h2>
+            <p className="mt-2 text-sm text-ink-400">
+              {t("nav.dashboard")} · {t("fleet.title")}
+            </p>
+          </div>
 
-          <form onSubmit={onSubmit} className="mt-6 space-y-4">
-            <div>
-              <label htmlFor="email" className="mb-1 block text-xs uppercase tracking-wide text-ink-400">
-                {t("auth.email")}
-              </label>
-              <input
-                id="email"
-                type="email"
-                autoComplete="email"
-                required
-                className="input"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={submitting}
-              />
-            </div>
-            <div>
-              <label htmlFor="password" className="mb-1 block text-xs uppercase tracking-wide text-ink-400">
-                {t("auth.password")}
-              </label>
-              <input
-                id="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                minLength={8}
-                className="input"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={submitting}
-              />
-            </div>
-
-            {error && (
-              <div className="rounded-md border border-alarm-red/40 bg-alarm-red/10 px-3 py-2 text-sm text-alarm-red">
-                {error}
+          {/* Login form card */}
+          <div className="panel p-8 shadow-2xl backdrop-blur-sm bg-white/95 border-surface-200">
+            <form onSubmit={onSubmit} className="space-y-5">
+              <div>
+                <label htmlFor="email" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-ink-600">
+                  {t("auth.email")}
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  className="input h-10 text-sm"
+                  placeholder="you@company.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={submitting}
+                />
               </div>
-            )}
+              <div>
+                <label htmlFor="password" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-ink-600">
+                  {t("auth.password")}
+                </label>
+                <input
+                  id="password"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  minLength={8}
+                  className="input h-10 text-sm"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={submitting}
+                />
+              </div>
 
-            <button type="submit" className="btn-primary w-full" disabled={submitting}>
-              {submitting ? t("common.loading") : t("auth.signIn")}
-            </button>
-          </form>
+              {error && (
+                <div className="rounded-md border border-alarm-red/40 bg-alarm-red/10 px-3 py-2.5 text-sm text-alarm-red">
+                  {error}
+                </div>
+              )}
+
+              <button type="submit" className="btn-primary w-full h-10 text-sm" disabled={submitting}>
+                {submitting ? (
+                  <span className="flex items-center gap-2">
+                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                    </svg>
+                    {t("common.loading")}
+                  </span>
+                ) : (
+                  t("auth.signIn")
+                )}
+              </button>
+            </form>
+
+            {/* Footer branding */}
+            <div className="mt-6 pt-5 border-t border-surface-200">
+              <p className="text-center text-xs text-ink-500">
+                Powered by <span className="font-semibold text-brand-500">MotoLink GPS</span>
+              </p>
+            </div>
+          </div>
+
+          {/* Bottom tagline */}
+          <p className="mt-6 text-center text-xs text-ink-400/70">
+            Real-time fleet tracking for Bangladesh
+          </p>
         </div>
       </div>
     </main>
