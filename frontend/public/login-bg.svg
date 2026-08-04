@@ -1,13 +1,20 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice">
   <defs>
+    <!-- Deep brand-blue background gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0E3257"/>
+      <stop offset="55%" stop-color="#134472"/>
+      <stop offset="100%" stop-color="#175389"/>
+    </linearGradient>
+
     <!-- Grid pattern for map effect -->
     <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
-      <path d="M 60 0 L 0 0 0 60" fill="none" stroke="rgba(43, 130, 212, 0.08)" stroke-width="1"/>
+      <path d="M 60 0 L 0 0 0 60" fill="none" stroke="rgba(138, 190, 235, 0.12)" stroke-width="1"/>
     </pattern>
 
     <!-- Smaller grid for detail -->
     <pattern id="gridSmall" width="15" height="15" patternUnits="userSpaceOnUse">
-      <path d="M 15 0 L 0 0 0 15" fill="none" stroke="rgba(43, 130, 212, 0.04)" stroke-width="0.5"/>
+      <path d="M 15 0 L 0 0 0 15" fill="none" stroke="rgba(138, 190, 235, 0.06)" stroke-width="0.5"/>
     </pattern>
 
     <!-- Radial gradient for glow effect -->
@@ -51,7 +58,7 @@
   </defs>
 
   <!-- Background -->
-  <rect width="100%" height="100%" fill="#0a1520"/>
+  <rect width="100%" height="100%" fill="url(#bgGrad)"/>
 
   <!-- Grid layers -->
   <rect width="100%" height="100%" fill="url(#gridSmall)"/>
@@ -139,7 +146,7 @@
     <defs>
       <radialGradient id="vignette">
         <stop offset="50%" stop-color="transparent"/>
-        <stop offset="100%" stop-color="#0a1520"/>
+        <stop offset="100%" stop-color="#0E3257"/>
       </radialGradient>
     </defs>
   </rect>

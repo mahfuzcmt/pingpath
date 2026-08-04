@@ -32,7 +32,7 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#0a1520]">
+    <main className="relative min-h-screen overflow-hidden bg-gradient-to-br from-brand-900 via-[#134472] to-brand-700">
       {/* Branded GPS background */}
       <div
         aria-hidden
@@ -43,7 +43,7 @@ export default function LoginPage() {
       {/* Additional overlay for depth */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[#0a1520]/80 via-transparent to-[#0a1520]/60"
+        className="pointer-events-none absolute inset-0 bg-gradient-to-br from-brand-900/60 via-transparent to-brand-700/40"
       />
 
       <header className="absolute inset-x-0 top-0 z-10 flex items-center justify-between px-6 py-4">
@@ -74,7 +74,7 @@ export default function LoginPage() {
             <h2 className="text-3xl font-bold text-white tracking-tight">
               {t("auth.signIn")}
             </h2>
-            <p className="mt-2 text-sm text-ink-400">
+            <p className="mt-2 text-sm text-brand-100/80">
               {t("nav.dashboard")} · {t("fleet.title")}
             </p>
           </div>
@@ -146,7 +146,7 @@ export default function LoginPage() {
           </div>
 
           {/* Bottom tagline */}
-          <p className="mt-6 text-center text-xs text-ink-400/70">
+          <p className="mt-6 text-center text-xs text-brand-100/70">
             Real-time fleet tracking for Bangladesh
           </p>
         </div>
