@@ -1484,7 +1484,7 @@ GitHub Actions:
 
 ---
 
-## 16. Development Phases — 12-Week Plan
+## 16. Development Phases — 12-Week Launch + Advanced Roadmap
 
 ### Phase 1 — Foundation (Weeks 1–2)
 
@@ -1584,6 +1584,148 @@ GitHub Actions:
 - [ ] DNS, SSL cert, soft-launch with first paying customer
 
 **Exit criteria:** First paying customer is live, monitoring shows healthy metrics, on-call runbook is in place.
+
+---
+
+### Advanced Roadmap (Post-Launch Phases)
+
+The following phases represent the evolution toward a next-generation AI-powered fleet management platform. These are prioritized by market demand and technical dependencies.
+
+### Phase 7 — Advanced Fleet Management (Month 4)
+
+**Goal:** Enterprise-grade fleet operations with KPIs and driver monitoring.
+
+- [ ] **Fleet Dashboard 2.0** — unified view with fleet-wide KPIs, health indicators, utilization metrics
+- [ ] **Vehicle Groups** — logical groupings (by branch, type, route, driver)
+- [ ] **Branch Management** — multi-location support with per-branch admins and reporting
+- [ ] **KPI Dashboard** — fleet utilization, on-time delivery, idle time, fuel efficiency metrics
+- [ ] **Driver Behavior Basics** — harsh braking detection, rapid acceleration, harsh cornering (from accelerometer data)
+- [ ] **Driver Assignment** — link drivers to vehicles, track driver-specific metrics
+
+**Exit criteria:** Fleet manager can view branch-level KPIs, assign drivers, and see basic driving behavior scores.
+
+### Phase 8 — Fuel & Maintenance Intelligence (Month 5)
+
+**Goal:** Reduce operational costs through fuel monitoring and proactive maintenance.
+
+- [ ] **Fuel Sensor Integration** — support for capacitive/ultrasonic fuel sensors (RS232/RS485)
+- [ ] **Fuel Theft Detection** — sudden drop alerts with location and timestamp
+- [ ] **Fuel Efficiency Reports** — L/100km, cost per km, fuel consumption trends
+- [ ] **Cost Analysis Dashboard** — fuel costs, maintenance costs, total cost of ownership per vehicle
+- [ ] **Service Scheduler** — oil change, tire rotation, inspection reminders based on mileage/time
+- [ ] **Battery Health Monitoring** — vehicle battery voltage trends, low battery alerts
+- [ ] **TPMS Integration** — tire pressure monitoring via BLE sensors (future hardware)
+
+**Exit criteria:** Fleet manager receives fuel theft alert, views fuel efficiency report, and gets maintenance reminder.
+
+### Phase 9 — AI & Predictive Analytics (Month 6–7)
+
+**Goal:** AI-powered insights for proactive fleet management.
+
+- [ ] **Fleet Health Score** — ML model combining vehicle age, maintenance history, fuel efficiency, sensor data
+- [ ] **Driver Safety Score** — composite score from harsh events, speeding, fatigue indicators, seat belt usage
+- [ ] **Predictive Maintenance** — ML predictions for brake wear, battery replacement, engine issues based on patterns
+- [ ] **AI Assistant (Chat)** — natural language queries ("Show me vehicles due for service", "Which driver has the most speeding events?")
+- [ ] **Smart Recommendations** — automated suggestions (route optimization, driver training needs, vehicle replacement timing)
+- [ ] **Anomaly Detection** — unusual patterns in location, fuel, or behavior flagged automatically
+
+**Tech stack additions:** Python ML service (FastAPI), Redis ML feature store, scheduled model retraining jobs.
+
+**Exit criteria:** AI assistant answers fleet queries, predictive maintenance alert prevents a breakdown.
+
+### Phase 10 — Enhanced Tracking & Maps (Month 7–8)
+
+**Goal:** Rich map experience with contextual data overlays.
+
+- [ ] **3D Map View** — building extrusion, terrain (Mapbox GL JS 3D features or Google 3D tiles)
+- [ ] **Traffic Overlay** — real-time traffic data on routes (Google Traffic API)
+- [ ] **Weather Integration** — weather conditions at vehicle locations, severe weather alerts
+- [ ] **ETA Calculations** — accurate arrival time based on traffic, driver behavior, historical patterns
+- [ ] **Street View Integration** — click location to see Google Street View
+- [ ] **Historical Traffic Playback** — replay trips with traffic conditions at the time
+
+**Exit criteria:** User views 3D map with traffic overlay, sees ETA for in-progress deliveries.
+
+### Phase 11 — Logistics & Delivery (Month 8–9)
+
+**Goal:** Full logistics and last-mile delivery management.
+
+- [ ] **ePOD (Electronic Proof of Delivery)** — driver app captures signature, photo, timestamp at delivery
+- [ ] **QR Code Delivery Verification** — scan package QR to confirm delivery
+- [ ] **Shipment Tracking** — end-to-end package tracking with customer-facing tracking page
+- [ ] **Route Optimization** — multi-stop route planning with traffic-aware sequencing
+- [ ] **Delivery Time Windows** — schedule deliveries, alert on late arrivals
+- [ ] **Customer Notifications** — SMS/WhatsApp alerts for "Driver is 10 minutes away"
+
+**Exit criteria:** Delivery driver completes delivery with ePOD, customer receives notification and can track.
+
+### Phase 12 — IoT & Hardware Integration (Month 9–10)
+
+**Goal:** Connect additional sensors and hardware for comprehensive telematics.
+
+- [ ] **Temperature Sensors** — cold chain monitoring for pharma/food logistics (BLE or wired sensors)
+- [ ] **Door Sensors** — cargo door open/close alerts with location
+- [ ] **RFID Driver ID** — driver swipe to start vehicle, automatic driver assignment
+- [ ] **Dashcam Integration** — live streaming, event-triggered recording, AI incident detection
+- [ ] **BLE Beacon Support** — asset tracking within vehicles, trailer attachment detection
+- [ ] **OBD-II Integration** — direct vehicle diagnostics, DTC codes, real-time engine data
+
+**Hardware partnerships required.** API-first design for third-party sensor integration.
+
+**Exit criteria:** Temperature alert triggers for cold chain vehicle, dashcam footage accessible after harsh braking event.
+
+### Phase 13 — Enterprise & Security (Month 10–11)
+
+**Goal:** Enterprise-grade security and white-label capabilities.
+
+- [ ] **White Label Platform** — custom branding, domain, logo for resellers
+- [ ] **Multi-Company Management** — parent company oversees subsidiaries, consolidated reporting
+- [ ] **Enhanced API** — GraphQL API, webhooks, rate limiting tiers, API key management
+- [ ] **Advanced Audit Logs** — detailed action logging, compliance reports, data export
+- [ ] **2FA (Two-Factor Authentication)** — SMS/authenticator app for all users
+- [ ] **Biometric Login** — fingerprint/face ID on mobile app
+- [ ] **Device Binding** — lock app to specific devices, prevent unauthorized access
+- [ ] **Role-Based Permissions** — granular permissions (view-only, edit, admin per feature)
+
+**Exit criteria:** Reseller deploys white-label instance, enterprise client passes security audit.
+
+### Phase 14 — EV, Specialty & Innovation (Month 11–12+)
+
+**Goal:** Future-proof platform with EV support and innovative features.
+
+**EV Fleet Support:**
+- [ ] **EV Battery Monitoring** — state of charge, battery health, range estimation
+- [ ] **Charging Station Integration** — find nearby chargers, charging session tracking
+- [ ] **Range Anxiety Alerts** — warn when range insufficient to reach destination
+- [ ] **Charging Cost Tracking** — kWh consumed, cost per charge, comparison to fuel
+
+**Specialty Modes:**
+- [ ] **School Bus Tracking** — parent app, stop arrival notifications, student RFID check-in
+- [ ] **Family Mode** — simplified UI for personal vehicle tracking, teen driver monitoring
+- [ ] **Carbon Footprint Report** — CO2 emissions per vehicle/fleet, sustainability metrics
+
+**Innovation Features:**
+- [ ] **Gamification** — driver leaderboards, safety badges, fuel efficiency challenges, rewards
+- [ ] **Android Auto / CarPlay Integration** — in-vehicle display of alerts and navigation
+- [ ] **Voice Commands** — "Hey MotoLink, where is vehicle BD-123?"
+- [ ] **AR Navigation** — augmented reality directions for drivers (experimental)
+
+**Exit criteria:** EV fleet operational with charging tracking, school parents receive bus arrival notifications.
+
+---
+
+### Feature Priority Matrix
+
+| Priority | Category | Features | Business Impact |
+|----------|----------|----------|-----------------|
+| **P0** (Must Have) | Core | Phases 1–6 | Launch readiness |
+| **P1** (High) | Fleet Ops | Phase 7 (Fleet Dashboard, Groups, Driver) | Enterprise sales |
+| **P1** (High) | Cost Savings | Phase 8 (Fuel, Maintenance) | Clear ROI for customers |
+| **P2** (Medium) | AI | Phase 9 (Scores, Predictions, Assistant) | Differentiation |
+| **P2** (Medium) | Logistics | Phase 11 (ePOD, Shipment) | New market segment |
+| **P3** (Low) | Enhanced UX | Phase 10 (3D, Traffic, Weather) | User delight |
+| **P3** (Low) | Enterprise | Phase 13 (White Label, API) | Reseller channel |
+| **P4** (Future) | Innovation | Phase 14 (EV, Gamification, AR) | Market leadership |
 
 ---
 
@@ -1763,4 +1905,4 @@ Full teardown lives in [`docs/COMPETITIVE_ANALYSIS.md`](docs/COMPETITIVE_ANALYSI
 
 ---
 
-*Last updated: 2026-07-08. Update the date when you change anything substantive.*
+*Last updated: 2026-08-09. Update the date when you change anything substantive.*
