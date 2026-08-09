@@ -108,10 +108,15 @@
       "Bash(git rm:*)",
       "Bash(docker build:*)",
       "WebFetch(domain:docs.gps-server.net)",
-      "Bash(GIT_EDITOR=true git rebase --continue)",
-      "Bash(git rev-list *)",
-      "Bash(git rebase:*)",
-      "Bash(GIT_EDITOR=true git rebase:*)"
+      "Bash(npm install:*)",
+      "Bash(unzip:*)",
+      "Bash(fold:*)",
+      "Bash(find:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run lint:*)",
+      "Bash(git pull:*)",
+      "Bash(git stash:*)",
+      "Bash(git stash pop:*)"
     ]
   }
 }

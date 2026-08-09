@@ -3,10 +3,10 @@
 import { useLocale } from "@/lib/i18n";
 
 const STATS = [
-  { value: "10,000+", key: "mkt.stats.vehicles" },
+  { value: "24/7", key: "mkt.stats.support" },
   { value: "99.9%", key: "mkt.stats.uptime" },
-  { value: "1M+", key: "mkt.stats.alerts" },
-  { value: "500+", key: "mkt.stats.customers" },
+  { value: "5s", key: "mkt.stats.updateInterval" },
+  { value: "100%", key: "mkt.stats.local" },
 ] as const;
 
 export function StatsSection() {

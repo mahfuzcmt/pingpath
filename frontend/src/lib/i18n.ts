@@ -307,15 +307,17 @@ const STRINGS = {
   "mkt.hero.subheadline": { en: "GPS tracking solution built for Bangladesh. Monitor vehicles, reduce theft, and optimize your fleet operations.", bn: "বাংলাদেশের জন্য তৈরি GPS ট্র্যাকিং সমাধান। যানবাহন পর্যবেক্ষণ করুন, চুরি কমান এবং আপনার ফ্লিট অপারেশন অপ্টিমাইজ করুন।" },
   "mkt.hero.cta.primary": { en: "Start Free Trial", bn: "ফ্রি ট্রায়াল শুরু করুন" },
   "mkt.hero.cta.secondary": { en: "Watch Demo", bn: "ডেমো দেখুন" },
-  "mkt.hero.badge": { en: "Trusted by 500+ businesses in Bangladesh", bn: "বাংলাদেশের ৫০০+ ব্যবসায় বিশ্বস্ত" },
+  "mkt.hero.badge": { en: "GPS Fleet Tracking Made in Bangladesh", bn: "বাংলাদেশে তৈরি GPS ফ্লিট ট্র্যাকিং" },
 
   // ── Stats Section ────────────────────────────────────────────────
   "mkt.stats.vehicles": { en: "Vehicles Tracked", bn: "ট্র্যাক করা যানবাহন" },
   "mkt.stats.uptime": { en: "Platform Uptime", bn: "প্ল্যাটফর্ম আপটাইম" },
   "mkt.stats.alerts": { en: "Alerts Delivered", bn: "সতর্কতা প্রদান" },
   "mkt.stats.customers": { en: "Happy Customers", bn: "সন্তুষ্ট গ্রাহক" },
-  "mkt.stats.support": { en: "24/7 Support", bn: "২৪/৭ সাপোর্ট" },
+  "mkt.stats.support": { en: "Live Support", bn: "লাইভ সাপোর্ট" },
   "mkt.stats.coverage": { en: "Nationwide Coverage", bn: "সারাদেশে কভারেজ" },
+  "mkt.stats.updateInterval": { en: "Update Interval", bn: "আপডেট ইন্টারভাল" },
+  "mkt.stats.local": { en: "Local Service", bn: "লোকাল সার্ভিস" },
 
   // ── Features - Overview ──────────────────────────────────────────
   "mkt.features.title": { en: "Powerful Features for Modern Fleet Management", bn: "আধুনিক ফ্লিট ম্যানেজমেন্টের জন্য শক্তিশালী ফিচার" },

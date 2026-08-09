@@ -26,7 +26,7 @@ export function MarketingHeader({ variant = "light" }: { variant?: "light" | "da
       <div className="mkt-container flex h-16 items-center justify-between px-4 md:px-6">
         {/* Logo */}
         <Link href="/" className="flex items-center">
-          <MotoLinkLogoInline />
+          <MotoLinkLogoInline dark={isDark} />
         </Link>
 
         {/* Desktop Navigation */}

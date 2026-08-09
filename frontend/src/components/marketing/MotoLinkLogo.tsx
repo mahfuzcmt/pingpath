@@ -97,13 +97,14 @@ export function MotoLinkLogo({ className = "", size = "md", variant = "full" }: 
 }
 
 // Inline SVG version for places where we need direct JSX
-export function MotoLinkLogoInline({ dark = false }: { dark?: boolean }) {
-  const textColor = dark ? "white" : "white";
+export function MotoLinkLogoInline({ dark = true }: { dark?: boolean }) {
+  // dark=true means dark background (white text), dark=false means light background (dark text)
+  const textColorClass = dark ? "text-white" : "text-ink-900";
 
   return (
     <div className="flex items-center">
       {/* M */}
-      <span className="text-2xl font-black text-white tracking-tight" style={{ fontFamily: "Arial Black, sans-serif" }}>
+      <span className={`text-2xl font-black ${textColorClass} tracking-tight`} style={{ fontFamily: "Arial Black, sans-serif" }}>
         M
       </span>
 
@@ -127,7 +128,7 @@ export function MotoLinkLogoInline({ dark = false }: { dark?: boolean }) {
       </svg>
 
       {/* TO */}
-      <span className="text-2xl font-black text-white tracking-tight -ml-0.5" style={{ fontFamily: "Arial Black, sans-serif" }}>
+      <span className={`text-2xl font-black ${textColorClass} tracking-tight -ml-0.5`} style={{ fontFamily: "Arial Black, sans-serif" }}>
         TO
       </span>
 
