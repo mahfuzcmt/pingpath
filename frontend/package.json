@@ -18,6 +18,7 @@
     "@stomp/stompjs": "^7.0.0",
     "@types/leaflet.gridlayer.googlemutant": "^0.4.11",
     "axios": "^1.7.7",
+    "framer-motion": "^13.0.0",
     "leaflet": "^1.9.4",
     "leaflet.gridlayer.googlemutant": "^0.16.0",
     "next": "^15.1.0",
