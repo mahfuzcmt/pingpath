@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 interface MotoLinkLogoProps {
   className?: string;
   size?: "sm" | "md" | "lg";
@@ -8,41 +10,55 @@ interface MotoLinkLogoProps {
 
 export function MotoLinkLogo({ className = "", size = "md", variant = "full" }: MotoLinkLogoProps) {
   const sizes = {
-    sm: { width: 120, height: 32 },
-    md: { width: 160, height: 42 },
-    lg: { width: 200, height: 52 },
+    sm: { width: 120, height: 32, iconSize: 28 },
+    md: { width: 180, height: 44, iconSize: 38 },
+    lg: { width: 240, height: 56, iconSize: 48 },
   };
 
-  const { width, height } = sizes[size];
+  const { width, height, iconSize } = sizes[size];
 
   if (variant === "icon") {
-    // Just the pin marker icon
+    // Just the triangular motion icon
     return (
       <svg
-        width={height}
-        height={height}
+        width={iconSize}
+        height={iconSize}
         viewBox="0 0 48 48"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         className={className}
       >
-        {/* Concentric rings */}
-        <ellipse cx="24" cy="42" rx="14" ry="4" fill="none" stroke="#F5A623" strokeWidth="1.5" opacity="0.6" />
-        <ellipse cx="24" cy="42" rx="10" ry="3" fill="none" stroke="#E8900A" strokeWidth="1.5" opacity="0.8" />
-        <ellipse cx="24" cy="42" rx="6" ry="2" fill="none" stroke="#DC3545" strokeWidth="1.5" />
-
-        {/* Pin marker */}
+        <defs>
+          <linearGradient id="iconGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#00D4FF" />
+            <stop offset="100%" stopColor="#0A1F44" />
+          </linearGradient>
+        </defs>
+        {/* Main triangle */}
         <path
-          d="M24 4C17.373 4 12 9.373 12 16c0 9 12 22 12 22s12-13 12-22c0-6.627-5.373-12-12-12z"
-          fill="#DC3545"
+          d="M24 4L44 40H4L24 4Z"
+          fill="url(#iconGradient)"
+          rx="4"
         />
-        {/* Pin gradient overlay for 3D effect */}
+        {/* Motion waves */}
         <path
-          d="M24 4C17.373 4 12 9.373 12 16c0 9 12 22 12 22V4z"
-          fill="#C82333"
+          d="M12 32C14 30 18 28 22 32"
+          stroke="white"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          fill="none"
         />
-        {/* White circle in pin */}
-        <circle cx="24" cy="16" r="5" fill="white" />
+        <path
+          d="M16 26C18 24 22 23 26 26"
+          stroke="white"
+          strokeWidth="2"
+          strokeLinecap="round"
+          fill="none"
+        />
+        {/* Signal dots */}
+        <circle cx="14" cy="35" r="2" fill="white" />
+        <circle cx="20" cy="33" r="1.5" fill="white" />
+        <circle cx="26" cy="31" r="1.5" fill="white" />
       </svg>
     );
   }
@@ -52,90 +68,134 @@ export function MotoLinkLogo({ className = "", size = "md", variant = "full" }: 
     <svg
       width={width}
       height={height}
-      viewBox="0 0 200 52"
+      viewBox="0 0 240 56"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className={className}
     >
-      {/* M */}
-      <text x="0" y="38" fontFamily="Arial Black, Arial, sans-serif" fontSize="36" fontWeight="900" fill="white">
-        M
-      </text>
+      <defs>
+        <linearGradient id="triangleGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#00D4FF" />
+          <stop offset="50%" stopColor="#1E5799" />
+          <stop offset="100%" stopColor="#0A1F44" />
+        </linearGradient>
+        <linearGradient id="textGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#1E3A5F" />
+          <stop offset="50%" stopColor="#0A2540" />
+          <stop offset="100%" stopColor="#071B2F" />
+        </linearGradient>
+      </defs>
 
-      {/* Location Pin (replacing O) */}
-      <g transform="translate(28, 2)">
-        {/* Concentric rings */}
-        <ellipse cx="16" cy="44" rx="12" ry="3.5" fill="none" stroke="#F5A623" strokeWidth="1.2" opacity="0.5" />
-        <ellipse cx="16" cy="44" rx="8" ry="2.5" fill="none" stroke="#E8900A" strokeWidth="1.2" opacity="0.7" />
-        <ellipse cx="16" cy="44" rx="4" ry="1.5" fill="none" stroke="#DC3545" strokeWidth="1" />
-
-        {/* Pin marker */}
+      {/* Triangle icon */}
+      <g transform="translate(0, 4)">
         <path
-          d="M16 2C10.477 2 6 6.477 6 12c0 7.5 10 18 10 18s10-10.5 10-18c0-5.523-4.477-10-10-10z"
-          fill="#DC3545"
+          d="M24 2L46 44H2L24 2Z"
+          fill="url(#triangleGradient)"
         />
-        {/* Pin gradient overlay for 3D effect */}
+        {/* Motion waves */}
         <path
-          d="M16 2C10.477 2 6 6.477 6 12c0 7.5 10 18 10 18V2z"
-          fill="#B21F2D"
+          d="M10 34C13 31 19 29 24 34"
+          stroke="white"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          fill="none"
         />
-        {/* White circle in pin */}
-        <circle cx="16" cy="12" r="4" fill="white" />
+        <path
+          d="M14 28C17 25 23 24 28 28"
+          stroke="white"
+          strokeWidth="2"
+          strokeLinecap="round"
+          fill="none"
+        />
+        {/* Signal dots */}
+        <circle cx="12" cy="38" r="2" fill="white" />
+        <circle cx="19" cy="35" r="1.5" fill="white" />
+        <circle cx="26" cy="32" r="1.5" fill="white" />
       </g>
 
-      {/* TO */}
-      <text x="60" y="38" fontFamily="Arial Black, Arial, sans-serif" fontSize="36" fontWeight="900" fill="white">
-        TO
-      </text>
-
-      {/* LINK */}
-      <text x="114" y="38" fontFamily="Arial Black, Arial, sans-serif" fontSize="36" fontWeight="900" fill="#DC3545">
-        LINK
+      {/* MOTOLINK text */}
+      <text
+        x="56"
+        y="40"
+        fontFamily="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+        fontSize="32"
+        fontWeight="800"
+        fill="url(#textGradient)"
+        letterSpacing="-0.5"
+      >
+        MOTOLINK
       </text>
     </svg>
   );
 }
 
-// Inline SVG version for places where we need direct JSX
+// Inline version for header/footer
 export function MotoLinkLogoInline({ dark = true }: { dark?: boolean }) {
-  // dark=true means dark background (white text), dark=false means light background (dark text)
-  const textColorClass = dark ? "text-white" : "text-ink-900";
+  // dark=true means dark background, dark=false means light background
+  const textColor = dark ? "#FFFFFF" : "#0A2540";
 
   return (
-    <div className="flex items-center">
-      {/* M */}
-      <span className={`text-2xl font-black ${textColorClass} tracking-tight`} style={{ fontFamily: "Arial Black, sans-serif" }}>
-        M
-      </span>
-
-      {/* Pin Icon */}
-      <svg width="28" height="36" viewBox="0 0 32 44" fill="none" className="-mx-0.5 -mb-1">
-        {/* Concentric rings */}
-        <ellipse cx="16" cy="40" rx="10" ry="2.5" fill="none" stroke="#F5A623" strokeWidth="1" opacity="0.5" />
-        <ellipse cx="16" cy="40" rx="6" ry="1.8" fill="none" stroke="#E8900A" strokeWidth="1" opacity="0.7" />
-        <ellipse cx="16" cy="40" rx="3" ry="1" fill="none" stroke="#DC3545" strokeWidth="0.8" />
-
-        {/* Pin marker */}
+    <div className="flex items-center gap-2">
+      {/* Triangle Icon */}
+      <svg width="36" height="36" viewBox="0 0 48 48" fill="none">
+        <defs>
+          <linearGradient id="inlineTriGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#00D4FF" />
+            <stop offset="50%" stopColor="#1E5799" />
+            <stop offset="100%" stopColor="#0A1F44" />
+          </linearGradient>
+        </defs>
+        {/* Main triangle with rounded appearance */}
         <path
-          d="M16 2C10.477 2 6 6.477 6 12c0 7 10 16 10 16s10-9 10-16c0-5.523-4.477-10-10-10z"
-          fill="#DC3545"
+          d="M24 6L42 40C42 42 40 44 38 44H10C8 44 6 42 6 40L24 6Z"
+          fill="url(#inlineTriGrad)"
+        />
+        {/* Motion waves */}
+        <path
+          d="M12 34C15 31 20 29 25 33"
+          stroke="white"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          fill="none"
         />
         <path
-          d="M16 2C10.477 2 6 6.477 6 12c0 7 10 16 10 16V2z"
-          fill="#B21F2D"
+          d="M16 28C19 25 24 24 29 27"
+          stroke="white"
+          strokeWidth="2"
+          strokeLinecap="round"
+          fill="none"
         />
-        <circle cx="16" cy="12" r="3.5" fill="white" />
+        {/* Signal dots */}
+        <circle cx="14" cy="37" r="2" fill="white" opacity="0.9" />
+        <circle cx="21" cy="34" r="1.5" fill="white" opacity="0.9" />
+        <circle cx="28" cy="31" r="1.5" fill="white" opacity="0.9" />
       </svg>
 
-      {/* TO */}
-      <span className={`text-2xl font-black ${textColorClass} tracking-tight -ml-0.5`} style={{ fontFamily: "Arial Black, sans-serif" }}>
-        TO
-      </span>
-
-      {/* LINK */}
-      <span className="text-2xl font-black text-[#DC3545] tracking-tight" style={{ fontFamily: "Arial Black, sans-serif" }}>
-        LINK
+      {/* MOTOLINK Text */}
+      <span
+        className="text-2xl font-extrabold tracking-tight"
+        style={{
+          color: textColor,
+          fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+          textShadow: dark ? "none" : "0 1px 2px rgba(0,0,0,0.1)"
+        }}
+      >
+        MOTOLINK
       </span>
     </div>
+  );
+}
+
+// Image-based logo for highest fidelity
+export function MotoLinkLogoImage({ className = "", height = 40 }: { className?: string; height?: number }) {
+  return (
+    <Image
+      src="/motolink-logo.png"
+      alt="MotoLink"
+      width={Math.round(height * 4.5)}
+      height={height}
+      className={className}
+      style={{ height, width: "auto" }}
+    />
   );
 }

@@ -74,10 +74,22 @@ export function Topbar({ user, orgId }: { user: UserView; orgId: string }) {
       {/* Logo */}
       <Link
         href="/dashboard"
-        className="flex h-full items-center gap-2 border-r border-surface-300 px-4 font-semibold tracking-tight text-ink-900"
+        className="flex h-full items-center gap-1.5 border-r border-surface-300 px-4 font-extrabold tracking-tight text-[#0A2540]"
       >
-        <span className="inline-block h-2 w-2 rounded-full bg-brand-500" />
-        <span className="text-sm">MotoLink</span>
+        <svg width="24" height="24" viewBox="0 0 48 48" fill="none" className="flex-shrink-0">
+          <defs>
+            <linearGradient id="topbarTriGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#00D4FF" />
+              <stop offset="50%" stopColor="#1E5799" />
+              <stop offset="100%" stopColor="#0A1F44" />
+            </linearGradient>
+          </defs>
+          <path d="M24 6L42 40C42 42 40 44 38 44H10C8 44 6 42 6 40L24 6Z" fill="url(#topbarTriGrad)" />
+          <path d="M12 34C15 31 20 29 25 33" stroke="white" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+          <circle cx="14" cy="37" r="2" fill="white" />
+          <circle cx="21" cy="34" r="1.5" fill="white" />
+        </svg>
+        <span className="text-sm">MOTOLINK</span>
       </Link>
 
       {/* Primary nav — hidden on mobile (hamburger menu instead); icon-only

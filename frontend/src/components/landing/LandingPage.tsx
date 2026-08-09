@@ -26,18 +26,34 @@ const NAV_LINKS = [
 
 function Logo({ dark = false }: { dark?: boolean }) {
   return (
-    <div className="flex items-center gap-3">
-      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-500 shadow-lg shadow-brand-500/30">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="white" />
-          <circle cx="12" cy="9" r="3" fill="#2B82D4" />
-        </svg>
-      </div>
+    <div className="flex items-center gap-2.5">
+      {/* Triangle Icon */}
+      <svg width="40" height="40" viewBox="0 0 48 48" fill="none" className="drop-shadow-lg">
+        <defs>
+          <linearGradient id="logoTriGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#00D4FF" />
+            <stop offset="50%" stopColor="#1E5799" />
+            <stop offset="100%" stopColor="#0A1F44" />
+          </linearGradient>
+        </defs>
+        <path
+          d="M24 6L42 40C42 42 40 44 38 44H10C8 44 6 42 6 40L24 6Z"
+          fill="url(#logoTriGrad)"
+        />
+        {/* Motion waves */}
+        <path d="M12 34C15 31 20 29 25 33" stroke="white" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+        <path d="M16 28C19 25 24 24 29 27" stroke="white" strokeWidth="2" strokeLinecap="round" fill="none" />
+        {/* Signal dots */}
+        <circle cx="14" cy="37" r="2" fill="white" opacity="0.9" />
+        <circle cx="21" cy="34" r="1.5" fill="white" opacity="0.9" />
+        <circle cx="28" cy="31" r="1.5" fill="white" opacity="0.9" />
+      </svg>
+      {/* Text */}
       <div>
-        <div className={`font-display text-lg font-bold leading-tight tracking-tight ${dark ? "text-white" : "text-ink-950"}`}>
-          MotoLink
+        <div className={`font-display text-xl font-extrabold leading-tight tracking-tight ${dark ? "text-white" : "text-[#0A2540]"}`}>
+          MOTOLINK
         </div>
-        <div className="text-[10px] font-medium uppercase tracking-widest text-brand-400">GPS Tracking</div>
+        <div className="text-[10px] font-semibold uppercase tracking-widest text-brand-400">GPS Tracking</div>
       </div>
     </div>
   );
@@ -505,13 +521,20 @@ function AppPromo() {
               >
                 <div className="absolute inset-x-0 top-0 bg-white/95 px-3 py-2.5">
                   <div className="flex items-center gap-2">
-                    <div className="flex h-6 w-6 items-center justify-center rounded bg-brand-500">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="white" />
-                        <circle cx="12" cy="9" r="3" fill="#2B82D4" />
-                      </svg>
-                    </div>
-                    <span className="text-[11px] font-bold text-ink-950">MotoLink</span>
+                    <svg width="22" height="22" viewBox="0 0 48 48" fill="none">
+                      <defs>
+                        <linearGradient id="phoneTriGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stopColor="#00D4FF" />
+                          <stop offset="50%" stopColor="#1E5799" />
+                          <stop offset="100%" stopColor="#0A1F44" />
+                        </linearGradient>
+                      </defs>
+                      <path d="M24 6L42 40C42 42 40 44 38 44H10C8 44 6 42 6 40L24 6Z" fill="url(#phoneTriGrad)" />
+                      <path d="M12 34C15 31 20 29 25 33" stroke="white" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+                      <circle cx="14" cy="37" r="2" fill="white" />
+                      <circle cx="21" cy="34" r="1.5" fill="white" />
+                    </svg>
+                    <span className="text-[11px] font-extrabold text-[#0A2540]">MOTOLINK</span>
                   </div>
                 </div>
                 <div className="absolute bottom-3 left-3 right-3 rounded-lg bg-white/95 p-3 shadow-lg">
