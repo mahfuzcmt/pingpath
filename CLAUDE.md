@@ -1784,6 +1784,843 @@ The following phases represent the evolution toward a next-generation AI-powered
 
 **Exit criteria:** AI assistant answers fleet queries, predictive maintenance alert prevents a breakdown.
 
+#### 9.1 AI Architecture Overview
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           MotoLink AI Platform                               │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐                   │
+│  │ Spring Boot  │───►│   Kafka /    │───►│  Python ML   │                   │
+│  │   Backend    │    │  RabbitMQ    │    │   Service    │                   │
+│  └──────────────┘    └──────────────┘    └──────┬───────┘                   │
+│         │                                        │                           │
+│         │                                        ▼                           │
+│         │                               ┌──────────────┐                     │
+│         │                               │ Redis ML     │                     │
+│         │                               │ Feature Store│                     │
+│         │                               └──────────────┘                     │
+│         │                                        │                           │
+│         ▼                                        ▼                           │
+│  ┌──────────────┐                       ┌──────────────┐                     │
+│  │  PostgreSQL  │◄──────────────────────│  ML Models   │                     │
+│  │  (scores,    │                       │  (scikit,    │                     │
+│  │  predictions)│                       │   PyTorch)   │                     │
+│  └──────────────┘                       └──────────────┘                     │
+│         │                                        │                           │
+│         ▼                                        ▼                           │
+│  ┌──────────────┐                       ┌──────────────┐                     │
+│  │   Next.js    │◄──────────────────────│  AI Chat     │                     │
+│  │  Dashboard   │      WebSocket        │  (Claude/    │                     │
+│  │              │                       │   OpenAI)    │                     │
+│  └──────────────┘                       └──────────────┘                     │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+#### 9.2 Data Pipeline
+
+**Raw Data Sources (from existing tables):**
+
+| Source Table | Data Points | Update Frequency |
+|--------------|-------------|------------------|
+| `locations` | lat, lng, speed, course, acc_on, voltage | Real-time |
+| `alarms` | type (SOS, SHOCK, OVERSPEED, COLLISION) | Event-driven |
+| `trips` | distance, duration, max_speed, avg_speed, idle_time | Per trip |
+| `devices` | vehicle_type, model, created_at (age) | On change |
+| `fuel_readings` (Phase 8) | liters, consumption_rate | Per reading |
+| `maintenance_logs` (Phase 8) | service_type, mileage, cost | On service |
+
+**Feature Engineering Pipeline:**
+
+```sql
+-- Daily driver behavior aggregation (scheduled job)
+CREATE TABLE driver_daily_metrics (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    org_id          UUID NOT NULL,
+    device_imei     VARCHAR(20) NOT NULL,
+    date            DATE NOT NULL,
+
+    -- Driving behavior
+    total_distance_km       DECIMAL(10,2),
+    total_drive_time_min    INTEGER,
+    harsh_braking_count     INTEGER DEFAULT 0,
+    harsh_accel_count       INTEGER DEFAULT 0,
+    harsh_cornering_count   INTEGER DEFAULT 0,
+    overspeed_count         INTEGER DEFAULT 0,
+    overspeed_duration_sec  INTEGER DEFAULT 0,
+    max_speed_kmh           INTEGER,
+    avg_speed_kmh           DECIMAL(5,2),
+
+    -- Efficiency
+    idle_time_min           INTEGER DEFAULT 0,
+    fuel_consumed_liters    DECIMAL(8,2),
+    fuel_efficiency_km_l    DECIMAL(6,2),
+
+    -- Safety events
+    sos_count               INTEGER DEFAULT 0,
+    collision_count         INTEGER DEFAULT 0,
+
+    -- Computed scores (0-100)
+    safety_score            INTEGER,
+    efficiency_score        INTEGER,
+
+    created_at              TIMESTAMPTZ NOT NULL DEFAULT now(),
+
+    UNIQUE(device_imei, date)
+);
+
+CREATE INDEX idx_driver_metrics_org_date ON driver_daily_metrics(org_id, date DESC);
+CREATE INDEX idx_driver_metrics_device ON driver_daily_metrics(device_imei, date DESC);
+
+-- Vehicle health snapshots
+CREATE TABLE vehicle_health_snapshots (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    org_id          UUID NOT NULL,
+    device_imei     VARCHAR(20) NOT NULL,
+    snapshot_date   DATE NOT NULL,
+
+    -- Vehicle info
+    vehicle_age_days        INTEGER,
+    total_mileage_km        BIGINT,
+
+    -- Battery health
+    avg_voltage_mv          INTEGER,
+    min_voltage_mv          INTEGER,
+    voltage_drop_events     INTEGER DEFAULT 0,
+
+    -- Engine indicators (from OBD if available)
+    avg_engine_temp_c       INTEGER,
+    dtc_codes               TEXT[],
+
+    -- Maintenance
+    days_since_last_service INTEGER,
+    km_since_last_service   INTEGER,
+
+    -- Computed health score (0-100)
+    health_score            INTEGER,
+    predicted_issues        JSONB DEFAULT '[]'::jsonb,
+
+    created_at              TIMESTAMPTZ NOT NULL DEFAULT now(),
+
+    UNIQUE(device_imei, snapshot_date)
+);
+
+-- AI predictions log
+CREATE TABLE ai_predictions (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    org_id          UUID NOT NULL,
+    device_imei     VARCHAR(20) NOT NULL,
+    prediction_type VARCHAR(50) NOT NULL,  -- MAINTENANCE, BREAKDOWN, ANOMALY, DRIVER_RISK
+
+    predicted_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+    prediction      JSONB NOT NULL,        -- Model output
+    confidence      DECIMAL(4,3) NOT NULL, -- 0.000 to 1.000
+
+    -- Outcome tracking
+    outcome_at      TIMESTAMPTZ,
+    outcome         JSONB,
+    was_accurate    BOOLEAN,
+
+    model_version   VARCHAR(50) NOT NULL,
+
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_predictions_org_type ON ai_predictions(org_id, prediction_type, predicted_at DESC);
+CREATE INDEX idx_predictions_accuracy ON ai_predictions(prediction_type, was_accurate) WHERE outcome_at IS NOT NULL;
+```
+
+#### 9.3 ML Models Specification
+
+**Model 1: Driver Safety Score**
+
+```yaml
+model_name: driver_safety_scorer
+type: Gradient Boosting (XGBoost)
+update_frequency: Daily batch
+training_data: 90 days rolling window
+
+features:
+  behavioral:
+    - harsh_braking_per_100km: float
+    - harsh_accel_per_100km: float
+    - overspeed_percentage: float  # % of drive time over limit
+    - night_driving_ratio: float   # % between 10pm-6am
+    - avg_continuous_drive_hours: float
+
+  historical:
+    - collision_count_30d: int
+    - sos_count_30d: int
+    - alarm_count_30d: int
+    - score_trend_7d: float  # improving or declining
+
+  contextual:
+    - vehicle_type: categorical
+    - route_complexity: float  # urban vs highway ratio
+
+output:
+  safety_score: int  # 0-100
+  risk_factors: list[str]  # ["excessive_speeding", "fatigue_risk"]
+  improvement_tips: list[str]
+
+thresholds:
+  excellent: 85-100
+  good: 70-84
+  needs_improvement: 50-69
+  high_risk: 0-49
+```
+
+**Model 2: Fleet Health Score**
+
+```yaml
+model_name: vehicle_health_predictor
+type: Random Forest + LSTM (hybrid)
+update_frequency: Daily batch
+training_data: Full vehicle history
+
+features:
+  static:
+    - vehicle_age_days: int
+    - vehicle_type: categorical
+    - manufacturer: categorical (if known)
+
+  telemetry:
+    - avg_daily_mileage: float
+    - voltage_stability: float  # std dev of readings
+    - voltage_trend_7d: float
+    - engine_temp_anomalies: int
+
+  maintenance:
+    - days_since_service: int
+    - km_since_service: int
+    - service_adherence_ratio: float  # on-time vs late
+
+  usage_patterns:
+    - heavy_load_ratio: float  # inferred from accel patterns
+    - harsh_usage_score: float
+    - idle_ratio: float
+
+output:
+  health_score: int  # 0-100
+  predicted_issues:
+    - issue_type: str  # "battery", "brakes", "engine"
+    - probability: float
+    - estimated_days_to_failure: int
+    - recommended_action: str
+
+alerts:
+  critical: health_score < 30 OR any issue probability > 0.8
+  warning: health_score < 50 OR any issue probability > 0.5
+```
+
+**Model 3: Anomaly Detection**
+
+```yaml
+model_name: fleet_anomaly_detector
+type: Isolation Forest + Autoencoder
+update_frequency: Real-time (streaming)
+training_data: 30 days normal behavior baseline
+
+detection_types:
+  location_anomaly:
+    features: [lat, lng, time_of_day, day_of_week]
+    trigger: Vehicle in unusual location for time
+
+  behavior_anomaly:
+    features: [speed_pattern, stop_frequency, route_deviation]
+    trigger: Driving pattern deviates from baseline
+
+  fuel_anomaly:
+    features: [consumption_rate, sudden_drops, refill_patterns]
+    trigger: Unexpected fuel loss (theft indicator)
+
+  usage_anomaly:
+    features: [daily_mileage, active_hours, weekend_usage]
+    trigger: Unusual usage pattern (possible unauthorized use)
+
+output:
+  anomaly_type: str
+  severity: float  # 0-1
+  description: str
+  evidence: list[dict]  # supporting data points
+  recommended_action: str
+```
+
+#### 9.4 AI Assistant (Chat) Specification
+
+**Architecture:**
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    AI Chat Assistant                         │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  User Query ──► Intent Classifier ──► Query Router           │
+│                       │                    │                 │
+│                       ▼                    ▼                 │
+│              ┌────────────────┐   ┌────────────────┐        │
+│              │ Simple Queries │   │ Complex Queries│        │
+│              │ (SQL + Rules)  │   │ (LLM + RAG)    │        │
+│              └───────┬────────┘   └───────┬────────┘        │
+│                      │                    │                 │
+│                      ▼                    ▼                 │
+│              ┌────────────────────────────────────┐         │
+│              │     Response Generator             │         │
+│              │  (Natural Language + Charts)       │         │
+│              └────────────────────────────────────┘         │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Supported Query Types:**
+
+```yaml
+simple_queries:  # Direct SQL, no LLM needed
+  examples:
+    - "How many vehicles are online?"
+    - "Show me today's trips for BA-1234"
+    - "Which vehicles are overspeeding right now?"
+  handler: sql_executor
+  response_time: < 500ms
+
+analytical_queries:  # Aggregation + computation
+  examples:
+    - "What's our fleet's average fuel efficiency this month?"
+    - "Compare driver scores between Dhaka and Chittagong branches"
+    - "Show me the trend of harsh braking events over 30 days"
+  handler: analytics_engine
+  response_time: < 2s
+
+predictive_queries:  # ML model inference
+  examples:
+    - "Which vehicles are likely to need maintenance soon?"
+    - "Predict fuel costs for next month"
+    - "Which drivers are at high risk of accidents?"
+  handler: ml_inference
+  response_time: < 3s
+
+complex_queries:  # LLM + RAG for open-ended questions
+  examples:
+    - "Why is vehicle BA-5678 consuming more fuel than usual?"
+    - "What can we do to improve our fleet efficiency?"
+    - "Analyze the root cause of increased maintenance costs"
+  handler: llm_rag
+  response_time: < 10s
+```
+
+**API Endpoint:**
+
+```
+POST /api/v1/ai/chat
+Authorization: Bearer {jwt}
+
+Request:
+{
+  "message": "Which drivers need safety training?",
+  "context": {
+    "org_id": "uuid",
+    "conversation_id": "uuid",  // for multi-turn
+    "filters": {
+      "branch_id": "uuid",  // optional
+      "date_range": "last_30_days"
+    }
+  }
+}
+
+Response:
+{
+  "response": {
+    "text": "Based on safety scores, 3 drivers need attention:\n1. Driver A (score: 42) - excessive speeding...",
+    "data": [
+      {"driver": "Driver A", "score": 42, "issues": ["speeding", "harsh_braking"]},
+      ...
+    ],
+    "visualization": {
+      "type": "bar_chart",
+      "config": { ... }
+    },
+    "suggested_actions": [
+      {"action": "Schedule training", "drivers": ["driver_a_id", ...]},
+      {"action": "View detailed reports", "link": "/dashboard/drivers/safety"}
+    ]
+  },
+  "confidence": 0.92,
+  "sources": ["driver_daily_metrics", "ai_predictions"],
+  "conversation_id": "uuid"
+}
+```
+
+**LLM Integration (Claude API):**
+
+```python
+# ai_service/llm/claude_client.py
+from anthropic import Anthropic
+
+class FleetAIAssistant:
+    def __init__(self):
+        self.client = Anthropic()
+        self.model = "claude-sonnet-4-20250514"
+
+    async def analyze_query(self, query: str, context: dict) -> dict:
+        # Build context from fleet data
+        fleet_context = await self._build_fleet_context(context)
+
+        response = await self.client.messages.create(
+            model=self.model,
+            max_tokens=1024,
+            system="""You are MotoLink AI, a fleet management assistant for Bangladesh.
+            You help fleet managers understand their vehicle data, driver performance,
+            and make data-driven decisions. Always be specific with numbers and
+            actionable with recommendations. Respond in English or Bengali based on
+            the user's language preference.""",
+            messages=[
+                {"role": "user", "content": f"""
+                Fleet Context:
+                {fleet_context}
+
+                User Query: {query}
+
+                Provide a helpful, data-driven response with specific numbers
+                and actionable recommendations.
+                """}
+            ]
+        )
+
+        return self._parse_response(response)
+```
+
+#### 9.5 Python ML Service Structure
+
+```
+ai_service/
+├── Dockerfile
+├── requirements.txt
+├── pyproject.toml
+│
+├── app/
+│   ├── __init__.py
+│   ├── main.py                 # FastAPI app entry
+│   ├── config.py               # Settings from env
+│   │
+│   ├── api/
+│   │   ├── __init__.py
+│   │   ├── routes/
+│   │   │   ├── health.py       # /health, /ready
+│   │   │   ├── scores.py       # /scores/driver, /scores/vehicle
+│   │   │   ├── predictions.py  # /predict/maintenance, /predict/anomaly
+│   │   │   ├── chat.py         # /chat
+│   │   │   └── training.py     # /train/trigger (admin only)
+│   │   └── dependencies.py     # Auth, DB connections
+│   │
+│   ├── models/
+│   │   ├── __init__.py
+│   │   ├── driver_safety.py    # XGBoost model
+│   │   ├── vehicle_health.py   # Random Forest + LSTM
+│   │   ├── anomaly.py          # Isolation Forest
+│   │   └── base.py             # Abstract model class
+│   │
+│   ├── features/
+│   │   ├── __init__.py
+│   │   ├── driver_features.py  # Feature extraction
+│   │   ├── vehicle_features.py
+│   │   └── pipeline.py         # Sklearn pipelines
+│   │
+│   ├── llm/
+│   │   ├── __init__.py
+│   │   ├── claude_client.py    # Anthropic API client
+│   │   ├── prompts.py          # System prompts
+│   │   ├── rag.py              # Retrieval augmented generation
+│   │   └── intent.py           # Query classification
+│   │
+│   ├── data/
+│   │   ├── __init__.py
+│   │   ├── postgres.py         # SQLAlchemy async
+│   │   ├── redis.py            # Feature store client
+│   │   └── schemas.py          # Pydantic models
+│   │
+│   ├── jobs/
+│   │   ├── __init__.py
+│   │   ├── daily_scoring.py    # Compute daily scores
+│   │   ├── model_training.py   # Retrain models
+│   │   └── feature_refresh.py  # Update feature store
+│   │
+│   └── utils/
+│       ├── __init__.py
+│       ├── logging.py
+│       └── metrics.py          # Prometheus metrics
+│
+├── models/                     # Serialized model files
+│   ├── driver_safety_v1.joblib
+│   ├── vehicle_health_v1.joblib
+│   └── anomaly_detector_v1.joblib
+│
+├── tests/
+│   ├── __init__.py
+│   ├── test_models.py
+│   ├── test_features.py
+│   └── test_api.py
+│
+└── scripts/
+    ├── train_initial_models.py
+    └── backfill_features.py
+```
+
+#### 9.6 API Endpoints (FastAPI)
+
+```python
+# ai_service/app/main.py
+from fastapi import FastAPI, Depends, HTTPException
+from pydantic import BaseModel
+
+app = FastAPI(title="MotoLink AI Service", version="1.0.0")
+
+# ─────────────────────────────────────────────────────────────
+# Health & Readiness
+# ─────────────────────────────────────────────────────────────
+
+@app.get("/health")
+async def health():
+    return {"status": "healthy", "models_loaded": True}
+
+# ─────────────────────────────────────────────────────────────
+# Scoring Endpoints
+# ─────────────────────────────────────────────────────────────
+
+class DriverScoreRequest(BaseModel):
+    org_id: str
+    device_imei: str
+    date: str | None = None  # defaults to today
+
+class DriverScoreResponse(BaseModel):
+    device_imei: str
+    safety_score: int
+    efficiency_score: int
+    risk_factors: list[str]
+    improvement_tips: list[str]
+    trend: str  # "improving", "stable", "declining"
+
+@app.post("/api/v1/scores/driver", response_model=DriverScoreResponse)
+async def get_driver_score(req: DriverScoreRequest):
+    """Get driver safety and efficiency scores."""
+    ...
+
+@app.post("/api/v1/scores/driver/batch")
+async def get_driver_scores_batch(org_id: str):
+    """Get all driver scores for an organization."""
+    ...
+
+class VehicleHealthRequest(BaseModel):
+    org_id: str
+    device_imei: str
+
+class VehicleHealthResponse(BaseModel):
+    device_imei: str
+    health_score: int
+    predicted_issues: list[dict]
+    days_to_next_service: int
+    recommended_actions: list[str]
+
+@app.post("/api/v1/scores/vehicle", response_model=VehicleHealthResponse)
+async def get_vehicle_health(req: VehicleHealthRequest):
+    """Get vehicle health score and predictions."""
+    ...
+
+# ─────────────────────────────────────────────────────────────
+# Prediction Endpoints
+# ─────────────────────────────────────────────────────────────
+
+@app.post("/api/v1/predict/maintenance")
+async def predict_maintenance(org_id: str, days_ahead: int = 30):
+    """Predict which vehicles will need maintenance in N days."""
+    ...
+
+@app.post("/api/v1/predict/anomalies")
+async def detect_anomalies(org_id: str, hours_back: int = 24):
+    """Detect anomalies in fleet behavior."""
+    ...
+
+# ─────────────────────────────────────────────────────────────
+# AI Chat
+# ─────────────────────────────────────────────────────────────
+
+class ChatRequest(BaseModel):
+    message: str
+    conversation_id: str | None = None
+    language: str = "en"  # "en" or "bn"
+
+class ChatResponse(BaseModel):
+    text: str
+    data: dict | None = None
+    visualization: dict | None = None
+    suggested_actions: list[dict] = []
+    conversation_id: str
+
+@app.post("/api/v1/chat", response_model=ChatResponse)
+async def chat(req: ChatRequest, org_id: str = Depends(get_org_from_token)):
+    """AI assistant chat endpoint."""
+    ...
+
+# ─────────────────────────────────────────────────────────────
+# Admin / Training
+# ─────────────────────────────────────────────────────────────
+
+@app.post("/api/v1/admin/train/{model_name}")
+async def trigger_training(model_name: str, admin_key: str = Depends(verify_admin)):
+    """Trigger model retraining (admin only)."""
+    ...
+
+@app.get("/api/v1/admin/models")
+async def list_models(admin_key: str = Depends(verify_admin)):
+    """List deployed models and versions."""
+    ...
+```
+
+#### 9.7 Integration with Spring Boot Backend
+
+```java
+// backend/src/main/java/com/webinnovation/motolink/service/AiService.java
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class AiService {
+
+    private final WebClient aiServiceClient;  // Points to Python service
+    private final RedisTemplate<String, Object> redis;
+
+    /**
+     * Get driver safety score (cached for 1 hour).
+     */
+    public Mono<DriverScore> getDriverScore(String imei) {
+        String cacheKey = "ai:score:driver:" + imei;
+
+        // Check cache first
+        DriverScore cached = (DriverScore) redis.opsForValue().get(cacheKey);
+        if (cached != null) {
+            return Mono.just(cached);
+        }
+
+        return aiServiceClient.post()
+            .uri("/api/v1/scores/driver")
+            .bodyValue(Map.of("device_imei", imei))
+            .retrieve()
+            .bodyToMono(DriverScore.class)
+            .doOnNext(score -> {
+                redis.opsForValue().set(cacheKey, score, Duration.ofHours(1));
+            });
+    }
+
+    /**
+     * AI Chat - proxy to Python service with org context.
+     */
+    public Mono<ChatResponse> chat(UUID orgId, String message, String conversationId) {
+        return aiServiceClient.post()
+            .uri("/api/v1/chat")
+            .header("X-Org-Id", orgId.toString())
+            .bodyValue(Map.of(
+                "message", message,
+                "conversation_id", conversationId
+            ))
+            .retrieve()
+            .bodyToMono(ChatResponse.class);
+    }
+
+    /**
+     * Get vehicles predicted to need maintenance.
+     */
+    public Mono<List<MaintenancePrediction>> predictMaintenance(UUID orgId, int daysAhead) {
+        return aiServiceClient.post()
+            .uri(uriBuilder -> uriBuilder
+                .path("/api/v1/predict/maintenance")
+                .queryParam("org_id", orgId)
+                .queryParam("days_ahead", daysAhead)
+                .build())
+            .retrieve()
+            .bodyToFlux(MaintenancePrediction.class)
+            .collectList();
+    }
+}
+```
+
+#### 9.8 Training Pipeline
+
+```yaml
+# Scheduled jobs for model training and scoring
+
+daily_scoring_job:
+  schedule: "0 2 * * *"  # 2 AM daily (after midnight data settles)
+  tasks:
+    - name: compute_driver_daily_metrics
+      query: |
+        INSERT INTO driver_daily_metrics (...)
+        SELECT ... FROM locations, alarms, trips
+        WHERE date = CURRENT_DATE - 1
+
+    - name: compute_vehicle_health_snapshots
+      query: |
+        INSERT INTO vehicle_health_snapshots (...)
+        SELECT ... FROM devices, locations, maintenance_logs
+        WHERE snapshot_date = CURRENT_DATE
+
+    - name: run_safety_scoring
+      endpoint: POST /api/v1/scores/driver/batch
+
+    - name: run_health_scoring
+      endpoint: POST /api/v1/scores/vehicle/batch
+
+    - name: run_anomaly_detection
+      endpoint: POST /api/v1/predict/anomalies
+
+    - name: generate_predictions
+      endpoint: POST /api/v1/predict/maintenance
+
+weekly_training_job:
+  schedule: "0 3 * * SUN"  # Sunday 3 AM
+  tasks:
+    - name: retrain_driver_safety_model
+      endpoint: POST /api/v1/admin/train/driver_safety
+
+    - name: retrain_vehicle_health_model
+      endpoint: POST /api/v1/admin/train/vehicle_health
+
+    - name: update_anomaly_baseline
+      endpoint: POST /api/v1/admin/train/anomaly_detector
+
+    - name: validate_model_accuracy
+      script: scripts/validate_predictions.py
+```
+
+#### 9.9 Docker Compose Addition
+
+```yaml
+# Add to docker-compose.prod.yml
+
+services:
+  # ... existing services ...
+
+  ai-service:
+    build:
+      context: ./ai_service
+      dockerfile: Dockerfile
+    container_name: pingpath-ai
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      REDIS_URL: redis://redis:6379/1
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      MODEL_PATH: /app/models
+      LOG_LEVEL: INFO
+    volumes:
+      - ai_models:/app/models
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    # Internal only - accessed via backend
+    expose:
+      - "8000"
+
+volumes:
+  ai_models:
+```
+
+#### 9.10 Environment Variables
+
+```bash
+# Add to .env for AI service
+
+# Anthropic Claude API (for AI Chat)
+ANTHROPIC_API_KEY=sk-ant-...
+
+# AI Service config
+AI_SERVICE_URL=http://ai-service:8000
+AI_MODEL_DRIVER_SAFETY=driver_safety_v1
+AI_MODEL_VEHICLE_HEALTH=vehicle_health_v1
+AI_MODEL_ANOMALY=anomaly_v1
+
+# Feature store (Redis DB 1)
+AI_REDIS_DB=1
+AI_FEATURE_TTL_HOURS=24
+
+# Training config
+AI_TRAINING_MIN_SAMPLES=1000
+AI_TRAINING_WINDOW_DAYS=90
+```
+
+#### 9.11 Frontend Integration
+
+```typescript
+// frontend/src/lib/ai.ts
+
+export interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  data?: Record<string, unknown>;
+  visualization?: ChartConfig;
+  suggestedActions?: Array<{ action: string; link?: string }>;
+}
+
+export interface DriverScore {
+  deviceImei: string;
+  safetyScore: number;
+  efficiencyScore: number;
+  riskFactors: string[];
+  improvementTips: string[];
+  trend: 'improving' | 'stable' | 'declining';
+}
+
+export interface VehicleHealth {
+  deviceImei: string;
+  healthScore: number;
+  predictedIssues: Array<{
+    issueType: string;
+    probability: number;
+    estimatedDaysToFailure: number;
+    recommendedAction: string;
+  }>;
+  daysToNextService: number;
+}
+
+// API calls
+export async function sendChatMessage(message: string, conversationId?: string): Promise<ChatMessage> {
+  const res = await api.post('/ai/chat', { message, conversationId });
+  return res.data;
+}
+
+export async function getDriverScore(imei: string): Promise<DriverScore> {
+  const res = await api.get(`/ai/scores/driver/${imei}`);
+  return res.data;
+}
+
+export async function getFleetHealthSummary(): Promise<{
+  averageScore: number;
+  vehiclesAtRisk: number;
+  upcomingMaintenance: number;
+}> {
+  const res = await api.get('/ai/fleet/health-summary');
+  return res.data;
+}
+```
+
+#### 9.12 Success Metrics
+
+| Metric | Target | Measurement |
+|--------|--------|-------------|
+| Driver score accuracy | >85% | Compare predicted risk vs actual incidents |
+| Maintenance prediction | >70% precision | Predicted issues that occurred within window |
+| Anomaly detection | <5% false positive | User feedback on alerts |
+| Chat response time | <3s (simple), <10s (complex) | P95 latency |
+| Chat accuracy | >90% user satisfaction | Thumbs up/down feedback |
+| Model freshness | <7 days | Time since last training |
+| Feature latency | <100ms | Redis feature store reads |
+
 ### Phase 10 — Enhanced Tracking & Maps (Month 7–8)
 
 **Goal:** Rich map experience with contextual data overlays.
