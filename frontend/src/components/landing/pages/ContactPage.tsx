@@ -49,7 +49,7 @@ export function ContactPage() {
   return (
     <>
       {/* Hero */}
-      <section className="bg-gradient-to-br from-gray-900 via-gray-800 to-teal-900 pb-20 pt-32">
+      <section className="bg-gradient-to-br from-gray-900 via-gray-800 to-blue-900 pb-20 pt-32">
         <div className="mx-auto max-w-7xl px-4 text-center sm:px-6">
           <motion.div initial="hidden" animate="visible" variants={staggerContainer}>
             <motion.div variants={fadeInUp} className="mb-4 inline-flex items-center rounded-full bg-cyan-500/20 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-cyan-300">
@@ -228,22 +228,18 @@ export function ContactPage() {
       <section className="bg-gray-50 py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <AnimatedSection>
-            <motion.div variants={fadeInUp} className="overflow-hidden rounded-2xl bg-gray-200 shadow-lg">
-              {/* Map Placeholder */}
-              <div className="flex h-[400px] items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
-                <div className="text-center">
-                  <Icon path={ICONS.map} className="mx-auto h-16 w-16 text-gray-400" />
-                  <p className="mt-4 text-lg font-medium text-gray-500">Dhanmondi, Dhaka</p>
-                  <a
-                    href="https://maps.google.com/?q=Dhanmondi,Dhaka"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-2 inline-flex items-center gap-1 text-blue-600 hover:text-blue-700"
-                  >
-                    View on Google Maps <Icon path={ICONS.arrow} className="h-4 w-4" />
-                  </a>
-                </div>
-              </div>
+            <motion.div variants={fadeInUp} className="overflow-hidden rounded-2xl shadow-lg">
+              <iframe
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3651.8982253779893!2d90.37568847607619!3d23.751006588731426!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3755b8b33cffc3fb%3A0x4a826f475fd312af!2sDhanmondi%2C%20Dhaka!5e0!3m2!1sen!2sbd!4v1691234567890!5m2!1sen!2sbd"
+                width="100%"
+                height="400"
+                style={{ border: 0 }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                title="MotoLink Office Location"
+                className="w-full"
+              />
             </motion.div>
           </AnimatedSection>
         </div>

@@ -72,108 +72,18 @@ const CONTACT = {
   sales: "+880 1629-563645",
 };
 
-/* ── Client Logos (SVG placeholders for company logos) ─────────── */
-function PathaoLogo({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 120 40" fill="none">
-      <rect width="120" height="40" rx="6" fill="#E8F5E9" />
-      <text x="60" y="25" textAnchor="middle" fill="#2E7D32" fontWeight="bold" fontSize="14">Pathao</text>
-    </svg>
-  );
-}
-
-function FoodpandaLogo({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 120 40" fill="none">
-      <rect width="120" height="40" rx="6" fill="#FFE0E6" />
-      <text x="60" y="25" textAnchor="middle" fill="#D50055" fontWeight="bold" fontSize="12">foodpanda</text>
-    </svg>
-  );
-}
-
-function DarazLogo({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 120 40" fill="none">
-      <rect width="120" height="40" rx="6" fill="#FFF3E0" />
-      <text x="60" y="25" textAnchor="middle" fill="#F57224" fontWeight="bold" fontSize="14">Daraz</text>
-    </svg>
-  );
-}
-
-function RobiLogo({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 120 40" fill="none">
-      <rect width="120" height="40" rx="6" fill="#FFEBEE" />
-      <text x="60" y="25" textAnchor="middle" fill="#E53935" fontWeight="bold" fontSize="14">Robi</text>
-    </svg>
-  );
-}
-
-function GrameenphoneLogo({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 120 40" fill="none">
-      <rect width="120" height="40" rx="6" fill="#E3F2FD" />
-      <text x="60" y="25" textAnchor="middle" fill="#1565C0" fontWeight="bold" fontSize="11">Grameenphone</text>
-    </svg>
-  );
-}
-
-function BRACLogo({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 120 40" fill="none">
-      <rect width="120" height="40" rx="6" fill="#E8EAF6" />
-      <text x="60" y="25" textAnchor="middle" fill="#3F51B5" fontWeight="bold" fontSize="14">BRAC</text>
-    </svg>
-  );
-}
-
-function SquareLogo({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 120 40" fill="none">
-      <rect width="120" height="40" rx="6" fill="#E0F2F1" />
-      <text x="60" y="25" textAnchor="middle" fill="#00796B" fontWeight="bold" fontSize="14">Square</text>
-    </svg>
-  );
-}
-
-function WaltonLogo({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 120 40" fill="none">
-      <rect width="120" height="40" rx="6" fill="#FFF8E1" />
-      <text x="60" y="25" textAnchor="middle" fill="#F57F17" fontWeight="bold" fontSize="14">Walton</text>
-    </svg>
-  );
-}
-
-function ACILogo({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 120 40" fill="none">
-      <rect width="120" height="40" rx="6" fill="#FCE4EC" />
-      <text x="60" y="25" textAnchor="middle" fill="#C2185B" fontWeight="bold" fontSize="14">ACI</text>
-    </svg>
-  );
-}
-
-function PranRFLLogo({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 120 40" fill="none">
-      <rect width="120" height="40" rx="6" fill="#E1F5FE" />
-      <text x="60" y="25" textAnchor="middle" fill="#0277BD" fontWeight="bold" fontSize="12">Pran-RFL</text>
-    </svg>
-  );
-}
-
+/* ── Client Logos ─────────────────────────────────────────────── */
 const CLIENT_LOGOS = [
-  { name: "Pathao", Logo: PathaoLogo },
-  { name: "Foodpanda", Logo: FoodpandaLogo },
-  { name: "Daraz", Logo: DarazLogo },
-  { name: "Robi", Logo: RobiLogo },
-  { name: "Grameenphone", Logo: GrameenphoneLogo },
-  { name: "BRAC", Logo: BRACLogo },
-  { name: "Square", Logo: SquareLogo },
-  { name: "Walton", Logo: WaltonLogo },
-  { name: "ACI", Logo: ACILogo },
-  { name: "Pran-RFL", Logo: PranRFLLogo },
+  { name: "Client 1", image: "/images/clients/client-1.png" },
+  { name: "Client 2", image: "/images/clients/client-2.png" },
+  { name: "Client 3", image: "/images/clients/client-3.png" },
+  { name: "Client 4", image: "/images/clients/client-4.png" },
+  { name: "Client 5", image: "/images/clients/client-5.png" },
+  { name: "Client 6", image: "/images/clients/client-6.png" },
+  { name: "Client 7", image: "/images/clients/client-7.png" },
+  { name: "Client 8", image: "/images/clients/client-8.png" },
+  { name: "Client 9", image: "/images/clients/client-9.png" },
+  { name: "Client 10", image: "/images/clients/client-10.png" },
 ];
 
 /* ── Hero Section ──────────────────────────────────────────────── */
@@ -319,9 +229,15 @@ function TrustedClientsSection() {
             {t("clients.title")}
           </motion.p>
           <motion.div variants={fadeInUp} className="flex flex-wrap items-center justify-center gap-4 lg:gap-6">
-            {CLIENT_LOGOS.map(({ name, Logo }) => (
-              <motion.div key={name} whileHover={{ scale: 1.05, y: -2 }} className="transition-all">
-                <Logo className="h-10 w-28 rounded-lg transition-shadow hover:shadow-md" />
+            {CLIENT_LOGOS.map(({ name, image }) => (
+              <motion.div key={name} whileHover={{ scale: 1.05, y: -2 }} className="flex h-14 w-32 items-center justify-center rounded-lg bg-gray-50 p-2 transition-shadow hover:shadow-md">
+                <Image
+                  src={image}
+                  alt={name}
+                  width={120}
+                  height={50}
+                  className="h-auto max-h-10 w-auto object-contain"
+                />
               </motion.div>
             ))}
           </motion.div>
