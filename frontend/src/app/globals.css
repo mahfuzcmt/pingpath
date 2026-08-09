@@ -210,3 +210,217 @@
 .leaflet-control-zoom a {
   @apply !bg-white !text-ink-700 hover:!bg-surface-100;
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   MARKETING WEBSITE COMPONENTS
+   ══════════════════════════════════════════════════════════════════ */
+
+@layer components {
+  /* ── Marketing buttons (larger than dashboard) ─────────────────── */
+  .mkt-btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-md bg-brand-500 px-6 py-3 text-sm font-semibold text-white transition-all hover:bg-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .mkt-btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-md border-2 border-brand-500 bg-transparent px-6 py-3 text-sm font-semibold text-brand-500 transition-all hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .mkt-btn-white {
+    @apply inline-flex items-center justify-center gap-2 rounded-md bg-white px-6 py-3 text-sm font-semibold text-ink-900 transition-all hover:bg-surface-100 focus:outline-none focus:ring-2 focus:ring-white/40 focus:ring-offset-2 focus:ring-offset-brand-700 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .mkt-btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-md bg-transparent px-4 py-2 text-sm font-medium text-ink-700 transition-all hover:bg-surface-100 hover:text-ink-900 focus:outline-none;
+  }
+
+  /* ── Marketing input (larger than dashboard) ───────────────────── */
+  .mkt-input {
+    @apply w-full rounded-md border border-surface-300 bg-white px-4 py-3 text-sm text-ink-900 placeholder:text-ink-400 transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 disabled:bg-surface-100 disabled:text-ink-500;
+  }
+
+  .mkt-textarea {
+    @apply mkt-input min-h-[120px] resize-y;
+  }
+
+  .mkt-select {
+    @apply mkt-input appearance-none bg-no-repeat pr-10;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23808080' stroke-width='2.5'><path d='m6 9 6 6 6-6'/></svg>");
+    background-position: right 12px center;
+  }
+
+  /* ── Marketing headings ────────────────────────────────────────── */
+  .mkt-heading-xl {
+    @apply text-4xl font-bold leading-tight tracking-tight text-ink-900 md:text-5xl lg:text-6xl;
+  }
+
+  .mkt-heading-lg {
+    @apply text-3xl font-bold leading-tight tracking-tight text-ink-900 md:text-4xl;
+  }
+
+  .mkt-heading-md {
+    @apply text-2xl font-bold leading-tight tracking-tight text-ink-900 md:text-3xl;
+  }
+
+  .mkt-heading-sm {
+    @apply text-xl font-semibold leading-tight text-ink-900 md:text-2xl;
+  }
+
+  /* ── Marketing body text ───────────────────────────────────────── */
+  .mkt-body {
+    @apply text-base leading-relaxed text-ink-600 md:text-lg;
+  }
+
+  .mkt-body-sm {
+    @apply text-sm leading-relaxed text-ink-600;
+  }
+
+  /* ── Marketing sections ────────────────────────────────────────── */
+  .mkt-section {
+    @apply px-4 py-16 md:px-6 md:py-24 lg:py-32;
+  }
+
+  .mkt-section-dark {
+    @apply mkt-section bg-gradient-to-br from-[#0A1928] to-[#0E3257] text-white;
+  }
+
+  .mkt-section-dark .mkt-heading-xl,
+  .mkt-section-dark .mkt-heading-lg,
+  .mkt-section-dark .mkt-heading-md,
+  .mkt-section-dark .mkt-heading-sm {
+    @apply text-white;
+  }
+
+  .mkt-section-dark .mkt-body,
+  .mkt-section-dark .mkt-body-sm {
+    @apply text-ink-300;
+  }
+
+  .mkt-container {
+    @apply mx-auto max-w-7xl;
+  }
+
+  /* ── Marketing cards ───────────────────────────────────────────── */
+  .mkt-card {
+    @apply rounded-xl border border-surface-200 bg-white p-6 transition-shadow hover:shadow-lg md:p-8;
+  }
+
+  .mkt-card-feature {
+    @apply mkt-card flex flex-col items-start gap-4;
+  }
+
+  .mkt-card-pricing {
+    @apply mkt-card relative flex flex-col;
+  }
+
+  .mkt-card-pricing-popular {
+    @apply mkt-card-pricing border-2 border-brand-500 shadow-lg;
+  }
+
+  .mkt-card-industry {
+    @apply mkt-card cursor-pointer;
+  }
+  .mkt-card-industry:hover {
+    @apply border-brand-100;
+  }
+
+  /* ── Feature icon container ────────────────────────────────────── */
+  .mkt-icon-container {
+    @apply flex h-12 w-12 items-center justify-center rounded-lg bg-brand-50 text-brand-500;
+  }
+
+  .mkt-icon-container-dark {
+    @apply flex h-12 w-12 items-center justify-center rounded-lg bg-brand-500/20 text-brand-400;
+  }
+
+  /* ── Badges ────────────────────────────────────────────────────── */
+  .mkt-badge {
+    @apply inline-flex items-center gap-1.5 rounded-full bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-600;
+  }
+
+  .mkt-badge-popular {
+    @apply absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-brand-500 px-4 py-1 text-xs font-bold uppercase tracking-wide text-white;
+  }
+
+  /* ── Navigation (marketing header) ─────────────────────────────── */
+  .mkt-nav-link {
+    @apply text-sm font-medium text-ink-600 transition-colors hover:text-ink-900;
+  }
+
+  .mkt-nav-link-dark {
+    @apply text-sm font-medium text-ink-300 transition-colors hover:text-white;
+  }
+
+  /* ── Accordion (FAQ) ───────────────────────────────────────────── */
+  .mkt-accordion-item {
+    @apply border-b border-surface-200;
+  }
+
+  .mkt-accordion-trigger {
+    @apply flex w-full items-center justify-between py-5 text-left text-base font-semibold text-ink-900 transition hover:text-brand-600;
+  }
+
+  .mkt-accordion-content {
+    @apply overflow-hidden pb-5 text-ink-600;
+  }
+
+  /* ── Stats ─────────────────────────────────────────────────────── */
+  .mkt-stat {
+    @apply text-center;
+  }
+
+  .mkt-stat-value {
+    @apply text-3xl font-bold text-brand-500 md:text-4xl;
+  }
+
+  .mkt-stat-label {
+    @apply mt-1 text-sm text-ink-500;
+  }
+
+  /* ── Testimonials ──────────────────────────────────────────────── */
+  .mkt-testimonial {
+    @apply mkt-card flex flex-col gap-4;
+  }
+
+  .mkt-testimonial-quote {
+    @apply text-lg italic text-ink-700;
+  }
+
+  .mkt-testimonial-author {
+    @apply flex items-center gap-3;
+  }
+
+  .mkt-testimonial-avatar {
+    @apply h-12 w-12 rounded-full bg-surface-200;
+  }
+
+  /* ── Price display ─────────────────────────────────────────────── */
+  .mkt-price {
+    @apply text-4xl font-bold text-ink-900;
+  }
+
+  .mkt-price-period {
+    @apply text-sm font-normal text-ink-500;
+  }
+
+  /* ── Check list (pricing features) ─────────────────────────────── */
+  .mkt-checklist {
+    @apply space-y-3;
+  }
+
+  .mkt-checklist-item {
+    @apply flex items-start gap-3 text-sm text-ink-700;
+  }
+
+  .mkt-checklist-icon {
+    @apply mt-0.5 h-5 w-5 flex-shrink-0 text-status-moving;
+  }
+
+  /* ── Footer ────────────────────────────────────────────────────── */
+  .mkt-footer-link {
+    @apply text-sm text-ink-400 transition-colors hover:text-white;
+  }
+
+  .mkt-footer-heading {
+    @apply mb-4 text-sm font-semibold uppercase tracking-wider text-ink-300;
+  }
+}

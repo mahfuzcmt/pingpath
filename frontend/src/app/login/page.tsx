@@ -5,6 +5,7 @@ import { FormEvent, useState } from "react";
 import { login } from "@/lib/auth";
 import { useLocale } from "@/lib/i18n";
 import { LanguageToggle } from "@/components/shell/LanguageToggle";
+import { MotoLinkLogoInline } from "@/components/marketing/MotoLinkLogo";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -47,23 +48,7 @@ export default function LoginPage() {
       />
 
       <header className="absolute inset-x-0 top-0 z-10 flex items-center justify-between px-6 py-4">
-        <div className="flex items-center gap-3">
-          {/* MotoLink Logo */}
-          <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-brand-500 shadow-lg shadow-brand-500/30">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="white"/>
-              <circle cx="12" cy="9" r="3" fill="#2B82D4"/>
-            </svg>
-          </div>
-          <div>
-            <div className="font-display text-lg font-bold tracking-tight text-white">
-              MotoLink
-            </div>
-            <div className="text-[10px] font-medium tracking-widest text-brand-400 uppercase">
-              GPS Tracking
-            </div>
-          </div>
-        </div>
+        <MotoLinkLogoInline />
         <LanguageToggle />
       </header>
 

@@ -285,6 +285,265 @@ const STRINGS = {
   "audit.when": { en: "When", bn: "কখন" },
   "audit.metadata": { en: "Details", bn: "বিস্তারিত" },
   "audit.allActions": { en: "All actions", bn: "সব কর্ম" },
+
+  // ══════════════════════════════════════════════════════════════════
+  // MARKETING WEBSITE (mkt.*)
+  // ══════════════════════════════════════════════════════════════════
+
+  // ── Navigation ───────────────────────────────────────────────────
+  "mkt.nav.home": { en: "Home", bn: "হোম" },
+  "mkt.nav.features": { en: "Features", bn: "ফিচার" },
+  "mkt.nav.pricing": { en: "Pricing", bn: "মূল্য" },
+  "mkt.nav.industries": { en: "Industries", bn: "শিল্প" },
+  "mkt.nav.about": { en: "About", bn: "আমাদের সম্পর্কে" },
+  "mkt.nav.contact": { en: "Contact", bn: "যোগাযোগ" },
+  "mkt.nav.login": { en: "Login", bn: "লগইন" },
+  "mkt.nav.dashboard": { en: "Go to Dashboard", bn: "ড্যাশবোর্ডে যান" },
+  "mkt.nav.getStarted": { en: "Get Started", bn: "শুরু করুন" },
+  "mkt.nav.requestDemo": { en: "Request Demo", bn: "ডেমো অনুরোধ করুন" },
+
+  // ── Hero Section ─────────────────────────────────────────────────
+  "mkt.hero.headline": { en: "Track Your Fleet in Real-Time", bn: "আপনার ফ্লিট রিয়েল-টাইমে ট্র্যাক করুন" },
+  "mkt.hero.subheadline": { en: "GPS tracking solution built for Bangladesh. Monitor vehicles, reduce theft, and optimize your fleet operations.", bn: "বাংলাদেশের জন্য তৈরি GPS ট্র্যাকিং সমাধান। যানবাহন পর্যবেক্ষণ করুন, চুরি কমান এবং আপনার ফ্লিট অপারেশন অপ্টিমাইজ করুন।" },
+  "mkt.hero.cta.primary": { en: "Start Free Trial", bn: "ফ্রি ট্রায়াল শুরু করুন" },
+  "mkt.hero.cta.secondary": { en: "Watch Demo", bn: "ডেমো দেখুন" },
+  "mkt.hero.badge": { en: "Trusted by 500+ businesses in Bangladesh", bn: "বাংলাদেশের ৫০০+ ব্যবসায় বিশ্বস্ত" },
+
+  // ── Stats Section ────────────────────────────────────────────────
+  "mkt.stats.vehicles": { en: "Vehicles Tracked", bn: "ট্র্যাক করা যানবাহন" },
+  "mkt.stats.uptime": { en: "Platform Uptime", bn: "প্ল্যাটফর্ম আপটাইম" },
+  "mkt.stats.alerts": { en: "Alerts Delivered", bn: "সতর্কতা প্রদান" },
+  "mkt.stats.customers": { en: "Happy Customers", bn: "সন্তুষ্ট গ্রাহক" },
+  "mkt.stats.support": { en: "24/7 Support", bn: "২৪/৭ সাপোর্ট" },
+  "mkt.stats.coverage": { en: "Nationwide Coverage", bn: "সারাদেশে কভারেজ" },
+
+  // ── Features - Overview ──────────────────────────────────────────
+  "mkt.features.title": { en: "Powerful Features for Modern Fleet Management", bn: "আধুনিক ফ্লিট ম্যানেজমেন্টের জন্য শক্তিশালী ফিচার" },
+  "mkt.features.subtitle": { en: "Everything you need to track, manage, and optimize your fleet operations", bn: "আপনার ফ্লিট অপারেশন ট্র্যাক, পরিচালনা এবং অপ্টিমাইজ করতে যা দরকার সব" },
+
+  // ── Features - GPS Tracking ──────────────────────────────────────
+  "mkt.features.realtime.title": { en: "Real-Time GPS Tracking", bn: "রিয়েল-টাইম GPS ট্র্যাকিং" },
+  "mkt.features.realtime.desc": { en: "See your entire fleet on a live map with positions updating every 10 seconds. Know exactly where every vehicle is, anytime.", bn: "প্রতি ১০ সেকেন্ডে আপডেট হওয়া লাইভ মানচিত্রে আপনার সম্পূর্ণ ফ্লিট দেখুন। যেকোনো সময় প্রতিটি যানবাহন ঠিক কোথায় তা জানুন।" },
+
+  "mkt.features.history.title": { en: "Route History & Playback", bn: "রুট ইতিহাস ও প্লেব্যাক" },
+  "mkt.features.history.desc": { en: "Review past trips with detailed route playback. See where vehicles went, when they stopped, and for how long.", bn: "বিস্তারিত রুট প্লেব্যাক সহ অতীতের ট্রিপ পর্যালোচনা করুন। যানবাহন কোথায় গেছে, কখন থেমেছে এবং কতক্ষণ দেখুন।" },
+
+  "mkt.features.geofence.title": { en: "Geofence Alerts", bn: "জিওফেন্স সতর্কতা" },
+  "mkt.features.geofence.desc": { en: "Draw virtual boundaries on the map. Get instant SMS or app notifications when vehicles enter or exit zones.", bn: "মানচিত্রে ভার্চুয়াল সীমানা আঁকুন। যানবাহন জোনে প্রবেশ বা প্রস্থান করলে তাৎক্ষণিক SMS বা অ্যাপ নোটিফিকেশন পান।" },
+
+  "mkt.features.speed.title": { en: "Speed Monitoring", bn: "গতি পর্যবেক্ষণ" },
+  "mkt.features.speed.desc": { en: "Set speed limits and get alerted when drivers exceed them. Promote safe driving and reduce accidents.", bn: "গতি সীমা নির্ধারণ করুন এবং ড্রাইভার সীমা অতিক্রম করলে সতর্কতা পান। নিরাপদ ড্রাইভিং প্রচার করুন এবং দুর্ঘটনা কমান।" },
+
+  "mkt.features.fuel.title": { en: "Fuel Monitoring", bn: "জ্বালানি পর্যবেক্ষণ" },
+  "mkt.features.fuel.desc": { en: "Track fuel consumption and detect theft or drain. Get reports on fuel efficiency per vehicle and driver.", bn: "জ্বালানি খরচ ট্র্যাক করুন এবং চুরি বা ড্রেন সনাক্ত করুন। প্রতি যানবাহন ও ড্রাইভারের জ্বালানি দক্ষতার রিপোর্ট পান।" },
+
+  "mkt.features.ignition.title": { en: "Engine Control", bn: "ইঞ্জিন নিয়ন্ত্রণ" },
+  "mkt.features.ignition.desc": { en: "Remotely cut or restore fuel supply. Immobilize stolen vehicles instantly from your phone or dashboard.", bn: "দূরবর্তীভাবে জ্বালানি সরবরাহ বন্ধ বা পুনরুদ্ধার করুন। আপনার ফোন বা ড্যাশবোর্ড থেকে চুরি হওয়া যানবাহন তাৎক্ষণিক স্থির করুন।" },
+
+  "mkt.features.sos.title": { en: "SOS & Panic Button", bn: "SOS ও প্যানিক বাটন" },
+  "mkt.features.sos.desc": { en: "Drivers can send instant emergency alerts. Get notified immediately with exact location.", bn: "ড্রাইভাররা তাৎক্ষণিক জরুরি সতর্কতা পাঠাতে পারেন। সঠিক অবস্থান সহ অবিলম্বে বিজ্ঞপ্তি পান।" },
+
+  // ── Features - Dashboard ─────────────────────────────────────────
+  "mkt.features.dashboard.title": { en: "Fleet Dashboard", bn: "ফ্লিট ড্যাশবোর্ড" },
+  "mkt.features.dashboard.desc": { en: "Comprehensive dashboard with live map, fleet status, daily stats, and quick actions. Bengali and English interface.", bn: "লাইভ মানচিত্র, ফ্লিট স্ট্যাটাস, দৈনিক পরিসংখ্যান এবং দ্রুত অ্যাকশন সহ বিস্তৃত ড্যাশবোর্ড। বাংলা ও ইংরেজি ইন্টারফেস।" },
+
+  "mkt.features.reports.title": { en: "Reports & Analytics", bn: "রিপোর্ট ও বিশ্লেষণ" },
+  "mkt.features.reports.desc": { en: "Daily, weekly, and monthly reports on trips, fuel, driver behavior, and more. Export to PDF or Excel.", bn: "ট্রিপ, জ্বালানি, ড্রাইভার আচরণ এবং আরও অনেক কিছুর দৈনিক, সাপ্তাহিক এবং মাসিক রিপোর্ট। PDF বা Excel-এ এক্সপোর্ট করুন।" },
+
+  "mkt.features.mobile.title": { en: "Mobile Apps", bn: "মোবাইল অ্যাপ" },
+  "mkt.features.mobile.desc": { en: "Track your fleet on the go with our Android and iOS apps. Get push notifications for all alerts.", bn: "আমাদের Android এবং iOS অ্যাপ দিয়ে চলতে চলতে আপনার ফ্লিট ট্র্যাক করুন। সব সতর্কতার জন্য পুশ নোটিফিকেশন পান।" },
+
+  "mkt.features.multiuser.title": { en: "Multi-User Access", bn: "মাল্টি-ইউজার অ্যাক্সেস" },
+  "mkt.features.multiuser.desc": { en: "Add team members with different access levels. Admins, managers, and drivers each see what they need.", bn: "বিভিন্ন অ্যাক্সেস লেভেল সহ টিম মেম্বার যোগ করুন। অ্যাডমিন, ম্যানেজার এবং ড্রাইভার প্রত্যেকে তাদের প্রয়োজনীয়তা দেখেন।" },
+
+  "mkt.features.api.title": { en: "API Integration", bn: "API ইন্টিগ্রেশন" },
+  "mkt.features.api.desc": { en: "Integrate vehicle data with your existing systems. RESTful API with comprehensive documentation.", bn: "আপনার বিদ্যমান সিস্টেমের সাথে যানবাহন ডেটা ইন্টিগ্রেট করুন। বিস্তৃত ডকুমেন্টেশন সহ RESTful API।" },
+
+  // ── Industries ───────────────────────────────────────────────────
+  "mkt.industries.title": { en: "Solutions for Every Industry", bn: "প্রতিটি শিল্পের জন্য সমাধান" },
+  "mkt.industries.subtitle": { en: "Tailored GPS tracking for your specific business needs", bn: "আপনার নির্দিষ্ট ব্যবসার প্রয়োজনের জন্য কাস্টমাইজড GPS ট্র্যাকিং" },
+
+  "mkt.industries.personal.title": { en: "Personal & Motorbike", bn: "ব্যক্তিগত ও মোটরবাইক" },
+  "mkt.industries.personal.desc": { en: "Protect your personal vehicle or motorbike from theft. Get instant alerts if your bike is moved without permission.", bn: "আপনার ব্যক্তিগত যানবাহন বা মোটরবাইক চুরি থেকে রক্ষা করুন। অনুমতি ছাড়া আপনার বাইক সরানো হলে তাৎক্ষণিক সতর্কতা পান।" },
+  "mkt.industries.personal.features": { en: "Anti-theft alerts • Engine immobilizer • Location sharing • SOS button", bn: "চুরি-বিরোধী সতর্কতা • ইঞ্জিন ইমোবিলাইজার • লোকেশন শেয়ারিং • SOS বাটন" },
+
+  "mkt.industries.logistics.title": { en: "Logistics & Delivery", bn: "লজিস্টিক ও ডেলিভারি" },
+  "mkt.industries.logistics.desc": { en: "Optimize delivery routes and track shipments in real-time. Perfect for courier services, e-commerce, and food delivery.", bn: "ডেলিভারি রুট অপ্টিমাইজ করুন এবং রিয়েল-টাইমে শিপমেন্ট ট্র্যাক করুন। কুরিয়ার সার্ভিস, ই-কমার্স এবং ফুড ডেলিভারির জন্য পারফেক্ট।" },
+  "mkt.industries.logistics.features": { en: "Route optimization • Delivery ETAs • Proof of delivery • Customer notifications", bn: "রুট অপ্টিমাইজেশন • ডেলিভারি ETA • ডেলিভারি প্রমাণ • কাস্টমার নোটিফিকেশন" },
+
+  "mkt.industries.bus.title": { en: "School & Staff Bus", bn: "স্কুল ও স্টাফ বাস" },
+  "mkt.industries.bus.desc": { en: "Give parents peace of mind with live bus tracking. Schools can monitor driver behavior and ensure student safety.", bn: "লাইভ বাস ট্র্যাকিং দিয়ে অভিভাবকদের মানসিক শান্তি দিন। স্কুলগুলো ড্রাইভার আচরণ পর্যবেক্ষণ করতে এবং ছাত্র নিরাপত্তা নিশ্চিত করতে পারে।" },
+  "mkt.industries.bus.features": { en: "Parent app notifications • Student pickup/dropoff alerts • Driver behavior • Route compliance", bn: "প্যারেন্ট অ্যাপ নোটিফিকেশন • ছাত্র পিকআপ/ড্রপঅফ সতর্কতা • ড্রাইভার আচরণ • রুট কমপ্লায়েন্স" },
+
+  "mkt.industries.truck.title": { en: "Truck & Heavy Vehicle", bn: "ট্রাক ও ভারী যানবাহন" },
+  "mkt.industries.truck.desc": { en: "Track long-haul trucks across Bangladesh. Monitor driving hours, rest stops, and cargo status.", bn: "সারা বাংলাদেশে লং-হল ট্রাক ট্র্যাক করুন। ড্রাইভিং আওয়ার, রেস্ট স্টপ এবং কার্গো স্ট্যাটাস পর্যবেক্ষণ করুন।" },
+  "mkt.industries.truck.features": { en: "Driving hours tracking • Route history • Fuel monitoring • Temperature sensors", bn: "ড্রাইভিং আওয়ার ট্র্যাকিং • রুট ইতিহাস • জ্বালানি পর্যবেক্ষণ • টেম্পারেচার সেন্সর" },
+
+  "mkt.industries.rental.title": { en: "Rent-a-Car", bn: "রেন্ট-এ-কার" },
+  "mkt.industries.rental.desc": { en: "Know where your rental vehicles are at all times. Prevent unauthorized use and simplify vehicle recovery.", bn: "আপনার ভাড়ার যানবাহন সবসময় কোথায় তা জানুন। অননুমোদিত ব্যবহার প্রতিরোধ করুন এবং যানবাহন পুনরুদ্ধার সহজ করুন।" },
+  "mkt.industries.rental.features": { en: "Rental period monitoring • Mileage tracking • Geofence boundaries • Remote immobilization", bn: "ভাড়ার সময়কাল পর্যবেক্ষণ • মাইলেজ ট্র্যাকিং • জিওফেন্স সীমানা • রিমোট ইমোবিলাইজেশন" },
+
+  "mkt.industries.corporate.title": { en: "Corporate Fleet", bn: "কর্পোরেট ফ্লিট" },
+  "mkt.industries.corporate.desc": { en: "Manage your company vehicles efficiently. Track employee trips, reduce fuel costs, and ensure compliance.", bn: "আপনার কোম্পানির যানবাহন দক্ষতার সাথে পরিচালনা করুন। কর্মচারী ট্রিপ ট্র্যাক করুন, জ্বালানি খরচ কমান এবং কমপ্লায়েন্স নিশ্চিত করুন।" },
+  "mkt.industries.corporate.features": { en: "Employee trip logs • Expense reports • Vehicle utilization • Maintenance alerts", bn: "কর্মচারী ট্রিপ লগ • খরচ রিপোর্ট • যানবাহন ব্যবহার • রক্ষণাবেক্ষণ সতর্কতা" },
+
+  // ── Pricing ──────────────────────────────────────────────────────
+  "mkt.pricing.title": { en: "Simple, Transparent Pricing", bn: "সহজ, স্বচ্ছ মূল্য" },
+  "mkt.pricing.subtitle": { en: "Choose the plan that fits your fleet. No hidden fees, cancel anytime.", bn: "আপনার ফ্লিটের জন্য উপযুক্ত প্ল্যান বেছে নিন। কোনো লুকানো ফি নেই, যেকোনো সময় বাতিল করুন।" },
+  "mkt.pricing.perVehicle": { en: "per vehicle / month", bn: "প্রতি যানবাহন / মাস" },
+  "mkt.pricing.billed": { en: "Billed monthly", bn: "মাসিক বিল" },
+
+  "mkt.pricing.basic.title": { en: "Basic", bn: "বেসিক" },
+  "mkt.pricing.basic.price": { en: "৳200", bn: "৳২০০" },
+  "mkt.pricing.basic.desc": { en: "Essential tracking for personal vehicles and small fleets", bn: "ব্যক্তিগত যানবাহন এবং ছোট ফ্লিটের জন্য প্রয়োজনীয় ট্র্যাকিং" },
+  "mkt.pricing.basic.f1": { en: "Real-time GPS tracking", bn: "রিয়েল-টাইম GPS ট্র্যাকিং" },
+  "mkt.pricing.basic.f2": { en: "30-day route history", bn: "৩০ দিনের রুট ইতিহাস" },
+  "mkt.pricing.basic.f3": { en: "Speed alerts", bn: "গতি সতর্কতা" },
+  "mkt.pricing.basic.f4": { en: "Mobile app access", bn: "মোবাইল অ্যাপ অ্যাক্সেস" },
+  "mkt.pricing.basic.f5": { en: "SMS notifications (10/month)", bn: "SMS নোটিফিকেশন (১০/মাস)" },
+
+  "mkt.pricing.pro.title": { en: "Pro", bn: "প্রো" },
+  "mkt.pricing.pro.price": { en: "৳350", bn: "৳৩৫০" },
+  "mkt.pricing.pro.desc": { en: "Advanced features for growing businesses", bn: "বর্ধনশীল ব্যবসার জন্য উন্নত ফিচার" },
+  "mkt.pricing.pro.badge": { en: "Most Popular", bn: "সবচেয়ে জনপ্রিয়" },
+  "mkt.pricing.pro.f1": { en: "Everything in Basic, plus:", bn: "বেসিকের সব কিছু, সাথে:" },
+  "mkt.pricing.pro.f2": { en: "90-day route history", bn: "৯০ দিনের রুট ইতিহাস" },
+  "mkt.pricing.pro.f3": { en: "Unlimited geofences", bn: "আনলিমিটেড জিওফেন্স" },
+  "mkt.pricing.pro.f4": { en: "Engine cut/restore", bn: "ইঞ্জিন বন্ধ/চালু" },
+  "mkt.pricing.pro.f5": { en: "Fuel monitoring", bn: "জ্বালানি পর্যবেক্ষণ" },
+  "mkt.pricing.pro.f6": { en: "Trip reports (PDF/Excel)", bn: "ট্রিপ রিপোর্ট (PDF/Excel)" },
+  "mkt.pricing.pro.f7": { en: "SMS notifications (50/month)", bn: "SMS নোটিফিকেশন (৫০/মাস)" },
+
+  "mkt.pricing.enterprise.title": { en: "Enterprise", bn: "এন্টারপ্রাইজ" },
+  "mkt.pricing.enterprise.price": { en: "৳500", bn: "৳৫০০" },
+  "mkt.pricing.enterprise.desc": { en: "Full-featured solution for large fleets", bn: "বড় ফ্লিটের জন্য সম্পূর্ণ ফিচার সমাধান" },
+  "mkt.pricing.enterprise.f1": { en: "Everything in Pro, plus:", bn: "প্রো-এর সব কিছু, সাথে:" },
+  "mkt.pricing.enterprise.f2": { en: "1-year route history", bn: "১ বছরের রুট ইতিহাস" },
+  "mkt.pricing.enterprise.f3": { en: "Multi-user access (up to 10)", bn: "মাল্টি-ইউজার অ্যাক্সেস (১০ পর্যন্ত)" },
+  "mkt.pricing.enterprise.f4": { en: "Custom alarm rules", bn: "কাস্টম অ্যালার্ম নিয়ম" },
+  "mkt.pricing.enterprise.f5": { en: "API access", bn: "API অ্যাক্সেস" },
+  "mkt.pricing.enterprise.f6": { en: "Priority support", bn: "প্রায়োরিটি সাপোর্ট" },
+  "mkt.pricing.enterprise.f7": { en: "Unlimited SMS notifications", bn: "আনলিমিটেড SMS নোটিফিকেশন" },
+  "mkt.pricing.enterprise.f8": { en: "White-label option", bn: "হোয়াইট-লেবেল অপশন" },
+
+  "mkt.pricing.choosePlan": { en: "Choose Plan", bn: "প্ল্যান বেছে নিন" },
+  "mkt.pricing.contactSales": { en: "Contact Sales", bn: "সেলস-এ যোগাযোগ" },
+  "mkt.pricing.currentPlan": { en: "Current Plan", bn: "বর্তমান প্ল্যান" },
+
+  // ── Hardware ─────────────────────────────────────────────────────
+  "mkt.hardware.title": { en: "GPS Tracker Hardware", bn: "GPS ট্র্যাকার হার্ডওয়্যার" },
+  "mkt.hardware.subtitle": { en: "One-time purchase, professional installation included", bn: "এককালীন ক্রয়, পেশাদার ইনস্টলেশন অন্তর্ভুক্ত" },
+  "mkt.hardware.basic.title": { en: "Basic Tracker", bn: "বেসিক ট্র্যাকার" },
+  "mkt.hardware.basic.price": { en: "৳3,500", bn: "৳৩,৫০০" },
+  "mkt.hardware.basic.desc": { en: "For motorbikes and small vehicles", bn: "মোটরবাইক এবং ছোট যানবাহনের জন্য" },
+  "mkt.hardware.pro.title": { en: "Pro Tracker", bn: "প্রো ট্র্যাকার" },
+  "mkt.hardware.pro.price": { en: "৳5,500", bn: "৳৫,৫০০" },
+  "mkt.hardware.pro.desc": { en: "With engine cut relay", bn: "ইঞ্জিন কাট রিলে সহ" },
+  "mkt.hardware.enterprise.title": { en: "Enterprise Tracker", bn: "এন্টারপ্রাইজ ট্র্যাকার" },
+  "mkt.hardware.enterprise.price": { en: "৳8,000", bn: "৳৮,০০০" },
+  "mkt.hardware.enterprise.desc": { en: "With fuel sensor support", bn: "ফুয়েল সেন্সর সাপোর্ট সহ" },
+  "mkt.hardware.includes": { en: "Includes free installation", bn: "ফ্রি ইনস্টলেশন অন্তর্ভুক্ত" },
+
+  // ── Payment Methods ──────────────────────────────────────────────
+  "mkt.payment.title": { en: "Convenient Payment Options", bn: "সুবিধাজনক পেমেন্ট অপশন" },
+  "mkt.payment.bkash": { en: "bKash", bn: "বিকাশ" },
+  "mkt.payment.nagad": { en: "Nagad", bn: "নগদ" },
+  "mkt.payment.bank": { en: "Bank Transfer", bn: "ব্যাংক ট্রান্সফার" },
+  "mkt.payment.cash": { en: "Cash on Installation", bn: "ইনস্টলেশনে নগদ" },
+
+  // ── About ────────────────────────────────────────────────────────
+  "mkt.about.title": { en: "About MotoLink", bn: "MotoLink সম্পর্কে" },
+  "mkt.about.subtitle": { en: "Bangladesh's homegrown GPS tracking platform", bn: "বাংলাদেশের নিজস্ব GPS ট্র্যাকিং প্ল্যাটফর্ম" },
+  "mkt.about.story.title": { en: "Our Story", bn: "আমাদের গল্প" },
+  "mkt.about.story.p1": { en: "MotoLink was born from a simple observation: existing GPS tracking solutions in Bangladesh were either overpriced foreign platforms or outdated local alternatives with poor user experience.", bn: "MotoLink একটি সাধারণ পর্যবেক্ষণ থেকে জন্ম নিয়েছে: বাংলাদেশে বিদ্যমান GPS ট্র্যাকিং সমাধানগুলো হয় অত্যধিক দামী বিদেশী প্ল্যাটফর্ম অথবা খারাপ ইউজার এক্সপেরিয়েন্স সহ পুরনো স্থানীয় বিকল্প।" },
+  "mkt.about.story.p2": { en: "We built MotoLink from the ground up specifically for Bangladesh. Bengali-first interface, bKash payments, local support team, and technology designed for our roads and networks.", bn: "আমরা বিশেষভাবে বাংলাদেশের জন্য MotoLink তৈরি করেছি। বাংলা-প্রথম ইন্টারফেস, বিকাশ পেমেন্ট, স্থানীয় সাপোর্ট টিম এবং আমাদের রাস্তা ও নেটওয়ার্কের জন্য ডিজাইন করা প্রযুক্তি।" },
+  "mkt.about.mission.title": { en: "Our Mission", bn: "আমাদের মিশন" },
+  "mkt.about.mission.desc": { en: "To provide every vehicle owner in Bangladesh with affordable, reliable GPS tracking that protects their investment and brings peace of mind.", bn: "বাংলাদেশের প্রতিটি যানবাহন মালিককে সাশ্রয়ী, নির্ভরযোগ্য GPS ট্র্যাকিং প্রদান করা যা তাদের বিনিয়োগ রক্ষা করে এবং মানসিক শান্তি আনে।" },
+  "mkt.about.why.title": { en: "Why MotoLink?", bn: "কেন MotoLink?" },
+  "mkt.about.why.local": { en: "Built for Bangladesh", bn: "বাংলাদেশের জন্য তৈরি" },
+  "mkt.about.why.local.desc": { en: "Bengali interface, local payment methods, Dhaka-based support", bn: "বাংলা ইন্টারফেস, স্থানীয় পেমেন্ট পদ্ধতি, ঢাকা-ভিত্তিক সাপোর্ট" },
+  "mkt.about.why.owned": { en: "We Own Our Technology", bn: "আমরা আমাদের প্রযুক্তির মালিক" },
+  "mkt.about.why.owned.desc": { en: "Not a reseller. We built our platform from scratch and can customize it for your needs.", bn: "রিসেলার নই। আমরা আমাদের প্ল্যাটফর্ম স্ক্র্যাচ থেকে তৈরি করেছি এবং আপনার প্রয়োজন অনুযায়ী কাস্টমাইজ করতে পারি।" },
+  "mkt.about.why.support": { en: "Real Local Support", bn: "প্রকৃত স্থানীয় সাপোর্ট" },
+  "mkt.about.why.support.desc": { en: "Talk to real people in Dhaka. Installation, training, and support in Bengali.", bn: "ঢাকায় প্রকৃত মানুষদের সাথে কথা বলুন। বাংলায় ইনস্টলেশন, ট্রেনিং এবং সাপোর্ট।" },
+  "mkt.about.why.affordable": { en: "Affordable Pricing", bn: "সাশ্রয়ী মূল্য" },
+  "mkt.about.why.affordable.desc": { en: "Fair pricing that makes GPS tracking accessible to everyone, from individuals to enterprises.", bn: "ন্যায্য মূল্য যা GPS ট্র্যাকিং ব্যক্তি থেকে এন্টারপ্রাইজ পর্যন্ত সবার কাছে অ্যাক্সেসযোগ্য করে।" },
+
+  // ── Contact ──────────────────────────────────────────────────────
+  "mkt.contact.title": { en: "Contact Us", bn: "যোগাযোগ করুন" },
+  "mkt.contact.subtitle": { en: "Get in touch with our team", bn: "আমাদের টিমের সাথে যোগাযোগ করুন" },
+  "mkt.contact.phone": { en: "Phone", bn: "ফোন" },
+  "mkt.contact.email": { en: "Email", bn: "ইমেইল" },
+  "mkt.contact.office": { en: "Office", bn: "অফিস" },
+  "mkt.contact.hours": { en: "Business Hours", bn: "অফিস সময়" },
+  "mkt.contact.hours.value": { en: "Saturday–Thursday, 9 AM – 6 PM", bn: "শনিবার–বৃহস্পতিবার, সকাল ৯টা – সন্ধ্যা ৬টা" },
+  "mkt.contact.form.title": { en: "Send us a message", bn: "আমাদের একটি বার্তা পাঠান" },
+  "mkt.contact.form.name": { en: "Your Name", bn: "আপনার নাম" },
+  "mkt.contact.form.email": { en: "Your Email", bn: "আপনার ইমেইল" },
+  "mkt.contact.form.phone": { en: "Your Phone", bn: "আপনার ফোন" },
+  "mkt.contact.form.company": { en: "Company (optional)", bn: "কোম্পানি (ঐচ্ছিক)" },
+  "mkt.contact.form.fleetSize": { en: "Fleet Size", bn: "ফ্লিটের আকার" },
+  "mkt.contact.form.message": { en: "Message", bn: "বার্তা" },
+  "mkt.contact.form.submit": { en: "Send Message", bn: "বার্তা পাঠান" },
+  "mkt.contact.form.success": { en: "Thank you! We'll get back to you within 24 hours.", bn: "ধন্যবাদ! আমরা ২৪ ঘণ্টার মধ্যে আপনার সাথে যোগাযোগ করব।" },
+  "mkt.contact.form.error": { en: "Something went wrong. Please try again or call us directly.", bn: "কিছু ভুল হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন বা সরাসরি আমাদের কল করুন।" },
+  "mkt.contact.fleetSize.1-5": { en: "1-5 vehicles", bn: "১-৫ যানবাহন" },
+  "mkt.contact.fleetSize.6-20": { en: "6-20 vehicles", bn: "৬-২০ যানবাহন" },
+  "mkt.contact.fleetSize.21-50": { en: "21-50 vehicles", bn: "২১-৫০ যানবাহন" },
+  "mkt.contact.fleetSize.50+": { en: "50+ vehicles", bn: "৫০+ যানবাহন" },
+
+  // ── FAQ ──────────────────────────────────────────────────────────
+  "mkt.faq.title": { en: "Frequently Asked Questions", bn: "সচরাচর জিজ্ঞাসিত প্রশ্ন" },
+  "mkt.faq.q1": { en: "How does GPS tracking work?", bn: "GPS ট্র্যাকিং কীভাবে কাজ করে?" },
+  "mkt.faq.a1": { en: "A small GPS device is installed in your vehicle. It sends location data via cellular network to our servers, and you can view it on our web dashboard or mobile app in real-time.", bn: "আপনার যানবাহনে একটি ছোট GPS ডিভাইস ইনস্টল করা হয়। এটি সেলুলার নেটওয়ার্কের মাধ্যমে আমাদের সার্ভারে লোকেশন ডেটা পাঠায়, এবং আপনি রিয়েল-টাইমে আমাদের ওয়েব ড্যাশবোর্ড বা মোবাইল অ্যাপে এটি দেখতে পারেন।" },
+  "mkt.faq.q2": { en: "Is there a monthly fee?", bn: "মাসিক ফি আছে কি?" },
+  "mkt.faq.a2": { en: "Yes, tracking service requires a monthly subscription starting at ৳200/month per vehicle. The hardware is a one-time purchase.", bn: "হ্যাঁ, ট্র্যাকিং সার্ভিসে প্রতি যানবাহনে ৳২০০/মাস থেকে শুরু করে মাসিক সাবস্ক্রিপশন প্রয়োজন। হার্ডওয়্যার এককালীন ক্রয়।" },
+  "mkt.faq.q3": { en: "Who installs the GPS device?", bn: "GPS ডিভাইস কে ইনস্টল করে?" },
+  "mkt.faq.a3": { en: "Our trained technicians will install the device at your location in Dhaka, or you can bring your vehicle to our office. Installation takes about 30-45 minutes.", bn: "আমাদের প্রশিক্ষিত টেকনিশিয়ানরা ঢাকায় আপনার লোকেশনে ডিভাইস ইনস্টল করবেন, অথবা আপনি আপনার যানবাহন আমাদের অফিসে আনতে পারেন। ইনস্টলেশনে প্রায় ৩০-৪৫ মিনিট লাগে।" },
+  "mkt.faq.q4": { en: "What if the device stops working?", bn: "ডিভাইস কাজ করা বন্ধ করলে কী হবে?" },
+  "mkt.faq.a4": { en: "We provide a 1-year warranty on all devices. If there's a hardware issue, we'll replace it free of charge.", bn: "আমরা সব ডিভাইসে ১ বছরের ওয়ারেন্টি প্রদান করি। হার্ডওয়্যার সমস্যা হলে, আমরা বিনামূল্যে এটি প্রতিস্থাপন করব।" },
+  "mkt.faq.q5": { en: "Can I track multiple vehicles?", bn: "আমি কি একাধিক যানবাহন ট্র্যাক করতে পারি?" },
+  "mkt.faq.a5": { en: "Yes! You can track unlimited vehicles under one account. Each vehicle needs its own GPS device and subscription.", bn: "হ্যাঁ! আপনি একটি অ্যাকাউন্টের অধীনে আনলিমিটেড যানবাহন ট্র্যাক করতে পারেন। প্রতিটি যানবাহনের নিজস্ব GPS ডিভাইস এবং সাবস্ক্রিপশন প্রয়োজন।" },
+  "mkt.faq.q6": { en: "Does it work outside Dhaka?", bn: "এটি কি ঢাকার বাইরে কাজ করে?" },
+  "mkt.faq.a6": { en: "Yes, MotoLink works anywhere in Bangladesh where there's mobile network coverage. Our devices support all major carriers (GP, Robi, Banglalink).", bn: "হ্যাঁ, MotoLink বাংলাদেশের যেকোনো জায়গায় কাজ করে যেখানে মোবাইল নেটওয়ার্ক কভারেজ আছে। আমাদের ডিভাইস সব প্রধান ক্যারিয়ার সাপোর্ট করে (জিপি, রবি, বাংলালিংক)।" },
+
+  // ── CTA Sections ─────────────────────────────────────────────────
+  "mkt.cta.ready.title": { en: "Ready to Track Your Fleet?", bn: "আপনার ফ্লিট ট্র্যাক করতে প্রস্তুত?" },
+  "mkt.cta.ready.desc": { en: "Get started with MotoLink today. Free installation in Dhaka.", bn: "আজই MotoLink দিয়ে শুরু করুন। ঢাকায় ফ্রি ইনস্টলেশন।" },
+  "mkt.cta.demo.title": { en: "See MotoLink in Action", bn: "MotoLink কার্যক্রমে দেখুন" },
+  "mkt.cta.demo.desc": { en: "Schedule a live demo with our team. We'll show you how MotoLink can help your business.", bn: "আমাদের টিমের সাথে একটি লাইভ ডেমো শিডিউল করুন। আমরা আপনাকে দেখাব কীভাবে MotoLink আপনার ব্যবসায় সাহায্য করতে পারে।" },
+
+  // ── Footer ───────────────────────────────────────────────────────
+  "mkt.footer.tagline": { en: "Real-time fleet tracking for Bangladesh", bn: "বাংলাদেশের জন্য রিয়েল-টাইম ফ্লিট ট্র্যাকিং" },
+  "mkt.footer.product": { en: "Product", bn: "পণ্য" },
+  "mkt.footer.company": { en: "Company", bn: "কোম্পানি" },
+  "mkt.footer.legal": { en: "Legal", bn: "আইনি" },
+  "mkt.footer.privacy": { en: "Privacy Policy", bn: "গোপনীয়তা নীতি" },
+  "mkt.footer.terms": { en: "Terms of Service", bn: "সেবার শর্তাবলী" },
+  "mkt.footer.refund": { en: "Refund Policy", bn: "রিফান্ড নীতি" },
+  "mkt.footer.copyright": { en: "© 2026 Web Innovation. All rights reserved.", bn: "© ২০২৬ ওয়েব ইনোভেশন। সর্বস্বত্ব সংরক্ষিত।" },
+  "mkt.footer.madeIn": { en: "Made with ❤️ in Dhaka", bn: "ঢাকায় ❤️ দিয়ে তৈরি" },
+
+  // ── Testimonials ─────────────────────────────────────────────────
+  "mkt.testimonials.title": { en: "What Our Customers Say", bn: "আমাদের গ্রাহকরা কী বলেন" },
+  "mkt.testimonial.1.quote": { en: "MotoLink helped us reduce fuel theft by 40%. The Bengali interface made it easy for our drivers to adopt.", bn: "MotoLink আমাদের জ্বালানি চুরি ৪০% কমাতে সাহায্য করেছে। বাংলা ইন্টারফেস আমাদের ড্রাইভারদের গ্রহণ করা সহজ করেছে।" },
+  "mkt.testimonial.1.name": { en: "Kamal Hossain", bn: "কামাল হোসেন" },
+  "mkt.testimonial.1.role": { en: "Fleet Manager, ABC Logistics", bn: "ফ্লিট ম্যানেজার, ABC লজিস্টিক" },
+  "mkt.testimonial.2.quote": { en: "After my bike was stolen, I got MotoLink installed. Now I have peace of mind knowing I can track it anytime.", bn: "আমার বাইক চুরি হওয়ার পর, আমি MotoLink ইনস্টল করিয়েছি। এখন আমি জানি যেকোনো সময় ট্র্যাক করতে পারি বলে মানসিক শান্তি আছে।" },
+  "mkt.testimonial.2.name": { en: "Rafiq Ahmed", bn: "রফিক আহমেদ" },
+  "mkt.testimonial.2.role": { en: "Motorbike Owner, Mirpur", bn: "মোটরবাইক মালিক, মিরপুর" },
+  "mkt.testimonial.3.quote": { en: "The school bus tracking feature gives parents real-time updates. It's been a game-changer for our school.", bn: "স্কুল বাস ট্র্যাকিং ফিচার অভিভাবকদের রিয়েল-টাইম আপডেট দেয়। এটি আমাদের স্কুলের জন্য গেম-চেঞ্জার হয়েছে।" },
+  "mkt.testimonial.3.name": { en: "Fatima Begum", bn: "ফাতিমা বেগম" },
+  "mkt.testimonial.3.role": { en: "Principal, Green Valley School", bn: "অধ্যক্ষ, গ্রিন ভ্যালি স্কুল" },
+
+  // ── Common marketing ─────────────────────────────────────────────
+  "mkt.learnMore": { en: "Learn More", bn: "আরও জানুন" },
+  "mkt.viewAll": { en: "View All", bn: "সব দেখুন" },
+  "mkt.seeDemo": { en: "See Demo", bn: "ডেমো দেখুন" },
+  "mkt.talkToSales": { en: "Talk to Sales", bn: "সেলস-এ কথা বলুন" },
+  "mkt.callNow": { en: "Call Now", bn: "এখনই কল করুন" },
+  "mkt.whatsapp": { en: "WhatsApp", bn: "হোয়াটসঅ্যাপ" },
+  "mkt.or": { en: "or", bn: "অথবা" },
 } as const;
 
 export type StringKey = keyof typeof STRINGS;
