@@ -304,9 +304,12 @@ const STRINGS = {
 
   // ── Hero Section ─────────────────────────────────────────────────
   "mkt.hero.headline": { en: "Track Your Fleet in Real-Time", bn: "আপনার ফ্লিট রিয়েল-টাইমে ট্র্যাক করুন" },
-  "mkt.hero.subheadline": { en: "GPS tracking solution built for Bangladesh. Monitor vehicles, reduce theft, and optimize your fleet operations.", bn: "বাংলাদেশের জন্য তৈরি GPS ট্র্যাকিং সমাধান। যানবাহন পর্যবেক্ষণ করুন, চুরি কমান এবং আপনার ফ্লিট অপারেশন অপ্টিমাইজ করুন।" },
-  "mkt.hero.cta.primary": { en: "Start Free Trial", bn: "ফ্রি ট্রায়াল শুরু করুন" },
-  "mkt.hero.cta.secondary": { en: "Watch Demo", bn: "ডেমো দেখুন" },
+  "mkt.hero.headline.part1": { en: "Track Your", bn: "আপনার" },
+  "mkt.hero.headline.highlight": { en: "Fleet", bn: "ফ্লিট" },
+  "mkt.hero.headline.part2": { en: " in Real-Time", bn: " রিয়েল-টাইমে ট্র্যাক করুন" },
+  "mkt.hero.subheadline": { en: "Professional GPS tracking solution built for Bangladesh. Monitor your vehicles 24/7, prevent theft, and optimize fleet operations with real-time insights.", bn: "বাংলাদেশের জন্য তৈরি পেশাদার GPS ট্র্যাকিং সমাধান। ২৪/৭ আপনার যানবাহন পর্যবেক্ষণ করুন, চুরি প্রতিরোধ করুন এবং রিয়েল-টাইম ইনসাইট দিয়ে ফ্লিট অপারেশন অপ্টিমাইজ করুন।" },
+  "mkt.hero.cta.primary": { en: "Get Started", bn: "শুরু করুন" },
+  "mkt.hero.cta.secondary": { en: "See Features", bn: "ফিচার দেখুন" },
   "mkt.hero.badge": { en: "GPS Fleet Tracking Made in Bangladesh", bn: "বাংলাদেশে তৈরি GPS ফ্লিট ট্র্যাকিং" },
 
   // ── Stats Section ────────────────────────────────────────────────

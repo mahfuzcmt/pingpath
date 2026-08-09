@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import "./globals.css";
 
 // Self-hosted fonts via fontsource (no build-time fetches to fonts.gstatic.com).
+import "@fontsource-variable/inter/wght.css";
 import "@fontsource-variable/open-sans/wght.css";
 import "@fontsource-variable/jetbrains-mono/wght.css";
 import "@fontsource/hind-siliguri/latin-400.css";
