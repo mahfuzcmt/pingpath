@@ -180,7 +180,7 @@ const CLIENT_LOGOS = [
 function Hero() {
   const { t } = useLanguage();
   return (
-    <section className="relative min-h-[750px] overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-teal-900">
+    <section className="relative min-h-[750px] overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-blue-900">
       <div className="absolute inset-0 opacity-20">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSA2MCAwIEwgMCAwIDAgNjAiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwwLjEpIiBzdHJva2Utd2lkdGg9IjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')]" />
       </div>
@@ -188,17 +188,17 @@ function Hero() {
       <div className="relative mx-auto max-w-7xl px-4 pb-20 pt-28 sm:px-6 lg:pb-32 lg:pt-36">
         <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
           <motion.div initial="hidden" animate="visible" variants={staggerContainer}>
-            <motion.div variants={fadeInUp} className="mb-6 inline-flex items-center gap-2 rounded-full bg-teal-500/20 px-4 py-2 text-[13px] font-semibold text-teal-300">
+            <motion.div variants={fadeInUp} className="mb-6 inline-flex items-center gap-2 rounded-full bg-cyan-500/20 px-4 py-2 text-[13px] font-semibold text-cyan-300">
               <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-teal-400 opacity-75" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-teal-400" />
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400 opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-cyan-400" />
               </span>
               {t("hero.badge")}
             </motion.div>
 
             <motion.h1 variants={fadeInUp} className="text-4xl font-bold leading-tight tracking-tight text-white sm:text-5xl lg:text-6xl">
               {t("hero.title1")}
-              <span className="mt-2 block text-teal-400">{t("hero.title2")}</span>
+              <span className="mt-2 block text-cyan-400">{t("hero.title2")}</span>
             </motion.h1>
 
             <motion.p variants={fadeInUp} className="mt-6 max-w-xl text-lg leading-relaxed text-gray-300">
@@ -206,7 +206,7 @@ function Hero() {
             </motion.p>
 
             <motion.div variants={fadeInUp} className="mt-10 flex flex-wrap items-center gap-4">
-              <a href={`tel:${CONTACT.sales.replace(/[^+\d]/g, "")}`} className="group inline-flex h-14 items-center gap-2 rounded-xl bg-teal-500 px-8 text-[15px] font-bold text-white shadow-xl shadow-teal-500/30 transition-all hover:bg-teal-600 hover:shadow-2xl">
+              <a href={`tel:${CONTACT.sales.replace(/[^+\d]/g, "")}`} className="group inline-flex h-14 items-center gap-2 rounded-xl bg-cyan-500 px-8 text-[15px] font-bold text-white shadow-xl shadow-cyan-500/30 transition-all hover:bg-blue-600 hover:shadow-2xl">
                 <Icon path={ICONS.phone} className="h-5 w-5" />
                 {t("hero.contactSales")}
               </a>
@@ -223,7 +223,7 @@ function Hero() {
                 { icon: ICONS.clock, labelKey: "hero.support" },
               ].map((item) => (
                 <div key={item.labelKey} className="flex items-center gap-2.5">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/10 text-teal-400">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/10 text-cyan-400">
                     <Icon path={item.icon} className="h-5 w-5" />
                   </div>
                   <span className="text-sm font-medium text-gray-300">{t(item.labelKey)}</span>
@@ -254,7 +254,7 @@ function Hero() {
                     ].map((v, i) => (
                       <motion.div key={i} initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 1 + i * 0.15 }} className="absolute" style={{ top: v.top, left: v.left }}>
                         <motion.div animate={v.status === "moving" ? { scale: [1, 1.3, 1] } : {}} transition={{ duration: 2, repeat: Infinity }} className="relative">
-                          <div className={`h-4 w-4 rounded-full shadow-lg ${v.status === "moving" ? "bg-teal-500 shadow-teal-500/50" : v.status === "parked" ? "bg-blue-500 shadow-blue-500/50" : "bg-amber-500 shadow-amber-500/50"}`} />
+                          <div className={`h-4 w-4 rounded-full shadow-lg ${v.status === "moving" ? "bg-cyan-500 shadow-cyan-500/50" : v.status === "parked" ? "bg-blue-500 shadow-blue-500/50" : "bg-amber-500 shadow-amber-500/50"}`} />
                           <div className="absolute -bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-black/70 px-1.5 py-0.5 text-[9px] font-medium text-white">{v.label}</div>
                         </motion.div>
                       </motion.div>
@@ -267,7 +267,7 @@ function Hero() {
                       { label: "Alerts", value: "3", color: "amber" },
                     ].map((stat) => (
                       <div key={stat.label} className="flex-1 rounded-lg bg-gray-800/80 p-2.5 backdrop-blur">
-                        <div className={`text-lg font-bold ${stat.color === "teal" ? "text-teal-400" : stat.color === "blue" ? "text-blue-400" : "text-amber-400"}`}>{stat.value}</div>
+                        <div className={`text-lg font-bold ${stat.color === "teal" ? "text-cyan-400" : stat.color === "blue" ? "text-blue-400" : "text-amber-400"}`}>{stat.value}</div>
                         <div className="text-[10px] text-gray-500">{stat.label}</div>
                       </div>
                     ))}
@@ -293,12 +293,12 @@ function TrustBadges() {
   ];
 
   return (
-    <section className="border-b border-gray-100 bg-teal-600 py-6">
+    <section className="border-b border-gray-100 bg-blue-600 py-6">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
           {badges.map((badge) => (
             <div key={badge.labelKey} className="flex items-center justify-center gap-3 text-white">
-              <Icon path={badge.icon} className="h-6 w-6 text-teal-200" />
+              <Icon path={badge.icon} className="h-6 w-6 text-cyan-200" />
               <span className="text-sm font-medium">{t(badge.labelKey)}</span>
             </div>
           ))}
@@ -351,7 +351,7 @@ function FeaturesSection() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <AnimatedSection>
           <motion.div variants={fadeInUp} className="mx-auto mb-14 max-w-3xl text-center">
-            <div className="mb-4 inline-flex items-center rounded-full bg-teal-50 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-teal-700">
+            <div className="mb-4 inline-flex items-center rounded-full bg-blue-50 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-blue-700">
               {t("features.badge")}
             </div>
             <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">{t("features.title")}</h2>
@@ -360,8 +360,8 @@ function FeaturesSection() {
 
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {features.map((f) => (
-              <motion.div key={f.titleKey} variants={fadeInUp} whileHover={{ y: -6 }} className="group rounded-2xl border border-gray-100 bg-white p-6 shadow-sm transition-all hover:border-teal-100 hover:shadow-lg">
-                <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-xl bg-teal-50 text-teal-600 transition-colors group-hover:bg-teal-100">
+              <motion.div key={f.titleKey} variants={fadeInUp} whileHover={{ y: -6 }} className="group rounded-2xl border border-gray-100 bg-white p-6 shadow-sm transition-all hover:border-blue-100 hover:shadow-lg">
+                <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-xl bg-blue-50 text-blue-600 transition-colors group-hover:bg-blue-100">
                   <Icon path={f.icon} className="h-7 w-7" />
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900">{t(f.titleKey)}</h3>
@@ -371,7 +371,7 @@ function FeaturesSection() {
           </div>
 
           <motion.div variants={fadeInUp} className="mt-12 text-center">
-            <Link href="/features" className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-8 py-4 text-[15px] font-semibold text-white shadow-lg shadow-teal-600/30 transition-all hover:bg-teal-700 hover:shadow-xl">
+            <Link href="/features" className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-8 py-4 text-[15px] font-semibold text-white shadow-lg shadow-blue-600/30 transition-all hover:bg-blue-700 hover:shadow-xl">
               {t("features.viewAll")}
               <Icon path={ICONS.arrow} className="h-5 w-5" />
             </Link>
@@ -399,7 +399,7 @@ function ProductsSection() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <AnimatedSection>
           <motion.div variants={fadeInUp} className="mx-auto mb-14 max-w-3xl text-center">
-            <div className="mb-4 inline-flex items-center rounded-full bg-teal-50 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-teal-700">
+            <div className="mb-4 inline-flex items-center rounded-full bg-blue-50 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-blue-700">
               {t("products.badge")}
             </div>
             <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">{t("products.title")}</h2>
@@ -414,12 +414,12 @@ function ProductsSection() {
                     {t(p.badgeKey)}
                   </div>
                 )}
-                <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-50 text-teal-600 transition-all group-hover:bg-teal-50 group-hover:scale-110">
+                <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-50 text-blue-600 transition-all group-hover:bg-blue-50 group-hover:scale-110">
                   <Icon path={p.icon} className="h-8 w-8" />
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900">{t(p.titleKey)}</h3>
                 <p className="mt-2 text-[14px] text-gray-600">{t(p.descKey)}</p>
-                <Link href="/products" className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-teal-600 transition-colors hover:text-teal-700">
+                <Link href="/products" className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-blue-600 transition-colors hover:text-blue-700">
                   {t("products.explore")} <Icon path={ICONS.arrow} className="h-4 w-4" />
                 </Link>
               </motion.div>
@@ -450,7 +450,7 @@ function IndustrySection() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <AnimatedSection>
           <motion.div variants={fadeInUp} className="mx-auto mb-14 max-w-3xl text-center">
-            <div className="mb-4 inline-flex items-center rounded-full bg-teal-500/20 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-teal-300">
+            <div className="mb-4 inline-flex items-center rounded-full bg-cyan-500/20 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-cyan-300">
               {t("industries.badge")}
             </div>
             <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">{t("industries.title")}</h2>
@@ -460,7 +460,7 @@ function IndustrySection() {
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:gap-6">
             {industries.map((ind) => (
               <motion.div key={ind.nameKey} variants={fadeInUp} whileHover={{ scale: 1.05 }} className="group flex flex-col items-center rounded-xl bg-white/5 p-6 text-center backdrop-blur transition-all hover:bg-white/10">
-                <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-xl bg-teal-500/20 text-teal-400 transition-all group-hover:bg-teal-500 group-hover:text-white">
+                <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-xl bg-cyan-500/20 text-cyan-400 transition-all group-hover:bg-cyan-500 group-hover:text-white">
                   <Icon path={ind.icon} className="h-7 w-7" />
                 </div>
                 <span className="text-sm font-medium text-white">{t(ind.nameKey)}</span>
@@ -469,7 +469,7 @@ function IndustrySection() {
           </div>
 
           <motion.div variants={fadeInUp} className="mt-12 text-center">
-            <Link href="/solutions" className="inline-flex items-center gap-2 text-sm font-semibold text-teal-400 hover:text-teal-300">
+            <Link href="/solutions" className="inline-flex items-center gap-2 text-sm font-semibold text-cyan-400 hover:text-cyan-300">
               {t("industries.viewAll")} <Icon path={ICONS.arrow} className="h-4 w-4" />
             </Link>
           </motion.div>
@@ -496,7 +496,7 @@ function StatsSection() {
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {stats.map((stat) => (
               <motion.div key={stat.labelKey} variants={fadeInUp} whileHover={{ y: -4 }} className="rounded-2xl bg-gray-50 p-6 text-center shadow-sm transition-shadow hover:shadow-lg">
-                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-teal-100 text-teal-600">
+                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
                   <Icon path={stat.icon} className="h-7 w-7" />
                 </div>
                 <div className="text-4xl font-bold text-gray-900">{stat.value}</div>
@@ -513,7 +513,13 @@ function StatsSection() {
 /* ── Certifications ───────────────────────────────────────────── */
 function CertificationsSection() {
   const { t } = useLanguage();
-  const certifications = ["BTRC", "VTS", "BASSIS", "ECAB"];
+  const certifications = [
+    { name: "BTRC", image: "/images/certifications/btrc.png" },
+    { name: "VTS", image: "/images/certifications/vts.svg" },
+    { name: "BASSIS", image: "/images/certifications/bassis.svg" },
+    { name: "ECAB", image: "/images/certifications/ecab.svg" },
+    { name: "BRTA", image: "/images/certifications/brta.png" },
+  ];
 
   return (
     <section className="border-y border-gray-100 bg-gray-50 py-12">
@@ -524,9 +530,19 @@ function CertificationsSection() {
           </motion.p>
           <motion.div variants={fadeInUp} className="flex flex-wrap items-center justify-center gap-8">
             {certifications.map((cert) => (
-              <div key={cert} className="flex h-16 w-24 items-center justify-center rounded-lg border border-gray-200 bg-white text-lg font-bold text-gray-700 shadow-sm">
-                {cert}
-              </div>
+              <motion.div
+                key={cert.name}
+                whileHover={{ scale: 1.05 }}
+                className="flex h-20 w-32 items-center justify-center rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition-shadow hover:shadow-md"
+              >
+                <Image
+                  src={cert.image}
+                  alt={cert.name}
+                  width={100}
+                  height={60}
+                  className="h-auto max-h-14 w-auto object-contain"
+                />
+              </motion.div>
             ))}
           </motion.div>
         </AnimatedSection>
@@ -538,8 +554,21 @@ function CertificationsSection() {
 /* ── Partners Section ─────────────────────────────────────────── */
 function PartnersSection() {
   const { t } = useLanguage();
-  const telecomPartners = ["Grameenphone", "Banglalink", "Robi"];
-  const devicePartners = ["Teltonika", "Concox", "Queclink", "Meitrack", "JimiIOT", "Fifotrack"];
+  const telecomPartners = [
+    { name: "Grameenphone", image: "/images/partners/telecom/grameenphone.webp" },
+    { name: "Banglalink", image: "/images/partners/telecom/banglalink.webp" },
+    { name: "Robi", image: "/images/partners/telecom/robi.jpg" },
+  ];
+  const devicePartners = [
+    { name: "Concox", image: "/images/partners/devices/concox.png" },
+    { name: "Teltonika", image: "/images/partners/devices/teltonika.png" },
+    { name: "Queclink", image: "/images/partners/devices/queclink.png" },
+    { name: "Meitrack", image: "/images/partners/devices/meitrack.png" },
+    { name: "Ruptela", image: "/images/partners/devices/ruptela.png" },
+    { name: "Fifotrack", image: "/images/partners/devices/fifotrack.png" },
+    { name: "JimiIOT", image: "/images/partners/devices/jimiiot.png" },
+    { name: "Seeworld", image: "/images/partners/devices/seeworld.png" },
+  ];
 
   return (
     <section className="bg-white py-16">
@@ -551,9 +580,19 @@ function PartnersSection() {
             </p>
             <div className="flex flex-wrap items-center justify-center gap-6">
               {telecomPartners.map((partner) => (
-                <div key={partner} className="flex h-14 items-center justify-center rounded-lg bg-gray-50 px-8 text-sm font-semibold text-gray-600">
-                  {partner}
-                </div>
+                <motion.div
+                  key={partner.name}
+                  whileHover={{ scale: 1.05 }}
+                  className="flex h-16 w-40 items-center justify-center rounded-lg bg-gray-50 p-3 transition-shadow hover:shadow-md"
+                >
+                  <Image
+                    src={partner.image}
+                    alt={partner.name}
+                    width={120}
+                    height={48}
+                    className="h-auto max-h-10 w-auto object-contain"
+                  />
+                </motion.div>
               ))}
             </div>
           </motion.div>
@@ -564,9 +603,19 @@ function PartnersSection() {
             </p>
             <div className="flex flex-wrap items-center justify-center gap-4">
               {devicePartners.map((partner) => (
-                <div key={partner} className="flex h-12 items-center justify-center rounded-lg bg-gray-50 px-6 text-sm font-medium text-gray-500">
-                  {partner}
-                </div>
+                <motion.div
+                  key={partner.name}
+                  whileHover={{ scale: 1.05 }}
+                  className="flex h-14 w-28 items-center justify-center rounded-lg bg-gray-50 p-2 transition-shadow hover:shadow-md"
+                >
+                  <Image
+                    src={partner.image}
+                    alt={partner.name}
+                    width={100}
+                    height={40}
+                    className="h-auto max-h-9 w-auto object-contain"
+                  />
+                </motion.div>
               ))}
             </div>
           </motion.div>
@@ -580,17 +629,17 @@ function PartnersSection() {
 function CTASection() {
   const { t } = useLanguage();
   return (
-    <section className="bg-gradient-to-br from-teal-600 to-teal-700 py-20">
+    <section className="bg-gradient-to-br from-blue-600 to-blue-700 py-20">
       <div className="mx-auto max-w-4xl px-4 text-center sm:px-6">
         <AnimatedSection>
           <motion.h2 variants={fadeInUp} className="text-3xl font-bold text-white sm:text-4xl lg:text-5xl">
             {t("cta.title")}
           </motion.h2>
-          <motion.p variants={fadeInUp} className="mx-auto mt-4 max-w-2xl text-lg text-teal-100">
+          <motion.p variants={fadeInUp} className="mx-auto mt-4 max-w-2xl text-lg text-blue-100">
             {t("cta.desc")}
           </motion.p>
           <motion.div variants={fadeInUp} className="mt-10 flex flex-wrap justify-center gap-4">
-            <a href={`tel:${CONTACT.sales.replace(/[^+\d]/g, "")}`} className="inline-flex h-14 items-center gap-2 rounded-xl bg-white px-8 text-[16px] font-bold text-teal-600 shadow-xl transition-all hover:bg-gray-50 hover:shadow-2xl">
+            <a href={`tel:${CONTACT.sales.replace(/[^+\d]/g, "")}`} className="inline-flex h-14 items-center gap-2 rounded-xl bg-white px-8 text-[16px] font-bold text-blue-600 shadow-xl transition-all hover:bg-gray-50 hover:shadow-2xl">
               <Icon path={ICONS.phone} className="h-5 w-5" />
               {t("hero.contactSales")}
             </a>

@@ -149,7 +149,7 @@ function SolutionCard({ solution, t }: { solution: typeof SOLUTIONS[0]; t: (key:
     green: "bg-green-50 text-green-600",
     purple: "bg-purple-50 text-purple-600",
     orange: "bg-orange-50 text-orange-600",
-    teal: "bg-teal-50 text-teal-600",
+    teal: "bg-blue-50 text-blue-600",
     cyan: "bg-cyan-50 text-cyan-600",
   };
 
@@ -164,19 +164,19 @@ function SolutionCard({ solution, t }: { solution: typeof SOLUTIONS[0]; t: (key:
           <Icon path={solution.icon} className="h-7 w-7" />
         </div>
         <h3 className="text-xl font-bold text-gray-900">{t(solution.titleKey)}</h3>
-        <p className="mt-1 text-sm text-teal-600">{t(solution.subtitleKey)}</p>
+        <p className="mt-1 text-sm text-blue-600">{t(solution.subtitleKey)}</p>
         <p className="mt-3 text-[15px] leading-relaxed text-gray-600">{t(solution.descKey)}</p>
 
         <div className="mt-6 grid grid-cols-2 gap-2">
           {solution.featureKeys.map((featureKey) => (
             <div key={featureKey} className="flex items-center gap-2 text-sm text-gray-600">
-              <Icon path={ICONS.check} className="h-4 w-4 shrink-0 text-teal-500" />
+              <Icon path={ICONS.check} className="h-4 w-4 shrink-0 text-cyan-500" />
               <span>{t(featureKey)}</span>
             </div>
           ))}
         </div>
 
-        <Link href="/contact" className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-teal-600 hover:text-teal-700">
+        <Link href="/contact" className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700">
           {t("solutions.learnMore")} <Icon path={ICONS.arrow} className="h-4 w-4" />
         </Link>
       </div>
@@ -193,7 +193,7 @@ export function SolutionsPage() {
       <section className="bg-gradient-to-br from-gray-900 via-gray-800 to-teal-900 pb-20 pt-32">
         <div className="mx-auto max-w-7xl px-4 text-center sm:px-6">
           <motion.div initial="hidden" animate="visible" variants={staggerContainer}>
-            <motion.div variants={fadeInUp} className="mb-4 inline-flex items-center rounded-full bg-teal-500/20 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-teal-300">
+            <motion.div variants={fadeInUp} className="mb-4 inline-flex items-center rounded-full bg-cyan-500/20 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-cyan-300">
               {t("solutions.badge")}
             </motion.div>
             <motion.h1 variants={fadeInUp} className="text-4xl font-bold text-white sm:text-5xl">
@@ -220,13 +220,13 @@ export function SolutionsPage() {
       </section>
 
       {/* CTA */}
-      <section className="bg-teal-600 py-16">
+      <section className="bg-blue-600 py-16">
         <div className="mx-auto max-w-4xl px-4 text-center sm:px-6">
           <h2 className="text-3xl font-bold text-white">{t("solutions.needCustom")}</h2>
-          <p className="mt-4 text-lg text-teal-100">
+          <p className="mt-4 text-lg text-blue-100">
             {t("solutions.customDesc")}
           </p>
-          <Link href="/contact" className="mt-8 inline-flex items-center gap-2 rounded-xl bg-white px-8 py-4 text-lg font-bold text-teal-600 shadow-xl transition-all hover:bg-gray-50">
+          <Link href="/contact" className="mt-8 inline-flex items-center gap-2 rounded-xl bg-white px-8 py-4 text-lg font-bold text-blue-600 shadow-xl transition-all hover:bg-gray-50">
             {t("solutions.contactExperts")}
             <Icon path={ICONS.arrow} className="h-5 w-5" />
           </Link>

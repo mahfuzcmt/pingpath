@@ -13,7 +13,7 @@ function LanguageToggle({ dark }: { dark: boolean }) {
         onClick={() => setLang("en")}
         className={`rounded-md px-2.5 py-1.5 text-xs font-semibold transition-all ${
           lang === "en"
-            ? "bg-teal-600 text-white shadow-sm"
+            ? "bg-blue-600 text-white shadow-sm"
             : dark
             ? "text-gray-600 hover:text-gray-900"
             : "text-white/70 hover:text-white"
@@ -25,7 +25,7 @@ function LanguageToggle({ dark }: { dark: boolean }) {
         onClick={() => setLang("bn")}
         className={`rounded-md px-2.5 py-1.5 text-xs font-semibold transition-all ${
           lang === "bn"
-            ? "bg-teal-600 text-white shadow-sm"
+            ? "bg-blue-600 text-white shadow-sm"
             : dark
             ? "text-gray-600 hover:text-gray-900"
             : "text-white/70 hover:text-white"
@@ -43,20 +43,22 @@ function Logo({ dark = false }: { dark?: boolean }) {
       <svg width="40" height="40" viewBox="0 0 48 48" fill="none" className="drop-shadow-sm">
         <defs>
           <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#14b8a6" />
-            <stop offset="100%" stopColor="#0d9488" />
+            <stop offset="0%" stopColor="#22D3EE" />
+            <stop offset="50%" stopColor="#0284C7" />
+            <stop offset="100%" stopColor="#1B3A5F" />
           </linearGradient>
         </defs>
-        <path d="M24 6L42 40C42 42 40 44 38 44H10C8 44 6 42 6 40L24 6Z" fill="url(#logoGrad)" />
-        <path d="M12 34C15 31 20 29 25 33" stroke="white" strokeWidth="2.5" strokeLinecap="round" fill="none" />
-        <path d="M16 28C19 25 24 24 29 27" stroke="white" strokeWidth="2" strokeLinecap="round" fill="none" opacity="0.8" />
-        <circle cx="14" cy="37" r="2" fill="white" opacity="0.9" />
-        <circle cx="21" cy="34" r="1.5" fill="white" opacity="0.8" />
-        <circle cx="28" cy="31" r="1.5" fill="white" opacity="0.7" />
+        <path d="M24 4L44 42C44 43.5 42.5 45 41 45H7C5.5 45 4 43.5 4 42L24 4Z" fill="url(#logoGrad)" />
+        <path d="M10 36C14 32 20 30 27 35" stroke="white" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+        <path d="M14 30C18 26 24 25 31 29" stroke="white" strokeWidth="2" strokeLinecap="round" fill="none" opacity="0.85" />
+        <path d="M18 24C22 20 28 19 35 23" stroke="white" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity="0.7" />
+        <circle cx="12" cy="38" r="2.5" fill="white" opacity="0.95" />
+        <circle cx="20" cy="35" r="2" fill="white" opacity="0.85" />
+        <circle cx="28" cy="32" r="1.5" fill="white" opacity="0.75" />
       </svg>
       <div>
-        <div className={`text-xl font-extrabold leading-tight tracking-tight ${dark ? "text-gray-900" : "text-white"}`}>MOTOLINK</div>
-        <div className="text-[10px] font-semibold uppercase tracking-widest text-teal-600">GPS Tracking</div>
+        <div className={`text-xl font-extrabold leading-tight tracking-tight ${dark ? "text-[#1B3A5F]" : "text-white"}`}>MOTOLINK</div>
+        <div className="text-[10px] font-semibold uppercase tracking-widest text-cyan-500">GPS Tracking</div>
       </div>
     </motion.div>
   );
@@ -108,7 +110,7 @@ export function Header({ transparent = false }: { transparent?: boolean }) {
         {/* Navigation */}
         <nav className="hidden items-center gap-1 lg:flex">
           {NAV_LINKS.map((l) => (
-            <Link key={l.href} href={l.href} className={`rounded-lg px-4 py-2 text-[14px] font-medium transition-colors ${showDark ? "text-gray-700 hover:text-teal-600" : "text-white/90 hover:text-white"}`}>
+            <Link key={l.href} href={l.href} className={`rounded-lg px-4 py-2 text-[14px] font-medium transition-colors ${showDark ? "text-gray-700 hover:text-blue-600" : "text-white/90 hover:text-white"}`}>
               {t(l.key)}
             </Link>
           ))}
@@ -117,10 +119,10 @@ export function Header({ transparent = false }: { transparent?: boolean }) {
         {/* CTA Buttons + Language Toggle */}
         <div className="hidden items-center gap-3 lg:flex">
           <LanguageToggle dark={showDark} />
-          <Link href="/login" className={`rounded-lg px-5 py-2.5 text-[14px] font-semibold transition-all ${showDark ? "text-gray-700 hover:text-teal-600" : "text-white hover:text-white/80"}`}>
+          <Link href="/login" className={`rounded-lg px-5 py-2.5 text-[14px] font-semibold transition-all ${showDark ? "text-gray-700 hover:text-blue-600" : "text-white hover:text-white/80"}`}>
             {t("nav.signIn")}
           </Link>
-          <Link href="/contact" className="rounded-lg bg-teal-600 px-6 py-2.5 text-[14px] font-semibold text-white shadow-lg shadow-teal-600/30 transition-all hover:bg-teal-700 hover:shadow-xl">
+          <Link href="/contact" className="rounded-lg bg-blue-600 px-6 py-2.5 text-[14px] font-semibold text-white shadow-lg shadow-blue-600/30 transition-all hover:bg-blue-700 hover:shadow-xl">
             {t("nav.getDemo")}
           </Link>
         </div>
@@ -147,13 +149,13 @@ export function Header({ transparent = false }: { transparent?: boolean }) {
         <motion.nav initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="border-t border-gray-100 bg-white px-4 py-4 shadow-lg lg:hidden">
           <div className="flex flex-col gap-1">
             {NAV_LINKS.map((l) => (
-              <Link key={l.href} href={l.href} onClick={() => setOpen(false)} className="rounded-lg px-4 py-3 text-[14px] font-medium text-gray-700 hover:bg-gray-50 hover:text-teal-600">
+              <Link key={l.href} href={l.href} onClick={() => setOpen(false)} className="rounded-lg px-4 py-3 text-[14px] font-medium text-gray-700 hover:bg-gray-50 hover:text-blue-600">
                 {t(l.key)}
               </Link>
             ))}
             <div className="mt-4 flex gap-3">
               <Link href="/login" className="flex-1 rounded-lg border border-gray-200 py-3 text-center text-[14px] font-semibold text-gray-700 hover:bg-gray-50">{t("nav.signIn")}</Link>
-              <Link href="/contact" className="flex-1 rounded-lg bg-teal-600 py-3 text-center text-[14px] font-semibold text-white">{t("nav.getDemo")}</Link>
+              <Link href="/contact" className="flex-1 rounded-lg bg-blue-600 py-3 text-center text-[14px] font-semibold text-white">{t("nav.getDemo")}</Link>
             </div>
           </div>
         </motion.nav>

@@ -79,7 +79,7 @@ export function FeaturesPage() {
       <section className="bg-gradient-to-br from-gray-900 via-gray-800 to-teal-900 pb-20 pt-32">
         <div className="mx-auto max-w-7xl px-4 text-center sm:px-6">
           <motion.div initial="hidden" animate="visible" variants={staggerContainer}>
-            <motion.div variants={fadeInUp} className="mb-4 inline-flex items-center rounded-full bg-teal-500/20 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-teal-300">
+            <motion.div variants={fadeInUp} className="mb-4 inline-flex items-center rounded-full bg-cyan-500/20 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-cyan-300">
               {t("featuresPage.badge")}
             </motion.div>
             <motion.h1 variants={fadeInUp} className="text-4xl font-bold text-white sm:text-5xl">
@@ -97,7 +97,7 @@ export function FeaturesPage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <AnimatedSection>
             <motion.div variants={fadeInUp} className="mb-14">
-              <div className="inline-flex items-center rounded-full bg-teal-50 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-teal-700">
+              <div className="inline-flex items-center rounded-full bg-blue-50 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-blue-700">
                 {t("featuresPage.gpsTracking")}
               </div>
               <h2 className="mt-4 text-3xl font-bold text-gray-900">{t("featuresPage.gpsFeatures")}</h2>
@@ -105,8 +105,8 @@ export function FeaturesPage() {
 
             <div className="grid gap-8 md:grid-cols-2">
               {GPS_FEATURES.map((feature) => (
-                <motion.div key={feature.titleKey} variants={fadeInUp} whileHover={{ x: 4 }} className="flex gap-5 rounded-xl border border-gray-100 bg-white p-6 shadow-sm transition-all hover:border-teal-100 hover:shadow-md">
-                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-600">
+                <motion.div key={feature.titleKey} variants={fadeInUp} whileHover={{ x: 4 }} className="flex gap-5 rounded-xl border border-gray-100 bg-white p-6 shadow-sm transition-all hover:border-blue-100 hover:shadow-md">
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
                     <Icon path={feature.icon} className="h-7 w-7" />
                   </div>
                   <div>
@@ -125,7 +125,7 @@ export function FeaturesPage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <AnimatedSection>
             <motion.div variants={fadeInUp} className="mb-14">
-              <div className="inline-flex items-center rounded-full bg-teal-50 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-teal-700">
+              <div className="inline-flex items-center rounded-full bg-blue-50 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-blue-700">
                 {t("featuresPage.dashboard")}
               </div>
               <h2 className="mt-4 text-3xl font-bold text-gray-900">{t("featuresPage.dashboardFeatures")}</h2>
@@ -134,7 +134,7 @@ export function FeaturesPage() {
             <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
               {DASHBOARD_FEATURES.map((feature) => (
                 <motion.div key={feature.titleKey} variants={fadeInUp} whileHover={{ y: -4 }} className="rounded-xl bg-white p-6 shadow-sm transition-all hover:shadow-lg">
-                  <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-teal-50 text-teal-600">
+                  <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
                     <Icon path={feature.icon} className="h-6 w-6" />
                   </div>
                   <h3 className="text-lg font-semibold text-gray-900">{t(feature.titleKey)}</h3>
@@ -147,14 +147,14 @@ export function FeaturesPage() {
       </section>
 
       {/* CTA */}
-      <section className="bg-teal-600 py-16">
+      <section className="bg-blue-600 py-16">
         <div className="mx-auto max-w-4xl px-4 text-center sm:px-6">
           <h2 className="text-3xl font-bold text-white">{t("featuresPage.ready")}</h2>
-          <p className="mt-4 text-lg text-teal-100">
+          <p className="mt-4 text-lg text-blue-100">
             {t("featuresPage.readyDesc")}
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-4">
-            <Link href="/contact" className="inline-flex items-center gap-2 rounded-xl bg-white px-8 py-4 text-lg font-bold text-teal-600 shadow-xl transition-all hover:bg-gray-50">
+            <Link href="/contact" className="inline-flex items-center gap-2 rounded-xl bg-white px-8 py-4 text-lg font-bold text-blue-600 shadow-xl transition-all hover:bg-gray-50">
               {t("nav.getDemo")}
               <Icon path={ICONS.arrow} className="h-5 w-5" />
             </Link>

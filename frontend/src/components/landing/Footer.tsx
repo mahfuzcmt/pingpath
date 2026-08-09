@@ -15,20 +15,22 @@ function Logo() {
       <svg width="40" height="40" viewBox="0 0 48 48" fill="none">
         <defs>
           <linearGradient id="logoGradFooter" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#14b8a6" />
-            <stop offset="100%" stopColor="#0d9488" />
+            <stop offset="0%" stopColor="#22D3EE" />
+            <stop offset="50%" stopColor="#0284C7" />
+            <stop offset="100%" stopColor="#1B3A5F" />
           </linearGradient>
         </defs>
-        <path d="M24 6L42 40C42 42 40 44 38 44H10C8 44 6 42 6 40L24 6Z" fill="url(#logoGradFooter)" />
-        <path d="M12 34C15 31 20 29 25 33" stroke="white" strokeWidth="2.5" strokeLinecap="round" fill="none" />
-        <path d="M16 28C19 25 24 24 29 27" stroke="white" strokeWidth="2" strokeLinecap="round" fill="none" opacity="0.8" />
-        <circle cx="14" cy="37" r="2" fill="white" opacity="0.9" />
-        <circle cx="21" cy="34" r="1.5" fill="white" opacity="0.8" />
-        <circle cx="28" cy="31" r="1.5" fill="white" opacity="0.7" />
+        <path d="M24 4L44 42C44 43.5 42.5 45 41 45H7C5.5 45 4 43.5 4 42L24 4Z" fill="url(#logoGradFooter)" />
+        <path d="M10 36C14 32 20 30 27 35" stroke="white" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+        <path d="M14 30C18 26 24 25 31 29" stroke="white" strokeWidth="2" strokeLinecap="round" fill="none" opacity="0.85" />
+        <path d="M18 24C22 20 28 19 35 23" stroke="white" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity="0.7" />
+        <circle cx="12" cy="38" r="2.5" fill="white" opacity="0.95" />
+        <circle cx="20" cy="35" r="2" fill="white" opacity="0.85" />
+        <circle cx="28" cy="32" r="1.5" fill="white" opacity="0.75" />
       </svg>
       <div>
         <div className="text-xl font-extrabold leading-tight tracking-tight text-white">MOTOLINK</div>
-        <div className="text-[10px] font-semibold uppercase tracking-widest text-teal-400">GPS Tracking</div>
+        <div className="text-[10px] font-semibold uppercase tracking-widest text-cyan-400">GPS Tracking</div>
       </div>
     </div>
   );
@@ -81,7 +83,7 @@ export function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   whileHover={{ y: -3 }}
-                  className="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-800 text-sm font-semibold text-gray-400 transition-colors hover:bg-teal-600 hover:text-white"
+                  className="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-800 text-sm font-semibold text-gray-400 transition-colors hover:bg-blue-600 hover:text-white"
                 >
                   {s.label[0]}
                 </motion.a>
@@ -94,13 +96,13 @@ export function Footer() {
             <ul className="space-y-3 text-[14px]">
               {NAV_LINKS.map((link) => (
                 <li key={link.href}>
-                  <Link href={link.href} className="text-gray-400 transition-colors hover:text-teal-400">
+                  <Link href={link.href} className="text-gray-400 transition-colors hover:text-cyan-400">
                     {t(link.key)}
                   </Link>
                 </li>
               ))}
               <li>
-                <Link href="/login" className="text-gray-400 transition-colors hover:text-teal-400">
+                <Link href="/login" className="text-gray-400 transition-colors hover:text-cyan-400">
                   {t("nav.signIn")}
                 </Link>
               </li>
@@ -111,15 +113,15 @@ export function Footer() {
             <h4 className="mb-5 text-sm font-semibold uppercase tracking-wider text-gray-400">{t("footer.contactUs")}</h4>
             <ul className="space-y-3 text-[14px] text-gray-400">
               <li className="flex items-center gap-2">
-                <Icon path={ICONS.phone} className="h-4 w-4 text-teal-500" />
-                <a href={`tel:${CONTACT.hotline.replace(/[^+\d]/g, "")}`} className="hover:text-teal-400">{CONTACT.hotline}</a>
+                <Icon path={ICONS.phone} className="h-4 w-4 text-cyan-500" />
+                <a href={`tel:${CONTACT.hotline.replace(/[^+\d]/g, "")}`} className="hover:text-cyan-400">{CONTACT.hotline}</a>
               </li>
               <li className="flex items-center gap-2">
-                <Icon path={ICONS.mail} className="h-4 w-4 text-teal-500" />
-                <a href={`mailto:${CONTACT.email}`} className="hover:text-teal-400">{CONTACT.email}</a>
+                <Icon path={ICONS.mail} className="h-4 w-4 text-cyan-500" />
+                <a href={`mailto:${CONTACT.email}`} className="hover:text-cyan-400">{CONTACT.email}</a>
               </li>
               <li className="flex items-start gap-2">
-                <Icon path={ICONS.map} className="mt-0.5 h-4 w-4 text-teal-500" />
+                <Icon path={ICONS.map} className="mt-0.5 h-4 w-4 text-cyan-500" />
                 <span>{t("footer.address")}</span>
               </li>
             </ul>
@@ -137,8 +139,8 @@ export function Footer() {
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-gray-800 pt-8 sm:flex-row">
           <span className="text-sm text-gray-500">© {new Date().getFullYear()} MotoLink GPS. {t("footer.rights")}</span>
           <div className="flex items-center gap-6 text-sm text-gray-500">
-            <Link href="/privacy" className="hover:text-teal-400">Privacy Policy</Link>
-            <Link href="/terms" className="hover:text-teal-400">Terms of Service</Link>
+            <Link href="/privacy" className="hover:text-cyan-400">Privacy Policy</Link>
+            <Link href="/terms" className="hover:text-cyan-400">Terms of Service</Link>
             <span>Made with ❤️ in Bangladesh</span>
           </div>
         </div>

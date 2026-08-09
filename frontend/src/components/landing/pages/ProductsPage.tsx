@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import Image from "next/image";
 import { motion, useInView } from "framer-motion";
 import { useLanguage } from "../LanguageContext";
 
@@ -46,6 +47,7 @@ const PRODUCTS = [
     titleKey: "productsPage.gt06n.title",
     subtitleKey: "productsPage.gt06n.subtitle",
     descKey: "productsPage.gt06n.desc",
+    image: "/images/products/wired-gps.png",
     featureKeys: [
       "productsPage.gt06n.f1",
       "productsPage.gt06n.f2",
@@ -57,13 +59,14 @@ const PRODUCTS = [
       "productsPage.gt06n.f8",
     ],
     badge: "Best Seller",
-    badgeColor: "bg-teal-500",
+    badgeColor: "bg-cyan-500",
   },
   {
     id: "wetrack2",
     titleKey: "productsPage.wetrack2.title",
     subtitleKey: "productsPage.wetrack2.subtitle",
     descKey: "productsPage.wetrack2.desc",
+    image: "/images/products/wired-gps.png",
     featureKeys: [
       "productsPage.wetrack2.f1",
       "productsPage.wetrack2.f2",
@@ -82,6 +85,7 @@ const PRODUCTS = [
     titleKey: "productsPage.obd.title",
     subtitleKey: "productsPage.obd.subtitle",
     descKey: "productsPage.obd.desc",
+    image: "/images/products/obd-tracker.png",
     featureKeys: [
       "productsPage.obd.f1",
       "productsPage.obd.f2",
@@ -100,6 +104,7 @@ const PRODUCTS = [
     titleKey: "productsPage.portable.title",
     subtitleKey: "productsPage.portable.subtitle",
     descKey: "productsPage.portable.desc",
+    image: "/images/products/portable-tracker.png",
     featureKeys: [
       "productsPage.portable.f1",
       "productsPage.portable.f2",
@@ -118,6 +123,7 @@ const PRODUCTS = [
     titleKey: "productsPage.motorcycle.title",
     subtitleKey: "productsPage.motorcycle.subtitle",
     descKey: "productsPage.motorcycle.desc",
+    image: "/images/products/wired-gps.png",
     featureKeys: [
       "productsPage.motorcycle.f1",
       "productsPage.motorcycle.f2",
@@ -136,6 +142,7 @@ const PRODUCTS = [
     titleKey: "productsPage.dashcam.title",
     subtitleKey: "productsPage.dashcam.subtitle",
     descKey: "productsPage.dashcam.desc",
+    image: "/images/products/dashcam.png",
     featureKeys: [
       "productsPage.dashcam.f1",
       "productsPage.dashcam.f2",
@@ -163,16 +170,21 @@ function ProductCard({ product, t, callText }: { product: typeof PRODUCTS[0]; t:
         {product.badge}
       </div>
 
-      {/* Product Image Placeholder */}
-      <div className="flex h-56 items-center justify-center bg-gradient-to-br from-gray-100 to-gray-50 p-8">
-        <div className="flex h-32 w-32 items-center justify-center rounded-2xl bg-white shadow-lg transition-transform group-hover:scale-105">
-          <Icon path={ICONS.map} className="h-16 w-16 text-teal-500" />
+      {/* Product Image */}
+      <div className="flex h-56 items-center justify-center bg-gradient-to-br from-gray-100 to-gray-50 p-6">
+        <div className="relative h-40 w-40 transition-transform group-hover:scale-105">
+          <Image
+            src={product.image}
+            alt={product.id}
+            fill
+            className="object-contain"
+          />
         </div>
       </div>
 
       {/* Content */}
       <div className="p-6">
-        <div className="text-xs font-semibold uppercase tracking-wider text-teal-600">{t(product.subtitleKey)}</div>
+        <div className="text-xs font-semibold uppercase tracking-wider text-blue-600">{t(product.subtitleKey)}</div>
         <h3 className="mt-1 text-xl font-bold text-gray-900">{t(product.titleKey)}</h3>
         <p className="mt-2 text-sm leading-relaxed text-gray-600">{t(product.descKey)}</p>
 
@@ -180,7 +192,7 @@ function ProductCard({ product, t, callText }: { product: typeof PRODUCTS[0]; t:
         <div className="mt-5 grid grid-cols-2 gap-2">
           {product.featureKeys.map((featureKey) => (
             <div key={featureKey} className="flex items-center gap-2 text-sm text-gray-600">
-              <Icon path={ICONS.check} className="h-4 w-4 shrink-0 text-teal-500" />
+              <Icon path={ICONS.check} className="h-4 w-4 shrink-0 text-cyan-500" />
               <span className="truncate">{t(featureKey)}</span>
             </div>
           ))}
@@ -209,10 +221,10 @@ export function ProductsPage() {
   return (
     <>
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-gray-900 via-gray-800 to-teal-900 pb-20 pt-32">
+      <section className="bg-gradient-to-br from-gray-900 via-gray-800 to-blue-900 pb-20 pt-32">
         <div className="mx-auto max-w-7xl px-4 text-center sm:px-6">
           <motion.div initial="hidden" animate="visible" variants={staggerContainer}>
-            <motion.div variants={fadeInUp} className="mb-4 inline-flex items-center rounded-full bg-teal-500/20 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-teal-300">
+            <motion.div variants={fadeInUp} className="mb-4 inline-flex items-center rounded-full bg-cyan-500/20 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-cyan-300">
               {t("productsPage.badge")}
             </motion.div>
             <motion.h1 variants={fadeInUp} className="text-4xl font-bold text-white sm:text-5xl">
@@ -278,15 +290,15 @@ export function ProductsPage() {
       </section>
 
       {/* CTA */}
-      <section className="bg-teal-600 py-16">
+      <section className="bg-blue-600 py-16">
         <div className="mx-auto max-w-4xl px-4 text-center sm:px-6">
           <h2 className="text-3xl font-bold text-white">{t("productsPage.needHelp")}</h2>
-          <p className="mt-4 text-lg text-teal-100">
+          <p className="mt-4 text-lg text-blue-100">
             {t("productsPage.needHelpDesc")}
           </p>
           <a
             href={`tel:${PHONE.replace(/[^+\d]/g, "")}`}
-            className="mt-8 inline-flex items-center gap-2 rounded-xl bg-white px-8 py-4 text-lg font-bold text-teal-600 shadow-xl transition-all hover:bg-gray-50"
+            className="mt-8 inline-flex items-center gap-2 rounded-xl bg-white px-8 py-4 text-lg font-bold text-blue-600 shadow-xl transition-all hover:bg-gray-50"
           >
             <Icon path={ICONS.phone} className="h-6 w-6" />
             {t("productsPage.callNow")}: {PHONE}

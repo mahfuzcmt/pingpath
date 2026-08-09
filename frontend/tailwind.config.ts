@@ -15,20 +15,23 @@ const config: Config = {
     extend: {
       colors: {
         brand: {
-          50: "#E8F1FB",
-          100: "#C6DDF4",
-          400: "#5AA3DF",
-          500: "#2B82D4", // primary action / link
-          600: "#1F6AB1",
-          700: "#175389",
-          900: "#0E3257",
+          50: "#E6F4FF",
+          100: "#BAE0FF",
+          200: "#7CC4FA",
+          300: "#4FAFEF",
+          400: "#29A3EE", // Light cyan (logo top)
+          500: "#0284C7", // Primary blue
+          600: "#0369A1", // Primary hover
+          700: "#075985",
+          800: "#1B3A5F", // Navy blue (logo text)
+          900: "#0C2340", // Darkest navy
         },
         // Accent colors for modern gradients
         accent: {
-          teal: "#14B8A6",
-          cyan: "#06B6D4",
-          emerald: "#10B981",
-          violet: "#8B5CF6",
+          cyan: "#22D3EE",   // Bright cyan
+          sky: "#38BDF8",    // Sky blue
+          blue: "#3B82F6",   // Blue
+          navy: "#1B3A5F",   // Navy (logo)
         },
         surface: {
           0: "#FFFFFF", // page / panel
