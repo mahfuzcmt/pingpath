@@ -1484,7 +1484,158 @@ GitHub Actions:
 
 ---
 
-## 16. Development Phases — 12-Week Launch + Advanced Roadmap
+## 16. Development Plan & Roadmap
+
+### 16.1 Timeline Overview
+
+```
+2026 Q3-Q4 LAUNCH PLAN                    2027 ADVANCED ROADMAP
+─────────────────────────────────────     ─────────────────────────────────────
+│ Week │ 1-2 │ 3-4 │ 5-6 │ 7-8 │ 9-10 │ 11-12 │     │ M4 │ M5 │ M6-7 │ M8-9 │ M10-11 │ M12+ │
+├──────┼─────┼─────┼─────┼─────┼──────┼───────┤     ├────┼────┼──────┼──────┼────────┼──────┤
+│Phase │  1  │  2  │  3  │  4  │   5  │   6   │     │  7 │  8 │   9  │ 10-11│   12-13│  14  │
+│      │Found│Dash │ Ops │ BD  │Mobile│ Prod  │     │Fleet│Fuel│  AI  │Track/│  IoT/  │ EV/  │
+│      │ation│board│     │Polish│ App │Harden │     │ 2.0 │Mnt │      │Logis │Enterpr │Future│
+└──────┴─────┴─────┴─────┴─────┴──────┴───────┘     └────┴────┴──────┴──────┴────────┴──────┘
+        ▲                         ▲                       ▲                            ▲
+        │                         │                       │                            │
+   MVP Backend              First Customer           Enterprise              Market Leader
+```
+
+### 16.2 Resource Requirements
+
+| Role | Phase 1-6 (Launch) | Phase 7-14 (Scale) | Notes |
+|------|-------------------|-------------------|-------|
+| **Backend Developer** | 1 FTE | 2 FTE | Java/Spring, Netty, PostgreSQL |
+| **Frontend Developer** | 1 FTE | 1-2 FTE | Next.js, React Native |
+| **DevOps/Infra** | 0.5 FTE | 1 FTE | AWS, Docker, CI/CD |
+| **QA Engineer** | 0.5 FTE | 1 FTE | Manual + automated testing |
+| **ML Engineer** | — | 1 FTE (Phase 9+) | Python, TensorFlow/PyTorch |
+| **Product Manager** | 0.5 FTE | 1 FTE | Requirements, customer feedback |
+| **Designer** | 0.25 FTE | 0.5 FTE | UI/UX, Bengali localization |
+
+**Infrastructure Costs (Monthly Estimates):**
+| Phase | AWS Mumbai | Notes |
+|-------|-----------|-------|
+| 1-4 (Dev) | $50-80 | VPS, dev database |
+| 5-6 (Staging) | $100-150 | RDS, ElastiCache, ECS |
+| Production (100 vehicles) | $120-180 | Full stack |
+| Production (1000 vehicles) | $300-500 | Scaled instances |
+| Production (10K vehicles) | $800-1200 | Multi-AZ, RabbitMQ |
+
+### 16.3 Sprint Structure
+
+Each phase follows a 2-week sprint cycle:
+
+```
+Week 1                              Week 2
+┌─────────────────────────────────┐ ┌─────────────────────────────────┐
+│ Day 1-2: Planning & Design      │ │ Day 8-9: Integration & Polish   │
+│ Day 3-5: Core Implementation    │ │ Day 10: Testing & Bug Fixes     │
+│ Day 6-7: Component Development  │ │ Day 11-12: Documentation        │
+│                                 │ │ Day 13-14: Demo & Review        │
+└─────────────────────────────────┘ └─────────────────────────────────┘
+```
+
+**Sprint Ceremonies:**
+- **Sprint Planning** (Day 1, 2hr): Define sprint goals, break down tasks
+- **Daily Standup** (15min): Progress, blockers, plans
+- **Code Review**: All PRs require review before merge
+- **Sprint Demo** (Day 14, 1hr): Demonstrate completed features
+- **Retrospective** (Day 14, 30min): What worked, what didn't, improvements
+
+### 16.4 Key Milestones
+
+| Milestone | Target Date | Success Criteria |
+|-----------|-------------|------------------|
+| **M1: Backend MVP** | Week 2 | GT06 device connects, location stored, REST API working |
+| **M2: Live Dashboard** | Week 4 | Real-time map with WebSocket updates, login works |
+| **M3: Operations Ready** | Week 6 | Geofencing, trips, alarms, basic reports functional |
+| **M4: Bangladesh Launch** | Week 8 | bKash billing, Bengali UI, SMS alerts live |
+| **M5: Mobile App Beta** | Week 10 | APK installable, push notifications working |
+| **M6: Production Launch** | Week 12 | First paying customer live with monitoring |
+| **M7: Enterprise Features** | Month 4 | Fleet groups, KPIs, driver management |
+| **M8: AI Integration** | Month 7 | Predictive maintenance, driver scores |
+| **M9: Full Platform** | Month 12 | All Phase 14 features, market leader position |
+
+### 16.5 Phase Dependencies
+
+```
+Phase 1 (Foundation)
+    │
+    ├──► Phase 2 (Dashboard) ──► Phase 3 (Operations)
+    │                                   │
+    │                                   ▼
+    │                            Phase 4 (BD Polish)
+    │                                   │
+    │                                   ├──► Phase 5 (Mobile)
+    │                                   │
+    │                                   ▼
+    │                            Phase 6 (Production)
+    │                                   │
+    ▼                                   ▼
+Phase 7 (Fleet 2.0) ◄─────────────── LAUNCH
+    │
+    ├──► Phase 8 (Fuel/Maintenance)
+    │           │
+    │           ▼
+    │    Phase 9 (AI) ◄── Requires 3+ months of data
+    │
+    ├──► Phase 10 (Maps) ── Can run parallel
+    │
+    ├──► Phase 11 (Logistics) ── Requires Phase 7
+    │
+    └──► Phase 12 (IoT) ── Hardware partnerships needed
+            │
+            ▼
+      Phase 13 (Enterprise)
+            │
+            ▼
+      Phase 14 (EV/Future)
+```
+
+### 16.6 Risk Assessment & Mitigation
+
+| Risk | Probability | Impact | Mitigation |
+|------|-------------|--------|------------|
+| **GT06 protocol bugs** | High | High | Extensive unit tests, real device testing, Traccar reference |
+| **bKash integration delays** | Medium | High | Start sandbox early, have Nagad backup, support manual payment |
+| **Device provisioning failures** | Medium | Medium | Clear SMS templates, fallback to manual config, video guides |
+| **VPS performance issues** | Low | High | Load testing, auto-scaling readiness, monitoring alerts |
+| **Bengali font rendering** | Low | Medium | Test on multiple Android devices, fallback fonts |
+| **Competitor response** | Medium | Medium | Focus on differentiation (Bengali UX, bKash, owned stack) |
+| **Hardware supply chain** | Medium | High | Multiple supplier relationships, stock buffer |
+| **Team scaling challenges** | Medium | Medium | Documentation-first culture, onboarding guides |
+
+### 16.7 Definition of Done (DoD)
+
+A feature is considered **DONE** when:
+
+- [ ] Code implemented and follows project conventions
+- [ ] Unit tests written with >80% coverage for new code
+- [ ] Integration tests pass
+- [ ] Code reviewed and approved
+- [ ] Documentation updated (API docs, CLAUDE.md if needed)
+- [ ] Bengali translations added (if user-facing)
+- [ ] Manual testing completed on target devices
+- [ ] No critical/high severity bugs
+- [ ] Deployed to staging and verified
+- [ ] Product owner accepted
+
+### 16.8 Communication Plan
+
+| Channel | Purpose | Frequency |
+|---------|---------|-----------|
+| **GitHub Issues** | Task tracking, bugs | Continuous |
+| **GitHub PRs** | Code review, discussion | Per change |
+| **Slack/Discord** | Quick questions, updates | Daily |
+| **Weekly Sync** | Progress review, blockers | Weekly (1hr) |
+| **Sprint Demo** | Feature showcase | Bi-weekly |
+| **Monthly Review** | Roadmap assessment | Monthly |
+
+---
+
+### Launch Phases (12-Week Plan)
 
 ### Phase 1 — Foundation (Weeks 1–2)
 
