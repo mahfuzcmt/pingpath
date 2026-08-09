@@ -5,13 +5,12 @@ import { useState } from "react";
 
 /* ────────────────────────────────────────────────────────────────
    MotoLink GPS — public marketing landing page.
-   Contact details below are placeholders; replace before launch.
    ──────────────────────────────────────────────────────────────── */
 
 const CONTACT = {
   hotline: "+880 1629-563645",
-  sales: "+880 1700-000001",
-  email: "sales@motolinkgps.com",
+  sales: "+880 1629-563645",
+  email: "hello@motolink.com.bd",
   address: "Dhaka, Bangladesh",
 };
 
