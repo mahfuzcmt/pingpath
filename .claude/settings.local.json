@@ -117,7 +117,16 @@
       "Bash(git pull:*)",
       "Bash(git stash:*)",
       "Bash(git stash pop:*)",
-      "WebFetch(domain:www.copilotai.live)"
+      "WebFetch(domain:www.copilotai.live)",
+      "Bash(ssh-add:*)",
+      "Bash(SSHPASS='LlX8AedBpHOG8sir7HSN' sshpass -e ssh -o StrictHostKeyChecking=no -o PreferredAuthentications=password -o PubkeyAuthentication=no root@103.187.22.131 \"docker start pingpath-frontend && docker ps | grep frontend\")",
+      "Bash(SSHPASS='LlX8AedBpHOG8sir7HSN' sshpass -e ssh -o StrictHostKeyChecking=no -o PreferredAuthentications=password -o PubkeyAuthentication=no root@103.187.22.131 \"curl -s -o /dev/null -w ''%{http_code}'' http://localhost:3000/\")",
+      "Bash(git push:*)",
+      "Bash(export SSHPASS='LlX8AedBpHOG8sir7HSN')",
+      "WebFetch(domain:autonemogps.com)",
+      "WebFetch(domain:copilotai.live)",
+      "Bash(npm run dev:*)",
+      "WebFetch(domain:www.autonemogps.com)"
     ]
   }
 }

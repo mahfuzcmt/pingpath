@@ -468,6 +468,23 @@ const translations: Record<string, { en: string; bn: string }> = {
   "productsPage.monthsWarranty": { en: "Months Warranty", bn: "মাস ওয়ারেন্টি" },
   "productsPage.supportAvailable": { en: "Support Available", bn: "সাপোর্ট উপলব্ধ" },
 
+  // Product Detail Page
+  "productDetail.notFound": { en: "Product Not Found", bn: "পণ্য পাওয়া যায়নি" },
+  "productDetail.notFoundDesc": { en: "The product you are looking for does not exist.", bn: "আপনি যে পণ্য খুঁজছেন তা বিদ্যমান নেই।" },
+  "productDetail.backToProducts": { en: "Back to Products", bn: "পণ্যে ফিরে যান" },
+  "productDetail.features": { en: "Key Features", bn: "মূল বৈশিষ্ট্য" },
+  "productDetail.orderNow": { en: "Order Now", bn: "এখনই অর্ডার করুন" },
+  "productDetail.getQuote": { en: "Get a Quote", bn: "কোটেশন নিন" },
+  "productDetail.callUs": { en: "Call us", bn: "কল করুন" },
+  "productDetail.whyChoose": { en: "Why Choose This Product?", bn: "কেন এই পণ্যটি বেছে নেবেন?" },
+  "productDetail.benefit1Title": { en: "Premium Quality", bn: "প্রিমিয়াম কোয়ালিটি" },
+  "productDetail.benefit1Desc": { en: "High-quality GPS chips with accurate tracking and reliable performance in all conditions.", bn: "সমস্ত পরিস্থিতিতে সঠিক ট্র্যাকিং এবং নির্ভরযোগ্য পারফরম্যান্স সহ উচ্চ-মানের জিপিএস চিপ।" },
+  "productDetail.benefit2Title": { en: "Warranty & Support", bn: "ওয়ারেন্টি এবং সাপোর্ট" },
+  "productDetail.benefit2Desc": { en: "Full manufacturer warranty with dedicated 24/7 technical support team.", bn: "নিবেদিত ২৪/৭ টেকনিক্যাল সাপোর্ট টিম সহ সম্পূর্ণ প্রস্তুতকারকের ওয়ারেন্টি।" },
+  "productDetail.benefit3Title": { en: "Trusted Brand", bn: "বিশ্বস্ত ব্র্যান্ড" },
+  "productDetail.benefit3Desc": { en: "Trusted by 150+ companies across Bangladesh with proven track record.", bn: "প্রমাণিত ট্র্যাক রেকর্ড সহ বাংলাদেশ জুড়ে ১৫০+ কোম্পানির বিশ্বস্ত।" },
+  "productDetail.relatedProducts": { en: "Related Products", bn: "সম্পর্কিত পণ্য" },
+
   // Footer
   "footer.desc": { en: "Bangladesh's leading GPS tracking and fleet management platform. Real-time monitoring, fuel tracking, and intelligent alerts for your entire fleet.", bn: "বাংলাদেশের শীর্ষস্থানীয় জিপিএস ট্র্যাকিং এবং ফ্লিট ম্যানেজমেন্ট প্ল্যাটফর্ম। আপনার সম্পূর্ণ ফ্লিটের জন্য রিয়েল-টাইম মনিটরিং, ফুয়েল ট্র্যাকিং এবং বুদ্ধিমান অ্যালার্ট।" },
   "footer.quickLinks": { en: "Quick Links", bn: "দ্রুত লিংক" },
