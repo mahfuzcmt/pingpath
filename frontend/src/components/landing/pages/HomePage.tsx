@@ -98,17 +98,17 @@ function Hero() {
       <div className="relative mx-auto max-w-7xl px-4 pb-20 pt-28 sm:px-6 lg:pb-32 lg:pt-36">
         <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
           <motion.div initial="hidden" animate="visible" variants={staggerContainer}>
-            <motion.div variants={fadeInUp} className="mb-6 inline-flex items-center gap-2 rounded-full bg-cyan-500/20 px-4 py-2 text-[13px] font-semibold text-cyan-300">
+            <motion.div variants={fadeInUp} className="mb-6 inline-flex items-center gap-2 rounded-full bg-amber-500/20 px-4 py-2 text-[13px] font-semibold text-amber-300">
               <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400 opacity-75" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-cyan-400" />
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-400" />
               </span>
               {t("hero.badge")}
             </motion.div>
 
             <motion.h1 variants={fadeInUp} className="text-4xl font-bold leading-tight tracking-tight text-white sm:text-5xl lg:text-6xl">
               {t("hero.title1")}
-              <span className="mt-2 block text-cyan-400">{t("hero.title2")}</span>
+              <span className="mt-2 block text-amber-400">{t("hero.title2")}</span>
             </motion.h1>
 
             <motion.p variants={fadeInUp} className="mt-6 max-w-xl text-lg leading-relaxed text-gray-300">
@@ -116,7 +116,7 @@ function Hero() {
             </motion.p>
 
             <motion.div variants={fadeInUp} className="mt-10 flex flex-wrap items-center gap-4">
-              <a href={`tel:${CONTACT.sales.replace(/[^+\d]/g, "")}`} className="group inline-flex h-14 items-center gap-2 rounded-xl bg-cyan-500 px-8 text-[15px] font-bold text-white shadow-xl shadow-cyan-500/30 transition-all hover:bg-blue-600 hover:shadow-2xl">
+              <a href={`tel:${CONTACT.sales.replace(/[^+\d]/g, "")}`} className="group inline-flex h-14 items-center gap-2 rounded-xl bg-amber-500 px-8 text-[15px] font-bold text-white shadow-xl shadow-amber-500/30 transition-all hover:bg-amber-600 hover:shadow-2xl">
                 <Icon path={ICONS.phone} className="h-5 w-5" />
                 {t("hero.contactSales")}
               </a>
@@ -133,7 +133,7 @@ function Hero() {
                 { icon: ICONS.clock, labelKey: "hero.support" },
               ].map((item) => (
                 <div key={item.labelKey} className="flex items-center gap-2.5">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/10 text-cyan-400">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/10 text-amber-400">
                     <Icon path={item.icon} className="h-5 w-5" />
                   </div>
                   <span className="text-sm font-medium text-gray-300">{t(item.labelKey)}</span>
@@ -164,7 +164,7 @@ function Hero() {
                     ].map((v, i) => (
                       <motion.div key={i} initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 1 + i * 0.15 }} className="absolute" style={{ top: v.top, left: v.left }}>
                         <motion.div animate={v.status === "moving" ? { scale: [1, 1.3, 1] } : {}} transition={{ duration: 2, repeat: Infinity }} className="relative">
-                          <div className={`h-4 w-4 rounded-full shadow-lg ${v.status === "moving" ? "bg-cyan-500 shadow-cyan-500/50" : v.status === "parked" ? "bg-blue-500 shadow-blue-500/50" : "bg-amber-500 shadow-amber-500/50"}`} />
+                          <div className={`h-4 w-4 rounded-full shadow-lg ${v.status === "moving" ? "bg-amber-500 shadow-amber-500/50" : v.status === "parked" ? "bg-emerald-500 shadow-emerald-500/50" : "bg-blue-500 shadow-blue-500/50"}`} />
                           <div className="absolute -bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-black/70 px-1.5 py-0.5 text-[9px] font-medium text-white">{v.label}</div>
                         </motion.div>
                       </motion.div>
@@ -172,12 +172,12 @@ function Hero() {
                   </div>
                   <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.5 }} className="absolute bottom-5 left-5 right-5 flex gap-2">
                     {[
-                      { label: "Active", value: "24", color: "teal" },
-                      { label: "Parked", value: "12", color: "blue" },
-                      { label: "Alerts", value: "3", color: "amber" },
+                      { label: "Active", value: "24", color: "amber" },
+                      { label: "Parked", value: "12", color: "emerald" },
+                      { label: "Alerts", value: "3", color: "red" },
                     ].map((stat) => (
                       <div key={stat.label} className="flex-1 rounded-lg bg-gray-800/80 p-2.5 backdrop-blur">
-                        <div className={`text-lg font-bold ${stat.color === "teal" ? "text-cyan-400" : stat.color === "blue" ? "text-blue-400" : "text-amber-400"}`}>{stat.value}</div>
+                        <div className={`text-lg font-bold ${stat.color === "amber" ? "text-amber-400" : stat.color === "emerald" ? "text-emerald-400" : "text-red-400"}`}>{stat.value}</div>
                         <div className="text-[10px] text-gray-500">{stat.label}</div>
                       </div>
                     ))}
@@ -203,12 +203,12 @@ function TrustBadges() {
   ];
 
   return (
-    <section className="border-b border-gray-100 bg-blue-600 py-6">
+    <section className="border-b border-gray-800 bg-gray-900 py-6">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
           {badges.map((badge) => (
             <div key={badge.labelKey} className="flex items-center justify-center gap-3 text-white">
-              <Icon path={badge.icon} className="h-6 w-6 text-cyan-200" />
+              <Icon path={badge.icon} className="h-6 w-6 text-amber-400" />
               <span className="text-sm font-medium">{t(badge.labelKey)}</span>
             </div>
           ))}
@@ -300,22 +300,32 @@ function FeaturesSection() {
 
 /* ── Product Categories ───────────────────────────────────────── */
 function ProductsSection() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
+
+  // Products with pricing info
   const products = [
-    { titleKey: "product.btrc.title", descKey: "product.btrc.desc", badgeKey: "product.btrc.badge", icon: ICONS.shield },
-    { titleKey: "product.wired.title", descKey: "product.wired.desc", icon: ICONS.map },
-    { titleKey: "product.obd.title", descKey: "product.obd.desc", icon: ICONS.car },
-    { titleKey: "product.dashcam.title", descKey: "product.dashcam.desc", icon: ICONS.video },
-    { titleKey: "product.fuelSensor.title", descKey: "product.fuelSensor.desc", icon: ICONS.fuel },
-    { titleKey: "product.portable.title", descKey: "product.portable.desc", icon: ICONS.package },
+    { titleKey: "product.btrc.title", descKey: "product.btrc.desc", badgeKey: "product.btrc.badge", icon: ICONS.shield, price: 4500, categoryColor: "bg-red-500" },
+    { titleKey: "product.wired.title", descKey: "product.wired.desc", icon: ICONS.map, price: 4500, categoryColor: "bg-emerald-500" },
+    { titleKey: "product.obd.title", descKey: "product.obd.desc", icon: ICONS.car, price: 5500, categoryColor: "bg-violet-500" },
+    { titleKey: "product.dashcam.title", descKey: "product.dashcam.desc", icon: ICONS.video, price: 12500, categoryColor: "bg-amber-500" },
+    { titleKey: "product.fuelSensor.title", descKey: "product.fuelSensor.desc", icon: ICONS.fuel, price: 8500, categoryColor: "bg-blue-500" },
+    { titleKey: "product.portable.title", descKey: "product.portable.desc", icon: ICONS.package, price: 7500, categoryColor: "bg-purple-500" },
   ];
+
+  const formatPrice = (price: number): string => {
+    if (lang === "bn") {
+      const bnDigits = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
+      return price.toLocaleString("en-IN").replace(/\d/g, (d) => bnDigits[parseInt(d)]);
+    }
+    return price.toLocaleString("en-IN");
+  };
 
   return (
     <section className="bg-white py-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <AnimatedSection>
           <motion.div variants={fadeInUp} className="mx-auto mb-14 max-w-3xl text-center">
-            <div className="mb-4 inline-flex items-center rounded-full bg-blue-50 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-blue-700">
+            <div className="mb-4 inline-flex items-center rounded-full bg-amber-50 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-amber-700">
               {t("products.badge")}
             </div>
             <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">{t("products.title")}</h2>
@@ -326,16 +336,23 @@ function ProductsSection() {
             {products.map((p) => (
               <motion.div key={p.titleKey} variants={fadeInUp} whileHover={{ y: -8, boxShadow: "0 20px 40px rgba(0,0,0,0.1)" }} className="group relative overflow-hidden rounded-2xl border border-gray-100 bg-white p-6 shadow-sm transition-all">
                 {p.badgeKey && (
-                  <div className="absolute right-4 top-4 rounded-full bg-red-500 px-3 py-1 text-xs font-bold text-white">
+                  <div className={`absolute right-4 top-4 rounded-full ${p.categoryColor} px-3 py-1 text-xs font-bold text-white`}>
                     {t(p.badgeKey)}
                   </div>
                 )}
-                <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-50 text-blue-600 transition-all group-hover:bg-blue-50 group-hover:scale-110">
+                <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-50 text-amber-600 transition-all group-hover:bg-amber-50 group-hover:scale-110">
                   <Icon path={p.icon} className="h-8 w-8" />
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900">{t(p.titleKey)}</h3>
+
+                {/* Price - Prominent display */}
+                <div className="mt-2 flex items-baseline gap-2">
+                  <span className="text-2xl font-bold text-gray-900">৳{formatPrice(p.price)}</span>
+                  <span className="text-sm text-gray-500">{t("products.onwards")}</span>
+                </div>
+
                 <p className="mt-2 text-[14px] text-gray-600">{t(p.descKey)}</p>
-                <Link href="/products" className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-blue-600 transition-colors hover:text-blue-700">
+                <Link href="/products" className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-amber-600 transition-colors hover:text-amber-700">
                   {t("products.explore")} <Icon path={ICONS.arrow} className="h-4 w-4" />
                 </Link>
               </motion.div>
@@ -366,7 +383,7 @@ function IndustrySection() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <AnimatedSection>
           <motion.div variants={fadeInUp} className="mx-auto mb-14 max-w-3xl text-center">
-            <div className="mb-4 inline-flex items-center rounded-full bg-cyan-500/20 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-cyan-300">
+            <div className="mb-4 inline-flex items-center rounded-full bg-amber-500/20 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-amber-400">
               {t("industries.badge")}
             </div>
             <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">{t("industries.title")}</h2>
@@ -376,7 +393,7 @@ function IndustrySection() {
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:gap-6">
             {industries.map((ind) => (
               <motion.div key={ind.nameKey} variants={fadeInUp} whileHover={{ scale: 1.05 }} className="group flex flex-col items-center rounded-xl bg-white/5 p-6 text-center backdrop-blur transition-all hover:bg-white/10">
-                <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-xl bg-cyan-500/20 text-cyan-400 transition-all group-hover:bg-cyan-500 group-hover:text-white">
+                <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-xl bg-amber-500/20 text-amber-400 transition-all group-hover:bg-amber-500 group-hover:text-white">
                   <Icon path={ind.icon} className="h-7 w-7" />
                 </div>
                 <span className="text-sm font-medium text-white">{t(ind.nameKey)}</span>
@@ -385,7 +402,7 @@ function IndustrySection() {
           </div>
 
           <motion.div variants={fadeInUp} className="mt-12 text-center">
-            <Link href="/solutions" className="inline-flex items-center gap-2 text-sm font-semibold text-cyan-400 hover:text-cyan-300">
+            <Link href="/solutions" className="inline-flex items-center gap-2 text-sm font-semibold text-amber-400 hover:text-amber-300">
               {t("industries.viewAll")} <Icon path={ICONS.arrow} className="h-4 w-4" />
             </Link>
           </motion.div>
@@ -545,17 +562,17 @@ function PartnersSection() {
 function CTASection() {
   const { t } = useLanguage();
   return (
-    <section className="bg-gradient-to-br from-blue-600 to-blue-700 py-20">
+    <section className="bg-gradient-to-br from-amber-500 via-amber-600 to-orange-600 py-20">
       <div className="mx-auto max-w-4xl px-4 text-center sm:px-6">
         <AnimatedSection>
           <motion.h2 variants={fadeInUp} className="text-3xl font-bold text-white sm:text-4xl lg:text-5xl">
             {t("cta.title")}
           </motion.h2>
-          <motion.p variants={fadeInUp} className="mx-auto mt-4 max-w-2xl text-lg text-blue-100">
+          <motion.p variants={fadeInUp} className="mx-auto mt-4 max-w-2xl text-lg text-amber-100">
             {t("cta.desc")}
           </motion.p>
           <motion.div variants={fadeInUp} className="mt-10 flex flex-wrap justify-center gap-4">
-            <a href={`tel:${CONTACT.sales.replace(/[^+\d]/g, "")}`} className="inline-flex h-14 items-center gap-2 rounded-xl bg-white px-8 text-[16px] font-bold text-blue-600 shadow-xl transition-all hover:bg-gray-50 hover:shadow-2xl">
+            <a href={`tel:${CONTACT.sales.replace(/[^+\d]/g, "")}`} className="inline-flex h-14 items-center gap-2 rounded-xl bg-white px-8 text-[16px] font-bold text-amber-600 shadow-xl transition-all hover:bg-gray-50 hover:shadow-2xl">
               <Icon path={ICONS.phone} className="h-5 w-5" />
               {t("hero.contactSales")}
             </a>

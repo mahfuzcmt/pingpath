@@ -72,6 +72,7 @@ const translations: Record<string, { en: string; bn: string }> = {
   "products.desc": { en: "Wide range of professional GPS tracking devices for every need.", bn: "প্রতিটি প্রয়োজনের জন্য বিস্তৃত পেশাদার জিপিএস ট্র্যাকিং ডিভাইস।" },
   "products.explore": { en: "Explore", bn: "দেখুন" },
   "products.callForPrice": { en: "Call for Price", bn: "দাম জানতে কল করুন" },
+  "products.onwards": { en: "onwards", bn: "থেকে" },
 
   // Product Items
   "product.btrc.title": { en: "BTRC Certified Tracker", bn: "বিটিআরসি সার্টিফাইড ট্র্যাকার" },
@@ -436,6 +437,36 @@ const translations: Record<string, { en: string; bn: string }> = {
   "productsPage.needHelp": { en: "Need Help Choosing?", bn: "বেছে নিতে সাহায্য দরকার?" },
   "productsPage.needHelpDesc": { en: "Our experts will help you find the perfect GPS tracker for your needs. Call us for a free consultation.", bn: "আমাদের বিশেষজ্ঞরা আপনার প্রয়োজনের জন্য উপযুক্ত জিপিএস ট্র্যাকার খুঁজে পেতে সাহায্য করবেন। বিনামূল্যে পরামর্শের জন্য আমাদের কল করুন।" },
   "productsPage.callNow": { en: "Call Now", bn: "এখনই কল করুন" },
+  "productsPage.requestDemo": { en: "Request Demo", bn: "ডেমো অনুরোধ করুন" },
+
+  // Products Page - Badges
+  "productsPage.badge.wired": { en: "Wired", bn: "ওয়্যার্ড" },
+  "productsPage.badge.4g": { en: "4G LTE", bn: "4G LTE" },
+  "productsPage.badge.obd": { en: "OBD", bn: "OBD" },
+  "productsPage.badge.wireless": { en: "Wireless", bn: "ওয়্যারলেস" },
+  "productsPage.badge.dashcam": { en: "Dashcam", bn: "ড্যাশক্যাম" },
+  "productsPage.badge.sale": { en: "Sale", bn: "সেল" },
+
+  // Products Page - Filters
+  "productsPage.filter.all": { en: "All Devices", bn: "সব ডিভাইস" },
+  "productsPage.filter.wired": { en: "Wired GPS", bn: "ওয়্যার্ড জিপিএস" },
+  "productsPage.filter.4g": { en: "4G Trackers", bn: "4G ট্র্যাকার" },
+  "productsPage.filter.obd": { en: "OBD Plug & Play", bn: "OBD প্লাগ এন্ড প্লে" },
+  "productsPage.filter.wireless": { en: "Wireless/Portable", bn: "ওয়্যারলেস/পোর্টেবল" },
+  "productsPage.filter.dashcam": { en: "Dashcam + GPS", bn: "ড্যাশক্যাম + জিপিএস" },
+
+  // Products Page - Pricing & Warranty
+  "productsPage.contactForPrice": { en: "Contact for Price", bn: "দামের জন্য যোগাযোগ করুন" },
+  "productsPage.monthWarranty": { en: "Month Warranty", bn: "মাস ওয়ারেন্টি" },
+  "productsPage.freeInstall": { en: "Free Installation", bn: "ফ্রি ইনস্টলেশন" },
+  "productsPage.viewDetails": { en: "View Details", bn: "বিস্তারিত দেখুন" },
+  "productsPage.getQuote": { en: "Get Quote", bn: "কোট নিন" },
+  "productsPage.noProducts": { en: "No products found in this category.", bn: "এই ক্যাটাগরিতে কোনো পণ্য পাওয়া যায়নি।" },
+
+  // Products Page - Hero Stats
+  "productsPage.startingFrom": { en: "Starting From", bn: "শুরু থেকে" },
+  "productsPage.monthsWarranty": { en: "Months Warranty", bn: "মাস ওয়ারেন্টি" },
+  "productsPage.supportAvailable": { en: "Support Available", bn: "সাপোর্ট উপলব্ধ" },
 
   // Footer
   "footer.desc": { en: "Bangladesh's leading GPS tracking and fleet management platform. Real-time monitoring, fuel tracking, and intelligent alerts for your entire fleet.", bn: "বাংলাদেশের শীর্ষস্থানীয় জিপিএস ট্র্যাকিং এবং ফ্লিট ম্যানেজমেন্ট প্ল্যাটফর্ম। আপনার সম্পূর্ণ ফ্লিটের জন্য রিয়েল-টাইম মনিটরিং, ফুয়েল ট্র্যাকিং এবং বুদ্ধিমান অ্যালার্ট।" },
