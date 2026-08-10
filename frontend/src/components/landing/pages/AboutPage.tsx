@@ -198,38 +198,6 @@ export function AboutPage() {
         </div>
       </section>
 
-      {/* Team Section */}
-      <section className="py-20 lg:py-28 bg-white">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <AnimatedSection className="text-center">
-            <motion.div variants={fadeInUp} className="mb-6 inline-flex items-center gap-2 rounded-full bg-amber-100 px-4 py-2 text-sm font-semibold text-amber-700">
-              <Icon path={ICONS.users} className="h-4 w-4" />
-              {t("about.team.badge")}
-            </motion.div>
-
-            <motion.h2 variants={fadeInUp} className="text-3xl font-bold text-gray-900 sm:text-4xl">
-              {t("about.team.title")}
-            </motion.h2>
-
-            <motion.p variants={fadeInUp} className="mx-auto mt-4 max-w-2xl text-lg text-gray-600">
-              {t("about.team.desc")}
-            </motion.p>
-
-            <motion.div variants={fadeInUp} className="mt-12 flex flex-wrap items-center justify-center gap-8">
-              <div className="flex flex-col items-center gap-3 text-center">
-                <div className="flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-amber-600 text-3xl font-bold text-white shadow-lg">
-                  MA
-                </div>
-                <div>
-                  <div className="font-bold text-gray-900">Mahfuz Ahmed</div>
-                  <div className="text-sm text-gray-500">Founder & CEO</div>
-                </div>
-              </div>
-            </motion.div>
-          </AnimatedSection>
-        </div>
-      </section>
-
       {/* CTA Section */}
       <section className="py-20 lg:py-28 bg-gradient-to-r from-amber-500 via-amber-600 to-orange-500">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
