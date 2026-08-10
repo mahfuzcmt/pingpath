@@ -65,7 +65,7 @@ export default function AboutPage() {
       <section className="mkt-section bg-white">
         <div className="mkt-container">
           <div className="mx-auto max-w-3xl">
-            <span className="mkt-badge">Our Journey</span>
+            <span className="mkt-badge">Since 2016</span>
             <h2 className="mkt-heading-md mt-4">
               {t("mkt.about.story.title")}
             </h2>
@@ -74,6 +74,9 @@ export default function AboutPage() {
             </p>
             <p className="mt-4 text-lg leading-relaxed text-ink-600">
               {t("mkt.about.story.p2")}
+            </p>
+            <p className="mt-4 text-lg leading-relaxed text-ink-600">
+              {t("mkt.about.story.p3")}
             </p>
           </div>
         </div>
