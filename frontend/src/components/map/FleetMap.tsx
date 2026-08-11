@@ -11,7 +11,11 @@ import {
   calculateFitZoom,
   layerSupportsTraffic,
   setLayerTraffic,
+  hasGoogleMapsKey,
+  type BaseLayerKind,
 } from "@/lib/leaflet";
+import { MapLayerDropdown } from "./MapLayerDropdown";
+import { MapToolbar } from "./MapToolbar";
 import { formatSince, vehicleState, VEHICLE_STATE_COLOR, type VehicleState } from "@/lib/format";
 import { buildVehicleSvg } from "@/lib/vehicleIcons";
 import { useSpeedLimits } from "@/hooks/useSpeedLimits";
@@ -36,7 +40,8 @@ interface GeocodeResult {
   lng: number;
 }
 
-type BaseLayer = "normal" | "satellite";
+// Default to google-street if Google API key is available, otherwise OSM
+const getDefaultLayer = (): BaseLayerKind => hasGoogleMapsKey() ? "google-street" : "osm";
 
 const STATE_TEXT: Record<VehicleState, string> = {
   moving: "Moving",
@@ -106,7 +111,8 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
   const userMarkerRef = useRef<L.Marker | null>(null);
   const searchMarkerRef = useRef<L.Marker | null>(null);
 
-  const [baseLayer, setBaseLayer] = useState<BaseLayer>("normal");
+  const [baseLayer, setBaseLayer] = useState<BaseLayerKind>(getDefaultLayer);
+  const [googleAvailable, setGoogleAvailable] = useState(hasGoogleMapsKey);
   const [refreshing, setRefreshing] = useState(false);
   const [locating, setLocating] = useState(false);
   const [showTraffic, setShowTraffic] = useState(false);
@@ -200,12 +206,8 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
     const map = L.map(container, {
       center: DHAKA_CENTER,
       zoom: DEFAULT_ZOOM,
-      zoomControl: true,
+      zoomControl: false, // We use our own MapToolbar instead
     });
-
-    // Move zoom control to bottom-right. The tile layer is added by the
-    // base-layer effect below so the Normal/Satellite toggle can swap it.
-    map.zoomControl.setPosition('bottomright');
 
     mapRef.current = map;
 
@@ -230,13 +232,13 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
     };
   }, []);
 
-  // Base layer (Normal / Satellite). Owns the tile layer so the toggle can swap
-  // it; runs on mount to create the initial layer too.
+  // Base layer (all 5 types). Owns the tile layer so the dropdown can swap it;
+  // runs on mount to create the initial layer too.
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
     let cancelled = false;
-    createBaseLayer(baseLayer === "satellite" ? "satellite" : "street").then((layer) => {
+    createBaseLayer(baseLayer).then((layer) => {
       // Guard: toggle changed again or map unmounted while Google API loaded.
       if (cancelled || mapRef.current !== map) return;
       tileLayerRef.current?.remove();
@@ -244,7 +246,9 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
       layer.bringToBack();
       tileLayerRef.current = layer;
       // Traffic only exists on the Google base layer, not the OSM fallback.
-      setTrafficAvailable(layerSupportsTraffic(layer));
+      const supportsTraffic = layerSupportsTraffic(layer);
+      setTrafficAvailable(supportsTraffic);
+      setGoogleAvailable(supportsTraffic || hasGoogleMapsKey());
       setLayerTraffic(layer, showTrafficRef.current);
     });
     return () => {
@@ -447,9 +451,18 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
     <div className="relative h-full w-full" style={{ minHeight: "400px" }}>
       <div ref={containerRef} className="absolute inset-0" style={{ width: "100%", height: "100%" }} />
 
-      {/* Address search (top-left) */}
+      {/* Map toolbar (top-left) — zoom, measure, fit all, locate */}
+      <MapToolbar
+        map={mapRef.current}
+        onFitAll={handleFitAll}
+        onLocate={handleLocate}
+        locating={locating}
+        disabled={locations.size === 0}
+      />
+
+      {/* Address search (top-left, below toolbar when enabled) */}
       {showSearch && (
-        <div className="absolute left-3 top-3 z-[1000] w-64">
+        <div className="absolute left-14 top-3 z-[1000] w-64">
           <div className="flex overflow-hidden rounded-md border border-surface-300 bg-white shadow-menu">
             <input
               type="search"
@@ -497,39 +510,28 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
         </div>
       )}
 
-      {/* Map controls (top-right) — Normal / Satellite + Show Traffic */}
+      {/* Map controls (top-right) — Layer dropdown + Show Traffic */}
       <div className="absolute right-3 top-3 z-[1000] flex items-center gap-2">
         {trafficAvailable && (
-          <label className="flex cursor-pointer items-center gap-1.5 rounded-md border border-surface-300 bg-white px-2.5 py-1 text-xs font-semibold text-ink-900 shadow-menu">
+          <label className="flex cursor-pointer items-center gap-1.5 rounded-md border border-surface-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-ink-900 shadow-menu">
             <input
               type="checkbox"
               checked={showTraffic}
               onChange={(e) => setShowTraffic(e.target.checked)}
               className="h-3.5 w-3.5 accent-brand-500"
             />
-            Show Traffic
+            Traffic
           </label>
         )}
-        <div className="flex overflow-hidden rounded-md border border-surface-300 bg-white text-xs shadow-menu">
-          {(["normal", "satellite"] as BaseLayer[]).map((k) => (
-            <button
-              key={k}
-              type="button"
-              onClick={() => setBaseLayer(k)}
-              className={
-                baseLayer === k
-                  ? "bg-brand-500 px-2.5 py-1 font-semibold capitalize text-white"
-                  : "px-2.5 py-1 capitalize text-ink-700 transition hover:bg-surface-100"
-              }
-            >
-              {k}
-            </button>
-          ))}
-        </div>
+        <MapLayerDropdown
+          currentLayer={baseLayer}
+          onChange={setBaseLayer}
+          googleAvailable={googleAvailable}
+        />
       </div>
 
-      {/* Control cluster (bottom-right, above the zoom control) */}
-      <div className="absolute bottom-[92px] right-3 z-[1000] flex flex-col gap-1.5">
+      {/* Refresh button (bottom-right) */}
+      <div className="absolute bottom-6 right-3 z-[1000]">
         <button
           type="button"
           onClick={handleRefresh}
@@ -544,36 +546,6 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           >
             <path d="M23 4v6h-6M1 20v-6h6" />
             <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
-          </svg>
-        </button>
-        <button
-          type="button"
-          onClick={handleFitAll}
-          disabled={locations.size === 0}
-          title="Fit all vehicles"
-          className="flex h-9 w-9 items-center justify-center rounded-md border border-surface-300 bg-white text-ink-700 shadow-menu transition hover:bg-surface-100 disabled:opacity-60"
-        >
-          <svg
-            width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-            strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-          >
-            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
-          </svg>
-        </button>
-        <button
-          type="button"
-          onClick={handleLocate}
-          disabled={locating}
-          title="Locate me"
-          className="flex h-9 w-9 items-center justify-center rounded-md border border-surface-300 bg-white text-ink-700 shadow-menu transition hover:bg-surface-100 disabled:opacity-60"
-        >
-          <svg
-            width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-            strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-            className={locating ? "animate-pulse" : ""}
-          >
-            <circle cx="12" cy="12" r="3" />
-            <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
           </svg>
         </button>
       </div>

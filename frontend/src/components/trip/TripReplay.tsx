@@ -68,7 +68,7 @@ export function TripReplay({ trip, onClose }: Props) {
       zoomControl: true,
     });
 
-    createBaseLayer("street").then((layer) => {
+    createBaseLayer("google-street").then((layer) => {
       if (mapRef.current === map) layer.addTo(map);
     });
 

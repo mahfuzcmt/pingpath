@@ -31,7 +31,19 @@ export const SATELLITE_ATTRIBUTION =
 
 export const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
 
-export type BaseLayerKind = "street" | "satellite";
+export type BaseLayerKind =
+  | "osm"              // OSM Standard (free, always available)
+  | "google-street"    // Google roadmap
+  | "google-satellite" // Google satellite imagery
+  | "google-hybrid"    // Google satellite + labels
+  | "google-terrain";  // Google terrain
+
+// Backwards compatibility: map old "street"/"satellite" to new kinds
+export function normalizeLayerKind(kind: string): BaseLayerKind {
+  if (kind === "street" || kind === "normal") return "google-street";
+  if (kind === "satellite") return "google-hybrid";
+  return kind as BaseLayerKind;
+}
 
 declare global {
   interface Window {
@@ -93,7 +105,37 @@ export function setLayerTraffic(layer: L.GridLayer | null | undefined, enabled: 
   else layer.removeGoogleLayer("TrafficLayer");
 }
 
-export async function createBaseLayer(kind: BaseLayerKind = "street"): Promise<L.GridLayer> {
+/** Map BaseLayerKind to Google Maps type string. Returns null for OSM. */
+function googleMapType(kind: BaseLayerKind): string | null {
+  switch (kind) {
+    case "google-street": return "roadmap";
+    case "google-satellite": return "satellite";
+    case "google-hybrid": return "hybrid";
+    case "google-terrain": return "terrain";
+    case "osm": return null;
+    default: return null;
+  }
+}
+
+/** Check if Google Maps API key is configured. */
+export function hasGoogleMapsKey(): boolean {
+  return !!GOOGLE_MAPS_API_KEY;
+}
+
+/** Preload Google Maps API (call early if you know you'll need it). */
+export function preloadGoogleMaps(): void {
+  if (GOOGLE_MAPS_API_KEY) loadGoogleMaps();
+}
+
+export async function createBaseLayer(kind: BaseLayerKind = "google-street"): Promise<L.GridLayer> {
+  const gmapType = googleMapType(kind);
+
+  // OSM: always use OSM tiles, no Google API needed
+  if (kind === "osm" || !gmapType) {
+    return L.tileLayer(TILE_URL, { attribution: TILE_ATTRIBUTION, maxZoom: 19 });
+  }
+
+  // Google layer types
   if (await loadGoogleMaps()) {
     // Import lazily so the plugin (which touches window) never runs during SSR
     // and stays out of the no-key path. Do NOT use the L.gridLayer.googleMutant
@@ -116,15 +158,18 @@ export async function createBaseLayer(kind: BaseLayerKind = "street"): Promise<L
       fromExports(mod) ?? fromExports((mod as { default?: unknown } | null)?.default);
     if (GoogleMutant) {
       return new GoogleMutant({
-        type: kind === "satellite" ? "hybrid" : "roadmap",
+        type: gmapType,
         maxZoom: 21,
       });
     }
     // Unexpected plugin shape — fall through to the free tile fallback.
   }
-  return kind === "satellite"
-    ? L.tileLayer(TILE_URL_SATELLITE, { attribution: SATELLITE_ATTRIBUTION, maxZoom: 19 })
-    : L.tileLayer(TILE_URL, { attribution: TILE_ATTRIBUTION, maxZoom: 19 });
+
+  // Fallback: OSM for street-like types, Esri satellite for satellite types
+  if (kind === "google-satellite" || kind === "google-hybrid") {
+    return L.tileLayer(TILE_URL_SATELLITE, { attribution: SATELLITE_ATTRIBUTION, maxZoom: 19 });
+  }
+  return L.tileLayer(TILE_URL, { attribution: TILE_ATTRIBUTION, maxZoom: 19 });
 }
 
 // Dhaka centre — used as initial map view when no devices yet have a fix.

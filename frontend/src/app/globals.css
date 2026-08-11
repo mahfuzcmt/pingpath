@@ -212,6 +212,22 @@
   @apply !bg-white !text-ink-700 hover:!bg-surface-100;
 }
 
+/* Measure tool styles */
+.pp-measure-line {
+  stroke: #2B82D4;
+  stroke-width: 2;
+  stroke-dasharray: 6, 4;
+}
+.pp-measure-label {
+  background: rgba(15, 39, 66, 0.9);
+  color: #fff;
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  white-space: nowrap;
+  font-family: 'JetBrains Mono', monospace;
+}
+
 /* ══════════════════════════════════════════════════════════════════
    MARKETING WEBSITE COMPONENTS - Professional Design System
    ══════════════════════════════════════════════════════════════════ */
