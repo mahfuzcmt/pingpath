@@ -13,7 +13,7 @@ const CONTACT = {
 function Logo() {
   return (
     <Image
-      src="/motolink-logo.jpg"
+      src="/motolink-logo.png"
       alt="MotoLink"
       width={180}
       height={45}

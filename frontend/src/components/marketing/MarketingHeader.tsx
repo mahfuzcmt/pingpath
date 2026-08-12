@@ -46,7 +46,7 @@ export function MarketingHeader({ variant = "light" }: { variant?: "light" | "da
         {/* Logo */}
         <Link href="/" className="flex items-center">
           <Image
-            src="/motolink-logo.jpg"
+            src="/motolink-logo.png"
             alt="MotoLink"
             width={160}
             height={40}

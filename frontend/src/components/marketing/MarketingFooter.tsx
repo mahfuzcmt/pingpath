@@ -38,7 +38,7 @@ export function MarketingFooter() {
           <div className="lg:col-span-2">
             <Link href="/" className="inline-flex items-center">
               <Image
-                src="/motolink-logo.jpg"
+                src="/motolink-logo.png"
                 alt="MotoLink"
                 width={160}
                 height={40}
