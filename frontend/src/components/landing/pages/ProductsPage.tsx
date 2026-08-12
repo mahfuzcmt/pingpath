@@ -70,16 +70,14 @@ function ProductCard({ product, t, lang }: { product: Product; t: (key: string) 
         </div>
       )}
 
-      {/* Product Image - Premium dark background with subtle glow */}
-      <div className="relative flex h-64 items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-6">
-        {/* Subtle colored glow behind product */}
-        <div className={`absolute inset-0 opacity-20 ${product.categoryColor.replace("bg-", "bg-gradient-to-br from-")} to-transparent`} />
+      {/* Product Image - Brand gradient background (cyan to light blue) */}
+      <div className="relative flex h-64 items-center justify-center bg-gradient-to-br from-cyan-50 via-blue-50 to-slate-100 p-6">
         <div className="relative h-44 w-44 transition-transform duration-300 group-hover:scale-110">
           <Image
             src={product.image}
             alt={t(product.titleKey)}
             fill
-            className="object-contain drop-shadow-2xl"
+            className="object-contain drop-shadow-xl"
           />
         </div>
       </div>

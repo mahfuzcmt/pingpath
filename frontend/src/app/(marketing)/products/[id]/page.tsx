@@ -94,9 +94,8 @@ export default function ProductDetailPage() {
                 </div>
               )}
 
-              {/* Image Container */}
-              <div className="overflow-hidden rounded-3xl bg-gradient-to-br from-gray-800 via-gray-900 to-black p-8 md:p-16">
-                <div className={`absolute inset-0 opacity-10 ${product.categoryColor.replace("bg-", "bg-gradient-to-br from-")} to-transparent rounded-3xl`} />
+              {/* Image Container - Brand gradient background (cyan to light blue) */}
+              <div className="overflow-hidden rounded-3xl bg-gradient-to-br from-cyan-50 via-blue-50 to-slate-100 p-8 md:p-16 shadow-xl">
                 <div className="relative aspect-square">
                   <Image
                     src={product.image}
@@ -275,7 +274,7 @@ export default function ProductDetailPage() {
                     href={`/products/${relProduct.id}`}
                     className="group block overflow-hidden rounded-2xl bg-gray-800/50 border border-gray-700/50 transition hover:border-amber-500/50"
                   >
-                    <div className="relative h-48 bg-gradient-to-br from-gray-800 to-gray-900 p-4">
+                    <div className="relative h-48 bg-gradient-to-br from-cyan-50 via-blue-50 to-slate-100 p-4">
                       <div className={`absolute left-3 top-3 z-10 rounded-full px-2 py-0.5 text-xs font-bold uppercase text-white ${relProduct.categoryColor}`}>
                         {t(relProduct.categoryBadge)}
                       </div>
@@ -284,7 +283,7 @@ export default function ProductDetailPage() {
                           src={relProduct.image}
                           alt={t(relProduct.titleKey)}
                           fill
-                          className="object-contain transition group-hover:scale-105"
+                          className="object-contain transition group-hover:scale-105 drop-shadow-lg"
                         />
                       </div>
                     </div>

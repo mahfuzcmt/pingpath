@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useLocale } from "@/lib/i18n";
-import { MotoLinkLogoInline } from "./MotoLinkLogo";
+import Image from "next/image";
 
 export function MarketingFooter() {
   const { t } = useLocale();
@@ -37,7 +37,13 @@ export function MarketingFooter() {
           {/* Brand section */}
           <div className="lg:col-span-2">
             <Link href="/" className="inline-flex items-center">
-              <MotoLinkLogoInline dark={true} />
+              <Image
+                src="/motolink-logo.jpg"
+                alt="MotoLink"
+                width={160}
+                height={40}
+                className="h-10 w-auto"
+              />
             </Link>
             <p className="mt-5 max-w-xs text-[15px] leading-relaxed text-slate-400">
               {t("mkt.footer.tagline")}

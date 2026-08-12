@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useLocale } from "@/lib/i18n";
 import { LanguageToggle } from "@/components/shell/LanguageToggle";
-import { MotoLinkLogoInline } from "./MotoLinkLogo";
+import Image from "next/image";
 
 const NAV_LINKS = [
   { href: "/features", key: "mkt.nav.features" },
@@ -45,7 +45,14 @@ export function MarketingHeader({ variant = "light" }: { variant?: "light" | "da
       <div className="mkt-container flex h-[72px] items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center">
-          <MotoLinkLogoInline dark={isDark} />
+          <Image
+            src="/motolink-logo.jpg"
+            alt="MotoLink"
+            width={160}
+            height={40}
+            className="h-10 w-auto"
+            priority
+          />
         </Link>
 
         {/* Desktop Navigation */}

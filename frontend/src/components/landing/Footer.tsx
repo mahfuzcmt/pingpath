@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { useLanguage } from "./LanguageContext";
 
@@ -11,28 +12,13 @@ const CONTACT = {
 
 function Logo() {
   return (
-    <div className="flex items-center gap-2.5">
-      <svg width="40" height="40" viewBox="0 0 48 48" fill="none">
-        <defs>
-          <linearGradient id="logoGradFooter" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#22D3EE" />
-            <stop offset="50%" stopColor="#0284C7" />
-            <stop offset="100%" stopColor="#1B3A5F" />
-          </linearGradient>
-        </defs>
-        <path d="M24 4L44 42C44 43.5 42.5 45 41 45H7C5.5 45 4 43.5 4 42L24 4Z" fill="url(#logoGradFooter)" />
-        <path d="M10 36C14 32 20 30 27 35" stroke="white" strokeWidth="2.5" strokeLinecap="round" fill="none" />
-        <path d="M14 30C18 26 24 25 31 29" stroke="white" strokeWidth="2" strokeLinecap="round" fill="none" opacity="0.85" />
-        <path d="M18 24C22 20 28 19 35 23" stroke="white" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity="0.7" />
-        <circle cx="12" cy="38" r="2.5" fill="white" opacity="0.95" />
-        <circle cx="20" cy="35" r="2" fill="white" opacity="0.85" />
-        <circle cx="28" cy="32" r="1.5" fill="white" opacity="0.75" />
-      </svg>
-      <div>
-        <div className="text-xl font-extrabold leading-tight tracking-tight text-white">MOTOLINK</div>
-        <div className="text-[10px] font-semibold uppercase tracking-widest text-cyan-400">GPS Tracking</div>
-      </div>
-    </div>
+    <Image
+      src="/motolink-logo.jpg"
+      alt="MotoLink"
+      width={180}
+      height={45}
+      className="h-11 w-auto"
+    />
   );
 }
 
