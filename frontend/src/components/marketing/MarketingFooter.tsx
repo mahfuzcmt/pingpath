@@ -42,7 +42,7 @@ export function MarketingFooter() {
                 alt="MotoLink"
                 width={160}
                 height={40}
-                className="h-10 w-auto"
+                className="h-10 w-auto rounded-md"
               />
             </Link>
             <p className="mt-5 max-w-xs text-[15px] leading-relaxed text-slate-400">

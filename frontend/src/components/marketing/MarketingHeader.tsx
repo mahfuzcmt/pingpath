@@ -50,7 +50,7 @@ export function MarketingHeader({ variant = "light" }: { variant?: "light" | "da
             alt="MotoLink"
             width={160}
             height={40}
-            className="h-10 w-auto"
+            className="h-10 w-auto rounded-md shadow-sm"
             priority
           />
         </Link>

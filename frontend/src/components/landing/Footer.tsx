@@ -17,7 +17,7 @@ function Logo() {
       alt="MotoLink"
       width={180}
       height={45}
-      className="h-11 w-auto"
+      className="h-11 w-auto rounded-md"
     />
   );
 }
