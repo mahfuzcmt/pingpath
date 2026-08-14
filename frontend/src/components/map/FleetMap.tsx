@@ -79,6 +79,14 @@ function statusText(device: DeviceView | undefined, location: LocationView | und
   return STATE_TEXT[vehicleState(device, location)];
 }
 
+/**
+ * True when the device is still transmitting but its newest packet carried no GPS
+ * fix — the coordinates on screen are the last confirmed position, not a live one.
+ */
+function hasNoFix(location: LocationView | undefined): boolean {
+  return location != null && !location.valid;
+}
+
 // Vehicle marker: top-view silhouette by vehicle type, rotated to the course.
 function createVehicleIcon(
   vehicleType: string | null | undefined,
@@ -86,11 +94,12 @@ function createVehicleIcon(
   rotation: number,
   isSelected: boolean,
   isOverspeed = false,
+  noFix = false,
 ): L.DivIcon {
   const size = isSelected ? 46 : 38;
   return L.divIcon({
     html: buildVehicleSvg(vehicleType, isOverspeed ? OVERSPEED_COLOR : bodyColor, rotation, size),
-    className: `pp-vehicle-icon ${isSelected ? 'pp-selected' : ''} ${isOverspeed ? 'pp-overspeed' : ''}`,
+    className: `pp-vehicle-icon ${isSelected ? 'pp-selected' : ''} ${isOverspeed ? 'pp-overspeed' : ''} ${noFix ? 'pp-nofix' : ''}`,
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2],
   });
@@ -152,6 +161,19 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
          </div>`
       : "";
 
+    // The device is reporting but has lost its GPS fix: say so plainly, and date
+    // the coordinates, so a frozen marker reads as "no fix" and not "app broken".
+    const sats = location?.satellites != null ? ` · ${location.satellites} sat` : "";
+    const fixAge = location?.lastValidTs
+      ? `position from ${formatDateTime(location.lastValidTs)}`
+      : "no confirmed position yet";
+    const noFixRow = hasNoFix(location)
+      ? `<div class="pp-popup-row pp-popup-row-full pp-popup-nofix">
+           <span class="pp-popup-label">GPS</span>
+           <span class="pp-popup-value">No fix${sats} — ${fixAge}</span>
+         </div>`
+      : "";
+
     return `
       <div class="pp-popup">
         <div class="pp-popup-header">
@@ -159,6 +181,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           <span class="pp-popup-status" style="background: ${statusColor}20; color: ${statusColor};">${status}</span>
         </div>
         <div class="pp-popup-grid">
+          ${noFixRow}
           <div class="pp-popup-row">
             <span class="pp-popup-label">Vehicle No</span>
             <span class="pp-popup-value">${plate}</span>
@@ -332,10 +355,11 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
 
       const course = loc.course ?? 0;
       const bodyColor = device?.iconColor || "#E8900A";
+      const noFix = hasNoFix(loc);
 
       if (!marker) {
         // Create new marker
-        const icon = createVehicleIcon(device?.vehicleType, bodyColor, course, isSelected, isOverspeed);
+        const icon = createVehicleIcon(device?.vehicleType, bodyColor, course, isSelected, isOverspeed, noFix);
         marker = L.marker([loc.latitude, loc.longitude], { icon })
           .addTo(map)
           .bindPopup(createPopupContent(device, loc), {
@@ -357,7 +381,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
       } else {
         // Update existing marker
         marker.setLatLng([loc.latitude, loc.longitude]);
-        marker.setIcon(createVehicleIcon(device?.vehicleType, bodyColor, course, isSelected, isOverspeed));
+        marker.setIcon(createVehicleIcon(device?.vehicleType, bodyColor, course, isSelected, isOverspeed, noFix));
         marker.setPopupContent(createPopupContent(device, loc));
         marker.setTooltipContent(plateLabelHtml(device, color));
       }
@@ -568,6 +592,19 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
             opacity: 0.25;
           }
         }
+        /* No GPS fix: the marker sits on the last confirmed position, so mute it
+           and ring it to distinguish "stale coordinates" from a live vehicle. */
+        .pp-vehicle-icon.pp-nofix {
+          opacity: 0.55;
+        }
+        .pp-vehicle-icon.pp-nofix::after {
+          content: '';
+          position: absolute;
+          inset: -4px;
+          border: 1.5px dashed rgba(148, 163, 184, 0.9);
+          border-radius: 50%;
+          pointer-events: none;
+        }
         .pp-search-pin {
           width: 14px;
           height: 14px;
@@ -662,6 +699,16 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
         }
         .pp-popup-row-full {
           grid-column: span 2;
+        }
+        .pp-popup-nofix {
+          background: rgba(245, 158, 11, 0.12);
+          border: 1px solid rgba(245, 158, 11, 0.35);
+          border-radius: 6px;
+          padding: 6px 8px;
+        }
+        .pp-popup-nofix .pp-popup-label,
+        .pp-popup-nofix .pp-popup-value {
+          color: #f59e0b;
         }
         .pp-popup-label {
           font-size: 10px;

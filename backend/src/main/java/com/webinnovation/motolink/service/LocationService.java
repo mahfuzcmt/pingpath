@@ -40,17 +40,31 @@ public class LocationService {
 
             Integer engineHoursSeconds = loc.getAccOnTimeSeconds() == null
                     ? null : loc.getAccOnTimeSeconds().intValue();
-            deviceRepo.updateLastPosition(
-                    loc.getImei(),
-                    loc.getLatitude(),
-                    loc.getLongitude(),
-                    loc.getSpeed(),
-                    loc.getCourse(),
-                    loc.getVoltageMv(),
-                    loc.getGsmSignal(),
-                    engineHoursSeconds,
-                    loc.getTimestamp()
-            );
+            // Only a valid fix may advance the device's position. Without a fix the
+            // reported lat/lng is meaningless (a repeat of the last fix at best, zeros
+            // or a cell-tower estimate at worst), so we refresh presence + telemetry
+            // and leave last_location/speed/course pinned to the last known-good fix.
+            if (loc.isValid()) {
+                deviceRepo.updateLastPosition(
+                        loc.getImei(),
+                        loc.getLatitude(),
+                        loc.getLongitude(),
+                        loc.getSpeed(),
+                        loc.getCourse(),
+                        loc.getVoltageMv(),
+                        loc.getGsmSignal(),
+                        engineHoursSeconds,
+                        loc.getTimestamp()
+                );
+            } else {
+                deviceRepo.updateLastTelemetryNoFix(
+                        loc.getImei(),
+                        loc.getVoltageMv(),
+                        loc.getGsmSignal(),
+                        engineHoursSeconds,
+                        loc.getTimestamp()
+                );
+            }
 
             String json = toJson(loc);
             if (json != null) {
@@ -78,6 +92,9 @@ public class LocationService {
         m.put("speed", d.getSpeed());
         m.put("course", d.getCourse());
         m.put("valid", d.isValid());
+        // Null on a no-fix packet — the client carries the previous value forward
+        // rather than re-querying, keeping the hot path free of extra reads.
+        m.put("lastValidTs", d.isValid() ? d.getTimestamp().toString() : null);
         m.put("satellites", d.getSatellites());
         m.put("accOn", d.getAccOn());
         m.put("voltageMv", d.getVoltageMv());

@@ -122,7 +122,10 @@ export interface LocationView {
   longitude: number;
   speed: number;
   course: number;
+  /** Whether the NEWEST packet had a GPS fix. False ⇒ the coordinates are stale. */
   valid: boolean;
+  /** When the coordinates were last confirmed by a fix. Null if never fixed. */
+  lastValidTs?: string | null;
   satellites?: number | null;
   accOn?: boolean | null;
   voltageMv?: number | null;

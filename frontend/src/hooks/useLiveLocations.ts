@@ -13,6 +13,27 @@ import type { LocationView } from "@/types/domain";
  * Returns a map keyed by IMEI plus a `bumpId` that increments on every
  * mutation so consumers (the map) can re-render markers cheaply.
  */
+/**
+ * Fold an incoming packet into what we already hold for the device.
+ *
+ * A packet with no GPS fix still tells us the device is alive and carries fresh
+ * telemetry, but its coordinates are meaningless — a GT06 repeats its last fix,
+ * and some firmware sends zeros or a cell-tower estimate. So we take everything
+ * except position from the new packet and leave the marker where the last
+ * confirmed fix put it. This mirrors the backend rule in LocationService.
+ */
+function merge(existing: LocationView, incoming: LocationView): LocationView {
+  if (incoming.valid) return incoming;
+  return {
+    ...incoming,
+    latitude: existing.latitude,
+    longitude: existing.longitude,
+    speed: existing.speed,
+    course: existing.course,
+    lastValidTs: incoming.lastValidTs ?? existing.lastValidTs ?? null,
+  };
+}
+
 export function useLiveLocations(orgId: string) {
   const [locations, setLocations] = useState<Map<string, LocationView>>(new Map());
   const [loaded, setLoaded] = useState(false);
@@ -28,7 +49,7 @@ export function useLiveLocations(orgId: string) {
       if (existing && new Date(existing.ts).getTime() >= new Date(loc.ts).getTime()) {
         return prev; // ignore out-of-order
       }
-      next.set(loc.imei, loc);
+      next.set(loc.imei, existing ? merge(existing, loc) : loc);
       return next;
     });
     setBumpId((n) => n + 1);

@@ -137,6 +137,36 @@ public class DeviceRepository {
     }
 
     /**
+     * Apply a location packet that carries NO valid GPS fix.
+     *
+     * The device is heard from (presence + non-positional telemetry refresh) but
+     * last_location / last_speed / last_course are deliberately left untouched, so
+     * the device row keeps the last position we actually know to be true. A GT06
+     * with no fix repeats its stale coordinates — and some firmware emits zeroed or
+     * LBS-derived coordinates instead, which would otherwise teleport the marker.
+     * See CLAUDE.md §3.2 rule 1: the raw row is still persisted either way.
+     */
+    public void updateLastTelemetryNoFix(String imei, Integer voltageMv, Integer gsmSignal,
+                                         Integer engineHoursSeconds, Instant ts) {
+        var params = new MapSqlParameterSource()
+                .addValue("imei", imei)
+                .addValue("voltageMv", voltageMv)
+                .addValue("gsmSignal", gsmSignal)
+                .addValue("engineHours", engineHoursSeconds)
+                .addValue("ts", java.sql.Timestamp.from(ts));
+        jdbc.update("""
+                UPDATE devices SET
+                  status = 'ONLINE',
+                  last_seen_at = :ts,
+                  last_voltage_mv = COALESCE(:voltageMv, last_voltage_mv),
+                  last_gsm_signal = COALESCE(:gsmSignal, last_gsm_signal),
+                  last_engine_hours_seconds = COALESCE(:engineHours, last_engine_hours_seconds),
+                  updated_at = now()
+                WHERE imei = :imei
+                """, params);
+    }
+
+    /**
      * Apply a heartbeat-derived status update (no position). Heartbeats carry
      * GSM strength independently of location packets, so we refresh the signal
      * indicator for parked vehicles between position fixes.

@@ -13,8 +13,10 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
@@ -118,5 +120,40 @@ public class LocationRepository {
                 ORDER BY device_imei, ts DESC
                 """.formatted(SELECT_FIELDS),
                 new MapSqlParameterSource("orgId", orgId), ROW_MAPPER);
+    }
+
+    /**
+     * The newest location per device paired with the newest location that actually
+     * had a GPS fix.
+     *
+     * <p>The two differ whenever a device is transmitting without a fix (parked under
+     * cover, antenna unplugged): {@code latest} carries current freshness/telemetry,
+     * {@code lastValid} carries the coordinates we last knew to be true. Callers plot
+     * {@code lastValid} and use {@code latest} to tell the user the position is stale.
+     * {@code lastValid} is null for a device that has never reported a fix.
+     */
+    public record LastKnownFix(Location latest, Location lastValid) {}
+
+    public List<LastKnownFix> findAllLastKnownWithFixForOrg(UUID orgId) {
+        var params = new MapSqlParameterSource("orgId", orgId);
+        List<Location> latest = jdbc.query("""
+                SELECT DISTINCT ON (device_imei) %s
+                FROM locations
+                WHERE org_id = :orgId
+                ORDER BY device_imei, ts DESC
+                """.formatted(SELECT_FIELDS), params, ROW_MAPPER);
+
+        Map<String, Location> lastValidByImei = jdbc.query("""
+                SELECT DISTINCT ON (device_imei) %s
+                FROM locations
+                WHERE org_id = :orgId AND valid
+                ORDER BY device_imei, ts DESC
+                """.formatted(SELECT_FIELDS), params, ROW_MAPPER)
+                .stream()
+                .collect(Collectors.toMap(Location::deviceImei, l -> l));
+
+        return latest.stream()
+                .map(l -> new LastKnownFix(l, lastValidByImei.get(l.deviceImei())))
+                .toList();
     }
 }

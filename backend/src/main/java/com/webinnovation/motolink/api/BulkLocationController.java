@@ -23,12 +23,17 @@ public class BulkLocationController {
 
     private final LocationRepository locationRepo;
 
-    /** Last-known position for every device in the org — initial dashboard load. */
+    /**
+     * Last-known position for every device in the org — initial dashboard load.
+     * Coordinates are the last GPS-confirmed fix; `valid` and `ts` describe the
+     * newest packet, so the map can flag a device that is still reporting but has
+     * lost its fix instead of presenting stale coordinates as live.
+     */
     @GetMapping("/last")
     public List<LocationView> allLastKnown() {
         UUID orgId = TenantContext.requireOrgId();
-        return locationRepo.findAllLastKnownForOrg(orgId).stream()
-                .map(LocationView::of)
+        return locationRepo.findAllLastKnownWithFixForOrg(orgId).stream()
+                .map(f -> LocationView.ofLastKnown(f.latest(), f.lastValid()))
                 .toList();
     }
 }
