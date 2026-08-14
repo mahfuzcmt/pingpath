@@ -49,10 +49,10 @@ export function ContactPage() {
   return (
     <>
       {/* Hero */}
-      <section className="bg-gradient-to-br from-gray-900 via-gray-800 to-blue-900 pb-20 pt-32">
+      <section className="bg-gradient-to-br from-gray-900 via-gray-800 to-brand-900 pb-20 pt-32">
         <div className="mx-auto max-w-7xl px-4 text-center sm:px-6">
           <motion.div initial="hidden" animate="visible" variants={staggerContainer}>
-            <motion.div variants={fadeInUp} className="mb-4 inline-flex items-center rounded-full bg-cyan-500/20 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-cyan-300">
+            <motion.div variants={fadeInUp} className="mb-4 inline-flex items-center rounded-full bg-brand-500/20 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-brand-300">
               {t("contact.badge")}
             </motion.div>
             <motion.h1 variants={fadeInUp} className="text-4xl font-bold text-white sm:text-5xl">
@@ -82,9 +82,9 @@ export function ContactPage() {
                   <motion.a
                     href={`tel:${PHONE.replace(/[^+\d]/g, "")}`}
                     whileHover={{ x: 4 }}
-                    className="flex items-start gap-4 rounded-xl border border-gray-100 bg-gray-50 p-5 transition-all hover:border-blue-100 hover:shadow-md"
+                    className="flex items-start gap-4 rounded-xl border border-gray-100 bg-gray-50 p-5 transition-all hover:border-brand-100 hover:shadow-md"
                   >
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-brand-100 text-brand-600">
                       <Icon path={ICONS.phone} className="h-6 w-6" />
                     </div>
                     <div>
@@ -98,9 +98,9 @@ export function ContactPage() {
                   <motion.a
                     href={`mailto:${EMAIL}`}
                     whileHover={{ x: 4 }}
-                    className="flex items-start gap-4 rounded-xl border border-gray-100 bg-gray-50 p-5 transition-all hover:border-blue-100 hover:shadow-md"
+                    className="flex items-start gap-4 rounded-xl border border-gray-100 bg-gray-50 p-5 transition-all hover:border-brand-100 hover:shadow-md"
                   >
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-brand-100 text-brand-600">
                       <Icon path={ICONS.mail} className="h-6 w-6" />
                     </div>
                     <div>
@@ -113,9 +113,9 @@ export function ContactPage() {
                   {/* Address */}
                   <motion.div
                     whileHover={{ x: 4 }}
-                    className="flex items-start gap-4 rounded-xl border border-gray-100 bg-gray-50 p-5 transition-all hover:border-blue-100 hover:shadow-md"
+                    className="flex items-start gap-4 rounded-xl border border-gray-100 bg-gray-50 p-5 transition-all hover:border-brand-100 hover:shadow-md"
                   >
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-brand-100 text-brand-600">
                       <Icon path={ICONS.map} className="h-6 w-6" />
                     </div>
                     <div>
@@ -128,9 +128,9 @@ export function ContactPage() {
                   {/* Business Hours */}
                   <motion.div
                     whileHover={{ x: 4 }}
-                    className="flex items-start gap-4 rounded-xl border border-gray-100 bg-gray-50 p-5 transition-all hover:border-blue-100 hover:shadow-md"
+                    className="flex items-start gap-4 rounded-xl border border-gray-100 bg-gray-50 p-5 transition-all hover:border-brand-100 hover:shadow-md"
                   >
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-brand-100 text-brand-600">
                       <Icon path={ICONS.clock} className="h-6 w-6" />
                     </div>
                     <div>
@@ -153,7 +153,7 @@ export function ContactPage() {
                         <input
                           type="text"
                           required
-                          className="h-12 w-full rounded-xl border border-gray-200 bg-white px-4 text-gray-900 placeholder-gray-400 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20"
+                          className="h-12 w-full rounded-xl border border-gray-200 bg-white px-4 text-gray-900 placeholder-gray-400 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20"
                           placeholder=""
                         />
                       </div>
@@ -162,7 +162,7 @@ export function ContactPage() {
                         <input
                           type="tel"
                           required
-                          className="h-12 w-full rounded-xl border border-gray-200 bg-white px-4 text-gray-900 placeholder-gray-400 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20"
+                          className="h-12 w-full rounded-xl border border-gray-200 bg-white px-4 text-gray-900 placeholder-gray-400 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20"
                           placeholder="01XXX-XXXXXX"
                         />
                       </div>
@@ -172,7 +172,7 @@ export function ContactPage() {
                       <label className="mb-1.5 block text-sm font-medium text-gray-700">{t("contact.emailAddress")}</label>
                       <input
                         type="email"
-                        className="h-12 w-full rounded-xl border border-gray-200 bg-white px-4 text-gray-900 placeholder-gray-400 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20"
+                        className="h-12 w-full rounded-xl border border-gray-200 bg-white px-4 text-gray-900 placeholder-gray-400 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20"
                         placeholder=""
                       />
                     </div>
@@ -181,14 +181,14 @@ export function ContactPage() {
                       <label className="mb-1.5 block text-sm font-medium text-gray-700">{t("contact.companyName")}</label>
                       <input
                         type="text"
-                        className="h-12 w-full rounded-xl border border-gray-200 bg-white px-4 text-gray-900 placeholder-gray-400 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20"
+                        className="h-12 w-full rounded-xl border border-gray-200 bg-white px-4 text-gray-900 placeholder-gray-400 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20"
                         placeholder=""
                       />
                     </div>
 
                     <div>
                       <label className="mb-1.5 block text-sm font-medium text-gray-700">{t("contact.fleetSize")}</label>
-                      <select className="h-12 w-full rounded-xl border border-gray-200 bg-white px-4 text-gray-700 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20">
+                      <select className="h-12 w-full rounded-xl border border-gray-200 bg-white px-4 text-gray-700 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20">
                         <option value="">{t("contact.selectFleet")}</option>
                         <option>1-5 {t("contact.vehicles")}</option>
                         <option>6-20 {t("contact.vehicles")}</option>
@@ -202,7 +202,7 @@ export function ContactPage() {
                       <label className="mb-1.5 block text-sm font-medium text-gray-700">{t("contact.message")}</label>
                       <textarea
                         rows={4}
-                        className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder-gray-400 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20"
+                        className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder-gray-400 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20"
                         placeholder={t("contact.messagePlaceholder")}
                       />
                     </div>
@@ -211,7 +211,7 @@ export function ContactPage() {
                       type="submit"
                       whileHover={{ scale: 1.01 }}
                       whileTap={{ scale: 0.99 }}
-                      className="flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 text-[15px] font-bold text-white shadow-lg shadow-blue-600/30 transition-all hover:bg-blue-700 hover:shadow-xl"
+                      className="flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-brand-600 text-[15px] font-bold text-white shadow-lg shadow-brand-600/30 transition-all hover:bg-brand-700 hover:shadow-xl"
                     >
                       {t("contact.submit")}
                       <Icon path={ICONS.arrow} className="h-5 w-5" />

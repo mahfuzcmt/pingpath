@@ -14,7 +14,7 @@ function LanguageToggle({ dark }: { dark: boolean }) {
         onClick={() => setLang("en")}
         className={`rounded-md px-2.5 py-1.5 text-xs font-semibold transition-all ${
           lang === "en"
-            ? "bg-blue-600 text-white shadow-sm"
+            ? "bg-brand-600 text-white shadow-sm"
             : dark
             ? "text-gray-600 hover:text-gray-900"
             : "text-white/70 hover:text-white"
@@ -26,7 +26,7 @@ function LanguageToggle({ dark }: { dark: boolean }) {
         onClick={() => setLang("bn")}
         className={`rounded-md px-2.5 py-1.5 text-xs font-semibold transition-all ${
           lang === "bn"
-            ? "bg-blue-600 text-white shadow-sm"
+            ? "bg-brand-600 text-white shadow-sm"
             : dark
             ? "text-gray-600 hover:text-gray-900"
             : "text-white/70 hover:text-white"
@@ -100,7 +100,7 @@ export function Header({ transparent = false }: { transparent?: boolean }) {
         {/* Navigation */}
         <nav className="hidden items-center gap-1 lg:flex">
           {NAV_LINKS.map((l) => (
-            <Link key={l.href} href={l.href} className={`rounded-lg px-4 py-2 text-[14px] font-medium transition-colors ${showDark ? "text-gray-700 hover:text-blue-600" : "text-white/90 hover:text-white"}`}>
+            <Link key={l.href} href={l.href} className={`rounded-lg px-4 py-2 text-[14px] font-medium transition-colors ${showDark ? "text-gray-700 hover:text-brand-600" : "text-white/90 hover:text-white"}`}>
               {t(l.key)}
             </Link>
           ))}
@@ -109,10 +109,10 @@ export function Header({ transparent = false }: { transparent?: boolean }) {
         {/* CTA Buttons + Language Toggle */}
         <div className="hidden items-center gap-3 lg:flex">
           <LanguageToggle dark={showDark} />
-          <Link href="/login" className={`rounded-lg px-5 py-2.5 text-[14px] font-semibold transition-all ${showDark ? "text-gray-700 hover:text-blue-600" : "text-white hover:text-white/80"}`}>
+          <Link href="/login" className={`rounded-lg px-5 py-2.5 text-[14px] font-semibold transition-all ${showDark ? "text-gray-700 hover:text-brand-600" : "text-white hover:text-white/80"}`}>
             {t("nav.signIn")}
           </Link>
-          <Link href="/contact" className="rounded-lg bg-blue-600 px-6 py-2.5 text-[14px] font-semibold text-white shadow-lg shadow-blue-600/30 transition-all hover:bg-blue-700 hover:shadow-xl">
+          <Link href="/contact" className="rounded-lg bg-brand-600 px-6 py-2.5 text-[14px] font-semibold text-white shadow-lg shadow-brand-600/30 transition-all hover:bg-brand-700 hover:shadow-xl">
             {t("nav.getDemo")}
           </Link>
         </div>
@@ -139,13 +139,13 @@ export function Header({ transparent = false }: { transparent?: boolean }) {
         <motion.nav initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="border-t border-gray-100 bg-white px-4 py-4 shadow-lg lg:hidden">
           <div className="flex flex-col gap-1">
             {NAV_LINKS.map((l) => (
-              <Link key={l.href} href={l.href} onClick={() => setOpen(false)} className="rounded-lg px-4 py-3 text-[14px] font-medium text-gray-700 hover:bg-gray-50 hover:text-blue-600">
+              <Link key={l.href} href={l.href} onClick={() => setOpen(false)} className="rounded-lg px-4 py-3 text-[14px] font-medium text-gray-700 hover:bg-gray-50 hover:text-brand-600">
                 {t(l.key)}
               </Link>
             ))}
             <div className="mt-4 flex gap-3">
               <Link href="/login" className="flex-1 rounded-lg border border-gray-200 py-3 text-center text-[14px] font-semibold text-gray-700 hover:bg-gray-50">{t("nav.signIn")}</Link>
-              <Link href="/contact" className="flex-1 rounded-lg bg-blue-600 py-3 text-center text-[14px] font-semibold text-white">{t("nav.getDemo")}</Link>
+              <Link href="/contact" className="flex-1 rounded-lg bg-brand-600 py-3 text-center text-[14px] font-semibold text-white">{t("nav.getDemo")}</Link>
             </div>
           </div>
         </motion.nav>

@@ -71,7 +71,7 @@ function ProductCard({ product, t, lang }: { product: Product; t: (key: string) 
       )}
 
       {/* Product Image - Brand gradient background (cyan to light blue) */}
-      <div className="relative flex h-64 items-center justify-center bg-gradient-to-br from-cyan-50 via-blue-50 to-slate-100 p-6">
+      <div className="relative flex h-64 items-center justify-center bg-gradient-to-br from-brand-50 via-brand-50 to-slate-100 p-6">
         <div className="relative h-44 w-44 transition-transform duration-300 group-hover:scale-110">
           <Image
             src={product.image}
@@ -85,7 +85,7 @@ function ProductCard({ product, t, lang }: { product: Product; t: (key: string) 
       {/* Content */}
       <div className="flex flex-1 flex-col p-6">
         {/* Subtitle */}
-        <div className="text-xs font-semibold uppercase tracking-wider text-amber-600">
+        <div className="text-xs font-semibold uppercase tracking-wider text-brand-600">
           {t(product.subtitleKey)}
         </div>
 
@@ -106,7 +106,7 @@ function ProductCard({ product, t, lang }: { product: Product; t: (key: string) 
               )}
             </>
           ) : (
-            <span className="text-xl font-semibold text-amber-600">
+            <span className="text-xl font-semibold text-brand-600">
               {t("productsPage.contactForPrice")}
             </span>
           )}
@@ -160,7 +160,7 @@ function ProductCard({ product, t, lang }: { product: Product; t: (key: string) 
             href={`tel:${PHONE.replace(/[^+\d]/g, "")}`}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-amber-500 py-3 text-sm font-bold text-white shadow-lg shadow-amber-500/30 transition-all hover:bg-amber-600 hover:shadow-xl"
+            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-brand-500 py-3 text-sm font-bold text-white shadow-lg shadow-brand-500/30 transition-all hover:bg-brand-600 hover:shadow-xl"
           >
             <Icon path={ICONS.cart} className="h-4 w-4" />
             {t("productsPage.getQuote")}
@@ -191,7 +191,7 @@ function CategoryFilters({
             whileTap={{ scale: 0.95 }}
             className={`rounded-full px-5 py-2.5 text-sm font-semibold transition-all ${
               activeCategory === filter.key
-                ? "bg-amber-500 text-white shadow-lg shadow-amber-500/30"
+                ? "bg-brand-500 text-white shadow-lg shadow-brand-500/30"
                 : "bg-white text-gray-700 shadow-md hover:bg-gray-50 hover:shadow-lg"
             }`}
           >
@@ -217,7 +217,7 @@ export function ProductsPage() {
       <section className="bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 pb-20 pt-32">
         <div className="mx-auto max-w-7xl px-4 text-center sm:px-6">
           <motion.div initial="hidden" animate="visible" variants={staggerContainer}>
-            <motion.div variants={fadeInUp} className="mb-4 inline-flex items-center rounded-full bg-amber-500/20 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-amber-400">
+            <motion.div variants={fadeInUp} className="mb-4 inline-flex items-center rounded-full bg-brand-500/20 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-brand-400">
               {t("productsPage.badge")}
             </motion.div>
             <motion.h1 variants={fadeInUp} className="text-4xl font-bold text-white sm:text-5xl">
@@ -235,7 +235,7 @@ export function ProductsPage() {
                 { value: "24/7", labelKey: "productsPage.supportAvailable" },
               ].map((stat) => (
                 <div key={stat.labelKey} className="text-center">
-                  <div className="text-2xl font-bold text-amber-400">{stat.value}</div>
+                  <div className="text-2xl font-bold text-brand-400">{stat.value}</div>
                   <div className="text-sm text-gray-500">{t(stat.labelKey)}</div>
                 </div>
               ))}
@@ -245,7 +245,7 @@ export function ProductsPage() {
             <motion.div variants={fadeInUp} className="mt-10">
               <a
                 href={`tel:${PHONE.replace(/[^+\d]/g, "")}`}
-                className="inline-flex items-center gap-2 rounded-full bg-amber-500 px-6 py-3 text-lg font-bold text-white shadow-xl shadow-amber-500/30 transition-all hover:bg-amber-600 hover:shadow-2xl"
+                className="inline-flex items-center gap-2 rounded-full bg-brand-500 px-6 py-3 text-lg font-bold text-white shadow-xl shadow-brand-500/30 transition-all hover:bg-brand-600 hover:shadow-2xl"
               >
                 <Icon path={ICONS.phone} className="h-5 w-5" />
                 {PHONE}
@@ -302,15 +302,15 @@ export function ProductsPage() {
 
             <motion.div variants={fadeInUp} className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {[
-                { titleKey: "productsPage.genuine.title", descKey: "productsPage.genuine.desc", icon: ICONS.shield, color: "text-amber-500" },
+                { titleKey: "productsPage.genuine.title", descKey: "productsPage.genuine.desc", icon: ICONS.shield, color: "text-brand-500" },
                 { titleKey: "productsPage.freeInstall.title", descKey: "productsPage.freeInstall.desc", icon: ICONS.check, color: "text-emerald-500" },
-                { titleKey: "productsPage.warranty.title", descKey: "productsPage.warranty.desc", icon: ICONS.shield, color: "text-blue-500" },
+                { titleKey: "productsPage.warranty.title", descKey: "productsPage.warranty.desc", icon: ICONS.shield, color: "text-brand-500" },
                 { titleKey: "productsPage.support247.title", descKey: "productsPage.support247.desc", icon: ICONS.phone, color: "text-purple-500" },
               ].map((item) => (
                 <motion.div
                   key={item.titleKey}
                   whileHover={{ y: -4 }}
-                  className="rounded-2xl border border-gray-100 bg-gray-50 p-6 text-center transition-all hover:border-amber-200 hover:shadow-lg"
+                  className="rounded-2xl border border-gray-100 bg-gray-50 p-6 text-center transition-all hover:border-brand-200 hover:shadow-lg"
                 >
                   <div className={`mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gray-100 ${item.color}`}>
                     <Icon path={item.icon} className="h-6 w-6" />
@@ -325,16 +325,16 @@ export function ProductsPage() {
       </section>
 
       {/* CTA - Gold/Amber theme */}
-      <section className="bg-gradient-to-br from-amber-500 to-amber-600 py-16">
+      <section className="bg-gradient-to-br from-brand-500 to-brand-600 py-16">
         <div className="mx-auto max-w-4xl px-4 text-center sm:px-6">
           <h2 className="text-3xl font-bold text-white">{t("productsPage.needHelp")}</h2>
-          <p className="mt-4 text-lg text-amber-100">
+          <p className="mt-4 text-lg text-brand-100">
             {t("productsPage.needHelpDesc")}
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-4">
             <a
               href={`tel:${PHONE.replace(/[^+\d]/g, "")}`}
-              className="inline-flex items-center gap-2 rounded-xl bg-white px-8 py-4 text-lg font-bold text-amber-600 shadow-xl transition-all hover:bg-gray-50 hover:shadow-2xl"
+              className="inline-flex items-center gap-2 rounded-xl bg-white px-8 py-4 text-lg font-bold text-brand-600 shadow-xl transition-all hover:bg-gray-50 hover:shadow-2xl"
             >
               <Icon path={ICONS.phone} className="h-6 w-6" />
               {t("productsPage.callNow")}: {PHONE}

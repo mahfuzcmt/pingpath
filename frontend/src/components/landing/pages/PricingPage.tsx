@@ -104,10 +104,10 @@ export function PricingPage() {
   return (
     <>
       {/* Hero */}
-      <section className="bg-gradient-to-br from-gray-900 via-gray-800 to-teal-900 pb-20 pt-32">
+      <section className="bg-gradient-to-br from-gray-900 via-gray-800 to-brand-900 pb-20 pt-32">
         <div className="mx-auto max-w-7xl px-4 text-center sm:px-6">
           <motion.div initial="hidden" animate="visible" variants={staggerContainer}>
-            <motion.div variants={fadeInUp} className="mb-4 inline-flex items-center rounded-full bg-teal-500/20 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-teal-300">
+            <motion.div variants={fadeInUp} className="mb-4 inline-flex items-center rounded-full bg-brand-500/20 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-brand-300">
               {t("pricing.badge")}
             </motion.div>
             <motion.h1 variants={fadeInUp} className="text-4xl font-bold text-white sm:text-5xl">
@@ -132,7 +132,7 @@ export function PricingPage() {
                   whileHover={{ y: -8 }}
                   className={`relative flex flex-col overflow-hidden rounded-2xl p-8 transition-all ${
                     plan.highlight
-                      ? "bg-teal-600 text-white shadow-2xl shadow-teal-600/30"
+                      ? "bg-brand-600 text-white shadow-2xl shadow-brand-600/30"
                       : "bg-white shadow-lg"
                   }`}
                 >
@@ -145,7 +145,7 @@ export function PricingPage() {
                   <h3 className={`text-2xl font-bold ${plan.highlight ? "text-white" : "text-gray-900"}`}>
                     {t(plan.nameKey)}
                   </h3>
-                  <p className={`mt-1 text-sm ${plan.highlight ? "text-teal-100" : "text-gray-500"}`}>
+                  <p className={`mt-1 text-sm ${plan.highlight ? "text-brand-100" : "text-gray-500"}`}>
                     {t(plan.taglineKey)}
                   </p>
 
@@ -153,14 +153,14 @@ export function PricingPage() {
                     <span className={`text-5xl font-bold ${plan.highlight ? "text-white" : "text-gray-900"}`}>
                       {plan.price}
                     </span>
-                    <span className={plan.highlight ? "text-teal-100" : "text-gray-500"}>{t("pricing.perMonth")}</span>
+                    <span className={plan.highlight ? "text-brand-100" : "text-gray-500"}>{t("pricing.perMonth")}</span>
                   </div>
 
                   <ul className="mt-8 flex-1 space-y-4">
                     {plan.featureKeys.map((featureKey) => (
                       <li key={featureKey} className={`flex items-center gap-3 text-[15px] ${plan.highlight ? "text-white" : "text-gray-600"}`}>
-                        <div className={`flex h-5 w-5 items-center justify-center rounded-full ${plan.highlight ? "bg-white/20" : "bg-teal-50"}`}>
-                          <Icon path={ICONS.check} className={`h-3 w-3 ${plan.highlight ? "text-white" : "text-teal-600"}`} />
+                        <div className={`flex h-5 w-5 items-center justify-center rounded-full ${plan.highlight ? "bg-white/20" : "bg-brand-50"}`}>
+                          <Icon path={ICONS.check} className={`h-3 w-3 ${plan.highlight ? "text-white" : "text-brand-600"}`} />
                         </div>
                         {t(featureKey)}
                       </li>
@@ -171,8 +171,8 @@ export function PricingPage() {
                     href="/contact"
                     className={`mt-8 block rounded-xl py-4 text-center text-[15px] font-semibold transition-all ${
                       plan.highlight
-                        ? "bg-white text-teal-600 hover:bg-gray-50"
-                        : "bg-teal-600 text-white hover:bg-teal-700"
+                        ? "bg-white text-brand-600 hover:bg-gray-50"
+                        : "bg-brand-600 text-white hover:bg-brand-700"
                     }`}
                   >
                     {t("pricing.getStarted")}
@@ -206,13 +206,13 @@ export function PricingPage() {
                 </p>
                 <a
                   href={`tel:${PHONE.replace(/[^+\d]/g, "")}`}
-                  className="inline-flex items-center gap-2 rounded-xl bg-orange-500 px-8 py-4 text-lg font-bold text-white shadow-lg shadow-orange-500/30 transition-all hover:bg-orange-600 hover:shadow-xl"
+                  className="inline-flex items-center gap-2 rounded-xl bg-brand-500 px-8 py-4 text-lg font-bold text-white shadow-lg shadow-brand-500/30 transition-all hover:bg-brand-600 hover:shadow-xl"
                 >
                   <Icon path={ICONS.phone} className="h-5 w-5" />
                   {t("products.callForPrice")}
                 </a>
                 <p className="mt-4 text-sm text-gray-500">
-                  {t("device.visitProducts")} <Link href="/products" className="text-teal-600 hover:text-teal-700 font-medium">{t("nav.products")}</Link>
+                  {t("device.visitProducts")} <Link href="/products" className="text-brand-600 hover:text-brand-700 font-medium">{t("nav.products")}</Link>
                 </p>
               </div>
             </motion.div>
@@ -241,14 +241,14 @@ export function PricingPage() {
       </section>
 
       {/* CTA */}
-      <section className="bg-teal-600 py-16">
+      <section className="bg-brand-600 py-16">
         <div className="mx-auto max-w-4xl px-4 text-center sm:px-6">
           <h2 className="text-3xl font-bold text-white">{t("quote.title")}</h2>
-          <p className="mt-4 text-lg text-teal-100">
+          <p className="mt-4 text-lg text-brand-100">
             {t("quote.desc")}
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-4">
-            <Link href="/contact" className="inline-flex items-center gap-2 rounded-xl bg-white px-8 py-4 text-lg font-bold text-teal-600 shadow-xl transition-all hover:bg-gray-50">
+            <Link href="/contact" className="inline-flex items-center gap-2 rounded-xl bg-white px-8 py-4 text-lg font-bold text-brand-600 shadow-xl transition-all hover:bg-gray-50">
               {t("quote.contactSales")}
               <Icon path={ICONS.arrow} className="h-5 w-5" />
             </Link>

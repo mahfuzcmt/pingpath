@@ -43,7 +43,7 @@ export default function ProductDetailPage() {
           <p className="text-gray-400 mb-8">{t("productDetail.notFoundDesc")}</p>
           <Link
             href="/products"
-            className="inline-flex items-center gap-2 rounded-full bg-amber-500 px-6 py-3 font-semibold text-black transition hover:bg-amber-400"
+            className="inline-flex items-center gap-2 rounded-full bg-brand-500 px-6 py-3 font-semibold text-white transition hover:bg-brand-400"
           >
             <Icon path={ICONS.arrow} className="h-5 w-5" />
             {t("productDetail.backToProducts")}
@@ -62,9 +62,9 @@ export default function ProductDetailPage() {
       <div className="border-b border-gray-800 bg-black/50">
         <div className="mx-auto max-w-7xl px-4 py-4">
           <nav className="flex items-center gap-2 text-sm text-gray-400">
-            <Link href="/" className="hover:text-amber-400 transition">{t("nav.home")}</Link>
+            <Link href="/" className="hover:text-brand-400 transition">{t("nav.home")}</Link>
             <span>/</span>
-            <Link href="/products" className="hover:text-amber-400 transition">{t("nav.products")}</Link>
+            <Link href="/products" className="hover:text-brand-400 transition">{t("nav.products")}</Link>
             <span>/</span>
             <span className="text-white">{t(product.titleKey)}</span>
           </nav>
@@ -95,7 +95,7 @@ export default function ProductDetailPage() {
               )}
 
               {/* Image Container - Brand gradient background (cyan to light blue) */}
-              <div className="overflow-hidden rounded-3xl bg-gradient-to-br from-cyan-50 via-blue-50 to-slate-100 p-8 md:p-16 shadow-xl">
+              <div className="overflow-hidden rounded-3xl bg-gradient-to-br from-brand-50 via-brand-50 to-slate-100 p-8 md:p-16 shadow-xl">
                 <div className="relative aspect-square">
                   <Image
                     src={product.image}
@@ -119,7 +119,7 @@ export default function ProductDetailPage() {
               <h1 className="text-3xl font-bold text-white md:text-4xl lg:text-5xl">
                 {t(product.titleKey)}
               </h1>
-              <p className="mt-2 text-lg text-amber-400 font-medium">
+              <p className="mt-2 text-lg text-brand-400 font-medium">
                 {t(product.subtitleKey)}
               </p>
               <p className="mt-4 text-gray-400 text-lg leading-relaxed">
@@ -141,7 +141,7 @@ export default function ProductDetailPage() {
                     <span className="text-gray-400">{t("products.onwards")}</span>
                   </>
                 ) : (
-                  <span className="text-2xl text-amber-400 font-semibold">
+                  <span className="text-2xl text-brand-400 font-semibold">
                     {t("productsPage.contactForPrice")}
                   </span>
                 )}
@@ -159,7 +159,7 @@ export default function ProductDetailPage() {
 
                 {/* Free Installation Badge */}
                 {product.freeInstallation && (
-                  <div className="flex items-center gap-2 rounded-full bg-amber-500/10 px-4 py-2 text-amber-400">
+                  <div className="flex items-center gap-2 rounded-full bg-brand-500/10 px-4 py-2 text-brand-400">
                     <Icon path={ICONS.truck} className="h-5 w-5" />
                     <span className="text-sm font-medium">{t("productsPage.freeInstall")}</span>
                   </div>
@@ -172,8 +172,8 @@ export default function ProductDetailPage() {
                 <ul className="grid gap-3 sm:grid-cols-2">
                   {product.featureKeys.map((featureKey, idx) => (
                     <li key={idx} className="flex items-start gap-3">
-                      <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-500/20">
-                        <Icon path={ICONS.check} className="h-3 w-3 text-amber-400" />
+                      <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-500/20">
+                        <Icon path={ICONS.check} className="h-3 w-3 text-brand-400" />
                       </span>
                       <span className="text-gray-300">{t(featureKey)}</span>
                     </li>
@@ -185,14 +185,14 @@ export default function ProductDetailPage() {
               <div className="mt-10 flex flex-col gap-4 sm:flex-row">
                 <a
                   href={`tel:${PHONE.replace(/[^+\d]/g, "")}`}
-                  className="flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-amber-500 via-amber-600 to-orange-500 px-8 py-4 text-lg font-bold text-black shadow-lg shadow-amber-500/25 transition hover:shadow-amber-500/40 hover:scale-105"
+                  className="flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-brand-500 via-brand-600 to-brand-700 px-8 py-4 text-lg font-bold text-white shadow-lg shadow-brand-500/25 transition hover:shadow-brand-500/40 hover:scale-105"
                 >
                   <Icon path={ICONS.phone} className="h-5 w-5" />
                   {t("productDetail.orderNow")}
                 </a>
                 <Link
                   href="/contact"
-                  className="flex items-center justify-center gap-2 rounded-full border-2 border-gray-600 bg-transparent px-8 py-4 text-lg font-semibold text-white transition hover:border-amber-500 hover:text-amber-400"
+                  className="flex items-center justify-center gap-2 rounded-full border-2 border-gray-600 bg-transparent px-8 py-4 text-lg font-semibold text-white transition hover:border-brand-500 hover:text-brand-400"
                 >
                   {t("productDetail.getQuote")}
                 </Link>
@@ -200,9 +200,9 @@ export default function ProductDetailPage() {
 
               {/* Contact Info */}
               <div className="mt-8 flex items-center gap-3 text-gray-400">
-                <Icon path={ICONS.phone} className="h-5 w-5 text-amber-400" />
+                <Icon path={ICONS.phone} className="h-5 w-5 text-brand-400" />
                 <span>{t("productDetail.callUs")}: </span>
-                <a href={`tel:${PHONE.replace(/[^+\d]/g, "")}`} className="text-white font-semibold hover:text-amber-400 transition">
+                <a href={`tel:${PHONE.replace(/[^+\d]/g, "")}`} className="text-white font-semibold hover:text-brand-400 transition">
                   {PHONE}
                 </a>
               </div>
@@ -237,8 +237,8 @@ export default function ProductDetailPage() {
                 transition={{ delay: idx * 0.1 }}
                 className="rounded-2xl bg-gray-800/50 p-8 text-center border border-gray-700/50"
               >
-                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-amber-500/10">
-                  <Icon path={benefit.icon} className="h-8 w-8 text-amber-400" />
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-brand-500/10">
+                  <Icon path={benefit.icon} className="h-8 w-8 text-brand-400" />
                 </div>
                 <h3 className="text-xl font-bold text-white mb-2">{t(benefit.titleKey)}</h3>
                 <p className="text-gray-400">{t(benefit.descKey)}</p>
@@ -272,9 +272,9 @@ export default function ProductDetailPage() {
                 >
                   <Link
                     href={`/products/${relProduct.id}`}
-                    className="group block overflow-hidden rounded-2xl bg-gray-800/50 border border-gray-700/50 transition hover:border-amber-500/50"
+                    className="group block overflow-hidden rounded-2xl bg-gray-800/50 border border-gray-700/50 transition hover:border-brand-500/50"
                   >
-                    <div className="relative h-48 bg-gradient-to-br from-cyan-50 via-blue-50 to-slate-100 p-4">
+                    <div className="relative h-48 bg-gradient-to-br from-brand-50 via-brand-50 to-slate-100 p-4">
                       <div className={`absolute left-3 top-3 z-10 rounded-full px-2 py-0.5 text-xs font-bold uppercase text-white ${relProduct.categoryColor}`}>
                         {t(relProduct.categoryBadge)}
                       </div>
@@ -288,11 +288,11 @@ export default function ProductDetailPage() {
                       </div>
                     </div>
                     <div className="p-4">
-                      <h3 className="font-bold text-white group-hover:text-amber-400 transition">
+                      <h3 className="font-bold text-white group-hover:text-brand-400 transition">
                         {t(relProduct.titleKey)}
                       </h3>
                       {relProduct.price && (
-                        <p className="mt-1 text-lg font-bold text-amber-400">
+                        <p className="mt-1 text-lg font-bold text-brand-400">
                           ৳{formatPrice(relProduct.price, lang)}
                         </p>
                       )}
@@ -310,7 +310,7 @@ export default function ProductDetailPage() {
         <div className="mx-auto max-w-7xl px-4 text-center">
           <Link
             href="/products"
-            className="inline-flex items-center gap-2 text-gray-400 hover:text-amber-400 transition"
+            className="inline-flex items-center gap-2 text-gray-400 hover:text-brand-400 transition"
           >
             <Icon path={ICONS.arrow} className="h-5 w-5" />
             {t("productDetail.backToProducts")}

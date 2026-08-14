@@ -90,7 +90,7 @@ const CLIENT_LOGOS = [
 function Hero() {
   const { t } = useLanguage();
   return (
-    <section className="relative min-h-[750px] overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-blue-900">
+    <section className="relative min-h-[750px] overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-brand-900">
       <div className="absolute inset-0 opacity-20">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSA2MCAwIEwgMCAwIDAgNjAiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwwLjEpIiBzdHJva2Utd2lkdGg9IjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')]" />
       </div>
@@ -98,17 +98,17 @@ function Hero() {
       <div className="relative mx-auto max-w-7xl px-4 pb-20 pt-28 sm:px-6 lg:pb-32 lg:pt-36">
         <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
           <motion.div initial="hidden" animate="visible" variants={staggerContainer}>
-            <motion.div variants={fadeInUp} className="mb-6 inline-flex items-center gap-2 rounded-full bg-amber-500/20 px-4 py-2 text-[13px] font-semibold text-amber-300">
+            <motion.div variants={fadeInUp} className="mb-6 inline-flex items-center gap-2 rounded-full bg-brand-500/20 px-4 py-2 text-[13px] font-semibold text-brand-300">
               <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-400" />
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-400 opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-brand-400" />
               </span>
               {t("hero.badge")}
             </motion.div>
 
             <motion.h1 variants={fadeInUp} className="text-4xl font-bold leading-tight tracking-tight text-white sm:text-5xl lg:text-6xl">
               {t("hero.title1")}
-              <span className="mt-2 block text-amber-400">{t("hero.title2")}</span>
+              <span className="mt-2 block text-brand-400">{t("hero.title2")}</span>
             </motion.h1>
 
             <motion.p variants={fadeInUp} className="mt-6 max-w-xl text-lg leading-relaxed text-gray-300">
@@ -116,7 +116,7 @@ function Hero() {
             </motion.p>
 
             <motion.div variants={fadeInUp} className="mt-10 flex flex-wrap items-center gap-4">
-              <a href={`tel:${CONTACT.sales.replace(/[^+\d]/g, "")}`} className="group inline-flex h-14 items-center gap-2 rounded-xl bg-amber-500 px-8 text-[15px] font-bold text-white shadow-xl shadow-amber-500/30 transition-all hover:bg-amber-600 hover:shadow-2xl">
+              <a href={`tel:${CONTACT.sales.replace(/[^+\d]/g, "")}`} className="group inline-flex h-14 items-center gap-2 rounded-xl bg-brand-500 px-8 text-[15px] font-bold text-white shadow-xl shadow-brand-500/30 transition-all hover:bg-brand-600 hover:shadow-2xl">
                 <Icon path={ICONS.phone} className="h-5 w-5" />
                 {t("hero.contactSales")}
               </a>
@@ -133,7 +133,7 @@ function Hero() {
                 { icon: ICONS.clock, labelKey: "hero.support" },
               ].map((item) => (
                 <div key={item.labelKey} className="flex items-center gap-2.5">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/10 text-amber-400">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/10 text-brand-400">
                     <Icon path={item.icon} className="h-5 w-5" />
                   </div>
                   <span className="text-sm font-medium text-gray-300">{t(item.labelKey)}</span>
@@ -164,7 +164,7 @@ function Hero() {
                     ].map((v, i) => (
                       <motion.div key={i} initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 1 + i * 0.15 }} className="absolute" style={{ top: v.top, left: v.left }}>
                         <motion.div animate={v.status === "moving" ? { scale: [1, 1.3, 1] } : {}} transition={{ duration: 2, repeat: Infinity }} className="relative">
-                          <div className={`h-4 w-4 rounded-full shadow-lg ${v.status === "moving" ? "bg-amber-500 shadow-amber-500/50" : v.status === "parked" ? "bg-emerald-500 shadow-emerald-500/50" : "bg-blue-500 shadow-blue-500/50"}`} />
+                          <div className={`h-4 w-4 rounded-full shadow-lg ${v.status === "moving" ? "bg-brand-500 shadow-brand-500/50" : v.status === "parked" ? "bg-emerald-500 shadow-emerald-500/50" : "bg-brand-500 shadow-brand-500/50"}`} />
                           <div className="absolute -bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-black/70 px-1.5 py-0.5 text-[9px] font-medium text-white">{v.label}</div>
                         </motion.div>
                       </motion.div>
@@ -177,7 +177,7 @@ function Hero() {
                       { label: "Alerts", value: "3", color: "red" },
                     ].map((stat) => (
                       <div key={stat.label} className="flex-1 rounded-lg bg-gray-800/80 p-2.5 backdrop-blur">
-                        <div className={`text-lg font-bold ${stat.color === "amber" ? "text-amber-400" : stat.color === "emerald" ? "text-emerald-400" : "text-red-400"}`}>{stat.value}</div>
+                        <div className={`text-lg font-bold ${stat.color === "amber" ? "text-brand-400" : stat.color === "emerald" ? "text-emerald-400" : "text-red-400"}`}>{stat.value}</div>
                         <div className="text-[10px] text-gray-500">{stat.label}</div>
                       </div>
                     ))}
@@ -208,7 +208,7 @@ function TrustBadges() {
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
           {badges.map((badge) => (
             <div key={badge.labelKey} className="flex items-center justify-center gap-3 text-white">
-              <Icon path={badge.icon} className="h-6 w-6 text-amber-400" />
+              <Icon path={badge.icon} className="h-6 w-6 text-brand-400" />
               <span className="text-sm font-medium">{t(badge.labelKey)}</span>
             </div>
           ))}
@@ -267,7 +267,7 @@ function FeaturesSection() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <AnimatedSection>
           <motion.div variants={fadeInUp} className="mx-auto mb-14 max-w-3xl text-center">
-            <div className="mb-4 inline-flex items-center rounded-full bg-blue-50 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-blue-700">
+            <div className="mb-4 inline-flex items-center rounded-full bg-brand-50 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-brand-700">
               {t("features.badge")}
             </div>
             <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">{t("features.title")}</h2>
@@ -276,8 +276,8 @@ function FeaturesSection() {
 
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {features.map((f) => (
-              <motion.div key={f.titleKey} variants={fadeInUp} whileHover={{ y: -6 }} className="group rounded-2xl border border-gray-100 bg-white p-6 shadow-sm transition-all hover:border-blue-100 hover:shadow-lg">
-                <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-xl bg-blue-50 text-blue-600 transition-colors group-hover:bg-blue-100">
+              <motion.div key={f.titleKey} variants={fadeInUp} whileHover={{ y: -6 }} className="group rounded-2xl border border-gray-100 bg-white p-6 shadow-sm transition-all hover:border-brand-100 hover:shadow-lg">
+                <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-xl bg-brand-50 text-brand-600 transition-colors group-hover:bg-brand-100">
                   <Icon path={f.icon} className="h-7 w-7" />
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900">{t(f.titleKey)}</h3>
@@ -287,7 +287,7 @@ function FeaturesSection() {
           </div>
 
           <motion.div variants={fadeInUp} className="mt-12 text-center">
-            <Link href="/features" className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-8 py-4 text-[15px] font-semibold text-white shadow-lg shadow-blue-600/30 transition-all hover:bg-blue-700 hover:shadow-xl">
+            <Link href="/features" className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-8 py-4 text-[15px] font-semibold text-white shadow-lg shadow-brand-600/30 transition-all hover:bg-brand-700 hover:shadow-xl">
               {t("features.viewAll")}
               <Icon path={ICONS.arrow} className="h-5 w-5" />
             </Link>
@@ -307,8 +307,8 @@ function ProductsSection() {
     { titleKey: "product.btrc.title", descKey: "product.btrc.desc", badgeKey: "product.btrc.badge", icon: ICONS.shield, price: 4500, categoryColor: "bg-red-500" },
     { titleKey: "product.wired.title", descKey: "product.wired.desc", icon: ICONS.map, price: 4500, categoryColor: "bg-emerald-500" },
     { titleKey: "product.obd.title", descKey: "product.obd.desc", icon: ICONS.car, price: 5500, categoryColor: "bg-violet-500" },
-    { titleKey: "product.dashcam.title", descKey: "product.dashcam.desc", icon: ICONS.video, price: 12500, categoryColor: "bg-amber-500" },
-    { titleKey: "product.fuelSensor.title", descKey: "product.fuelSensor.desc", icon: ICONS.fuel, price: 8500, categoryColor: "bg-blue-500" },
+    { titleKey: "product.dashcam.title", descKey: "product.dashcam.desc", icon: ICONS.video, price: 12500, categoryColor: "bg-brand-500" },
+    { titleKey: "product.fuelSensor.title", descKey: "product.fuelSensor.desc", icon: ICONS.fuel, price: 8500, categoryColor: "bg-brand-500" },
     { titleKey: "product.portable.title", descKey: "product.portable.desc", icon: ICONS.package, price: 7500, categoryColor: "bg-purple-500" },
   ];
 
@@ -325,7 +325,7 @@ function ProductsSection() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <AnimatedSection>
           <motion.div variants={fadeInUp} className="mx-auto mb-14 max-w-3xl text-center">
-            <div className="mb-4 inline-flex items-center rounded-full bg-amber-50 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-amber-700">
+            <div className="mb-4 inline-flex items-center rounded-full bg-brand-50 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-brand-700">
               {t("products.badge")}
             </div>
             <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">{t("products.title")}</h2>
@@ -340,7 +340,7 @@ function ProductsSection() {
                     {t(p.badgeKey)}
                   </div>
                 )}
-                <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-50 text-amber-600 transition-all group-hover:bg-amber-50 group-hover:scale-110">
+                <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-50 text-brand-600 transition-all group-hover:bg-brand-50 group-hover:scale-110">
                   <Icon path={p.icon} className="h-8 w-8" />
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900">{t(p.titleKey)}</h3>
@@ -352,7 +352,7 @@ function ProductsSection() {
                 </div>
 
                 <p className="mt-2 text-[14px] text-gray-600">{t(p.descKey)}</p>
-                <Link href="/products" className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-amber-600 transition-colors hover:text-amber-700">
+                <Link href="/products" className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-brand-600 transition-colors hover:text-brand-700">
                   {t("products.explore")} <Icon path={ICONS.arrow} className="h-4 w-4" />
                 </Link>
               </motion.div>
@@ -383,7 +383,7 @@ function IndustrySection() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <AnimatedSection>
           <motion.div variants={fadeInUp} className="mx-auto mb-14 max-w-3xl text-center">
-            <div className="mb-4 inline-flex items-center rounded-full bg-amber-500/20 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-amber-400">
+            <div className="mb-4 inline-flex items-center rounded-full bg-brand-500/20 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-brand-400">
               {t("industries.badge")}
             </div>
             <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">{t("industries.title")}</h2>
@@ -393,7 +393,7 @@ function IndustrySection() {
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:gap-6">
             {industries.map((ind) => (
               <motion.div key={ind.nameKey} variants={fadeInUp} whileHover={{ scale: 1.05 }} className="group flex flex-col items-center rounded-xl bg-white/5 p-6 text-center backdrop-blur transition-all hover:bg-white/10">
-                <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-xl bg-amber-500/20 text-amber-400 transition-all group-hover:bg-amber-500 group-hover:text-white">
+                <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-xl bg-brand-500/20 text-brand-400 transition-all group-hover:bg-brand-500 group-hover:text-white">
                   <Icon path={ind.icon} className="h-7 w-7" />
                 </div>
                 <span className="text-sm font-medium text-white">{t(ind.nameKey)}</span>
@@ -402,7 +402,7 @@ function IndustrySection() {
           </div>
 
           <motion.div variants={fadeInUp} className="mt-12 text-center">
-            <Link href="/solutions" className="inline-flex items-center gap-2 text-sm font-semibold text-amber-400 hover:text-amber-300">
+            <Link href="/solutions" className="inline-flex items-center gap-2 text-sm font-semibold text-brand-400 hover:text-brand-300">
               {t("industries.viewAll")} <Icon path={ICONS.arrow} className="h-4 w-4" />
             </Link>
           </motion.div>
@@ -429,7 +429,7 @@ function StatsSection() {
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {stats.map((stat) => (
               <motion.div key={stat.labelKey} variants={fadeInUp} whileHover={{ y: -4 }} className="rounded-2xl bg-gray-50 p-6 text-center shadow-sm transition-shadow hover:shadow-lg">
-                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
+                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-brand-100 text-brand-600">
                   <Icon path={stat.icon} className="h-7 w-7" />
                 </div>
                 <div className="text-4xl font-bold text-gray-900">{stat.value}</div>
@@ -562,17 +562,17 @@ function PartnersSection() {
 function CTASection() {
   const { t } = useLanguage();
   return (
-    <section className="bg-gradient-to-br from-amber-500 via-amber-600 to-orange-600 py-20">
+    <section className="bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 py-20">
       <div className="mx-auto max-w-4xl px-4 text-center sm:px-6">
         <AnimatedSection>
           <motion.h2 variants={fadeInUp} className="text-3xl font-bold text-white sm:text-4xl lg:text-5xl">
             {t("cta.title")}
           </motion.h2>
-          <motion.p variants={fadeInUp} className="mx-auto mt-4 max-w-2xl text-lg text-amber-100">
+          <motion.p variants={fadeInUp} className="mx-auto mt-4 max-w-2xl text-lg text-brand-100">
             {t("cta.desc")}
           </motion.p>
           <motion.div variants={fadeInUp} className="mt-10 flex flex-wrap justify-center gap-4">
-            <a href={`tel:${CONTACT.sales.replace(/[^+\d]/g, "")}`} className="inline-flex h-14 items-center gap-2 rounded-xl bg-white px-8 text-[16px] font-bold text-amber-600 shadow-xl transition-all hover:bg-gray-50 hover:shadow-2xl">
+            <a href={`tel:${CONTACT.sales.replace(/[^+\d]/g, "")}`} className="inline-flex h-14 items-center gap-2 rounded-xl bg-white px-8 text-[16px] font-bold text-brand-600 shadow-xl transition-all hover:bg-gray-50 hover:shadow-2xl">
               <Icon path={ICONS.phone} className="h-5 w-5" />
               {t("hero.contactSales")}
             </a>

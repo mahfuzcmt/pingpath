@@ -49,7 +49,7 @@ export function Footer() {
   const { t } = useLanguage();
 
   return (
-    <footer className="border-t border-gray-800 bg-gray-900 py-16">
+    <footer className="border-t border-gray-800 bg-gradient-to-br from-gray-900 via-gray-800 to-brand-900 py-16">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <div className="grid gap-12 lg:grid-cols-4">
           <div className="lg:col-span-2">
@@ -69,7 +69,7 @@ export function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   whileHover={{ y: -3 }}
-                  className="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-800 text-sm font-semibold text-gray-400 transition-colors hover:bg-blue-600 hover:text-white"
+                  className="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-800 text-sm font-semibold text-gray-400 transition-colors hover:bg-brand-600 hover:text-white"
                 >
                   {s.label[0]}
                 </motion.a>
@@ -82,13 +82,13 @@ export function Footer() {
             <ul className="space-y-3 text-[14px]">
               {NAV_LINKS.map((link) => (
                 <li key={link.href}>
-                  <Link href={link.href} className="text-gray-400 transition-colors hover:text-cyan-400">
+                  <Link href={link.href} className="text-gray-400 transition-colors hover:text-brand-400">
                     {t(link.key)}
                   </Link>
                 </li>
               ))}
               <li>
-                <Link href="/login" className="text-gray-400 transition-colors hover:text-cyan-400">
+                <Link href="/login" className="text-gray-400 transition-colors hover:text-brand-400">
                   {t("nav.signIn")}
                 </Link>
               </li>
@@ -99,15 +99,15 @@ export function Footer() {
             <h4 className="mb-5 text-sm font-semibold uppercase tracking-wider text-gray-400">{t("footer.contactUs")}</h4>
             <ul className="space-y-3 text-[14px] text-gray-400">
               <li className="flex items-center gap-2">
-                <Icon path={ICONS.phone} className="h-4 w-4 text-cyan-500" />
-                <a href={`tel:${CONTACT.hotline.replace(/[^+\d]/g, "")}`} className="hover:text-cyan-400">{CONTACT.hotline}</a>
+                <Icon path={ICONS.phone} className="h-4 w-4 text-brand-400" />
+                <a href={`tel:${CONTACT.hotline.replace(/[^+\d]/g, "")}`} className="hover:text-brand-400">{CONTACT.hotline}</a>
               </li>
               <li className="flex items-center gap-2">
-                <Icon path={ICONS.mail} className="h-4 w-4 text-cyan-500" />
-                <a href={`mailto:${CONTACT.email}`} className="hover:text-cyan-400">{CONTACT.email}</a>
+                <Icon path={ICONS.mail} className="h-4 w-4 text-brand-400" />
+                <a href={`mailto:${CONTACT.email}`} className="hover:text-brand-400">{CONTACT.email}</a>
               </li>
               <li className="flex items-start gap-2">
-                <Icon path={ICONS.map} className="mt-0.5 h-4 w-4 text-cyan-500" />
+                <Icon path={ICONS.map} className="mt-0.5 h-4 w-4 text-brand-400" />
                 <span>{t("footer.address")}</span>
               </li>
             </ul>
@@ -125,8 +125,8 @@ export function Footer() {
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-gray-800 pt-8 sm:flex-row">
           <span className="text-sm text-gray-500">© {new Date().getFullYear()} MotoLink GPS. {t("footer.rights")}</span>
           <div className="flex items-center gap-6 text-sm text-gray-500">
-            <Link href="/privacy" className="hover:text-cyan-400">Privacy Policy</Link>
-            <Link href="/terms" className="hover:text-cyan-400">Terms of Service</Link>
+            <Link href="/privacy" className="hover:text-brand-400">Privacy Policy</Link>
+            <Link href="/terms" className="hover:text-brand-400">Terms of Service</Link>
             <span>Made with ❤️ in Bangladesh</span>
           </div>
         </div>

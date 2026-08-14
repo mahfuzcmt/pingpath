@@ -85,7 +85,7 @@ export function AboutPage() {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-blue-900 pt-32 pb-20 lg:pt-40 lg:pb-28">
+      <section className="relative overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-brand-900 pt-32 pb-20 lg:pt-40 lg:pb-28">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-20">
           <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSA2MCAwIEwgMCAwIDAgNjAiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwwLjEpIiBzdHJva2Utd2lkdGg9IjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')]" />
@@ -93,7 +93,7 @@ export function AboutPage() {
 
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6">
           <AnimatedSection className="text-center">
-            <motion.div variants={fadeInUp} className="mb-6 inline-flex items-center gap-2 rounded-full bg-amber-500/20 px-4 py-2 text-sm font-semibold text-amber-300">
+            <motion.div variants={fadeInUp} className="mb-6 inline-flex items-center gap-2 rounded-full bg-brand-500/20 px-4 py-2 text-sm font-semibold text-brand-300">
               <Icon path={ICONS.clock} className="h-4 w-4" />
               {t("about.badge")}
             </motion.div>
@@ -110,7 +110,7 @@ export function AboutPage() {
             <motion.div variants={fadeInUp} className="mt-12 grid grid-cols-2 gap-6 sm:grid-cols-4 lg:gap-8">
               {STATS.map((stat, idx) => (
                 <div key={idx} className="rounded-2xl bg-white/10 backdrop-blur-sm p-6 text-center">
-                  <div className="text-3xl font-bold text-amber-400 sm:text-4xl">{stat.value}</div>
+                  <div className="text-3xl font-bold text-brand-400 sm:text-4xl">{stat.value}</div>
                   <div className="mt-1 text-sm text-gray-300">{t(stat.labelKey)}</div>
                 </div>
               ))}
@@ -124,7 +124,7 @@ export function AboutPage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <AnimatedSection>
             <div className="mx-auto max-w-3xl">
-              <motion.div variants={fadeInUp} className="mb-6 inline-flex items-center gap-2 rounded-full bg-amber-100 px-4 py-2 text-sm font-semibold text-amber-700">
+              <motion.div variants={fadeInUp} className="mb-6 inline-flex items-center gap-2 rounded-full bg-brand-100 px-4 py-2 text-sm font-semibold text-brand-700">
                 {t("about.story.badge")}
               </motion.div>
 
@@ -143,10 +143,10 @@ export function AboutPage() {
       </section>
 
       {/* Mission Section */}
-      <section className="py-20 lg:py-28 bg-gradient-to-br from-gray-900 via-gray-800 to-blue-900">
+      <section className="py-20 lg:py-28 bg-gradient-to-br from-gray-900 via-gray-800 to-brand-900">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <AnimatedSection className="text-center">
-            <motion.div variants={fadeInUp} className="mb-6 inline-flex items-center gap-2 rounded-full bg-amber-500/20 px-4 py-2 text-sm font-semibold text-amber-300">
+            <motion.div variants={fadeInUp} className="mb-6 inline-flex items-center gap-2 rounded-full bg-brand-500/20 px-4 py-2 text-sm font-semibold text-brand-300">
               <Icon path={ICONS.target} className="h-4 w-4" />
               {t("about.mission.badge")}
             </motion.div>
@@ -180,7 +180,7 @@ export function AboutPage() {
                   whileHover={{ y: -5 }}
                   className="flex gap-5 rounded-2xl bg-white p-6 shadow-lg transition-shadow hover:shadow-xl"
                 >
-                  <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-600">
+                  <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl bg-brand-100 text-brand-600">
                     <Icon path={item.icon} className="h-7 w-7" />
                   </div>
                   <div>
@@ -199,28 +199,28 @@ export function AboutPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 lg:py-28 bg-gradient-to-r from-amber-500 via-amber-600 to-orange-500">
+      <section className="py-20 lg:py-28 bg-gradient-to-r from-brand-500 via-brand-600 to-brand-700">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <AnimatedSection className="text-center">
-            <motion.h2 variants={fadeInUp} className="text-3xl font-bold text-black sm:text-4xl">
+            <motion.h2 variants={fadeInUp} className="text-3xl font-bold text-white sm:text-4xl">
               {t("about.cta.title")}
             </motion.h2>
 
-            <motion.p variants={fadeInUp} className="mx-auto mt-4 max-w-2xl text-lg text-black/80">
+            <motion.p variants={fadeInUp} className="mx-auto mt-4 max-w-2xl text-lg text-brand-100">
               {t("about.cta.desc")}
             </motion.p>
 
             <motion.div variants={fadeInUp} className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
               <a
                 href={`tel:${PHONE.replace(/[^+\d]/g, "")}`}
-                className="inline-flex items-center gap-2 rounded-full bg-black px-8 py-4 text-lg font-bold text-white shadow-lg transition hover:bg-gray-900"
+                className="inline-flex items-center gap-2 rounded-full bg-white px-8 py-4 text-lg font-bold text-brand-600 shadow-lg transition hover:bg-brand-50"
               >
                 <Icon path={ICONS.phone} className="h-5 w-5" />
                 {t("about.cta.call")}
               </a>
               <Link
                 href="/contact"
-                className="inline-flex items-center gap-2 rounded-full border-2 border-black bg-transparent px-8 py-4 text-lg font-bold text-black transition hover:bg-black/10"
+                className="inline-flex items-center gap-2 rounded-full border-2 border-white/40 bg-white/10 px-8 py-4 text-lg font-bold text-white backdrop-blur transition hover:bg-white/20"
               >
                 {t("about.cta.contact")}
               </Link>
