@@ -7,7 +7,7 @@ import { motion, useInView, AnimatePresence } from "framer-motion";
 import { useLanguage } from "../LanguageContext";
 import { PRODUCTS, CATEGORY_FILTERS, formatPrice, type ProductCategory, type Product } from "../data/products";
 
-const PHONE = "+880 1629-563645";
+const PHONE = "+880 1999-036999";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },

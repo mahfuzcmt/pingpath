@@ -5,7 +5,7 @@ import { motion, useInView } from "framer-motion";
 import Link from "next/link";
 import { useLanguage } from "../LanguageContext";
 
-const PHONE = "+880 1629-563645";
+const PHONE = "+880 1999-036999";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },

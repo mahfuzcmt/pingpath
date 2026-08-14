@@ -4,7 +4,7 @@ import { useRef } from "react";
 import { motion, useInView } from "framer-motion";
 import { useLanguage } from "../LanguageContext";
 
-const PHONE = "+880 1629-563645";
+const PHONE = "+880 1999-036999";
 const EMAIL = "hello@motolink.com.bd";
 
 const fadeInUp = {

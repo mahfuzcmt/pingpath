@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { useLanguage } from "./LanguageContext";
 
 const CONTACT = {
-  hotline: "+880 1629-563645",
+  hotline: "+880 1999-036999",
   email: "hello@motolink.com.bd",
 };
 

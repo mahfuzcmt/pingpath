@@ -8,8 +8,7 @@ import { useState } from "react";
    ──────────────────────────────────────────────────────────────── */
 
 const CONTACT = {
-  hotline: "+880 1629-563645",
-  sales: "+880 1629-563645",
+  hotline: "+880 1999-036999",
   email: "hello@motolink.com.bd",
   address: "Dhaka, Bangladesh",
 };
@@ -605,8 +604,7 @@ function Contact() {
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             {[
-              { label: "Sales Hotline", value: CONTACT.sales, href: `tel:${CONTACT.sales.replace(/[^+\d]/g, "")}` },
-              { label: "Support Hotline", value: CONTACT.hotline, href: `tel:${CONTACT.hotline.replace(/[^+\d]/g, "")}` },
+              { label: "Sales & Support Hotline", value: CONTACT.hotline, href: `tel:${CONTACT.hotline.replace(/[^+\d]/g, "")}` },
               { label: "Email", value: CONTACT.email, href: `mailto:${CONTACT.email}` },
               { label: "Office", value: CONTACT.address, href: undefined },
             ].map((c) => (

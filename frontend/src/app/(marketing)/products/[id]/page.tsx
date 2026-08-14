@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 import { useLanguage } from "@/components/landing/LanguageContext";
 import { getProductById, formatPrice, PRODUCTS } from "@/components/landing/data/products";
 
-const PHONE = "+880 1629-563645";
+const PHONE = "+880 1999-036999";
 
 function Icon({ path, className = "h-6 w-6" }: { path: string; className?: string }) {
   return (
