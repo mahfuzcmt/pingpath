@@ -601,8 +601,9 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
         });
 
         // Fetch and display address when popup opens
-        marker.on('popupopen', () => {
-          const popup = marker.getPopup();
+        const currentMarker = marker; // Capture for closure
+        currentMarker.on('popupopen', () => {
+          const popup = currentMarker.getPopup();
           if (!popup) return;
           const container = popup.getElement();
           if (!container) return;
