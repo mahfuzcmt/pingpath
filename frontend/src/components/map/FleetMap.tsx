@@ -49,6 +49,57 @@ interface TodaySummary {
   maxSpeed: number;
 }
 
+/** Cache key for address lookups (rounded to ~100m precision to reduce API calls) */
+function addressCacheKey(lat: number, lng: number): string {
+  return `${lat.toFixed(3)},${lng.toFixed(3)}`;
+}
+
+/** Global address cache (persists across re-renders) */
+const addressCache = new Map<string, string>();
+
+/** Reverse geocode coordinates to address using Nominatim */
+async function reverseGeocode(lat: number, lng: number): Promise<string> {
+  const key = addressCacheKey(lat, lng);
+  if (addressCache.has(key)) {
+    return addressCache.get(key)!;
+  }
+
+  try {
+    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`;
+    const res = await fetch(url, {
+      headers: {
+        Accept: "application/json",
+        "User-Agent": "MotoLink GPS Tracker"
+      }
+    });
+    if (!res.ok) throw new Error("Geocoding failed");
+
+    const data = await res.json();
+
+    // Build a concise address from the response
+    let address = "";
+    if (data.address) {
+      const parts: string[] = [];
+      // Prioritize: road/suburb > neighbourhood > village/city
+      if (data.address.road) parts.push(data.address.road);
+      if (data.address.suburb) parts.push(data.address.suburb);
+      else if (data.address.neighbourhood) parts.push(data.address.neighbourhood);
+      if (data.address.city || data.address.town || data.address.village) {
+        parts.push(data.address.city || data.address.town || data.address.village);
+      }
+      if (data.address.state_district) parts.push(data.address.state_district);
+      address = parts.slice(0, 3).join(", ") || data.display_name?.split(",").slice(0, 3).join(",") || "Unknown";
+    } else {
+      address = data.display_name?.split(",").slice(0, 3).join(",") || "Unknown";
+    }
+
+    addressCache.set(key, address);
+    return address;
+  } catch {
+    return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+  }
+}
+
 /** Format duration in seconds to "Xh Ym" or "Ym" format */
 function formatDurationCompact(seconds: number): string {
   if (seconds < 0) return "—";
@@ -332,9 +383,9 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
             <span class="pp-popup-label">IMEI</span>
             <span class="pp-popup-value pp-mono">${imei}</span>
           </div>
-          <div class="pp-popup-row">
+          <div class="pp-popup-row pp-popup-row-full">
             <span class="pp-popup-label">Location</span>
-            <span class="pp-popup-value pp-mono">${lat}, ${lng}</span>
+            <span class="pp-popup-value pp-popup-address" data-lat="${lat}" data-lng="${lng}">Loading address...</span>
           </div>
           <div class="pp-popup-row">
             <span class="pp-popup-label">Direction</span>
@@ -547,6 +598,31 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
 
         marker.on('click', () => {
           onSelect(imei);
+        });
+
+        // Fetch and display address when popup opens
+        marker.on('popupopen', () => {
+          const popup = marker.getPopup();
+          if (!popup) return;
+          const container = popup.getElement();
+          if (!container) return;
+          const addressEl = container.querySelector('.pp-popup-address') as HTMLElement;
+          if (!addressEl) return;
+
+          const lat = parseFloat(addressEl.dataset.lat || "0");
+          const lng = parseFloat(addressEl.dataset.lng || "0");
+          if (lat === 0 && lng === 0) return;
+
+          // Check cache first
+          const key = addressCacheKey(lat, lng);
+          if (addressCache.has(key)) {
+            addressEl.textContent = addressCache.get(key)!;
+          } else {
+            // Fetch async
+            reverseGeocode(lat, lng).then(address => {
+              addressEl.textContent = address;
+            });
+          }
         });
 
         markersRef.current.set(imei, marker);
@@ -984,6 +1060,12 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
         .pp-popup-value.pp-mono {
           font-family: 'JetBrains Mono', monospace;
           font-size: 11px;
+        }
+        .pp-popup-address {
+          font-size: 11px;
+          line-height: 1.4;
+          word-wrap: break-word;
+          max-width: 100%;
         }
         .pp-popup-value.pp-speed {
           color: #e8900a;
