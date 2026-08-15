@@ -167,7 +167,7 @@ function createVehicleIcon(
   noFix = false,
   isMoving = false,
 ): L.DivIcon {
-  const size = isSelected ? 42 : 36;
+  const size = isSelected ? 52 : 44;
   const classes = [
     'pp-vehicle-icon',
     isSelected && 'pp-selected',
