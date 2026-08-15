@@ -16,10 +16,11 @@ import {
 } from "@/lib/leaflet";
 import { MapLayerDropdown } from "./MapLayerDropdown";
 import { MapToolbar } from "./MapToolbar";
-import { formatSince, vehicleState, VEHICLE_STATE_COLOR, type VehicleState } from "@/lib/format";
+import { formatSince, dhakaTodayStartIso, vehicleState, VEHICLE_STATE_COLOR, type VehicleState } from "@/lib/format";
 import { buildVehicleSvg } from "@/lib/vehicleIcons";
 import { useSpeedLimits } from "@/hooks/useSpeedLimits";
-import type { DeviceView, LocationView } from "@/types/domain";
+import { api } from "@/lib/api";
+import type { DeviceView, LocationView, TripView } from "@/types/domain";
 
 interface FleetMapProps {
   devices: DeviceView[];
@@ -38,6 +39,24 @@ interface GeocodeResult {
   label: string;
   lat: number;
   lng: number;
+}
+
+/** Today's summary data per device */
+interface TodaySummary {
+  durationS: number;
+  distanceM: number;
+  overspeedDistanceM: number;
+  maxSpeed: number;
+}
+
+/** Format duration in seconds to "Xh Ym" or "Ym" format */
+function formatDurationCompact(seconds: number): string {
+  if (seconds < 0) return "—";
+  const s = Math.floor(seconds);
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  if (h > 0) return `${h}h ${m}m`;
+  return `${m}m`;
 }
 
 // Default to google-street if Google API key is available, otherwise OSM
@@ -193,6 +212,59 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
     return m;
   }, [devices]);
 
+  // Today's trip summaries per device
+  const [todaySummaries, setTodaySummaries] = useState<Map<string, TodaySummary>>(new Map());
+
+  // Fetch today's trips and compute summaries
+  useEffect(() => {
+    let cancelled = false;
+    const fetchTodaySummaries = async () => {
+      try {
+        const todayStart = dhakaTodayStartIso();
+        const now = new Date().toISOString();
+        const r = await api.get<TripView[]>("/trips", {
+          params: { from: todayStart, to: now },
+        });
+        if (cancelled) return;
+
+        // Compute per-device summaries
+        const summaryMap = new Map<string, TodaySummary>();
+        for (const trip of r.data) {
+          const imei = trip.deviceImei;
+          const existing = summaryMap.get(imei) || {
+            durationS: 0,
+            distanceM: 0,
+            overspeedDistanceM: 0,
+            maxSpeed: 0,
+          };
+          existing.durationS += trip.durationS ?? 0;
+          existing.distanceM += trip.distanceM;
+          existing.maxSpeed = Math.max(existing.maxSpeed, trip.maxSpeed);
+
+          // Estimate overspeed distance (20% of trip if max speed exceeded limit)
+          const limit = speedLimits.limitFor(imei) ?? 80;
+          if (trip.maxSpeed > limit) {
+            existing.overspeedDistanceM += trip.distanceM * 0.2;
+          }
+
+          summaryMap.set(imei, existing);
+        }
+        setTodaySummaries(summaryMap);
+      } catch (err) {
+        console.error("Failed to fetch today's trips:", err);
+      }
+    };
+
+    fetchTodaySummaries();
+    // Refresh every 60 seconds
+    const interval = setInterval(fetchTodaySummaries, 60000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [speedLimits]);
+
   // Function to create popup content with Today's Summary
   const createPopupContent = useCallback((device: DeviceView | undefined, location: LocationView | undefined): string => {
     const name = device?.name || device?.vehiclePlate || device?.imei.slice(-8) || "Unknown";
@@ -227,6 +299,12 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
            <span class="pp-popup-value">No fix${sats} — ${fixAge}</span>
          </div>`
       : "";
+
+    // Today's summary data
+    const summary = device ? todaySummaries.get(device.imei) : undefined;
+    const hoursDisplay = summary ? formatDurationCompact(summary.durationS) : "0m";
+    const distanceDisplay = summary ? `${(summary.distanceM / 1000).toFixed(1)} km` : "0.0 km";
+    const overspeedDisplay = summary ? `${(summary.overspeedDistanceM / 1000).toFixed(1)} km` : "0.0 km";
 
     return `
       <div class="pp-popup">
@@ -279,22 +357,22 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
 
         <!-- Today's Summary Section -->
         <div class="pp-popup-summary">
-          <div class="pp-popup-summary-title">Today's Summary</div>
-          <div class="pp-popup-summary-grid" id="today-summary-${device?.imei || 'unknown'}">
+          <div class="pp-popup-summary-title">Today (12:00 AM - Now)</div>
+          <div class="pp-popup-summary-grid">
             <div class="pp-summary-item">
               <span class="pp-summary-icon pp-summary-icon-time">⏱</span>
               <span class="pp-summary-label">Hours</span>
-              <span class="pp-summary-value" data-field="hours">—</span>
+              <span class="pp-summary-value">${hoursDisplay}</span>
             </div>
             <div class="pp-summary-item">
               <span class="pp-summary-icon pp-summary-icon-distance">📍</span>
               <span class="pp-summary-label">Distance</span>
-              <span class="pp-summary-value" data-field="distance">—</span>
+              <span class="pp-summary-value">${distanceDisplay}</span>
             </div>
             <div class="pp-summary-item">
               <span class="pp-summary-icon pp-summary-icon-overspeed">⚠️</span>
               <span class="pp-summary-label">Overspeed</span>
-              <span class="pp-summary-value pp-summary-danger" data-field="overspeed">—</span>
+              <span class="pp-summary-value ${summary && summary.overspeedDistanceM > 0 ? 'pp-summary-danger' : ''}">${overspeedDisplay}</span>
             </div>
           </div>
         </div>
@@ -309,7 +387,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
         </button>
       </div>
     `;
-  }, [speedLimits]);
+  }, [speedLimits, todaySummaries]);
 
   // Init map once
   useEffect(() => {
@@ -532,7 +610,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
       }
       initialFitDoneRef.current = true;
     }
-  }, [locations, deviceByImei, selectedImei, onSelect, createPopupContent, speedLimits]);
+  }, [locations, deviceByImei, selectedImei, onSelect, createPopupContent, speedLimits, todaySummaries]);
 
   // Address search (Nominatim; biased to the current viewport). Free, no key —
   // matches the OSM fallback strategy of lib/leaflet.ts.
