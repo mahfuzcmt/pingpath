@@ -65,7 +65,8 @@ async function reverseGeocode(lat: number, lng: number): Promise<string> {
   }
 
   try {
-    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`;
+    // Use zoom=19 for maximum detail (building level)
+    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=19&addressdetails=1`;
     const res = await fetch(url, {
       headers: {
         Accept: "application/json",
@@ -76,27 +77,58 @@ async function reverseGeocode(lat: number, lng: number): Promise<string> {
 
     const data = await res.json();
 
-    // Build a concise address from the response
+    // Build detailed address from the response
     let address = "";
     if (data.address) {
       const parts: string[] = [];
-      // Prioritize: road/suburb > neighbourhood > village/city
-      if (data.address.road) parts.push(data.address.road);
-      if (data.address.suburb) parts.push(data.address.suburb);
-      else if (data.address.neighbourhood) parts.push(data.address.neighbourhood);
-      if (data.address.city || data.address.town || data.address.village) {
-        parts.push(data.address.city || data.address.town || data.address.village);
+      const addr = data.address;
+
+      // Most specific first: house number + road
+      if (addr.house_number) {
+        parts.push(`House ${addr.house_number}`);
       }
-      if (data.address.state_district) parts.push(data.address.state_district);
-      address = parts.slice(0, 3).join(", ") || data.display_name?.split(",").slice(0, 3).join(",") || "Unknown";
+      if (addr.road) {
+        parts.push(addr.road);
+      }
+      // Add area/neighborhood
+      if (addr.neighbourhood) {
+        parts.push(addr.neighbourhood);
+      } else if (addr.suburb) {
+        parts.push(addr.suburb);
+      } else if (addr.residential) {
+        parts.push(addr.residential);
+      }
+      // Add city/town/village
+      if (addr.city) {
+        parts.push(addr.city);
+      } else if (addr.town) {
+        parts.push(addr.town);
+      } else if (addr.village) {
+        parts.push(addr.village);
+      } else if (addr.county) {
+        parts.push(addr.county);
+      }
+      // Add district if different from city
+      if (addr.state_district && addr.state_district !== addr.city) {
+        parts.push(addr.state_district);
+      }
+
+      // Join up to 4 parts for a detailed address
+      address = parts.slice(0, 4).join(", ");
+
+      // Fallback to display_name if no parts found
+      if (!address && data.display_name) {
+        address = data.display_name.split(",").slice(0, 4).join(",").trim();
+      }
+      if (!address) address = "Unknown location";
     } else {
-      address = data.display_name?.split(",").slice(0, 3).join(",") || "Unknown";
+      address = data.display_name?.split(",").slice(0, 4).join(",").trim() || "Unknown location";
     }
 
     addressCache.set(key, address);
     return address;
   } catch {
-    return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+    return `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
   }
 }
 
