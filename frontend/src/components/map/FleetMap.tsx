@@ -105,10 +105,14 @@ function createVehicleIcon(
   });
 }
 
-// Plate-number pill shown permanently above the marker (AutoNemo-style).
-function plateLabelHtml(device: DeviceView | undefined, stateColor: string): string {
+// Plate-number pill with speed shown permanently above the marker (AutoNemo-style).
+function plateLabelHtml(device: DeviceView | undefined, location: LocationView | undefined, stateColor: string): string {
   const text = device?.vehiclePlate || device?.name || device?.imei.slice(-8) || "—";
-  return `<div class="pp-plate" style="background:${stateColor}">${text}</div>`;
+  const speed = location?.speed ?? 0;
+  return `<div class="pp-plate-container">
+    <div class="pp-plate" style="background:${stateColor}">${text}</div>
+    <div class="pp-speed-badge">${speed} kph</div>
+  </div>`;
 }
 
 export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh, showSearch = false }: FleetMapProps) {
@@ -139,7 +143,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
     return m;
   }, [devices]);
 
-  // Function to create popup content
+  // Function to create popup content with Today's Summary
   const createPopupContent = useCallback((device: DeviceView | undefined, location: LocationView | undefined): string => {
     const name = device?.name || device?.vehiclePlate || device?.imei.slice(-8) || "Unknown";
     const plate = device?.vehiclePlate || "—";
@@ -180,6 +184,16 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           <span class="pp-popup-name">${name}</span>
           <span class="pp-popup-status" style="background: ${statusColor}20; color: ${statusColor};">${status}</span>
         </div>
+
+        <!-- Live Speed Display -->
+        <div class="pp-popup-speed-section">
+          <div class="pp-popup-speedometer">
+            <span class="pp-popup-speed-value">${speed}</span>
+            <span class="pp-popup-speed-unit">kph</span>
+          </div>
+          <div class="pp-popup-speed-label">Live Speed</div>
+        </div>
+
         <div class="pp-popup-grid">
           ${noFixRow}
           <div class="pp-popup-row">
@@ -193,10 +207,6 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           <div class="pp-popup-row">
             <span class="pp-popup-label">Location</span>
             <span class="pp-popup-value pp-mono">${lat}, ${lng}</span>
-          </div>
-          <div class="pp-popup-row">
-            <span class="pp-popup-label">Speed</span>
-            <span class="pp-popup-value pp-speed">${speed} <small>kph</small></span>
           </div>
           <div class="pp-popup-row">
             <span class="pp-popup-label">Direction</span>
@@ -216,6 +226,37 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
             <span class="pp-popup-value">${dateTime}</span>
           </div>
         </div>
+
+        <!-- Today's Summary Section -->
+        <div class="pp-popup-summary">
+          <div class="pp-popup-summary-title">Today's Summary</div>
+          <div class="pp-popup-summary-grid" id="today-summary-${device?.imei || 'unknown'}">
+            <div class="pp-summary-item">
+              <span class="pp-summary-icon pp-summary-icon-time">⏱</span>
+              <span class="pp-summary-label">Hours</span>
+              <span class="pp-summary-value" data-field="hours">—</span>
+            </div>
+            <div class="pp-summary-item">
+              <span class="pp-summary-icon pp-summary-icon-distance">📍</span>
+              <span class="pp-summary-label">Distance</span>
+              <span class="pp-summary-value" data-field="distance">—</span>
+            </div>
+            <div class="pp-summary-item">
+              <span class="pp-summary-icon pp-summary-icon-overspeed">⚠️</span>
+              <span class="pp-summary-label">Overspeed</span>
+              <span class="pp-summary-value pp-summary-danger" data-field="overspeed">—</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Tracking Button -->
+        <button class="pp-popup-live-btn" data-imei="${device?.imei || ''}" onclick="window.dispatchEvent(new CustomEvent('openLiveTracking', {detail: '${device?.imei || ''}'}))">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <polygon points="10 8 16 12 10 16 10 8"/>
+          </svg>
+          Live Tracking
+        </button>
       </div>
     `;
   }, [speedLimits]);
@@ -366,10 +407,10 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
             maxWidth: 320,
             className: 'pp-popup-container',
           })
-          .bindTooltip(plateLabelHtml(device, color), {
+          .bindTooltip(plateLabelHtml(device, loc, color), {
             permanent: true,
             direction: 'top',
-            offset: [0, -22],
+            offset: [0, -26],
             className: 'pp-plate-tooltip',
           });
 
@@ -383,7 +424,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
         marker.setLatLng([loc.latitude, loc.longitude]);
         marker.setIcon(createVehicleIcon(device?.vehicleType, bodyColor, course, isSelected, isOverspeed, noFix));
         marker.setPopupContent(createPopupContent(device, loc));
-        marker.setTooltipContent(plateLabelHtml(device, color));
+        marker.setTooltipContent(plateLabelHtml(device, loc, color));
       }
     }
 
@@ -613,7 +654,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           border: 3px solid #fff;
           box-shadow: 0 0 0 2px rgba(232, 144, 10, 0.45);
         }
-        /* Plate-number pill above each vehicle (AutoNemo-style) */
+        /* Plate-number + speed pill above each vehicle (AutoNemo-style) */
         .pp-plate-tooltip {
           background: transparent !important;
           border: none !important;
@@ -622,6 +663,12 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
         }
         .pp-plate-tooltip::before {
           display: none !important;
+        }
+        .pp-plate-container {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 2px;
         }
         .pp-plate {
           color: #fff;
@@ -635,17 +682,30 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           box-shadow: 0 1px 4px rgba(10, 25, 40, 0.35);
           white-space: nowrap;
         }
+        .pp-speed-badge {
+          color: #fff;
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 9px;
+          font-weight: 600;
+          padding: 1px 6px;
+          border-radius: 4px;
+          background: rgba(15, 39, 66, 0.9);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          white-space: nowrap;
+        }
 
         /* Popup styles */
         .pp-popup-container .leaflet-popup-content-wrapper {
           background: rgba(15, 39, 66, 0.98);
           border: 1px solid rgba(100, 116, 139, 0.3);
-          border-radius: 8px;
+          border-radius: 12px;
           padding: 0;
           box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+          max-width: 320px;
         }
         .pp-popup-container .leaflet-popup-content {
           margin: 0;
+          width: 100% !important;
         }
         .pp-popup-container .leaflet-popup-close-button {
           color: #94a3b8 !important;
@@ -664,7 +724,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
         }
         .pp-popup {
           font-family: 'Inter', sans-serif;
-          min-width: 240px;
+          min-width: 280px;
         }
         .pp-popup-header {
           display: flex;
@@ -686,6 +746,41 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           padding: 3px 8px;
           border-radius: 4px;
         }
+
+        /* Live Speed Section */
+        .pp-popup-speed-section {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          padding: 12px 14px;
+          background: linear-gradient(135deg, rgba(232, 144, 10, 0.15) 0%, rgba(232, 144, 10, 0.05) 100%);
+          border-bottom: 1px solid rgba(100, 116, 139, 0.2);
+        }
+        .pp-popup-speedometer {
+          display: flex;
+          align-items: baseline;
+          gap: 4px;
+        }
+        .pp-popup-speed-value {
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 36px;
+          font-weight: 700;
+          color: #e8900a;
+          line-height: 1;
+        }
+        .pp-popup-speed-unit {
+          font-size: 14px;
+          font-weight: 500;
+          color: #94a3b8;
+        }
+        .pp-popup-speed-label {
+          font-size: 10px;
+          text-transform: uppercase;
+          color: #64748b;
+          letter-spacing: 0.5px;
+          margin-top: 4px;
+        }
+
         .pp-popup-grid {
           padding: 10px 14px;
           display: grid;
@@ -734,6 +829,110 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           font-size: 10px;
           font-weight: 400;
           color: #94a3b8;
+        }
+
+        /* Today's Summary Section */
+        .pp-popup-summary {
+          padding: 10px 14px;
+          background: rgba(0, 0, 0, 0.2);
+          border-top: 1px solid rgba(100, 116, 139, 0.2);
+        }
+        .pp-popup-summary-title {
+          font-size: 11px;
+          font-weight: 600;
+          text-transform: uppercase;
+          color: #94a3b8;
+          letter-spacing: 0.5px;
+          margin-bottom: 10px;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+        .pp-popup-summary-title::before {
+          content: '📊';
+          font-size: 12px;
+        }
+        .pp-popup-summary-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 8px;
+        }
+        .pp-summary-item {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 4px;
+          padding: 8px 4px;
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 8px;
+        }
+        .pp-summary-icon {
+          font-size: 14px;
+        }
+        .pp-summary-label {
+          font-size: 9px;
+          text-transform: uppercase;
+          color: #64748b;
+          letter-spacing: 0.3px;
+        }
+        .pp-summary-value {
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 12px;
+          font-weight: 600;
+          color: #f1f5f9;
+        }
+        .pp-summary-danger {
+          color: #DC2626 !important;
+        }
+
+        /* Live Tracking Button */
+        .pp-popup-live-btn {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          width: calc(100% - 28px);
+          margin: 10px 14px 14px;
+          padding: 10px 16px;
+          background: linear-gradient(135deg, #e8900a 0%, #d97706 100%);
+          border: none;
+          border-radius: 8px;
+          color: #fff;
+          font-size: 12px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+        .pp-popup-live-btn:hover {
+          background: linear-gradient(135deg, #f59e0b 0%, #e8900a 100%);
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(232, 144, 10, 0.4);
+        }
+        .pp-popup-live-btn:active {
+          transform: translateY(0);
+        }
+        .pp-popup-live-btn svg {
+          flex-shrink: 0;
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 640px) {
+          .pp-popup {
+            min-width: 260px;
+          }
+          .pp-popup-speed-value {
+            font-size: 28px;
+          }
+          .pp-popup-summary-grid {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+          }
+          .pp-summary-item {
+            padding: 6px 2px;
+          }
+          .pp-summary-value {
+            font-size: 11px;
+          }
         }
       `}</style>
     </div>

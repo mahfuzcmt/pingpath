@@ -68,6 +68,13 @@ const STRINGS = {
   "panel.commandSent": { en: "Command sent", bn: "কমান্ড পাঠানো হয়েছে" },
   "panel.commandFailed": { en: "Command failed", bn: "কমান্ড ব্যর্থ হয়েছে" },
   "panel.dailyStats": { en: "Daily statistics", bn: "দৈনিক পরিসংখ্যান" },
+  "panel.liveTracking": { en: "Live Tracking", bn: "লাইভ ট্র্যাকিং" },
+  "panel.todaySummary": { en: "Today's Summary", bn: "আজকের সারাংশ" },
+  "panel.totalHours": { en: "Total Hours", bn: "মোট সময়" },
+  "panel.totalKm": { en: "Total Distance", bn: "মোট দূরত্ব" },
+  "panel.overspeedKm": { en: "Overspeed", bn: "অতিরিক্ত গতি" },
+  "panel.maxSpeedToday": { en: "Max Speed", bn: "সর্বোচ্চ গতি" },
+  "panel.liveSpeed": { en: "Live Speed", bn: "লাইভ গতি" },
   "graph.noData": { en: "No data for today yet", bn: "আজকের জন্য এখনও ডেটা নেই" },
 
   // ── Vehicle detail tabs (AutoNemo-aligned) ────────────────────────

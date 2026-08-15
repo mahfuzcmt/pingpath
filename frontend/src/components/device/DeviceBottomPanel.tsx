@@ -15,6 +15,7 @@ interface Props {
   location: LocationView | undefined;
   onClose: () => void;
   onViewHistory: () => void;
+  onViewLiveTracking?: () => void;
 }
 
 type TabId = "data" | "graph";
@@ -39,7 +40,7 @@ function formatOdometer(meters: number | undefined | null): string {
   return `${(meters / 1000).toFixed(0)} km`;
 }
 
-export function DeviceBottomPanel({ device, location, onClose, onViewHistory }: Props) {
+export function DeviceBottomPanel({ device, location, onClose, onViewHistory, onViewLiveTracking }: Props) {
   const { t, locale } = useLocale();
   const [activeTab, setActiveTab] = useState<TabId>("data");
 
@@ -137,6 +138,19 @@ export function DeviceBottomPanel({ device, location, onClose, onViewHistory }: 
           ))}
         </div>
         <div className="flex items-center gap-2 px-2">
+          {onViewLiveTracking && (
+            <button
+              type="button"
+              onClick={onViewLiveTracking}
+              className="btn-primary flex items-center gap-1.5 text-xs"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10"/>
+                <polygon points="10 8 16 12 10 16 10 8"/>
+              </svg>
+              {t("panel.liveTracking")}
+            </button>
+          )}
           <button
             type="button"
             onClick={onViewHistory}

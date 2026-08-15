@@ -5,10 +5,14 @@ import { api } from "@/lib/api";
 import { subscribeLocations } from "@/lib/ws";
 import type { LocationView } from "@/types/domain";
 
+/** Auto-refresh interval in milliseconds (10 seconds as per requirement). */
+const AUTO_REFRESH_INTERVAL_MS = 10_000;
+
 /**
  * Holds the current last-known position per IMEI for the org. On mount:
  * 1. REST GET /devices/locations/all-last for the bootstrap snapshot
  * 2. STOMP subscribe /topic/org/{orgId}/locations for live updates
+ * 3. Auto-refresh every 10 seconds for reliable position updates
  *
  * Returns a map keyed by IMEI plus a `bumpId` that increments on every
  * mutation so consumers (the map) can re-render markers cheaply.
@@ -40,6 +44,8 @@ export function useLiveLocations(orgId: string) {
   const [error, setError] = useState<string | null>(null);
   // bumpId is unused here directly but lets consumers depend on a primitive.
   const [bumpId, setBumpId] = useState(0);
+  // Track last refresh time for UI countdown if needed
+  const [lastRefreshAt, setLastRefreshAt] = useState<Date | null>(null);
   const mounted = useRef(true);
 
   const upsert = useCallback((loc: LocationView) => {
@@ -71,6 +77,7 @@ export function useLiveLocations(orgId: string) {
         return next;
       });
       setBumpId((n) => n + 1);
+      setLastRefreshAt(new Date());
       setLoaded(true);
       setError(null);
     } catch (err) {
@@ -81,6 +88,7 @@ export function useLiveLocations(orgId: string) {
   useEffect(() => {
     mounted.current = true;
     let unsub: (() => void) | null = null;
+    let refreshIntervalId: ReturnType<typeof setInterval> | null = null;
 
     (async () => {
       await refresh();
@@ -94,13 +102,24 @@ export function useLiveLocations(orgId: string) {
           setError(err instanceof Error ? err.message : "WS subscribe failed");
         }
       }
+
+      // Auto-refresh every 10 seconds for reliable updates
+      // This ensures positions update even if WebSocket misses events
+      refreshIntervalId = setInterval(() => {
+        if (mounted.current) {
+          void refresh();
+        }
+      }, AUTO_REFRESH_INTERVAL_MS);
     })();
 
     return () => {
       mounted.current = false;
       unsub?.();
+      if (refreshIntervalId) {
+        clearInterval(refreshIntervalId);
+      }
     };
   }, [orgId, upsert, refresh]);
 
-  return { locations, loaded, error, bumpId, refresh };
+  return { locations, loaded, error, bumpId, refresh, lastRefreshAt };
 }

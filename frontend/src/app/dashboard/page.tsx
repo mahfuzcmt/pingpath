@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { useDevices } from "@/hooks/useDevices";
 import { useLiveLocations } from "@/hooks/useLiveLocations";
@@ -16,6 +16,12 @@ const RouteHistoryPanel = dynamic(
   { ssr: false }
 );
 
+// Dynamic import for live tracking panel
+const LiveTrackingPanel = dynamic(
+  () => import("@/components/map/LiveTrackingPanel").then((m) => m.LiveTrackingPanel),
+  { ssr: false }
+);
+
 // mapbox-gl pulls window/document at import time → client-only.
 const FleetMap = dynamic(
   () => import("@/components/map/FleetMap").then((m) => m.FleetMap),
@@ -26,9 +32,10 @@ export default function DashboardPage() {
   const { orgId } = useSession();
   const { t } = useLocale();
   const { devices, loading } = useDevices();
-  const { locations, error, refresh } = useLiveLocations(orgId);
+  const { locations, error, refresh, lastRefreshAt } = useLiveLocations(orgId);
   const [selectedImei, setSelectedImei] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState(false);
+  const [showLiveTracking, setShowLiveTracking] = useState(false);
   const [listOpen, setListOpen] = useState(false); // mobile vehicle-list drawer
 
   // Deep-link from the Vehicles screen: /dashboard?focus={imei} preselects it.
@@ -36,6 +43,23 @@ export default function DashboardPage() {
     const focus = new URLSearchParams(window.location.search).get("focus");
     if (focus) setSelectedImei(focus);
   }, []);
+
+  // Listen for live tracking open events from the popup button
+  const handleOpenLiveTracking = useCallback((e: Event) => {
+    const imei = (e as CustomEvent).detail;
+    if (imei) {
+      setSelectedImei(imei);
+      setShowLiveTracking(true);
+      setShowHistory(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener("openLiveTracking", handleOpenLiveTracking);
+    return () => {
+      window.removeEventListener("openLiveTracking", handleOpenLiveTracking);
+    };
+  }, [handleOpenLiveTracking]);
 
   const selectedDevice = selectedImei
     ? devices.find((d) => d.imei === selectedImei) ?? null
@@ -108,12 +132,13 @@ export default function DashboardPage() {
         <KpiStrip liveOnlineCount={liveOnlineCount} liveOfflineCount={liveOfflineCount} />
 
         {/* Bottom details panel */}
-        {selectedDevice && !showHistory && (
+        {selectedDevice && !showHistory && !showLiveTracking && (
           <DeviceBottomPanel
             device={selectedDevice}
             location={locations.get(selectedDevice.imei)}
             onClose={() => setSelectedImei(null)}
             onViewHistory={() => setShowHistory(true)}
+            onViewLiveTracking={() => setShowLiveTracking(true)}
           />
         )}
 
@@ -122,6 +147,15 @@ export default function DashboardPage() {
           <RouteHistoryPanel
             device={selectedDevice}
             onClose={() => setShowHistory(false)}
+          />
+        )}
+
+        {/* Live Tracking panel with speedometer */}
+        {selectedDevice && showLiveTracking && (
+          <LiveTrackingPanel
+            device={selectedDevice}
+            location={locations.get(selectedDevice.imei)}
+            onClose={() => setShowLiveTracking(false)}
           />
         )}
 
