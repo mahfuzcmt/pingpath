@@ -1081,22 +1081,75 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           flex-shrink: 0;
         }
 
-        /* Mobile responsive */
+        /* Mobile responsive - compact popup */
         @media (max-width: 640px) {
+          .pp-popup-container .leaflet-popup-content-wrapper {
+            max-width: 280px;
+          }
           .pp-popup {
-            min-width: 260px;
+            min-width: 240px;
+          }
+          .pp-popup-header {
+            padding: 8px 10px;
+          }
+          .pp-popup-name {
+            font-size: 12px;
+          }
+          .pp-popup-status {
+            font-size: 9px;
+            padding: 2px 6px;
+          }
+          .pp-popup-speed-section {
+            padding: 8px 10px;
           }
           .pp-popup-speed-value {
-            font-size: 28px;
+            font-size: 24px;
+          }
+          .pp-popup-speed-unit {
+            font-size: 11px;
+          }
+          .pp-popup-speed-label {
+            font-size: 9px;
+          }
+          .pp-popup-grid {
+            padding: 6px 10px;
+            gap: 4px;
+          }
+          .pp-popup-label {
+            font-size: 9px;
+          }
+          .pp-popup-value {
+            font-size: 10px;
+          }
+          .pp-popup-value.pp-mono {
+            font-size: 9px;
+          }
+          .pp-popup-summary {
+            padding: 8px 10px;
+          }
+          .pp-popup-summary-title {
+            font-size: 9px;
+            margin-bottom: 6px;
           }
           .pp-popup-summary-grid {
             grid-template-columns: repeat(3, 1fr);
-            gap: 6px;
+            gap: 4px;
           }
           .pp-summary-item {
-            padding: 6px 2px;
+            padding: 4px 2px;
+          }
+          .pp-summary-icon {
+            font-size: 12px;
+          }
+          .pp-summary-label {
+            font-size: 8px;
           }
           .pp-summary-value {
+            font-size: 10px;
+          }
+          .pp-popup-live-btn {
+            margin: 8px 10px 10px;
+            padding: 8px 12px;
             font-size: 11px;
           }
         }

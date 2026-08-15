@@ -106,11 +106,11 @@ export default function DashboardPage() {
       )}
 
       <div className="relative flex-1 min-w-0 h-full">
-        {/* Mobile: open the vehicle list */}
+        {/* Mobile: open the vehicle list - positioned below search bar */}
         <button
           type="button"
           onClick={() => setListOpen(true)}
-          className="absolute left-3 top-3 z-20 flex items-center gap-1.5 rounded-md border border-surface-300 bg-white px-3 py-1.5 text-xs font-semibold text-ink-900 shadow md:hidden"
+          className="absolute left-3 top-14 z-[1001] flex items-center gap-1.5 rounded-md border border-surface-300 bg-white px-3 py-1.5 text-xs font-semibold text-ink-900 shadow-lg md:hidden"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
             <line x1="8" y1="6" x2="21" y2="6" /><line x1="8" y1="12" x2="21" y2="12" /><line x1="8" y1="18" x2="21" y2="18" />
