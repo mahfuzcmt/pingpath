@@ -32,7 +32,7 @@ export function LiveTrackingPanel({ device, location, onClose }: Props) {
 
     // Calculate overspeed distance (simplified - in reality would need location history)
     // For now, estimate based on max speed exceeding limit
-    const speedLimit = speedLimits.getLimit(device.imei);
+    const speedLimit = speedLimits.limitFor(device.imei) ?? 80; // default 80 kph if no rule
     const overspeedTrips = trips.filter(tr => tr.maxSpeed > speedLimit);
     const overspeedDistanceM = overspeedTrips.reduce((s, tr) => s + tr.distanceM * 0.2, 0); // estimate 20% of trip
 
