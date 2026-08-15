@@ -535,6 +535,8 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           .bindPopup(createPopupContent(device, loc), {
             maxWidth: 320,
             className: 'pp-popup-container',
+            autoPanPaddingTopLeft: L.point(60, 60), // Account for left toolbar
+            autoPanPaddingBottomRight: L.point(20, 100), // Account for bottom controls
           })
           .bindTooltip(plateLabelHtml(device, loc, color), {
             permanent: true,
