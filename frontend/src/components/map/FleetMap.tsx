@@ -95,11 +95,20 @@ function createVehicleIcon(
   isSelected: boolean,
   isOverspeed = false,
   noFix = false,
+  isMoving = false,
 ): L.DivIcon {
   const size = isSelected ? 46 : 38;
+  const classes = [
+    'pp-vehicle-icon',
+    isSelected && 'pp-selected',
+    isOverspeed && 'pp-overspeed',
+    noFix && 'pp-nofix',
+    isMoving && !isOverspeed && 'pp-moving', // Don't combine with overspeed animation
+  ].filter(Boolean).join(' ');
+
   return L.divIcon({
     html: buildVehicleSvg(vehicleType, isOverspeed ? OVERSPEED_COLOR : bodyColor, rotation, size),
-    className: `pp-vehicle-icon ${isSelected ? 'pp-selected' : ''} ${isOverspeed ? 'pp-overspeed' : ''} ${noFix ? 'pp-nofix' : ''}`,
+    className: classes,
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2],
   });
@@ -115,10 +124,51 @@ function plateLabelHtml(device: DeviceView | undefined, location: LocationView |
   </div>`;
 }
 
+// Smoothly animate a marker from its current position to a new position
+function animateMarker(
+  marker: L.Marker,
+  targetLat: number,
+  targetLng: number,
+  duration: number = 800,
+): void {
+  const start = marker.getLatLng();
+  const startLat = start.lat;
+  const startLng = start.lng;
+
+  // Skip animation if distance is negligible (< 1 meter)
+  const latDiff = Math.abs(targetLat - startLat);
+  const lngDiff = Math.abs(targetLng - startLng);
+  if (latDiff < 0.00001 && lngDiff < 0.00001) {
+    return;
+  }
+
+  const startTime = performance.now();
+
+  function step(currentTime: number) {
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+
+    // Ease-out cubic for smooth deceleration
+    const eased = 1 - Math.pow(1 - progress, 3);
+
+    const lat = startLat + (targetLat - startLat) * eased;
+    const lng = startLng + (targetLng - startLng) * eased;
+
+    marker.setLatLng([lat, lng]);
+
+    if (progress < 1) {
+      requestAnimationFrame(step);
+    }
+  }
+
+  requestAnimationFrame(step);
+}
+
 export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh, showSearch = false }: FleetMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
+  const prevPositionsRef = useRef<Map<string, { lat: number; lng: number }>>(new Map());
   const initialFitDoneRef = useRef(false);
   const tileLayerRef = useRef<L.GridLayer | null>(null);
   const userMarkerRef = useRef<L.Marker | null>(null);
@@ -397,10 +447,11 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
       const course = loc.course ?? 0;
       const bodyColor = device?.iconColor || "#E8900A";
       const noFix = hasNoFix(loc);
+      const isMoving = (loc.speed ?? 0) > 2; // Moving if speed > 2 kph
 
       if (!marker) {
         // Create new marker
-        const icon = createVehicleIcon(device?.vehicleType, bodyColor, course, isSelected, isOverspeed, noFix);
+        const icon = createVehicleIcon(device?.vehicleType, bodyColor, course, isSelected, isOverspeed, noFix, isMoving);
         marker = L.marker([loc.latitude, loc.longitude], { icon })
           .addTo(map)
           .bindPopup(createPopupContent(device, loc), {
@@ -419,10 +470,34 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
         });
 
         markersRef.current.set(imei, marker);
+        // Store initial position for animation tracking
+        prevPositionsRef.current.set(imei, { lat: loc.latitude, lng: loc.longitude });
       } else {
-        // Update existing marker
-        marker.setLatLng([loc.latitude, loc.longitude]);
-        marker.setIcon(createVehicleIcon(device?.vehicleType, bodyColor, course, isSelected, isOverspeed, noFix));
+        // Update existing marker with smooth animation
+        const prevPos = prevPositionsRef.current.get(imei);
+        const newPos = { lat: loc.latitude, lng: loc.longitude };
+
+        // Animate if position changed significantly (vehicle is moving)
+        if (prevPos && (prevPos.lat !== newPos.lat || prevPos.lng !== newPos.lng)) {
+          // Calculate distance to determine animation duration
+          const latDiff = Math.abs(newPos.lat - prevPos.lat);
+          const lngDiff = Math.abs(newPos.lng - prevPos.lng);
+          const distance = Math.sqrt(latDiff * latDiff + lngDiff * lngDiff);
+
+          // Scale animation duration based on distance (faster for small moves, slower for big jumps)
+          const baseDuration = 800; // ms
+          const maxDuration = 2000; // ms
+          const duration = Math.min(baseDuration + distance * 50000, maxDuration);
+
+          animateMarker(marker, loc.latitude, loc.longitude, duration);
+        } else {
+          marker.setLatLng([loc.latitude, loc.longitude]);
+        }
+
+        // Store current position for next comparison
+        prevPositionsRef.current.set(imei, newPos);
+
+        marker.setIcon(createVehicleIcon(device?.vehicleType, bodyColor, course, isSelected, isOverspeed, noFix, isMoving));
         marker.setPopupContent(createPopupContent(device, loc));
         marker.setTooltipContent(plateLabelHtml(device, loc, color));
       }
@@ -433,6 +508,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
       if (!seen.has(imei)) {
         marker.remove();
         markersRef.current.delete(imei);
+        prevPositionsRef.current.delete(imei);
       }
     }
 
@@ -631,6 +707,18 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
         @keyframes pp-blink {
           50% {
             opacity: 0.25;
+          }
+        }
+        /* Moving vehicle: subtle pulse glow effect */
+        .pp-vehicle-icon.pp-moving {
+          animation: pp-pulse 2s ease-in-out infinite;
+        }
+        @keyframes pp-pulse {
+          0%, 100% {
+            filter: drop-shadow(0 0 4px rgba(22, 163, 74, 0.6));
+          }
+          50% {
+            filter: drop-shadow(0 0 8px rgba(22, 163, 74, 0.9));
           }
         }
         /* No GPS fix: the marker sits on the last confirmed position, so mute it
