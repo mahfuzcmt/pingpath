@@ -136,13 +136,21 @@ public class Gt06Handler extends SimpleChannelInboundHandler<ByteBuf> {
         // Lookup off the event loop
         ingestExecutor.execute(() -> {
             Optional<Device> deviceOpt = deviceService.findByImei(imei);
+            Device d;
             if (deviceOpt.isEmpty()) {
-                log.warn("Unregistered IMEI {} — connection kept", imei);
-                ctx.channel().attr(ChannelKeys.IMEI_KEY).set(imei);
-                ctx.channel().attr(ChannelKeys.REGISTERED_KEY).set(false);
-                return;
+                // Auto-register new devices on first connection
+                log.info("New device IMEI {} — auto-registering", imei);
+                try {
+                    d = deviceService.autoRegister(imei);
+                } catch (Exception e) {
+                    log.error("Auto-registration failed for IMEI {}: {}", imei, e.getMessage());
+                    ctx.channel().attr(ChannelKeys.IMEI_KEY).set(imei);
+                    ctx.channel().attr(ChannelKeys.REGISTERED_KEY).set(false);
+                    return;
+                }
+            } else {
+                d = deviceOpt.get();
             }
-            Device d = deviceOpt.get();
             ctx.channel().attr(ChannelKeys.IMEI_KEY).set(imei);
             ctx.channel().attr(ChannelKeys.ORG_ID_KEY).set(d.orgId());
             ctx.channel().attr(ChannelKeys.REGISTERED_KEY).set(true);

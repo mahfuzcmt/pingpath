@@ -240,4 +240,21 @@ public class DeviceRepository {
                   AND (last_seen_at IS NULL OR last_seen_at < now() - (:mins || ' minutes')::interval)
                 """, new MapSqlParameterSource("mins", idleMinutes));
     }
+
+    /**
+     * Auto-register a new device when it first connects.
+     * Returns the created device.
+     */
+    public Device createDevice(UUID orgId, String imei, String name) {
+        UUID id = UUID.randomUUID();
+        jdbc.update("""
+                INSERT INTO devices (id, org_id, imei, name, status, protocol, created_at, updated_at)
+                VALUES (:id, :orgId, :imei, :name, 'ONLINE', 'GT06', now(), now())
+                """, new MapSqlParameterSource()
+                .addValue("id", id)
+                .addValue("orgId", orgId)
+                .addValue("imei", imei)
+                .addValue("name", name));
+        return findByImei(imei).orElseThrow();
+    }
 }
