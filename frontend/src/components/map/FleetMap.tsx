@@ -106,7 +106,7 @@ function hasNoFix(location: LocationView | undefined): boolean {
   return location != null && !location.valid;
 }
 
-// Vehicle marker: top-view silhouette by vehicle type, rotated to the course.
+// Vehicle marker: clean top-view silhouette by vehicle type, rotated to the course.
 function createVehicleIcon(
   vehicleType: string | null | undefined,
   bodyColor: string,
@@ -116,7 +116,7 @@ function createVehicleIcon(
   noFix = false,
   isMoving = false,
 ): L.DivIcon {
-  const size = isSelected ? 46 : 38;
+  const size = isSelected ? 42 : 36;
   const classes = [
     'pp-vehicle-icon',
     isSelected && 'pp-selected',
@@ -133,13 +133,13 @@ function createVehicleIcon(
   });
 }
 
-// Plate-number pill with speed shown permanently above the marker (AutoNemo-style).
+// Compact plate-number pill with speed inline (professional style).
 function plateLabelHtml(device: DeviceView | undefined, location: LocationView | undefined, stateColor: string): string {
   const text = device?.vehiclePlate || device?.name || device?.imei.slice(-8) || "—";
   const speed = location?.speed ?? 0;
-  return `<div class="pp-plate-container">
-    <div class="pp-plate" style="background:${stateColor}">${text}</div>
-    <div class="pp-speed-badge">${speed} kph</div>
+  return `<div class="pp-label" style="--state-color:${stateColor}">
+    <span class="pp-label-name">${text}</span>
+    <span class="pp-label-speed">${speed} kph</span>
   </div>`;
 }
 
@@ -541,7 +541,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           .bindTooltip(plateLabelHtml(device, loc, color), {
             permanent: true,
             direction: 'top',
-            offset: [0, -26],
+            offset: [0, -22],
             className: 'pp-plate-tooltip',
           });
 
@@ -822,7 +822,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           border: 3px solid #fff;
           box-shadow: 0 0 0 2px rgba(232, 144, 10, 0.45);
         }
-        /* Plate-number + speed pill above each vehicle (AutoNemo-style) */
+        /* Compact plate + speed label (professional inline style) */
         .pp-plate-tooltip {
           background: transparent !important;
           border: none !important;
@@ -832,34 +832,31 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
         .pp-plate-tooltip::before {
           display: none !important;
         }
-        .pp-plate-container {
-          display: flex;
-          flex-direction: column;
+        .pp-label {
+          display: inline-flex;
           align-items: center;
-          gap: 2px;
-        }
-        .pp-plate {
-          color: #fff;
-          font-family: 'JetBrains Mono', monospace;
-          font-size: 10px;
-          font-weight: 700;
-          letter-spacing: 0.3px;
-          padding: 2px 9px;
-          border-radius: 9999px;
-          border: 1px solid rgba(255, 255, 255, 0.55);
-          box-shadow: 0 1px 4px rgba(10, 25, 40, 0.35);
+          gap: 0;
+          background: rgba(10, 25, 40, 0.92);
+          border-radius: 4px;
+          overflow: hidden;
+          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
           white-space: nowrap;
         }
-        .pp-speed-badge {
+        .pp-label-name {
+          color: #fff;
+          font-family: 'Inter', -apple-system, sans-serif;
+          font-size: 10px;
+          font-weight: 600;
+          padding: 3px 6px;
+          background: var(--state-color);
+          border-right: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        .pp-label-speed {
           color: #fff;
           font-family: 'JetBrains Mono', monospace;
           font-size: 9px;
-          font-weight: 600;
-          padding: 1px 6px;
-          border-radius: 4px;
-          background: rgba(15, 39, 66, 0.9);
-          border: 1px solid rgba(255, 255, 255, 0.3);
-          white-space: nowrap;
+          font-weight: 500;
+          padding: 3px 5px;
         }
 
         /* Popup styles */
