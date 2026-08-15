@@ -121,14 +121,14 @@ export function Topbar({ user, orgId }: { user: UserView; orgId: string }) {
         </button>
       </div>
 
-      {/* Mobile menu: backdrop + dropdown panel */}
+      {/* Mobile menu: backdrop + dropdown panel - z-[2000] to appear above FleetMap (z-[1000]) */}
       {menuOpen && (
         <>
           <div
-            className="fixed inset-0 top-9 z-40 bg-ink-950/40 md:hidden"
+            className="fixed inset-0 top-9 z-[1900] bg-ink-950/40 md:hidden"
             onClick={() => setMenuOpen(false)}
           />
-          <nav className="absolute left-0 top-full z-50 w-64 max-w-[85vw] border-b border-r border-surface-300 bg-white shadow-menu md:hidden">
+          <nav className="absolute left-0 top-full z-[2000] w-64 max-w-[85vw] border-b border-r border-surface-300 bg-white shadow-menu md:hidden">
             {items.map((item) => (
               <Link
                 key={item.href}
