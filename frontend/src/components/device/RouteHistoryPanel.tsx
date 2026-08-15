@@ -216,16 +216,20 @@ export function RouteHistoryPanel({ device, onClose }: Props) {
   } : null;
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-ink-950">
+    <div className="fixed inset-0 z-[1500] flex flex-col bg-ink-950">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-ink-400/15 px-4 py-3">
+      <div className="flex items-center justify-between border-b border-ink-400/15 px-4 py-3 bg-ink-900">
         <div>
-          <div className="font-semibold text-base">
+          <div className="font-semibold text-base text-white">
             {t("fleet.routeHistory")} - {device.name || device.imei}
           </div>
           <div className="font-mono text-xs text-ink-400">{device.imei}</div>
         </div>
-        <button type="button" className="btn-ghost px-3 py-1 text-sm" onClick={onClose}>
+        <button
+          type="button"
+          className="px-4 py-2 text-sm font-semibold rounded-lg bg-ink-700 hover:bg-ink-600 text-white border border-ink-500 transition-colors"
+          onClick={onClose}
+        >
           {t("common.close")}
         </button>
       </div>
