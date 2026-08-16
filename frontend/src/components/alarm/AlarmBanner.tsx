@@ -66,7 +66,7 @@ export function AlarmBanner() {
   };
 
   return (
-    <div className="pointer-events-none fixed top-3 right-3 z-50 flex w-[340px] max-w-[90vw] flex-col gap-2">
+    <div className="pointer-events-none fixed top-16 right-3 z-50 flex w-[340px] max-w-[90vw] flex-col gap-2">
       {visible.map((a) => (
         <div
           key={a.id}
