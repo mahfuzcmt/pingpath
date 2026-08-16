@@ -351,18 +351,15 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
   // Function to create popup content with Today's Summary
   const createPopupContent = useCallback((device: DeviceView | undefined, location: LocationView | undefined): string => {
     const name = device?.name || device?.vehiclePlate || device?.imei.slice(-8) || "Unknown";
-    const plate = device?.vehiclePlate || "—";
     const imei = device?.imei || "—";
     const lat = location?.latitude?.toFixed(6) || "—";
     const lng = location?.longitude?.toFixed(6) || "—";
     const speed = location?.speed ?? 0;
-    const course = location?.course ?? 0;
     const dateTime = formatDateTime(location?.ts || device?.lastSeenAt);
     const overspeed = device != null && speedLimits.isOverspeed(device.imei, location?.speed);
     const status = overspeed ? "Overspeed" : statusText(device, location);
     const statusColor = overspeed ? OVERSPEED_COLOR : markerColor(device, location);
     const accStatus = location?.accOn == null ? "—" : location.accOn ? "ON" : "OFF";
-    const voltage = location?.voltageMv ? (location.voltageMv / 1000).toFixed(1) + "V" : "—";
     const parkedRow = device?.parkedSince && speed <= 2
       ? `<div class="pp-popup-row">
            <span class="pp-popup-label">Parked for</span>
@@ -370,18 +367,6 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
          </div>`
       : "";
 
-    // The device is reporting but has lost its GPS fix: say so plainly, and date
-    // the coordinates, so a frozen marker reads as "no fix" and not "app broken".
-    const sats = location?.satellites != null ? ` · ${location.satellites} sat` : "";
-    const fixAge = location?.lastValidTs
-      ? `position from ${formatDateTime(location.lastValidTs)}`
-      : "no confirmed position yet";
-    const noFixRow = hasNoFix(location)
-      ? `<div class="pp-popup-row pp-popup-row-full pp-popup-nofix">
-           <span class="pp-popup-label">GPS</span>
-           <span class="pp-popup-value">No fix${sats} — ${fixAge}</span>
-         </div>`
-      : "";
 
     // Today's summary data
     const summary = device ? todaySummaries.get(device.imei) : undefined;
@@ -406,30 +391,17 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
         </div>
 
         <div class="pp-popup-grid">
-          ${noFixRow}
-          <div class="pp-popup-row">
-            <span class="pp-popup-label">Vehicle No</span>
-            <span class="pp-popup-value">${plate}</span>
-          </div>
           <div class="pp-popup-row">
             <span class="pp-popup-label">IMEI</span>
             <span class="pp-popup-value pp-mono">${imei}</span>
           </div>
+          <div class="pp-popup-row">
+            <span class="pp-popup-label">ACC</span>
+            <span class="pp-popup-value" style="color: ${accStatus === 'ON' ? '#16A34A' : '#64748B'}; font-weight: 600;">${accStatus}</span>
+          </div>
           <div class="pp-popup-row pp-popup-row-full">
             <span class="pp-popup-label">Location</span>
             <span class="pp-popup-value pp-popup-address" data-lat="${lat}" data-lng="${lng}">Loading address...</span>
-          </div>
-          <div class="pp-popup-row">
-            <span class="pp-popup-label">Direction</span>
-            <span class="pp-popup-value">${course}°</span>
-          </div>
-          <div class="pp-popup-row">
-            <span class="pp-popup-label">Ignition</span>
-            <span class="pp-popup-value" style="color: ${accStatus === 'ON' ? '#16A34A' : '#64748B'};">${accStatus}</span>
-          </div>
-          <div class="pp-popup-row">
-            <span class="pp-popup-label">Battery</span>
-            <span class="pp-popup-value">${voltage}</span>
           </div>
           ${parkedRow}
           <div class="pp-popup-row pp-popup-row-full">
