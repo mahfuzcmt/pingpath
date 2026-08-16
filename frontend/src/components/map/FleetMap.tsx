@@ -351,7 +351,6 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
   // Function to create popup content with Today's Summary
   const createPopupContent = useCallback((device: DeviceView | undefined, location: LocationView | undefined): string => {
     const name = device?.name || device?.vehiclePlate || device?.imei.slice(-8) || "Unknown";
-    const imei = device?.imei || "—";
     const lat = location?.latitude?.toFixed(6) || "—";
     const lng = location?.longitude?.toFixed(6) || "—";
     const speed = location?.speed ?? 0;
@@ -392,22 +391,18 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
 
         <div class="pp-popup-grid">
           <div class="pp-popup-row">
-            <span class="pp-popup-label">IMEI</span>
-            <span class="pp-popup-value pp-mono">${imei}</span>
-          </div>
-          <div class="pp-popup-row">
             <span class="pp-popup-label">ACC</span>
             <span class="pp-popup-value" style="color: ${accStatus === 'ON' ? '#16A34A' : '#64748B'}; font-weight: 600;">${accStatus}</span>
+          </div>
+          <div class="pp-popup-row">
+            <span class="pp-popup-label">Last Update</span>
+            <span class="pp-popup-value">${dateTime}</span>
           </div>
           <div class="pp-popup-row pp-popup-row-full">
             <span class="pp-popup-label">Location</span>
             <span class="pp-popup-value pp-popup-address" data-lat="${lat}" data-lng="${lng}">Loading address...</span>
           </div>
           ${parkedRow}
-          <div class="pp-popup-row pp-popup-row-full">
-            <span class="pp-popup-label">Last Update</span>
-            <span class="pp-popup-value">${dateTime}</span>
-          </div>
         </div>
 
         <!-- Today's Summary Section -->
