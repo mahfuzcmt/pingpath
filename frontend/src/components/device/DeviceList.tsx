@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useLocale, type StringKey } from "@/lib/i18n";
 import { formatSince, formatVoltage, gsmBars, vehicleState, VEHICLE_STATE_COLOR, type VehicleState } from "@/lib/format";
 import { useSpeedLimits } from "@/hooks/useSpeedLimits";
+import { useTicker } from "@/hooks/useTicker";
 import type { DeviceView, LocationView } from "@/types/domain";
 
 const OVERSPEED_COLOR = "#DC2626";
@@ -68,6 +69,8 @@ export function DeviceList({ devices, locations, selectedImei, onSelect }: Devic
   const [filter, setFilter] = useState<ChipId>("all");
   const [checkedDevices, setCheckedDevices] = useState<Set<string>>(new Set());
   const speedLimits = useSpeedLimits();
+  // Force re-render every second to keep "since" times fresh
+  useTicker(1000);
 
   const sorted = useMemo(() => {
     const q = query.trim().toLowerCase();

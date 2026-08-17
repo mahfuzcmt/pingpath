@@ -4,6 +4,7 @@ import { useRouter } from "expo-router";
 import { useAuth } from "@/auth/AuthContext";
 import { useDevices } from "@/hooks/useDevices";
 import { useLiveLocations } from "@/hooks/useLiveLocations";
+import { useTicker } from "@/hooks/useTicker";
 import { Chip, EmptyState, Loading, Pill } from "@/ui";
 import { fmtAgo, fmtSince, motionColor, motionOf, subscriptionDaysLeft, subscriptionExpired } from "@/format";
 import { useSpeedLimits } from "@/hooks/useSpeedLimits";
@@ -30,6 +31,8 @@ export default function VehiclesScreen() {
   const speedLimits = useSpeedLimits();
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<Filter>("ALL");
+  // Force re-render every second to keep "since" times fresh
+  useTicker(1000);
 
   const rows = useMemo(() => {
     return devices.map((d) => {

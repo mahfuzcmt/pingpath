@@ -3,8 +3,12 @@ import { lastKnownAll } from "@/api/endpoints";
 import { subscribeLocations } from "@/ws/stomp";
 import type { LocationView } from "@/types";
 
+/** Auto-refresh interval in milliseconds (10 seconds). */
+const AUTO_REFRESH_INTERVAL_MS = 10_000;
+
 /**
  * Bootstrap last-known positions via REST, then keep them live over STOMP.
+ * Auto-refreshes every 10 seconds for reliable position updates.
  * Returns a Map keyed by IMEI plus a refresh() for the map's Refresh button.
  */
 export function useLiveLocations(orgId: string | null) {
@@ -44,6 +48,7 @@ export function useLiveLocations(orgId: string | null) {
     mounted.current = true;
     if (!orgId) return;
     let unsub: (() => void) | null = null;
+    let intervalId: ReturnType<typeof setInterval> | null = null;
 
     (async () => {
       await refresh();
@@ -54,11 +59,17 @@ export function useLiveLocations(orgId: string | null) {
       } catch (e) {
         if (mounted.current) setError(e instanceof Error ? e.message : "WS failed");
       }
+
+      // Auto-refresh every 10 seconds for reliable updates
+      intervalId = setInterval(() => {
+        if (mounted.current) void refresh();
+      }, AUTO_REFRESH_INTERVAL_MS);
     })();
 
     return () => {
       mounted.current = false;
       unsub?.();
+      if (intervalId) clearInterval(intervalId);
     };
   }, [orgId, refresh, upsert]);
 
