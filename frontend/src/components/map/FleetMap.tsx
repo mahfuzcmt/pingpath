@@ -684,16 +684,27 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
     setSearchResults([]);
   }, []);
 
-  // Pan to selection
+  // Track previous selection to avoid re-opening popup on refresh
+  const prevSelectedImeiRef = useRef<string | null>(null);
+
+  // Pan to selection (only open popup when selection actually changes)
   useEffect(() => {
-    if (!selectedImei) return;
+    if (!selectedImei) {
+      prevSelectedImeiRef.current = null;
+      return;
+    }
     const map = mapRef.current;
     const loc = locations.get(selectedImei);
     const marker = markersRef.current.get(selectedImei);
     if (map && loc) {
-      map.setView([loc.latitude, loc.longitude], Math.max(map.getZoom(), 14), { animate: true });
-      if (marker) {
-        marker.openPopup();
+      // Only pan and open popup if selection changed (not on every refresh)
+      const selectionChanged = prevSelectedImeiRef.current !== selectedImei;
+      if (selectionChanged) {
+        map.setView([loc.latitude, loc.longitude], Math.max(map.getZoom(), 14), { animate: true });
+        if (marker) {
+          marker.openPopup();
+        }
+        prevSelectedImeiRef.current = selectedImei;
       }
     }
   }, [selectedImei, locations]);
