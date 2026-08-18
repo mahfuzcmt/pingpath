@@ -22,6 +22,9 @@ import { useSpeedLimits } from "@/hooks/useSpeedLimits";
 import { api } from "@/lib/api";
 import type { DeviceView, LocationView, TripView } from "@/types/domain";
 
+/** Auto-refresh interval in seconds (must match useLiveLocations). */
+const AUTO_REFRESH_INTERVAL_S = 10;
+
 interface FleetMapProps {
   devices: DeviceView[];
   locations: Map<string, LocationView>;
@@ -29,6 +32,8 @@ interface FleetMapProps {
   onSelect: (imei: string | null) => void;
   /** AutoNemo "Refresh" control — re-pull last-known positions. */
   onRefresh?: () => void | Promise<void>;
+  /** Last refresh timestamp for countdown timer. */
+  lastRefreshAt?: Date | null;
   /** Address search box (geocoding). Off by default — single-vehicle embeds don't need it. */
   showSearch?: boolean;
 }
@@ -266,7 +271,7 @@ function animateMarker(
   requestAnimationFrame(step);
 }
 
-export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh, showSearch = false }: FleetMapProps) {
+export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh, lastRefreshAt, showSearch = false }: FleetMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
@@ -287,8 +292,31 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
   const [searching, setSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<GeocodeResult[]>([]);
   const [autoFollow, setAutoFollow] = useState(true); // Auto-follow selected vehicle
+  const [countdown, setCountdown] = useState(AUTO_REFRESH_INTERVAL_S);
 
   const speedLimits = useSpeedLimits();
+
+  // Countdown timer effect - counts down from 10 to 0, then resets on refresh
+  useEffect(() => {
+    if (!lastRefreshAt) {
+      setCountdown(AUTO_REFRESH_INTERVAL_S);
+      return;
+    }
+
+    const updateCountdown = () => {
+      const elapsed = Math.floor((Date.now() - lastRefreshAt.getTime()) / 1000);
+      const remaining = Math.max(0, AUTO_REFRESH_INTERVAL_S - elapsed);
+      setCountdown(remaining);
+    };
+
+    // Update immediately
+    updateCountdown();
+
+    // Update every second
+    const intervalId = setInterval(updateCountdown, 1000);
+
+    return () => clearInterval(intervalId);
+  }, [lastRefreshAt]);
 
   const deviceByImei = useMemo(() => {
     const m = new Map<string, DeviceView>();
@@ -760,13 +788,38 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
     <div className="relative h-full w-full" style={{ minHeight: "400px" }}>
       <div ref={containerRef} className="absolute inset-0" style={{ width: "100%", height: "100%" }} />
 
-      {/* Map toolbar (top-left) — zoom, measure, fit all, locate */}
+      {/* Countdown timer (top-left, above toolbar) */}
+      <div className="absolute left-3 top-3 z-[1000]">
+        <div
+          className="flex items-center gap-1.5 rounded-md border border-surface-300 bg-white px-2.5 py-1.5 text-xs font-medium shadow-menu"
+          title="Auto-refresh countdown"
+        >
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            className={`${countdown <= 2 ? "text-brand-500 animate-pulse" : "text-ink-500"}`}
+          >
+            <circle cx="12" cy="12" r="10" />
+            <polyline points="12 6 12 12 16 14" />
+          </svg>
+          <span className={`tabular-nums ${countdown <= 2 ? "text-brand-500" : "text-ink-700"}`}>
+            {countdown}s
+          </span>
+        </div>
+      </div>
+
+      {/* Map toolbar (top-left, below countdown) — zoom, measure, fit all, locate */}
       <MapToolbar
         map={mapRef.current}
         onFitAll={handleFitAll}
         onLocate={handleLocate}
         locating={locating}
         disabled={locations.size === 0}
+        className="top-14"
       />
 
       {/* Address search (top-left, below toolbar when enabled) */}
