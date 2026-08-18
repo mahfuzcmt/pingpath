@@ -293,19 +293,33 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
   const [searchResults, setSearchResults] = useState<GeocodeResult[]>([]);
   const [autoFollow, setAutoFollow] = useState(true); // Auto-follow selected vehicle
   const [countdown, setCountdown] = useState(AUTO_REFRESH_INTERVAL_S);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const lastRefreshAtRef = useRef<Date | null>(null);
 
   const speedLimits = useSpeedLimits();
 
-  // Countdown timer effect - counts down from 10 to 0, then resets on refresh
+  // Countdown timer effect - counts down from 10 to 0, shows refreshing state
   useEffect(() => {
-    if (!lastRefreshAt) {
+    // Detect when refresh completes (lastRefreshAt changed)
+    if (lastRefreshAt && lastRefreshAt !== lastRefreshAtRef.current) {
+      lastRefreshAtRef.current = lastRefreshAt;
+      setIsRefreshing(false);
       setCountdown(AUTO_REFRESH_INTERVAL_S);
-      return;
     }
 
     const updateCountdown = () => {
+      if (!lastRefreshAt) {
+        setCountdown(AUTO_REFRESH_INTERVAL_S);
+        return;
+      }
+
       const elapsed = Math.floor((Date.now() - lastRefreshAt.getTime()) / 1000);
       const remaining = Math.max(0, AUTO_REFRESH_INTERVAL_S - elapsed);
+
+      if (remaining === 0 && !isRefreshing) {
+        setIsRefreshing(true);
+      }
+
       setCountdown(remaining);
     };
 
@@ -316,7 +330,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
     const intervalId = setInterval(updateCountdown, 1000);
 
     return () => clearInterval(intervalId);
-  }, [lastRefreshAt]);
+  }, [lastRefreshAt, isRefreshing]);
 
   const deviceByImei = useMemo(() => {
     const m = new Map<string, DeviceView>();
@@ -791,23 +805,46 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
       {/* Countdown timer (top-left, above toolbar) */}
       <div className="absolute left-3 top-3 z-[1000]">
         <div
-          className="flex items-center gap-1.5 rounded-md border border-surface-300 bg-white px-2.5 py-1.5 text-xs font-medium shadow-menu"
-          title="Auto-refresh countdown"
+          className={`flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium shadow-menu ${
+            isRefreshing
+              ? "border-brand-500 bg-brand-50"
+              : "border-surface-300 bg-white"
+          }`}
+          title={isRefreshing ? "Updating positions..." : "Auto-refresh countdown"}
         >
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            className={`${countdown <= 2 ? "text-brand-500 animate-pulse" : "text-ink-500"}`}
-          >
-            <circle cx="12" cy="12" r="10" />
-            <polyline points="12 6 12 12 16 14" />
-          </svg>
-          <span className={`tabular-nums ${countdown <= 2 ? "text-brand-500" : "text-ink-700"}`}>
-            {countdown}s
+          {isRefreshing ? (
+            /* Spinning refresh icon when fetching new data */
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="text-brand-500 animate-spin"
+            >
+              <path d="M23 4v6h-6M1 20v-6h6" />
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+            </svg>
+          ) : (
+            /* Clock icon for countdown */
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              className={`${countdown <= 2 ? "text-brand-500 animate-pulse" : "text-ink-500"}`}
+            >
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+          )}
+          <span className={`tabular-nums ${isRefreshing || countdown <= 2 ? "text-brand-500" : "text-ink-700"}`}>
+            {isRefreshing ? "..." : `${countdown}s`}
           </span>
         </div>
       </div>
