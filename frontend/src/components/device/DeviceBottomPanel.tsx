@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { useLocale } from "@/lib/i18n";
 import { useTrips } from "@/hooks/useTrips";
 import { useLocationHistory } from "@/hooks/useLocationHistory";
-import { cutFuel, restoreFuel, queryAddress, sendRawCommand } from "@/lib/deviceCommands";
+import { cutFuel, restoreFuel, queryAddress, rebootDevice, sendRawCommand } from "@/lib/deviceCommands";
 import { extractError } from "@/lib/api";
 import { dhakaTodayStartIso, formatDurationS, formatNumber, formatSince } from "@/lib/format";
 import { TimeSeriesChart, chartColors } from "@/components/charts/TimeSeriesChart";
@@ -19,7 +19,7 @@ interface Props {
 }
 
 type TabId = "data" | "graph";
-type CommandTemplate = "custom" | "cut" | "restore" | "address";
+type CommandTemplate = "custom" | "cut" | "restore" | "address" | "reboot";
 
 function formatDateTime(ts: string | null | undefined): string {
   if (!ts) return "—";
@@ -96,6 +96,7 @@ export function DeviceBottomPanel({ device, location, onClose, onViewHistory, on
     if (busy) return;
     if (template === "custom" && !rawText.trim()) return;
     if (template === "cut" && !window.confirm(t("panel.confirmCut"))) return;
+    if (template === "reboot" && !window.confirm(t("panel.confirmReboot"))) return;
     setBusy(true);
     setCmdMsg(null);
     try {
@@ -103,6 +104,7 @@ export function DeviceBottomPanel({ device, location, onClose, onViewHistory, on
         template === "cut" ? await cutFuel(device.imei)
         : template === "restore" ? await restoreFuel(device.imei)
         : template === "address" ? await queryAddress(device.imei)
+        : template === "reboot" ? await rebootDevice(device.imei)
         : await sendRawCommand(device.imei, rawText.trim());
       setCmdMsg(res.ok ? res.reply ?? t("panel.commandSent") : res.error ?? t("panel.commandFailed"));
     } catch (e) {
@@ -214,6 +216,7 @@ export function DeviceBottomPanel({ device, location, onClose, onViewHistory, on
                   <option value="cut">{t("panel.cutEngine")}</option>
                   <option value="restore">{t("panel.restoreEngine")}</option>
                   <option value="address">{t("panel.queryAddress")}</option>
+                  <option value="reboot">{t("panel.rebootDevice")}</option>
                 </select>
               </div>
               <div>
@@ -223,7 +226,7 @@ export function DeviceBottomPanel({ device, location, onClose, onViewHistory, on
                     type="text"
                     className="input flex-1 font-mono disabled:bg-surface-100"
                     placeholder={template === "custom" ? "SPDADD,ON,10,2#" : ""}
-                    value={template === "custom" ? rawText : template === "cut" ? "DYD" : template === "restore" ? "HFYD" : "DWXX"}
+                    value={template === "custom" ? rawText : template === "cut" ? "DYD" : template === "restore" ? "HFYD" : template === "address" ? "DWXX" : "RESET"}
                     disabled={template !== "custom"}
                     onChange={(e) => setRawText(e.target.value)}
                     onKeyDown={(e) => { if (e.key === "Enter") void sendCommand(); }}

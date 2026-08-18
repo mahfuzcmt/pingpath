@@ -31,6 +31,15 @@ export async function queryAddress(imei: string, devicePassword?: string): Promi
   return r.data;
 }
 
+/** Reboot/restart the device (GT06 RESET). */
+export async function rebootDevice(imei: string, devicePassword?: string): Promise<CommandResponse> {
+  const password = devicePassword || "123456";
+  const r = await api.post<CommandResponse>(`/devices/${encodeURIComponent(imei)}/commands/raw`, {
+    rawCommand: `RESET,${password}#`,
+  });
+  return r.data;
+}
+
 /** Send an arbitrary GT06 ASCII command, e.g. "SPDADD,ON,10,2#". */
 export async function sendRawCommand(imei: string, rawCommand: string): Promise<CommandResponse> {
   const r = await api.post<CommandResponse>(`/devices/${encodeURIComponent(imei)}/commands/raw`, {
