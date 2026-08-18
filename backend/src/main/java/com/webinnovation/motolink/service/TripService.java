@@ -98,17 +98,51 @@ public class TripService {
     }
 
     private boolean shouldOpenTrip(LocationData loc) {
+        // ACC explicitly ON - start trip
         if (Boolean.TRUE.equals(loc.getAccOn())) return true;
-        if (loc.getSpeed() <= MOVING_SPEED_THRESHOLD) return false;
-        // Movement without ACC — only open if the device has been quiet for a while
-        // (avoids spuriously starting from a single GPS jitter).
-        return locationRepo.findLastForImei(loc.getImei())
-                .map(prev -> prev.ts().isBefore(loc.getTimestamp().minusSeconds(RESTART_IDLE_SECONDS)))
-                .orElse(true);
+
+        // Speed-based fallback when ACC is null/unknown:
+        // Start trip if speed > threshold (vehicle is moving)
+        if (loc.getAccOn() == null && loc.getSpeed() > MOVING_SPEED_THRESHOLD) {
+            return true;
+        }
+
+        return false;
     }
 
     private boolean shouldCloseTrip(LocationData loc) {
-        return Boolean.FALSE.equals(loc.getAccOn()) && loc.getSpeed() == 0;
+        // ACC explicitly OFF and stopped - close trip
+        if (Boolean.FALSE.equals(loc.getAccOn()) && loc.getSpeed() == 0) {
+            return true;
+        }
+
+        // Speed-based fallback when ACC is null/unknown:
+        // Close trip if speed is 0 (vehicle stopped)
+        // The stale trip sweeper will handle extended stops
+        if (loc.getAccOn() == null && loc.getSpeed() == 0) {
+            // Check if we've been stopped for a while (3+ minutes)
+            return hasBeenStoppedRecently(loc.getImei(), loc.getTimestamp());
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if the device has been stationary (speed=0) for the last few minutes.
+     * Used for speed-based trip closing when ACC is unavailable.
+     */
+    private boolean hasBeenStoppedRecently(String imei, Instant currentTs) {
+        // Get recent locations (last 3 minutes)
+        List<com.webinnovation.motolink.domain.Location> recent = locationRepo.findHistory(
+                null, imei,
+                currentTs.minusSeconds(180), // 3 minutes
+                currentTs,
+                10);
+
+        if (recent.size() < 3) return false; // Need at least a few points
+
+        // Check if all recent points have speed = 0
+        return recent.stream().allMatch(l -> l.speed() == 0);
     }
 
     /**
