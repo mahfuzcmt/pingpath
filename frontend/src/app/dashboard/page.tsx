@@ -89,7 +89,6 @@ export default function DashboardPage() {
           onSelect={setSelectedImei}
           onRefresh={refresh}
           lastRefreshAt={lastRefreshAt}
-          showSearch
         />
 
         {/* Live KPIs — floating overlay, collapsible */}

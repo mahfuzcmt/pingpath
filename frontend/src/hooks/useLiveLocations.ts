@@ -88,7 +88,18 @@ export function useLiveLocations(orgId: string) {
   useEffect(() => {
     mounted.current = true;
     let unsub: (() => void) | null = null;
-    let refreshIntervalId: ReturnType<typeof setInterval> | null = null;
+    let refreshTimeoutId: ReturnType<typeof setTimeout> | null = null;
+
+    // Recursive refresh: starts next refresh exactly 10s after previous one completes
+    const scheduleNextRefresh = () => {
+      refreshTimeoutId = setTimeout(async () => {
+        if (!mounted.current) return;
+        await refresh();
+        if (mounted.current) {
+          scheduleNextRefresh();
+        }
+      }, AUTO_REFRESH_INTERVAL_MS);
+    };
 
     (async () => {
       await refresh();
@@ -103,20 +114,16 @@ export function useLiveLocations(orgId: string) {
         }
       }
 
-      // Auto-refresh every 10 seconds for reliable updates
-      // This ensures positions update even if WebSocket misses events
-      refreshIntervalId = setInterval(() => {
-        if (mounted.current) {
-          void refresh();
-        }
-      }, AUTO_REFRESH_INTERVAL_MS);
+      // Start the recursive refresh cycle
+      // Each refresh happens exactly 10 seconds after the previous one completes
+      scheduleNextRefresh();
     })();
 
     return () => {
       mounted.current = false;
       unsub?.();
-      if (refreshIntervalId) {
-        clearInterval(refreshIntervalId);
+      if (refreshTimeoutId) {
+        clearTimeout(refreshTimeoutId);
       }
     };
   }, [orgId, upsert, refresh]);
