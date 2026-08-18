@@ -28,11 +28,13 @@ const AUTO_REFRESH_INTERVAL_MS = 10_000;
  */
 function merge(existing: LocationView, incoming: LocationView): LocationView {
   if (incoming.valid) return incoming;
+  // Invalid GPS fix: position is stale, so the reported speed is also unreliable
+  // (GT06 derives speed from GPS). Show 0 speed to avoid confusing "moving but stuck" display.
   return {
     ...incoming,
     latitude: existing.latitude,
     longitude: existing.longitude,
-    speed: existing.speed,
+    speed: 0,
     course: existing.course,
     lastValidTs: incoming.lastValidTs ?? existing.lastValidTs ?? null,
   };
