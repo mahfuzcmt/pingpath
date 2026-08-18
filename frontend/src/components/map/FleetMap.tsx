@@ -16,11 +16,10 @@ import {
 } from "@/lib/leaflet";
 import { MapLayerDropdown } from "./MapLayerDropdown";
 import { MapToolbar } from "./MapToolbar";
-import { formatSince, dhakaTodayStartIso, vehicleState, VEHICLE_STATE_COLOR, type VehicleState } from "@/lib/format";
+import { formatSince, vehicleState, VEHICLE_STATE_COLOR, type VehicleState } from "@/lib/format";
 import { buildVehicleSvg } from "@/lib/vehicleIcons";
 import { useSpeedLimits } from "@/hooks/useSpeedLimits";
-import { api } from "@/lib/api";
-import type { DeviceView, LocationView, TripView } from "@/types/domain";
+import type { DeviceView, LocationView } from "@/types/domain";
 
 /** Auto-refresh interval in seconds (must match useLiveLocations). */
 const AUTO_REFRESH_INTERVAL_S = 10;
@@ -44,14 +43,6 @@ interface GeocodeResult {
   label: string;
   lat: number;
   lng: number;
-}
-
-/** Today's summary data per device */
-interface TodaySummary {
-  durationS: number;
-  distanceM: number;
-  overspeedDistanceM: number;
-  maxSpeed: number;
 }
 
 /** Cache key for address lookups (rounded to ~100m precision to reduce API calls) */
@@ -135,16 +126,6 @@ async function reverseGeocode(lat: number, lng: number): Promise<string> {
   } catch {
     return `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
   }
-}
-
-/** Format duration in seconds to "Xh Ym" or "Ym" format */
-function formatDurationCompact(seconds: number): string {
-  if (seconds < 0) return "—";
-  const s = Math.floor(seconds);
-  const h = Math.floor(s / 3600);
-  const m = Math.floor((s % 3600) / 60);
-  if (h > 0) return `${h}h ${m}m`;
-  return `${m}m`;
 }
 
 // Default to google-street if Google API key is available, otherwise OSM
@@ -338,60 +319,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
     return m;
   }, [devices]);
 
-  // Today's trip summaries per device
-  const [todaySummaries, setTodaySummaries] = useState<Map<string, TodaySummary>>(new Map());
-
-  // Fetch today's trips and compute summaries
-  useEffect(() => {
-    let cancelled = false;
-    const fetchTodaySummaries = async () => {
-      try {
-        const todayStart = dhakaTodayStartIso();
-        const now = new Date().toISOString();
-        const r = await api.get<TripView[]>("/trips", {
-          params: { from: todayStart, to: now },
-        });
-        if (cancelled) return;
-
-        // Compute per-device summaries
-        const summaryMap = new Map<string, TodaySummary>();
-        for (const trip of r.data) {
-          const imei = trip.deviceImei;
-          const existing = summaryMap.get(imei) || {
-            durationS: 0,
-            distanceM: 0,
-            overspeedDistanceM: 0,
-            maxSpeed: 0,
-          };
-          existing.durationS += trip.durationS ?? 0;
-          existing.distanceM += trip.distanceM;
-          existing.maxSpeed = Math.max(existing.maxSpeed, trip.maxSpeed);
-
-          // Estimate overspeed distance (20% of trip if max speed exceeded limit)
-          const limit = speedLimits.limitFor(imei) ?? 80;
-          if (trip.maxSpeed > limit) {
-            existing.overspeedDistanceM += trip.distanceM * 0.2;
-          }
-
-          summaryMap.set(imei, existing);
-        }
-        setTodaySummaries(summaryMap);
-      } catch (err) {
-        console.error("Failed to fetch today's trips:", err);
-      }
-    };
-
-    fetchTodaySummaries();
-    // Refresh every 60 seconds
-    const interval = setInterval(fetchTodaySummaries, 60000);
-
-    return () => {
-      cancelled = true;
-      clearInterval(interval);
-    };
-  }, [speedLimits]);
-
-  // Function to create popup content with Today's Summary
+  // Function to create popup content
   const createPopupContent = useCallback((device: DeviceView | undefined, location: LocationView | undefined): string => {
     const name = device?.name || device?.vehiclePlate || device?.imei.slice(-8) || "Unknown";
     const lat = location?.latitude?.toFixed(6) || "—";
@@ -409,12 +337,6 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
          </div>`
       : "";
 
-
-    // Today's summary data
-    const summary = device ? todaySummaries.get(device.imei) : undefined;
-    const hoursDisplay = summary ? formatDurationCompact(summary.durationS) : "0m";
-    const distanceDisplay = summary ? `${(summary.distanceM / 1000).toFixed(1)} km` : "0.0 km";
-    const overspeedDisplay = summary ? `${(summary.overspeedDistanceM / 1000).toFixed(1)} km` : "0.0 km";
 
     return `
       <div class="pp-popup">
@@ -448,28 +370,6 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           ${parkedRow}
         </div>
 
-        <!-- Today's Summary Section -->
-        <div class="pp-popup-summary">
-          <div class="pp-popup-summary-title">Today (12:00 AM - Now)</div>
-          <div class="pp-popup-summary-grid">
-            <div class="pp-summary-item">
-              <span class="pp-summary-icon pp-summary-icon-time">⏱</span>
-              <span class="pp-summary-label">Hours</span>
-              <span class="pp-summary-value">${hoursDisplay}</span>
-            </div>
-            <div class="pp-summary-item">
-              <span class="pp-summary-icon pp-summary-icon-distance">📍</span>
-              <span class="pp-summary-label">Distance</span>
-              <span class="pp-summary-value">${distanceDisplay}</span>
-            </div>
-            <div class="pp-summary-item">
-              <span class="pp-summary-icon pp-summary-icon-overspeed">⚠️</span>
-              <span class="pp-summary-label">Overspeed</span>
-              <span class="pp-summary-value ${summary && summary.overspeedDistanceM > 0 ? 'pp-summary-danger' : ''}">${overspeedDisplay}</span>
-            </div>
-          </div>
-        </div>
-
         <!-- Live Tracking Button -->
         <button class="pp-popup-live-btn" data-imei="${device?.imei || ''}" onclick="window.dispatchEvent(new CustomEvent('openLiveTracking', {detail: '${device?.imei || ''}'}))">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -480,7 +380,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
         </button>
       </div>
     `;
-  }, [speedLimits, todaySummaries]);
+  }, [speedLimits]);
 
   // Init map once
   useEffect(() => {
@@ -742,7 +642,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
       }
       initialFitDoneRef.current = true;
     }
-  }, [locations, deviceByImei, selectedImei, onSelect, createPopupContent, speedLimits, todaySummaries, autoFollow]);
+  }, [locations, deviceByImei, selectedImei, onSelect, createPopupContent, speedLimits, autoFollow]);
 
   // Address search (Nominatim; biased to the current viewport). Free, no key —
   // matches the OSM fallback strategy of lib/leaflet.ts.
@@ -1203,60 +1103,6 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           color: #94a3b8;
         }
 
-        /* Today's Summary Section */
-        .pp-popup-summary {
-          padding: 10px 14px;
-          background: rgba(0, 0, 0, 0.2);
-          border-top: 1px solid rgba(100, 116, 139, 0.2);
-        }
-        .pp-popup-summary-title {
-          font-size: 11px;
-          font-weight: 600;
-          text-transform: uppercase;
-          color: #94a3b8;
-          letter-spacing: 0.5px;
-          margin-bottom: 10px;
-          display: flex;
-          align-items: center;
-          gap: 6px;
-        }
-        .pp-popup-summary-title::before {
-          content: '📊';
-          font-size: 12px;
-        }
-        .pp-popup-summary-grid {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 8px;
-        }
-        .pp-summary-item {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 4px;
-          padding: 8px 4px;
-          background: rgba(255, 255, 255, 0.05);
-          border-radius: 8px;
-        }
-        .pp-summary-icon {
-          font-size: 14px;
-        }
-        .pp-summary-label {
-          font-size: 9px;
-          text-transform: uppercase;
-          color: #64748b;
-          letter-spacing: 0.3px;
-        }
-        .pp-summary-value {
-          font-family: 'JetBrains Mono', monospace;
-          font-size: 12px;
-          font-weight: 600;
-          color: #f1f5f9;
-        }
-        .pp-summary-danger {
-          color: #DC2626 !important;
-        }
-
         /* Live Tracking Button */
         .pp-popup-live-btn {
           display: flex;
@@ -1329,29 +1175,6 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           }
           .pp-popup-value.pp-mono {
             font-size: 9px;
-          }
-          .pp-popup-summary {
-            padding: 8px 10px;
-          }
-          .pp-popup-summary-title {
-            font-size: 9px;
-            margin-bottom: 6px;
-          }
-          .pp-popup-summary-grid {
-            grid-template-columns: repeat(3, 1fr);
-            gap: 4px;
-          }
-          .pp-summary-item {
-            padding: 4px 2px;
-          }
-          .pp-summary-icon {
-            font-size: 12px;
-          }
-          .pp-summary-label {
-            font-size: 8px;
-          }
-          .pp-summary-value {
-            font-size: 10px;
           }
           .pp-popup-live-btn {
             margin: 8px 10px 10px;
