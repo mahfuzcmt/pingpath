@@ -45,3 +45,10 @@ desktop.ini
 logs/
 tmp/
 coverage/
+
+# ----- Claude Code -----
+.claude/settings.local.json
+
+# ----- Preview / temp files -----
+*-preview.html
+icon-preview.html
