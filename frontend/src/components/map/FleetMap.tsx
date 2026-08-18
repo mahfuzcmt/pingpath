@@ -286,6 +286,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
   const [searchQ, setSearchQ] = useState("");
   const [searching, setSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<GeocodeResult[]>([]);
+  const [autoFollow, setAutoFollow] = useState(true); // Auto-follow selected vehicle
 
   const speedLimits = useSpeedLimits();
 
@@ -646,6 +647,17 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           const duration = Math.min(baseDuration + distance * 50000, maxDuration);
 
           animateMarker(marker, loc.latitude, loc.longitude, duration);
+
+          // Auto-follow: pan map to keep selected vehicle in view
+          if (autoFollow && isSelected && map) {
+            const bounds = map.getBounds();
+            const point = L.latLng(loc.latitude, loc.longitude);
+            // Only pan if vehicle moved outside visible area (with some padding)
+            const paddedBounds = bounds.pad(-0.2); // 20% padding from edges
+            if (!paddedBounds.contains(point)) {
+              map.panTo(point, { animate: true, duration: 0.5 });
+            }
+          }
         } else {
           marker.setLatLng([loc.latitude, loc.longitude]);
         }
@@ -688,7 +700,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
       }
       initialFitDoneRef.current = true;
     }
-  }, [locations, deviceByImei, selectedImei, onSelect, createPopupContent, speedLimits, todaySummaries]);
+  }, [locations, deviceByImei, selectedImei, onSelect, createPopupContent, speedLimits, todaySummaries, autoFollow]);
 
   // Address search (Nominatim; biased to the current viewport). Free, no key —
   // matches the OSM fallback strategy of lib/leaflet.ts.
@@ -807,8 +819,31 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
         </div>
       )}
 
-      {/* Map controls (top-right) — Layer dropdown + Show Traffic */}
+      {/* Map controls (top-right) — Layer dropdown + Show Traffic + Auto-follow */}
       <div className="absolute right-3 top-3 z-[1000] flex items-center gap-2">
+        {/* Auto-follow toggle - only show when a vehicle is selected */}
+        {selectedImei && (
+          <label
+            className={`flex cursor-pointer items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-semibold shadow-menu transition ${
+              autoFollow
+                ? "border-brand-500 bg-brand-500 text-white"
+                : "border-surface-300 bg-white text-ink-900"
+            }`}
+            title={autoFollow ? "Map follows selected vehicle" : "Click to follow selected vehicle"}
+          >
+            <input
+              type="checkbox"
+              checked={autoFollow}
+              onChange={(e) => setAutoFollow(e.target.checked)}
+              className="sr-only"
+            />
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+            Follow
+          </label>
+        )}
         {trafficAvailable && (
           <label className="flex cursor-pointer items-center gap-1.5 rounded-md border border-surface-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-ink-900 shadow-menu">
             <input
