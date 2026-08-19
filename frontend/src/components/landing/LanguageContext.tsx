@@ -534,15 +534,23 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const [lang, setLang] = useState<Lang>("en");
 
   useEffect(() => {
-    const saved = localStorage.getItem("motolink-lang") as Lang | null;
-    if (saved && (saved === "en" || saved === "bn")) {
-      setLang(saved);
+    try {
+      const saved = localStorage.getItem("motolink-lang") as Lang | null;
+      if (saved && (saved === "en" || saved === "bn")) {
+        setLang(saved);
+      }
+    } catch {
+      // localStorage access may fail in some browser contexts
     }
   }, []);
 
   const handleSetLang = (newLang: Lang) => {
     setLang(newLang);
-    localStorage.setItem("motolink-lang", newLang);
+    try {
+      localStorage.setItem("motolink-lang", newLang);
+    } catch {
+      // localStorage access may fail in some browser contexts
+    }
   };
 
   const t = (key: string): string => {

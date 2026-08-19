@@ -582,8 +582,12 @@ export function LocaleProvider({
 
   const setLocale = useCallback((l: Locale) => {
     setLocaleState(l);
-    document.documentElement.lang = l;
-    document.cookie = `pp_locale=${l}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;
+    try {
+      document.documentElement.lang = l;
+      document.cookie = `pp_locale=${l}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;
+    } catch {
+      // Cookie access may fail in some browser contexts (privacy mode, extensions)
+    }
   }, []);
 
   const value = useMemo<LocaleCtx>(
