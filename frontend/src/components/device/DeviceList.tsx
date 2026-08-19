@@ -268,7 +268,7 @@ export function DeviceList({ devices, locations, selectedImei, onSelect }: Devic
                     className={`min-w-[40px] text-right text-xs font-semibold ${overspeed ? "animate-pulse" : "text-ink-900"}`}
                     style={{ color: overspeed ? OVERSPEED_COLOR : undefined }}
                   >
-                    {filterSpeed(live?.speed)} kph
+                    {filterSpeed(live?.speed, live?.valid)} kph
                   </span>
                   <SignalIcon
                     bars={gsmBars(d.lastGsmSignal)}

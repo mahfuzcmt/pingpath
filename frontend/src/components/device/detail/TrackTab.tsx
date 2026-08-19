@@ -39,7 +39,7 @@ export default function TrackTab({ device, orgId }: { device: DeviceView; orgId:
     }
   }
 
-  const speed = filterSpeed(live?.speed ?? device.lastSpeed);
+  const speed = filterSpeed(live?.speed ?? device.lastSpeed, live?.valid);
 
   return (
     <div className="flex h-full min-h-0 flex-col">

@@ -205,7 +205,7 @@ function createVehicleIcon(
 // Compact plate-number pill with speed inline (professional style).
 function plateLabelHtml(device: DeviceView | undefined, location: LocationView | undefined, stateColor: string): string {
   const text = device?.vehiclePlate || device?.name || device?.imei.slice(-8) || "—";
-  const speed = filterSpeed(location?.speed);
+  const speed = filterSpeed(location?.speed, location?.valid);
   return `<div class="pp-label" style="--state-color:${stateColor}">
     <span class="pp-label-name">${text}</span>
     <span class="pp-label-speed">${speed} kph</span>
@@ -324,7 +324,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
     const name = device?.name || device?.vehiclePlate || device?.imei.slice(-8) || "Unknown";
     const lat = location?.latitude?.toFixed(6) || "—";
     const lng = location?.longitude?.toFixed(6) || "—";
-    const speed = filterSpeed(location?.speed);
+    const speed = filterSpeed(location?.speed, location?.valid);
     const dateTime = formatDateTime(location?.ts || device?.lastSeenAt);
     const overspeed = device != null && speedLimits.isOverspeed(device.imei, location?.speed);
     const status = overspeed ? "Overspeed" : statusText(device, location);
@@ -518,7 +518,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
       const course = loc.course ?? 0;
       const bodyColor = device?.iconColor || "#E8900A";
       const noFix = hasNoFix(loc);
-      const isMoving = filterSpeed(loc.speed) > 0; // Moving if speed above noise threshold
+      const isMoving = filterSpeed(loc.speed, loc.valid) > 0; // Moving if speed above noise threshold
 
       if (!marker) {
         // Create new marker

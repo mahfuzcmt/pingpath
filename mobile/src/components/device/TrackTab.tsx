@@ -82,7 +82,7 @@ export default function TrackTab({ imei, orgId }: { imei: string; orgId: string 
 
   if (loading && !device) return <Loading label={t("track.loadingDevice")} />;
 
-  const speed = filterSpeed(loc?.speed ?? device?.lastSpeed);
+  const speed = filterSpeed(loc?.speed ?? device?.lastSpeed, loc?.valid);
   const overspeeding = speedLimits.isOverspeed(imei, speed);
   const expired = device ? subscriptionExpired(device) : false;
   const daysLeft = device ? subscriptionDaysLeft(device) : null;

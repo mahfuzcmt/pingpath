@@ -7,11 +7,14 @@ const TIMEZONE = "Asia/Dhaka";
 const SPEED_NOISE_THRESHOLD = 3;
 
 /**
- * Filter out GPS noise from speed readings. Speeds below 3 kph are typically
- * GPS drift when the vehicle is stationary, so we display them as 0.
+ * Filter out unreliable speed readings:
+ * 1. When GPS fix is invalid (valid=false), speed is meaningless - show 0
+ * 2. Speeds below 3 kph are typically GPS drift when stationary - show 0
  */
-export function filterSpeed(speed: number | null | undefined): number {
+export function filterSpeed(speed: number | null | undefined, valid?: boolean | null): number {
   if (speed == null) return 0;
+  // When GPS fix is invalid, speed is unreliable (cell tower can't measure speed)
+  if (valid === false) return 0;
   return speed < SPEED_NOISE_THRESHOLD ? 0 : speed;
 }
 
@@ -46,7 +49,7 @@ export function vehicleState(d: DeviceView, live?: LocationView | null): Vehicle
   if (d.status === "NEVER_CONNECTED" || !d.lastSeenAt) return "nodata";
   if (isSubscriptionExpired(d)) return "expired";
   if (d.status !== "ONLINE") return "offline";
-  const speed = filterSpeed(live?.speed ?? d.lastSpeed);
+  const speed = filterSpeed(live?.speed ?? d.lastSpeed, live?.valid);
   if (speed > 0) return "moving";
 
   // Vehicle is stationary. Only show "Idle" if ACC is explicitly ON.

@@ -59,7 +59,7 @@ export function DeviceDetailPanel({ device, location, onClose }: Props) {
             <div className="data-row">
               <dt>{t("fleet.speed")}</dt>
               <dd>
-                <span className="font-semibold">{formatNumber(filterSpeed(location.speed), locale)}</span>{" "}
+                <span className="font-semibold">{formatNumber(filterSpeed(location.speed, location.valid), locale)}</span>{" "}
                 <span className="text-ink-500">{t("fleet.kmh")}</span>
               </dd>
             </div>

@@ -183,7 +183,7 @@ export function DeviceBottomPanel({ device, location, onClose, onViewHistory, on
             <DataRow icon="⛰" label="Altitude" value={location?.altitude != null ? `${location.altitude} m` : "0 m"} />
             <DataRow icon="🧭" label="Angle" value={location?.course != null ? `${location.course} °` : "— °"} />
             <DataRow icon="📍" label="Position" value={location ? `${location.latitude.toFixed(6)} °, ${location.longitude.toFixed(6)} °` : "—"} link />
-            <DataRow icon="🚗" label="Speed" value={`${filterSpeed(location?.speed)} kph`} />
+            <DataRow icon="🚗" label="Speed" value={`${filterSpeed(location?.speed, location?.valid)} kph`} />
             {device.parkedSince && !isMoving && (
               <DataRow icon="🅿️" label="Parked for" value={formatSince(device.parkedSince)} />
             )}

@@ -5,11 +5,14 @@ import type { DeviceView, LocationView, MotionStatus } from "./types";
 const SPEED_NOISE_THRESHOLD = 3;
 
 /**
- * Filter out GPS noise from speed readings. Speeds below 3 kph are typically
- * GPS drift when the vehicle is stationary, so we display them as 0.
+ * Filter out unreliable speed readings:
+ * 1. When GPS fix is invalid (valid=false), speed is meaningless - show 0
+ * 2. Speeds below 3 kph are typically GPS drift when stationary - show 0
  */
-export function filterSpeed(speed: number | null | undefined): number {
+export function filterSpeed(speed: number | null | undefined, valid?: boolean | null): number {
   if (speed == null) return 0;
+  // When GPS fix is invalid, speed is unreliable (cell tower can't measure speed)
+  if (valid === false) return 0;
   return speed < SPEED_NOISE_THRESHOLD ? 0 : speed;
 }
 
@@ -22,7 +25,7 @@ export function filterSpeed(speed: number | null | undefined): number {
  */
 export function motionOf(d: DeviceView, live?: LocationView | null): MotionStatus {
   if (d.status !== "ONLINE") return "OFFLINE";
-  const speed = filterSpeed(live?.speed ?? d.lastSpeed);
+  const speed = filterSpeed(live?.speed ?? d.lastSpeed, live?.valid);
   if (speed > 0) return "MOVING";
 
   // Vehicle is stationary (speed = 0 after filtering). Only show "IDLE" if ACC is explicitly ON.

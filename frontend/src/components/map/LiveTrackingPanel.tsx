@@ -74,7 +74,7 @@ export function LiveTrackingPanel({ device, location, onClose }: Props) {
     fetchAddress();
   }, [location?.latitude, location?.longitude]);
 
-  const currentSpeed = filterSpeed(location?.speed);
+  const currentSpeed = filterSpeed(location?.speed, location?.valid);
   const isMoving = currentSpeed > 0;
 
   return (
