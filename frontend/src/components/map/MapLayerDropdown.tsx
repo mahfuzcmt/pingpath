@@ -105,7 +105,7 @@ export function MapLayerDropdown({ currentLayer, onChange, googleAvailable }: Ma
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 rounded-md border border-surface-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-ink-900 shadow-menu transition hover:bg-surface-50"
+        className="flex items-center gap-2 rounded-mkt border border-white/30 bg-white/80 px-2.5 py-1.5 text-xs font-semibold text-ink-900 shadow-glass backdrop-blur-md transition hover:bg-white/90 hover:border-white/50"
         title="Map layer"
       >
         <span className="text-ink-600">{currentOption.icon}</span>
@@ -125,7 +125,7 @@ export function MapLayerDropdown({ currentLayer, onChange, googleAvailable }: Ma
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full z-10 mt-1 min-w-[160px] overflow-hidden rounded-md border border-surface-300 bg-white shadow-menu">
+        <div className="absolute right-0 top-full z-10 mt-1.5 min-w-[160px] overflow-hidden rounded-mkt border border-white/30 bg-white/90 shadow-glass backdrop-blur-lg">
           {LAYER_OPTIONS.map((option) => {
             const disabled = option.requiresGoogle && !googleAvailable;
             const isSelected = option.kind === currentLayer;
@@ -136,12 +136,12 @@ export function MapLayerDropdown({ currentLayer, onChange, googleAvailable }: Ma
                 type="button"
                 onClick={() => !disabled && handleSelect(option.kind)}
                 disabled={disabled}
-                className={`flex w-full items-center gap-2.5 px-3 py-2 text-left text-xs transition ${
+                className={`flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-xs transition ${
                   isSelected
-                    ? "bg-brand-50 font-semibold text-brand-600"
+                    ? "bg-brand-50/80 font-semibold text-brand-600"
                     : disabled
                     ? "cursor-not-allowed text-ink-300"
-                    : "text-ink-700 hover:bg-surface-50"
+                    : "text-ink-700 hover:bg-white/60"
                 }`}
               >
                 <span className={isSelected ? "text-brand-500" : disabled ? "text-ink-300" : "text-ink-500"}>

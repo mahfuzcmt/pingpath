@@ -100,6 +100,10 @@ const config: Config = {
         "mkt-xl": "0 16px 48px -12px rgba(0,0,0,0.15), 0 8px 24px -8px rgba(0,0,0,0.1)",
         "mkt-glow": "0 0 40px -8px rgba(43,130,212,0.35)",
         "mkt-glow-lg": "0 0 80px -16px rgba(43,130,212,0.4)",
+        // Glass UI shadows
+        "glass": "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08)",
+        "glass-lg": "0 16px 48px rgba(0,0,0,0.15), 0 4px 16px rgba(0,0,0,0.1)",
+        "glass-inset": "inset 0 1px 0 0 rgba(255,255,255,0.1), inset 0 -1px 0 0 rgba(0,0,0,0.05)",
       },
       borderRadius: {
         DEFAULT: "2px",

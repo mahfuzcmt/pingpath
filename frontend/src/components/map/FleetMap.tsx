@@ -175,7 +175,7 @@ function hasNoFix(location: LocationView | undefined): boolean {
   return location != null && !location.valid;
 }
 
-// Vehicle marker: clean top-view silhouette by vehicle type, rotated to the course.
+// Vehicle marker: teardrop pin with vehicle icon inside, anchored at bottom point.
 function createVehicleIcon(
   vehicleType: string | null | undefined,
   bodyColor: string,
@@ -185,20 +185,21 @@ function createVehicleIcon(
   noFix = false,
   isMoving = false,
 ): L.DivIcon {
-  const size = isSelected ? 52 : 44;
+  const baseSize = isSelected ? 44 : 38;
+  const height = Math.round(baseSize * 1.25);
   const classes = [
     'pp-vehicle-icon',
     isSelected && 'pp-selected',
     isOverspeed && 'pp-overspeed',
     noFix && 'pp-nofix',
-    isMoving && !isOverspeed && 'pp-moving', // Don't combine with overspeed animation
+    isMoving && !isOverspeed && 'pp-moving',
   ].filter(Boolean).join(' ');
 
   return L.divIcon({
-    html: buildVehicleSvg(vehicleType, isOverspeed ? OVERSPEED_COLOR : bodyColor, rotation, size),
+    html: buildVehicleSvg(vehicleType, isOverspeed ? OVERSPEED_COLOR : bodyColor, rotation, baseSize),
     className: classes,
-    iconSize: [size, size],
-    iconAnchor: [size / 2, size / 2],
+    iconSize: [baseSize, height],
+    iconAnchor: [baseSize / 2, height], // Anchor at bottom tip of teardrop
   });
 }
 
@@ -713,13 +714,13 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
     <div className="relative h-full w-full" style={{ minHeight: "400px" }}>
       <div ref={containerRef} className="absolute inset-0" style={{ width: "100%", height: "100%" }} />
 
-      {/* Countdown timer (top-left, above toolbar) */}
+      {/* Countdown timer (top-left, above toolbar) - Glassy */}
       <div className="absolute left-3 top-3 z-[1000]">
         <div
-          className={`flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium shadow-menu ${
+          className={`glass-btn flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-medium ${
             isRefreshing
-              ? "border-brand-500 bg-brand-50"
-              : "border-surface-300 bg-white"
+              ? "!bg-brand-50/90 !border-brand-400/50"
+              : ""
           }`}
           title={isRefreshing ? "Updating positions..." : "Auto-refresh countdown"}
         >
@@ -770,13 +771,13 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
         className="top-14"
       />
 
-      {/* Address search (top-left, below toolbar when enabled) */}
+      {/* Address search (top-left, below toolbar when enabled) - Glassy */}
       {showSearch && (
         <div className="absolute left-14 top-3 z-[1000] w-64">
-          <div className="flex overflow-hidden rounded-md border border-surface-300 bg-white shadow-menu">
+          <div className="glass-btn flex overflow-hidden rounded-xl">
             <input
               type="search"
-              className="min-w-0 flex-1 px-2.5 py-1.5 text-xs text-ink-900 outline-none placeholder:text-ink-400"
+              className="min-w-0 flex-1 bg-transparent px-3 py-2 text-xs text-ink-900 outline-none placeholder:text-ink-400"
               placeholder="Search address…"
               value={searchQ}
               onChange={(e) => setSearchQ(e.target.value)}
@@ -789,7 +790,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
               type="button"
               onClick={() => void runSearch()}
               disabled={searching || !searchQ.trim()}
-              className="px-2.5 text-ink-500 transition hover:text-ink-900 disabled:opacity-50"
+              className="px-3 text-ink-500 transition hover:text-ink-900 disabled:opacity-50"
               title="Search"
             >
               <svg
@@ -803,13 +804,13 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
             </button>
           </div>
           {searchResults.length > 0 && (
-            <ul className="mt-1 max-h-56 overflow-y-auto rounded-md border border-surface-300 bg-white shadow-menu">
+            <ul className="glass-panel mt-2 max-h-56 overflow-y-auto rounded-xl">
               {searchResults.map((r, i) => (
                 <li key={i}>
                   <button
                     type="button"
                     onClick={() => gotoSearchResult(r)}
-                    className="block w-full border-b border-surface-100 px-2.5 py-1.5 text-left text-[11px] text-ink-700 transition last:border-b-0 hover:bg-surface-100"
+                    className="block w-full border-b border-surface-200/50 px-3 py-2 text-left text-[11px] text-ink-700 transition last:border-b-0 hover:bg-white/60"
                   >
                     {r.label}
                   </button>
@@ -820,15 +821,15 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
         </div>
       )}
 
-      {/* Map controls (top-right) — Layer dropdown + Show Traffic + Auto-follow */}
+      {/* Map controls (top-right) — Layer dropdown + Show Traffic + Auto-follow - Glassy */}
       <div className="absolute right-3 top-3 z-[1000] flex items-center gap-2">
         {/* Auto-follow toggle - only show when a vehicle is selected */}
         {selectedImei && (
           <label
-            className={`flex cursor-pointer items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-semibold shadow-menu transition ${
+            className={`glass-btn flex cursor-pointer items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition ${
               autoFollow
-                ? "border-brand-500 bg-brand-500 text-white"
-                : "border-surface-300 bg-white text-ink-900"
+                ? "!bg-brand-500/90 !border-brand-400/50 text-white"
+                : "text-ink-900"
             }`}
             title={autoFollow ? "Map follows selected vehicle" : "Click to follow selected vehicle"}
           >
@@ -846,7 +847,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           </label>
         )}
         {trafficAvailable && (
-          <label className="flex cursor-pointer items-center gap-1.5 rounded-md border border-surface-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-ink-900 shadow-menu">
+          <label className="glass-btn flex cursor-pointer items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold text-ink-900">
             <input
               type="checkbox"
               checked={showTraffic}
@@ -863,14 +864,14 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
         />
       </div>
 
-      {/* Refresh button (bottom-right) */}
+      {/* Refresh button (bottom-right) - Glassy */}
       <div className="absolute bottom-6 right-3 z-[1000]">
         <button
           type="button"
           onClick={handleRefresh}
           disabled={!onRefresh || refreshing}
           title="Refresh positions"
-          className="flex h-9 w-9 items-center justify-center rounded-md border border-surface-300 bg-white text-ink-700 shadow-menu transition hover:bg-surface-100 disabled:opacity-60"
+          className="glass-btn flex h-10 w-10 items-center justify-center rounded-xl text-ink-700 disabled:opacity-60"
         >
           <svg
             width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -934,7 +935,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           border: 3px solid #fff;
           box-shadow: 0 0 0 2px rgba(232, 144, 10, 0.45);
         }
-        /* Compact plate + speed label (professional inline style) */
+        /* Compact plate + speed label - Glassy style */
         .pp-plate-tooltip {
           background: transparent !important;
           border: none !important;
@@ -948,10 +949,13 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           display: inline-flex;
           align-items: center;
           gap: 0;
-          background: rgba(10, 25, 40, 0.92);
-          border-radius: 4px;
+          background: rgba(15, 39, 66, 0.85);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          border: 1px solid rgba(100, 116, 139, 0.2);
+          border-radius: 8px;
           overflow: hidden;
-          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
           white-space: nowrap;
         }
         .pp-label-name {
@@ -959,26 +963,31 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           font-family: 'Inter', -apple-system, sans-serif;
           font-size: 10px;
           font-weight: 600;
-          padding: 3px 6px;
+          padding: 4px 8px;
           background: var(--state-color);
-          border-right: 1px solid rgba(255, 255, 255, 0.15);
+          border-right: 1px solid rgba(255, 255, 255, 0.1);
         }
         .pp-label-speed {
-          color: #fff;
+          color: #e2e8f0;
           font-family: 'JetBrains Mono', monospace;
           font-size: 9px;
           font-weight: 500;
-          padding: 3px 5px;
+          padding: 4px 6px;
         }
 
-        /* Popup styles */
+        /* Popup styles - Glassy dark theme */
         .pp-popup-container .leaflet-popup-content-wrapper {
-          background: rgba(15, 39, 66, 0.98);
-          border: 1px solid rgba(100, 116, 139, 0.3);
-          border-radius: 12px;
+          background: rgba(15, 39, 66, 0.88);
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+          border: 1px solid rgba(100, 116, 139, 0.25);
+          border-radius: 16px;
           padding: 0;
-          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+          box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35),
+                      0 4px 16px rgba(0, 0, 0, 0.2),
+                      inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
           max-width: 320px;
+          overflow: hidden;
         }
         .pp-popup-container .leaflet-popup-content {
           margin: 0;
@@ -987,16 +996,19 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
         .pp-popup-container .leaflet-popup-close-button {
           color: #94a3b8 !important;
           font-size: 18px;
-          padding: 4px 8px;
+          padding: 6px 10px;
           right: 4px;
           top: 4px;
+          border-radius: 8px;
+          transition: all 0.2s ease;
         }
         .pp-popup-container .leaflet-popup-close-button:hover {
           color: #f1f5f9 !important;
+          background: rgba(255, 255, 255, 0.1);
         }
         .pp-popup-container .leaflet-popup-tip {
-          background: rgba(15, 39, 66, 0.98);
-          border: 1px solid rgba(100, 116, 139, 0.3);
+          background: rgba(15, 39, 66, 0.88);
+          border: 1px solid rgba(100, 116, 139, 0.25);
           box-shadow: none;
         }
         .pp-popup {

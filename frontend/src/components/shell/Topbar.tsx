@@ -51,12 +51,12 @@ export function Topbar({ user, orgId }: { user: UserView; orgId: string }) {
     href === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(href);
 
   return (
-    <header className="relative flex h-9 shrink-0 items-stretch border-b border-surface-300 bg-white">
+    <header className="relative flex h-10 shrink-0 items-stretch border-b border-white/20 bg-white/85 backdrop-blur-xl">
       {/* Mobile: hamburger */}
       <button
         type="button"
         onClick={() => setMenuOpen((o) => !o)}
-        className="flex w-10 shrink-0 items-center justify-center border-r border-surface-300 text-ink-700 transition hover:bg-surface-100 md:hidden"
+        className="flex w-10 shrink-0 items-center justify-center border-r border-white/20 text-ink-700 transition hover:bg-white/50 md:hidden"
         aria-label="Menu"
         aria-expanded={menuOpen}
       >
@@ -74,7 +74,7 @@ export function Topbar({ user, orgId }: { user: UserView; orgId: string }) {
       {/* Logo */}
       <Link
         href="/dashboard"
-        className="flex h-full items-center gap-1.5 border-r border-surface-300 px-4 font-extrabold tracking-tight text-[#0A2540]"
+        className="flex h-full items-center gap-1.5 border-r border-white/20 px-4 font-extrabold tracking-tight text-[#0A2540]"
       >
         <svg width="24" height="24" viewBox="0 0 48 48" fill="none" className="flex-shrink-0">
           <defs>
@@ -111,7 +111,7 @@ export function Topbar({ user, orgId }: { user: UserView; orgId: string }) {
       {/* Right side: lang + user + logout */}
       <div className="ml-auto flex items-center gap-1 pr-3">
         <LanguageToggle />
-        <div className="mx-2 hidden h-5 w-px bg-surface-300 sm:block" />
+        <div className="mx-2 hidden h-5 w-px bg-white/30 sm:block" />
         <div className="hidden text-right text-[11px] leading-tight sm:block" title={orgId}>
           <div className="font-semibold text-ink-900">{user.fullName ?? user.email}</div>
           <div className="text-ink-500">{user.role.replace("_", " ")}</div>
@@ -125,18 +125,18 @@ export function Topbar({ user, orgId }: { user: UserView; orgId: string }) {
       {menuOpen && (
         <>
           <div
-            className="fixed inset-0 top-9 z-[1900] bg-ink-950/40 md:hidden"
+            className="fixed inset-0 top-10 z-[1900] bg-ink-950/40 backdrop-blur-sm md:hidden"
             onClick={() => setMenuOpen(false)}
           />
-          <nav className="absolute left-0 top-full z-[2000] w-64 max-w-[85vw] border-b border-r border-surface-300 bg-white shadow-menu md:hidden">
+          <nav className="absolute left-0 top-full z-[2000] w-64 max-w-[85vw] rounded-br-mkt border-b border-r border-white/20 bg-white/92 shadow-glass backdrop-blur-xl md:hidden">
             {items.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-2.5 border-b border-surface-100 px-4 py-2.5 text-xs font-semibold transition ${
+                className={`flex items-center gap-2.5 border-b border-white/10 px-4 py-2.5 text-xs font-semibold transition ${
                   isActive(item.href)
-                    ? "bg-brand-50 text-ink-900"
-                    : "text-ink-700 hover:bg-surface-100"
+                    ? "bg-brand-50/70 text-ink-900"
+                    : "text-ink-700 hover:bg-white/50"
                 }`}
               >
                 <span className="text-ink-500">{item.icon}</span>

@@ -71,19 +71,19 @@
   }
 
   .btn-ghost {
-    @apply inline-flex items-center justify-center gap-1 rounded-sm bg-transparent px-2 text-xs text-ink-700 transition hover:bg-surface-100 hover:text-ink-900 focus:outline-none focus:ring-1 focus:ring-brand-500/30;
+    @apply inline-flex items-center justify-center gap-1 rounded-lg bg-white/50 px-2 text-xs text-ink-700 backdrop-blur-sm transition hover:bg-white/80 hover:text-ink-900 focus:outline-none focus:ring-1 focus:ring-brand-500/30;
     height: 26px;
   }
 
   .btn-icon {
-    @apply inline-flex items-center justify-center rounded-sm text-ink-500 transition hover:bg-surface-100 hover:text-ink-900 focus:outline-none;
+    @apply inline-flex items-center justify-center rounded-lg text-ink-500 backdrop-blur-sm transition hover:bg-white/60 hover:text-ink-900 focus:outline-none;
     width: 28px;
     height: 28px;
   }
 
   /* ── Inputs ────────────────────────────────────────────────────── */
   .input {
-    @apply w-full rounded-sm border border-surface-200 bg-surface-100 px-2 text-xs text-ink-900 placeholder:text-ink-400 transition focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-500/30 disabled:bg-surface-200 disabled:text-ink-500;
+    @apply w-full rounded-lg border border-white/30 bg-white/60 px-2 text-xs text-ink-900 placeholder:text-ink-400 backdrop-blur-sm transition focus:border-brand-400/50 focus:bg-white/90 focus:outline-none focus:ring-2 focus:ring-brand-400/20 disabled:bg-white/30 disabled:text-ink-500;
     height: 28px;
   }
 
@@ -106,11 +106,11 @@
 
   /* ── Surfaces ─────────────────────────────────────────────────── */
   .panel {
-    @apply rounded-sm border border-surface-300 bg-white;
+    @apply rounded-mkt border border-white/30 bg-white/85 backdrop-blur-md;
   }
 
   .panel-header {
-    @apply flex items-center justify-between border-b border-surface-300 bg-surface-100 px-3;
+    @apply flex items-center justify-between border-b border-white/20 bg-white/50 px-3 backdrop-blur-sm;
     height: 30px;
   }
 
@@ -123,16 +123,16 @@
     @apply w-full border-collapse text-xs;
   }
   .data-table thead th {
-    @apply sticky top-0 z-10 border-b border-surface-300 bg-surface-100 px-2 py-[6px] text-left font-semibold text-ink-700;
+    @apply sticky top-0 z-10 border-b border-white/20 bg-white/60 px-2 py-[6px] text-left font-semibold text-ink-700 backdrop-blur-sm;
   }
   .data-table tbody td {
-    @apply border-b border-surface-100 px-2 py-[6px] text-ink-900;
+    @apply border-b border-white/10 px-2 py-[6px] text-ink-900;
   }
   .data-table tbody tr:hover td {
-    @apply bg-surface-50;
+    @apply bg-white/50;
   }
   .data-table tbody tr.is-selected td {
-    @apply bg-brand-50;
+    @apply bg-brand-50/70;
   }
 
   /* ── Status pills ─────────────────────────────────────────────── */
@@ -156,29 +156,29 @@
 
   /* ── Tabs (gps-server.net style — top border accent on active) ─ */
   .tab-bar {
-    @apply flex items-stretch border-b border-surface-300 bg-white;
+    @apply flex items-stretch border-b border-white/20 bg-white/60 backdrop-blur-sm;
   }
   .tab-item {
-    @apply flex h-[30px] cursor-pointer items-center gap-1.5 border-t-[3px] border-transparent px-3 text-xs font-semibold text-ink-500 transition hover:text-ink-900;
+    @apply flex h-[30px] cursor-pointer items-center gap-1.5 border-t-[3px] border-transparent px-3 text-xs font-semibold text-ink-500 transition hover:bg-white/50 hover:text-ink-900;
   }
   .tab-item-active {
-    @apply tab-item border-brand-500 text-ink-900;
+    @apply tab-item border-brand-500 bg-white/40 text-ink-900;
   }
 
   /* ── Top panel nav (horizontal icon nav like gps-server.net) ─── */
   .topnav-item {
-    @apply inline-flex h-9 items-center gap-1.5 px-3 text-xs font-semibold text-ink-700 transition hover:bg-surface-100 hover:text-ink-900;
+    @apply inline-flex h-10 items-center gap-1.5 px-3 text-xs font-semibold text-ink-700 transition hover:bg-white/50 hover:text-ink-900;
   }
   .topnav-item-active {
-    @apply topnav-item border-b-2 border-brand-500 text-ink-900;
+    @apply topnav-item border-b-2 border-brand-500 bg-white/40 text-ink-900;
   }
 
   /* ── Filter chips (status filters under tabs) ─────────────────── */
   .filter-chip {
-    @apply inline-flex h-[22px] cursor-pointer items-center gap-1.5 rounded-sm bg-transparent px-2 text-[11px] font-semibold text-ink-700 transition hover:bg-surface-100;
+    @apply inline-flex h-[22px] cursor-pointer items-center gap-1.5 rounded-full bg-white/40 px-2 text-[11px] font-semibold text-ink-700 backdrop-blur-sm transition hover:bg-white/70;
   }
   .filter-chip-active {
-    @apply filter-chip bg-white text-ink-900 shadow-[inset_0_0_0_1px_#E5E5E5];
+    @apply filter-chip bg-white/80 text-ink-900 shadow-sm border border-white/50;
   }
 
   /* ── Resize handles ──────────────────────────────────────────── */
@@ -203,13 +203,13 @@
 
 /* Leaflet attribution and control restyle */
 .leaflet-control-attribution {
-  @apply !bg-white/85 !text-ink-700 !text-[10px];
+  @apply !bg-white/75 !text-ink-700 !text-[10px] !backdrop-blur-md !border-0 !rounded-tl-lg;
 }
 .leaflet-control-zoom {
-  @apply !shadow-menu !border !border-surface-300;
+  @apply !shadow-glass !border !border-white/30 !rounded-mkt !overflow-hidden !backdrop-blur-md;
 }
 .leaflet-control-zoom a {
-  @apply !bg-white !text-ink-700 hover:!bg-surface-100;
+  @apply !bg-white/80 !text-ink-700 hover:!bg-white/95 !border-white/20;
 }
 
 /* Measure tool styles */
@@ -513,6 +513,164 @@
 
   .mkt-glass-dark {
     @apply bg-white/5 backdrop-blur-xl border border-white/10;
+  }
+
+  /* ══════════════════════════════════════════════════════════════════
+     GLASS UI SYSTEM - Frosted glass effects for dashboard
+     ══════════════════════════════════════════════════════════════════ */
+
+  /* Base glass panel - light frosted glass effect */
+  .glass {
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), inset 0 1px 0 0 rgba(255, 255, 255, 0.5);
+  }
+
+  .glass:hover {
+    background: rgba(255, 255, 255, 0.85);
+    border-color: rgba(255, 255, 255, 0.5);
+  }
+
+  /* Glass panel variant - stronger frosted effect */
+  .glass-panel {
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1),
+                0 2px 8px rgba(0, 0, 0, 0.05),
+                inset 0 1px 0 0 rgba(255, 255, 255, 0.8);
+  }
+
+  /* Glass sidebar - for left sidebar panels */
+  .glass-sidebar {
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-right: 1px solid rgba(200, 200, 200, 0.3);
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.06);
+  }
+
+  /* Dark glass - for dark theme or dark overlays */
+  .glass-dark {
+    background: rgba(15, 39, 66, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(100, 116, 139, 0.25);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+  }
+
+  .glass-dark:hover {
+    background: rgba(15, 39, 66, 0.92);
+    border-color: rgba(100, 116, 139, 0.35);
+  }
+
+  /* Glass button */
+  .glass-btn {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), inset 0 1px 0 0 rgba(255, 255, 255, 0.6);
+    transition: all 0.2s ease;
+  }
+
+  .glass-btn:hover {
+    background: rgba(255, 255, 255, 0.95);
+    border-color: rgba(255, 255, 255, 0.7);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12), inset 0 1px 0 0 rgba(255, 255, 255, 0.8);
+    transform: translateY(-1px);
+  }
+
+  .glass-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Glass input */
+  .glass-input {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(200, 200, 200, 0.4);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease;
+  }
+
+  .glass-input:focus {
+    background: rgba(255, 255, 255, 0.95);
+    border-color: rgba(2, 132, 199, 0.5);
+    box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.1), inset 0 1px 2px rgba(0, 0, 0, 0.02);
+    outline: none;
+  }
+
+  /* Glass card - elevated card with depth */
+  .glass-card {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 12px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08),
+                0 1px 4px rgba(0, 0, 0, 0.04),
+                inset 0 1px 0 0 rgba(255, 255, 255, 0.6);
+    transition: all 0.3s ease;
+  }
+
+  .glass-card:hover {
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12),
+                0 2px 8px rgba(0, 0, 0, 0.06),
+                inset 0 1px 0 0 rgba(255, 255, 255, 0.8);
+    transform: translateY(-2px);
+  }
+
+  /* Glass tooltip/popup */
+  .glass-tooltip {
+    background: rgba(15, 39, 66, 0.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(100, 116, 139, 0.2);
+    border-radius: 8px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+  }
+
+  /* Glass chip/badge */
+  .glass-chip {
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    transition: all 0.15s ease;
+  }
+
+  .glass-chip:hover {
+    background: rgba(255, 255, 255, 0.85);
+    border-color: rgba(255, 255, 255, 0.6);
+  }
+
+  .glass-chip-active {
+    background: rgba(2, 132, 199, 0.15);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border: 1px solid rgba(2, 132, 199, 0.3);
+    color: #0284C7;
+  }
+
+  /* Glass divider */
+  .glass-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(200, 200, 200, 0.4), transparent);
+  }
+
+  /* Glass overlay - for modals and overlays */
+  .glass-overlay {
+    background: rgba(15, 39, 66, 0.4);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
   }
 
   /* ── Utility: Glow effects ─────────────────────────────────────── */

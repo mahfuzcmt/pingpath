@@ -126,9 +126,9 @@ export function MapToolbar({ map, onFitAll, onLocate, locating, disabled, classN
   };
 
   const buttonClass =
-    "flex h-9 w-9 items-center justify-center rounded-md border border-surface-300 bg-white text-ink-700 shadow-menu transition hover:bg-surface-100 disabled:opacity-60 disabled:cursor-not-allowed";
+    "flex h-9 w-9 items-center justify-center rounded-mkt border border-white/30 bg-white/80 text-ink-700 shadow-glass backdrop-blur-md transition hover:bg-white/90 hover:border-white/50 disabled:opacity-60 disabled:cursor-not-allowed";
   const activeButtonClass =
-    "flex h-9 w-9 items-center justify-center rounded-md border border-brand-500 bg-brand-50 text-brand-600 shadow-menu transition";
+    "flex h-9 w-9 items-center justify-center rounded-mkt border border-brand-400/50 bg-brand-50/90 text-brand-600 shadow-glass backdrop-blur-md transition";
 
   return (
     <div className={`absolute left-3 z-[1000] flex flex-col gap-1.5 ${className ?? "top-3"}`}>
@@ -255,7 +255,7 @@ export function MapToolbar({ map, onFitAll, onLocate, locating, disabled, classN
 
       {/* Measure Distance Panel */}
       {measuring && (
-        <div className="mt-2 rounded-md border border-surface-300 bg-white p-2 shadow-menu">
+        <div className="mt-2 rounded-mkt border border-white/30 bg-white/85 p-2.5 shadow-glass backdrop-blur-lg">
           <div className="flex items-center justify-between gap-2">
             <span className="text-[10px] font-semibold uppercase tracking-wide text-ink-500">
               Distance
