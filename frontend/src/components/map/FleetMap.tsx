@@ -535,7 +535,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           .bindTooltip(plateLabelHtml(device, loc, color), {
             permanent: true,
             direction: 'top',
-            offset: [0, -22],
+            offset: [0, -50],  // Clear teardrop marker height (47-55px)
             className: 'pp-plate-tooltip',
           });
 
