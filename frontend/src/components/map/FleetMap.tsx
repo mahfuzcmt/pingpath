@@ -16,7 +16,7 @@ import {
 } from "@/lib/leaflet";
 import { MapLayerDropdown } from "./MapLayerDropdown";
 import { MapToolbar } from "./MapToolbar";
-import { formatSince, vehicleState, VEHICLE_STATE_COLOR, type VehicleState } from "@/lib/format";
+import { filterSpeed, formatSince, vehicleState, VEHICLE_STATE_COLOR, type VehicleState } from "@/lib/format";
 import { buildVehicleSvg } from "@/lib/vehicleIcons";
 import { useSpeedLimits } from "@/hooks/useSpeedLimits";
 import type { DeviceView, LocationView } from "@/types/domain";
@@ -205,7 +205,7 @@ function createVehicleIcon(
 // Compact plate-number pill with speed inline (professional style).
 function plateLabelHtml(device: DeviceView | undefined, location: LocationView | undefined, stateColor: string): string {
   const text = device?.vehiclePlate || device?.name || device?.imei.slice(-8) || "—";
-  const speed = location?.speed ?? 0;
+  const speed = filterSpeed(location?.speed);
   return `<div class="pp-label" style="--state-color:${stateColor}">
     <span class="pp-label-name">${text}</span>
     <span class="pp-label-speed">${speed} kph</span>
@@ -324,13 +324,13 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
     const name = device?.name || device?.vehiclePlate || device?.imei.slice(-8) || "Unknown";
     const lat = location?.latitude?.toFixed(6) || "—";
     const lng = location?.longitude?.toFixed(6) || "—";
-    const speed = location?.speed ?? 0;
+    const speed = filterSpeed(location?.speed);
     const dateTime = formatDateTime(location?.ts || device?.lastSeenAt);
     const overspeed = device != null && speedLimits.isOverspeed(device.imei, location?.speed);
     const status = overspeed ? "Overspeed" : statusText(device, location);
     const statusColor = overspeed ? OVERSPEED_COLOR : markerColor(device, location);
     const accStatus = location?.accOn == null ? "—" : location.accOn ? "ON" : "OFF";
-    const parkedRow = device?.parkedSince && speed <= 2
+    const parkedRow = device?.parkedSince && speed === 0
       ? `<div class="pp-popup-row">
            <span class="pp-popup-label">Parked for</span>
            <span class="pp-popup-value">${formatSince(device.parkedSince)}</span>
@@ -518,7 +518,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
       const course = loc.course ?? 0;
       const bodyColor = device?.iconColor || "#E8900A";
       const noFix = hasNoFix(loc);
-      const isMoving = (loc.speed ?? 0) > 2; // Moving if speed > 2 kph
+      const isMoving = filterSpeed(loc.speed) > 0; // Moving if speed above noise threshold
 
       if (!marker) {
         // Create new marker

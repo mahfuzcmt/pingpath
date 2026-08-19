@@ -6,7 +6,7 @@ import { FleetMap } from "@/components/map/FleetMap";
 import { cutFuel, restoreFuel } from "@/lib/deviceCommands";
 import { extractError } from "@/lib/api";
 import { useLocale } from "@/lib/i18n";
-import { formatVoltage } from "@/lib/format";
+import { filterSpeed, formatVoltage } from "@/lib/format";
 import type { DeviceView } from "@/types/domain";
 
 export default function TrackTab({ device, orgId }: { device: DeviceView; orgId: string }) {
@@ -39,7 +39,7 @@ export default function TrackTab({ device, orgId }: { device: DeviceView; orgId:
     }
   }
 
-  const speed = live?.speed ?? device.lastSpeed ?? 0;
+  const speed = filterSpeed(live?.speed ?? device.lastSpeed);
 
   return (
     <div className="flex h-full min-h-0 flex-col">

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useLocale, type StringKey } from "@/lib/i18n";
-import { formatSince, formatVoltage, gsmBars, vehicleState, VEHICLE_STATE_COLOR, type VehicleState } from "@/lib/format";
+import { filterSpeed, formatSince, formatVoltage, gsmBars, vehicleState, VEHICLE_STATE_COLOR, type VehicleState } from "@/lib/format";
 import { useSpeedLimits } from "@/hooks/useSpeedLimits";
 import { useTicker } from "@/hooks/useTicker";
 import type { DeviceView, LocationView } from "@/types/domain";
@@ -268,7 +268,7 @@ export function DeviceList({ devices, locations, selectedImei, onSelect }: Devic
                     className={`min-w-[40px] text-right text-xs font-semibold ${overspeed ? "animate-pulse" : "text-ink-900"}`}
                     style={{ color: overspeed ? OVERSPEED_COLOR : undefined }}
                   >
-                    {live?.speed ?? 0} kph
+                    {filterSpeed(live?.speed)} kph
                   </span>
                   <SignalIcon
                     bars={gsmBars(d.lastGsmSignal)}

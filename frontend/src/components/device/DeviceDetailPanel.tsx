@@ -1,7 +1,7 @@
 "use client";
 
 import { useLocale } from "@/lib/i18n";
-import { formatDateTime, formatEngineHours, formatGsmSignal, formatNumber, formatVoltage } from "@/lib/format";
+import { filterSpeed, formatDateTime, formatEngineHours, formatGsmSignal, formatNumber, formatVoltage } from "@/lib/format";
 import type { DeviceView, LocationView } from "@/types/domain";
 
 interface Props {
@@ -59,7 +59,7 @@ export function DeviceDetailPanel({ device, location, onClose }: Props) {
             <div className="data-row">
               <dt>{t("fleet.speed")}</dt>
               <dd>
-                <span className="font-semibold">{formatNumber(location.speed, locale)}</span>{" "}
+                <span className="font-semibold">{formatNumber(filterSpeed(location.speed), locale)}</span>{" "}
                 <span className="text-ink-500">{t("fleet.kmh")}</span>
               </dd>
             </div>

@@ -1,6 +1,18 @@
 import { colors } from "./theme";
 import type { DeviceView, LocationView, MotionStatus } from "./types";
 
+/** Speeds below this threshold (kph) are considered GPS noise and displayed as 0. */
+const SPEED_NOISE_THRESHOLD = 3;
+
+/**
+ * Filter out GPS noise from speed readings. Speeds below 3 kph are typically
+ * GPS drift when the vehicle is stationary, so we display them as 0.
+ */
+export function filterSpeed(speed: number | null | undefined): number {
+  if (speed == null) return 0;
+  return speed < SPEED_NOISE_THRESHOLD ? 0 : speed;
+}
+
 /**
  * Derive the UI motion state the AutoNemo-style screens show.
  *
@@ -10,10 +22,10 @@ import type { DeviceView, LocationView, MotionStatus } from "./types";
  */
 export function motionOf(d: DeviceView, live?: LocationView | null): MotionStatus {
   if (d.status !== "ONLINE") return "OFFLINE";
-  const speed = live?.speed ?? d.lastSpeed ?? 0;
-  if (speed > 3) return "MOVING";
+  const speed = filterSpeed(live?.speed ?? d.lastSpeed);
+  if (speed > 0) return "MOVING";
 
-  // Vehicle is stationary (speed ≤ 3). Only show "IDLE" if ACC is explicitly ON.
+  // Vehicle is stationary (speed = 0 after filtering). Only show "IDLE" if ACC is explicitly ON.
   // When ACC is unknown (null), default to "STOPPED" (safer assumption).
   return live?.accOn === true ? "IDLE" : "STOPPED";
 }

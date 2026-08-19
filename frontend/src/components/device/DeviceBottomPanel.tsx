@@ -6,7 +6,7 @@ import { useTrips } from "@/hooks/useTrips";
 import { useLocationHistory } from "@/hooks/useLocationHistory";
 import { cutFuel, restoreFuel, queryAddress, rebootDevice, sendRawCommand } from "@/lib/deviceCommands";
 import { extractError } from "@/lib/api";
-import { dhakaTodayStartIso, formatDurationS, formatNumber, formatSince } from "@/lib/format";
+import { dhakaTodayStartIso, filterSpeed, formatDurationS, formatNumber, formatSince } from "@/lib/format";
 import { TimeSeriesChart, chartColors } from "@/components/charts/TimeSeriesChart";
 import type { DeviceView, LocationView } from "@/types/domain";
 
@@ -183,7 +183,7 @@ export function DeviceBottomPanel({ device, location, onClose, onViewHistory, on
             <DataRow icon="⛰" label="Altitude" value={location?.altitude != null ? `${location.altitude} m` : "0 m"} />
             <DataRow icon="🧭" label="Angle" value={location?.course != null ? `${location.course} °` : "— °"} />
             <DataRow icon="📍" label="Position" value={location ? `${location.latitude.toFixed(6)} °, ${location.longitude.toFixed(6)} °` : "—"} link />
-            <DataRow icon="🚗" label="Speed" value={`${location?.speed ?? 0} kph`} />
+            <DataRow icon="🚗" label="Speed" value={`${filterSpeed(location?.speed)} kph`} />
             {device.parkedSince && !isMoving && (
               <DataRow icon="🅿️" label="Parked for" value={formatSince(device.parkedSince)} />
             )}

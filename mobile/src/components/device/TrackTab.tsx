@@ -6,6 +6,7 @@ import { extractError } from "@/api/client";
 import WebMap, { MapVehicle } from "@/components/WebMap";
 import { Loading, Metric, Section } from "@/ui";
 import {
+  filterSpeed,
   fmtSince,
   fmtVoltage,
   motionColor,
@@ -81,7 +82,7 @@ export default function TrackTab({ imei, orgId }: { imei: string; orgId: string 
 
   if (loading && !device) return <Loading label={t("track.loadingDevice")} />;
 
-  const speed = loc?.speed ?? device?.lastSpeed ?? 0;
+  const speed = filterSpeed(loc?.speed ?? device?.lastSpeed);
   const overspeeding = speedLimits.isOverspeed(imei, speed);
   const expired = device ? subscriptionExpired(device) : false;
   const daysLeft = device ? subscriptionDaysLeft(device) : null;

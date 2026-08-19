@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo } from "react";
 import { Speedometer } from "./Speedometer";
 import { useLocale } from "@/lib/i18n";
 import { useTrips } from "@/hooks/useTrips";
-import { dhakaTodayStartIso, formatDurationS, formatNumber } from "@/lib/format";
+import { dhakaTodayStartIso, filterSpeed, formatDurationS, formatNumber } from "@/lib/format";
 import { useSpeedLimits } from "@/hooks/useSpeedLimits";
 import type { DeviceView, LocationView } from "@/types/domain";
 
@@ -74,8 +74,8 @@ export function LiveTrackingPanel({ device, location, onClose }: Props) {
     fetchAddress();
   }, [location?.latitude, location?.longitude]);
 
-  const isMoving = location && location.speed > 2;
-  const currentSpeed = location?.speed ?? 0;
+  const currentSpeed = filterSpeed(location?.speed);
+  const isMoving = currentSpeed > 0;
 
   return (
     <div className="absolute inset-0 z-[1100] flex flex-col bg-ink-950/95 backdrop-blur-sm">

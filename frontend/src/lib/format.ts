@@ -3,6 +3,18 @@ import type { DeviceView, LocationView } from "@/types/domain";
 
 const TIMEZONE = "Asia/Dhaka";
 
+/** Speeds below this threshold (kph) are considered GPS noise and displayed as 0. */
+const SPEED_NOISE_THRESHOLD = 3;
+
+/**
+ * Filter out GPS noise from speed readings. Speeds below 3 kph are typically
+ * GPS drift when the vehicle is stationary, so we display them as 0.
+ */
+export function filterSpeed(speed: number | null | undefined): number {
+  if (speed == null) return 0;
+  return speed < SPEED_NOISE_THRESHOLD ? 0 : speed;
+}
+
 /**
  * AutoNemo-style single-bucket vehicle state (matches the filter chips on the
  * Vehicles screen). Mirrors the 4-state motion model in the mobile app, plus
@@ -34,10 +46,10 @@ export function vehicleState(d: DeviceView, live?: LocationView | null): Vehicle
   if (d.status === "NEVER_CONNECTED" || !d.lastSeenAt) return "nodata";
   if (isSubscriptionExpired(d)) return "expired";
   if (d.status !== "ONLINE") return "offline";
-  const speed = live?.speed ?? d.lastSpeed ?? 0;
-  if (speed > 2) return "moving";
+  const speed = filterSpeed(live?.speed ?? d.lastSpeed);
+  if (speed > 0) return "moving";
 
-  // Vehicle is stationary (speed ≤ 2). Only show "Idle" if ACC is explicitly ON.
+  // Vehicle is stationary. Only show "Idle" if ACC is explicitly ON.
   // When ACC is unknown (null), default to "Stopped" (safer assumption).
   return live?.accOn === true ? "idle" : "stopped";
 }
