@@ -1,38 +1,21 @@
 import { colors } from "./theme";
 import type { DeviceView, LocationView, MotionStatus } from "./types";
 
-/** Threshold in ms: stops shorter than this are considered "idle" (traffic), longer = "stopped" (parked). */
-const IDLE_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes
-
 /**
  * Derive the UI motion state the AutoNemo-style screens show.
  *
  * For stopped vehicles (speed ≤ 3):
  * - ACC ON → IDLE (engine running, traffic jam, waiting at signal)
- * - ACC OFF → STOPPED (parked, engine off)
- * - ACC unknown → use time-based heuristic:
- *   - Stopped < 5 min → IDLE (likely traffic)
- *   - Stopped > 5 min → STOPPED (likely parked)
+ * - ACC OFF or unknown → STOPPED (parked, engine off)
  */
 export function motionOf(d: DeviceView, live?: LocationView | null): MotionStatus {
   if (d.status !== "ONLINE") return "OFFLINE";
   const speed = live?.speed ?? d.lastSpeed ?? 0;
   if (speed > 3) return "MOVING";
 
-  // Vehicle is stationary (speed ≤ 3). Check ACC status first.
-  const accOn = live?.accOn;
-  if (accOn === true) return "IDLE";    // Engine on, waiting (traffic/signal)
-  if (accOn === false) return "STOPPED"; // Engine off, parked
-
-  // ACC status unknown — use time-based heuristic
-  if (d.parkedSince) {
-    const parkedMs = Date.now() - new Date(d.parkedSince).getTime();
-    // Recent stop (< 5 min) = likely traffic; longer = likely parked
-    return parkedMs < IDLE_THRESHOLD_MS ? "IDLE" : "STOPPED";
-  }
-
-  // No parked time data — assume idle (give benefit of doubt for traffic)
-  return "IDLE";
+  // Vehicle is stationary (speed ≤ 3). Only show "IDLE" if ACC is explicitly ON.
+  // When ACC is unknown (null), default to "STOPPED" (safer assumption).
+  return live?.accOn === true ? "IDLE" : "STOPPED";
 }
 
 export function motionColor(m: MotionStatus): string {

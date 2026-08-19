@@ -21,9 +21,6 @@ export function isSubscriptionExpired(d: DeviceView): boolean {
   return false;
 }
 
-/** Threshold in ms: stops shorter than this are considered "idle" (traffic), longer = "stopped" (parked). */
-const IDLE_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes
-
 /**
  * Derive the vehicle's state. Precedence: no-data > expired > offline >
  * motion (moving / idle / stopped). Buckets are mutually exclusive so the
@@ -31,10 +28,7 @@ const IDLE_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes
  *
  * For stopped vehicles (speed ≤ 2):
  * - ACC ON → Idle (engine running, traffic jam, waiting at signal)
- * - ACC OFF → Stopped (parked, engine off)
- * - ACC unknown → use time-based heuristic:
- *   - Stopped < 5 min → Idle (likely traffic)
- *   - Stopped > 5 min → Stopped (likely parked)
+ * - ACC OFF or unknown → Stopped (parked, engine off)
  */
 export function vehicleState(d: DeviceView, live?: LocationView | null): VehicleState {
   if (d.status === "NEVER_CONNECTED" || !d.lastSeenAt) return "nodata";
@@ -43,20 +37,9 @@ export function vehicleState(d: DeviceView, live?: LocationView | null): Vehicle
   const speed = live?.speed ?? d.lastSpeed ?? 0;
   if (speed > 2) return "moving";
 
-  // Vehicle is stationary (speed ≤ 2). Check ACC status first.
-  const accOn = live?.accOn;
-  if (accOn === true) return "idle";   // Engine on, waiting (traffic/signal)
-  if (accOn === false) return "stopped"; // Engine off, parked
-
-  // ACC status unknown — use time-based heuristic
-  if (d.parkedSince) {
-    const parkedMs = Date.now() - new Date(d.parkedSince).getTime();
-    // Recent stop (< 5 min) = likely traffic; longer = likely parked
-    return parkedMs < IDLE_THRESHOLD_MS ? "idle" : "stopped";
-  }
-
-  // No parked time data — assume idle (give benefit of doubt for traffic)
-  return "idle";
+  // Vehicle is stationary (speed ≤ 2). Only show "Idle" if ACC is explicitly ON.
+  // When ACC is unknown (null), default to "Stopped" (safer assumption).
+  return live?.accOn === true ? "idle" : "stopped";
 }
 
 /** Hex color per state — for map/SVG fills that can't use CSS classes. */
