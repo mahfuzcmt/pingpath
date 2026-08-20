@@ -51,21 +51,21 @@ export function Topbar({ user, orgId }: { user: UserView; orgId: string }) {
     href === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(href);
 
   return (
-    <header className="relative flex h-10 shrink-0 items-stretch border-b border-white/20 bg-white/85 backdrop-blur-xl">
+    <header className="relative z-[2100] flex h-10 shrink-0 items-stretch border-b border-white/20 bg-white/85 backdrop-blur-xl">
       {/* Mobile: hamburger */}
       <button
         type="button"
         onClick={() => setMenuOpen((o) => !o)}
-        className="flex w-10 shrink-0 items-center justify-center border-r border-white/20 text-ink-700 transition hover:bg-white/50 md:hidden"
+        className="flex w-12 shrink-0 items-center justify-center border-r border-white/20 text-ink-700 transition active:bg-brand-100 hover:bg-white/50 md:hidden"
         aria-label="Menu"
         aria-expanded={menuOpen}
       >
         {menuOpen ? (
-          <svg {...ICON_PROPS} width={16} height={16}>
+          <svg {...ICON_PROPS} width={20} height={20}>
             <path d="M18 6 6 18M6 6l12 12" />
           </svg>
         ) : (
-          <svg {...ICON_PROPS} width={16} height={16}>
+          <svg {...ICON_PROPS} width={20} height={20}>
             <path d="M4 6h16M4 12h16M4 18h16" />
           </svg>
         )}
