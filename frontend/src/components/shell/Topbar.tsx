@@ -128,7 +128,7 @@ export function Topbar({ user, orgId }: { user: UserView; orgId: string }) {
             className="fixed inset-0 top-10 z-[1900] bg-ink-950/40 backdrop-blur-sm md:hidden"
             onClick={() => setMenuOpen(false)}
           />
-          <nav className="absolute left-0 top-full z-[2000] w-64 max-w-[85vw] rounded-br-mkt border-b border-r border-white/20 bg-white/92 shadow-glass backdrop-blur-xl md:hidden">
+          <nav className="fixed left-0 top-10 z-[2000] w-64 max-w-[85vw] rounded-br-mkt border-b border-r border-white/20 bg-white/92 shadow-glass backdrop-blur-xl md:hidden">
             {items.map((item) => (
               <Link
                 key={item.href}
