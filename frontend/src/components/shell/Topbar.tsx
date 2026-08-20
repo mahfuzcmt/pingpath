@@ -128,18 +128,18 @@ export function Topbar({ user, orgId }: { user: UserView; orgId: string }) {
             className="fixed inset-0 top-10 z-[1900] bg-ink-950/40 backdrop-blur-sm md:hidden"
             onClick={() => setMenuOpen(false)}
           />
-          <nav className="fixed left-0 top-10 z-[2000] w-64 max-w-[85vw] rounded-br-mkt border-b border-r border-white/20 bg-white/92 shadow-glass backdrop-blur-xl md:hidden">
+          <nav className="fixed left-0 top-10 z-[2000] w-64 max-w-[85vw] rounded-br-xl border-b border-r border-ink-200 bg-white shadow-xl md:hidden">
             {items.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-2.5 border-b border-white/10 px-4 py-2.5 text-xs font-semibold transition ${
+                className={`flex items-center gap-2.5 border-b border-ink-100 px-4 py-3 text-sm font-semibold transition ${
                   isActive(item.href)
-                    ? "bg-brand-50/70 text-ink-900"
-                    : "text-ink-700 hover:bg-white/50"
+                    ? "bg-brand-50 text-brand-700"
+                    : "text-ink-700 hover:bg-ink-50"
                 }`}
               >
-                <span className="text-ink-500">{item.icon}</span>
+                <span className={isActive(item.href) ? "text-brand-500" : "text-ink-400"}>{item.icon}</span>
                 {t(item.label)}
               </Link>
             ))}
