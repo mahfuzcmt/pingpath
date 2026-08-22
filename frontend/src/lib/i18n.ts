@@ -150,6 +150,7 @@ const STRINGS = {
   "common.download": { en: "Download CSV", bn: "CSV ডাউনলোড" },
   "common.acknowledge": { en: "Acknowledge", bn: "নিশ্চিত করুন" },
   "common.acknowledged": { en: "Acknowledged", bn: "নিশ্চিত করা হয়েছে" },
+  "common.ack": { en: "Ack", bn: "নিশ্চিত" },
 
   // ── Alarms ────────────────────────────────────────────────────────
   "alarms.title": { en: "Alarms", bn: "অ্যালার্ম" },
@@ -157,6 +158,10 @@ const STRINGS = {
   "alarms.banner": { en: "New alarm", bn: "নতুন অ্যালার্ম" },
   "alarms.severity": { en: "Severity", bn: "গুরুত্ব" },
   "alarms.type": { en: "Type", bn: "ধরন" },
+  "alarms.notifications": { en: "Notifications", bn: "বিজ্ঞপ্তি" },
+  "alarms.ackAll": { en: "Acknowledge all", bn: "সব নিশ্চিত করুন" },
+  "alarms.noAlarms": { en: "No new notifications", bn: "কোনো নতুন বিজ্ঞপ্তি নেই" },
+  "alarms.viewAll": { en: "View all alarms", bn: "সব অ্যালার্ম দেখুন" },
 
   // ── Geofences ─────────────────────────────────────────────────────
   "geo.title": { en: "Geofences", bn: "জিও-ফেন্স" },

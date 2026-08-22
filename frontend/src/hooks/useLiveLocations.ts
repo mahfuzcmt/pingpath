@@ -90,17 +90,33 @@ export function useLiveLocations(orgId: string) {
   useEffect(() => {
     mounted.current = true;
     let unsub: (() => void) | null = null;
-    let refreshTimeoutId: ReturnType<typeof setTimeout> | null = null;
+    let refreshIntervalId: ReturnType<typeof setInterval> | null = null;
 
-    // Recursive refresh: starts next refresh exactly 10s after previous one completes
-    const scheduleNextRefresh = () => {
-      refreshTimeoutId = setTimeout(async () => {
-        if (!mounted.current) return;
-        await refresh();
-        if (mounted.current) {
-          scheduleNextRefresh();
-        }
+    // Use setInterval instead of recursive setTimeout for more reliable timing
+    // Mobile browsers may throttle timeouts but intervals are slightly more consistent
+    const startRefreshInterval = () => {
+      if (refreshIntervalId) clearInterval(refreshIntervalId);
+      refreshIntervalId = setInterval(() => {
+        if (mounted.current) refresh();
       }, AUTO_REFRESH_INTERVAL_MS);
+    };
+
+    // Handle visibility change - refresh immediately when tab becomes visible
+    // This is critical for mobile browsers that pause JS when backgrounded
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible" && mounted.current) {
+        refresh();
+        // Restart the interval to reset the 10-second timer
+        startRefreshInterval();
+      }
+    };
+
+    // Handle page focus - also refresh when user returns to the tab
+    const handleFocus = () => {
+      if (mounted.current) {
+        refresh();
+        startRefreshInterval();
+      }
     };
 
     (async () => {
@@ -116,17 +132,22 @@ export function useLiveLocations(orgId: string) {
         }
       }
 
-      // Start the recursive refresh cycle
-      // Each refresh happens exactly 10 seconds after the previous one completes
-      scheduleNextRefresh();
+      // Start the refresh interval
+      startRefreshInterval();
     })();
+
+    // Add visibility and focus listeners for mobile browser support
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("focus", handleFocus);
 
     return () => {
       mounted.current = false;
       unsub?.();
-      if (refreshTimeoutId) {
-        clearTimeout(refreshTimeoutId);
+      if (refreshIntervalId) {
+        clearInterval(refreshIntervalId);
       }
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("focus", handleFocus);
     };
   }, [orgId, upsert, refresh]);
 

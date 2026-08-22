@@ -7,6 +7,7 @@ import { logout } from "@/lib/auth";
 import { useLocale, type StringKey } from "@/lib/i18n";
 import { useSession } from "@/lib/session-context";
 import { LanguageToggle } from "./LanguageToggle";
+import { NotificationDropdown } from "./NotificationDropdown";
 import type { UserView } from "@/types/domain";
 
 interface NavItem {
@@ -108,8 +109,9 @@ export function Topbar({ user, orgId }: { user: UserView; orgId: string }) {
         ))}
       </nav>
 
-      {/* Right side: lang + user + logout */}
+      {/* Right side: notifications + lang + user + logout */}
       <div className="ml-auto flex items-center gap-1 pr-3">
+        <NotificationDropdown />
         <LanguageToggle />
         <div className="mx-2 hidden h-5 w-px bg-white/30 sm:block" />
         <div className="hidden text-right text-[11px] leading-tight sm:block" title={orgId}>

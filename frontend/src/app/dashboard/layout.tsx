@@ -2,7 +2,6 @@ import { redirect } from "next/navigation";
 import { readSession } from "@/lib/session";
 import { backendBase } from "@/lib/session";
 import { Topbar } from "@/components/shell/Topbar";
-import { AlarmBanner } from "@/components/alarm/AlarmBanner";
 import { SessionProvider } from "@/lib/session-context";
 import type { AuthMeResponse } from "@/types/domain";
 
@@ -57,7 +56,6 @@ export default async function DashboardLayout({ children }: { children: React.Re
       <div className="flex h-screen w-screen flex-col overflow-hidden bg-surface-100 text-ink-900">
         <Topbar user={me.user} orgId={me.org.id} />
         <main className="min-h-0 flex-1 overflow-hidden">{children}</main>
-        <AlarmBanner />
       </div>
     </SessionProvider>
   );
