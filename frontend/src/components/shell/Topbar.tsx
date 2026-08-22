@@ -15,6 +15,7 @@ interface NavItem {
   label: StringKey;
   icon: React.ReactNode;
   adminOnly?: boolean;
+  superAdminOnly?: boolean;
 }
 
 const NAV: NavItem[] = [
@@ -28,6 +29,7 @@ const NAV: NavItem[] = [
   { href: "/dashboard/scheduled", label: "nav.scheduled", icon: <ScheduledIcon /> },
   { href: "/dashboard/reports", label: "nav.reports", icon: <ReportIcon /> },
   { href: "/dashboard/audit-log", label: "nav.auditLog", icon: <AuditIcon />, adminOnly: true },
+  { href: "/dashboard/admin", label: "nav.admin", icon: <AdminIcon />, superAdminOnly: true },
   { href: "/dashboard/settings", label: "nav.settings", icon: <SettingsIcon /> },
 ];
 
@@ -37,7 +39,12 @@ export function Topbar({ user, orgId }: { user: UserView; orgId: string }) {
   const { t } = useLocale();
   const { role } = useSession();
   const isAdmin = role === "ORG_ADMIN" || role === "SUPER_ADMIN";
-  const items = NAV.filter((n) => !n.adminOnly || isAdmin);
+  const isSuperAdmin = role === "SUPER_ADMIN";
+  const items = NAV.filter((n) => {
+    if (n.superAdminOnly && !isSuperAdmin) return false;
+    if (n.adminOnly && !isAdmin) return false;
+    return true;
+  });
   const [menuOpen, setMenuOpen] = useState(false);
 
   // Close the mobile menu whenever navigation happens.
@@ -263,6 +270,15 @@ function LogoutIcon() {
     <svg {...ICON_PROPS}>
       <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
       <path d="m16 17 5-5-5-5M21 12H9" />
+    </svg>
+  );
+}
+function AdminIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <path d="M12 2L3 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5z" />
+      <circle cx="12" cy="10" r="2" />
+      <path d="M12 14v3" />
     </svg>
   );
 }

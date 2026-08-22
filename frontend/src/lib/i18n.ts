@@ -28,6 +28,7 @@ const STRINGS = {
   "nav.auditLog": { en: "Audit log", bn: "অডিট লগ" },
   "nav.scheduled": { en: "Scheduled", bn: "নির্ধারিত" },
   "nav.rules": { en: "Rules", bn: "নিয়ম" },
+  "nav.admin": { en: "Admin", bn: "অ্যাডমিন" },
 
   // ── Map / fleet ───────────────────────────────────────────────────
   "fleet.title": { en: "Live fleet", bn: "লাইভ ফ্লিট" },

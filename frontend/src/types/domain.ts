@@ -337,3 +337,61 @@ export interface TripView {
   idleTimeS: number;
   status: TripStatus;
 }
+
+// ─────────────────────────────────────────────────────────────
+// Super Admin types
+// ─────────────────────────────────────────────────────────────
+
+export type OrgStatus = "ACTIVE" | "SUSPENDED" | "CANCELLED";
+
+export interface OrgAdminView {
+  id: string;
+  name: string;
+  slug: string;
+  planTier: string;
+  status: OrgStatus;
+  contactEmail: string | null;
+  contactPhone: string | null;
+  address: string | null;
+  locale: string;
+  timezone: string;
+  deviceCount: number;
+  userCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface OrgCreate {
+  name: string;
+  slug: string;
+  planTier?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  address?: string;
+}
+
+export interface DeviceAdminView {
+  id: string;
+  orgId: string;
+  orgName: string;
+  imei: string;
+  name: string | null;
+  simMsisdn: string | null;
+  vehiclePlate: string | null;
+  vehicleType: string | null;
+  status: DeviceStatus;
+  lastSeenAt: string | null;
+  lastLat: number | null;
+  lastLng: number | null;
+  lastSpeed: number | null;
+  lastVoltageMv: number | null;
+  createdAt: string;
+}
+
+export interface AdminStats {
+  totalOrgs: number;
+  activeOrgs: number;
+  totalDevices: number;
+  onlineDevices: number;
+  totalUsers: number;
+}

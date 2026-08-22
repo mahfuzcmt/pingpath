@@ -257,4 +257,62 @@ public class DeviceRepository {
                 .addValue("name", name));
         return findByImei(imei).orElseThrow();
     }
+
+    // ─────────────────────────────────────────────────────────────
+    // Super Admin operations
+    // ─────────────────────────────────────────────────────────────
+
+    /**
+     * List all devices across all organizations (Super Admin only).
+     */
+    public List<Device> listAll() {
+        return jdbc.query(
+                SELECT_FIELDS + " FROM devices ORDER BY created_at DESC",
+                ROW_MAPPER);
+    }
+
+    /**
+     * List all devices with optional org filter (Super Admin only).
+     */
+    public List<Device> listAllWithFilter(UUID orgId) {
+        if (orgId == null) {
+            return listAll();
+        }
+        return jdbc.query(
+                SELECT_FIELDS + " FROM devices WHERE org_id = :orgId ORDER BY created_at DESC",
+                new MapSqlParameterSource("orgId", orgId),
+                ROW_MAPPER);
+    }
+
+    /**
+     * Reassign a device to a different organization (Super Admin only).
+     */
+    public int reassignOrg(String imei, UUID newOrgId) {
+        return jdbc.update("""
+                UPDATE devices SET org_id = :newOrgId, updated_at = now()
+                WHERE imei = :imei
+                """, new MapSqlParameterSource("imei", imei).addValue("newOrgId", newOrgId));
+    }
+
+    /**
+     * Count total devices.
+     */
+    public int countAll() {
+        Integer count = jdbc.queryForObject(
+                "SELECT COUNT(*)::int FROM devices",
+                new MapSqlParameterSource(),
+                Integer.class);
+        return count != null ? count : 0;
+    }
+
+    /**
+     * Count online devices.
+     */
+    public int countOnline() {
+        Integer count = jdbc.queryForObject(
+                "SELECT COUNT(*)::int FROM devices WHERE status = 'ONLINE'",
+                new MapSqlParameterSource(),
+                Integer.class);
+        return count != null ? count : 0;
+    }
 }
