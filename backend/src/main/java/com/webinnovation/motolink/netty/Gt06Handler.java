@@ -196,6 +196,9 @@ public class Gt06Handler extends SimpleChannelInboundHandler<ByteBuf> {
                 loc.setImei(imei);
                 loc.setOrgId(orgId);
                 loc.setRawPayload(raw);
+                log.info("Location: imei={} lat={} lng={} speed={} course={} acc={} valid={} ts={}",
+                        imei, loc.getLatitude(), loc.getLongitude(), loc.getSpeed(),
+                        loc.getCourse(), loc.getAccOn(), loc.isValid(), loc.getTimestamp());
                 locationService.saveAndBroadcast(loc);
             } catch (Exception e) {
                 log.error("Location decode/persist failed for imei={}: {}", imei, e.getMessage(), e);
