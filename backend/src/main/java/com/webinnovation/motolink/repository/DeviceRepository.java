@@ -93,6 +93,46 @@ public class DeviceRepository {
                 ROW_MAPPER);
     }
 
+    /**
+     * List devices visible to a specific user.
+     * If seeAllDevices is true, returns all org devices.
+     * Otherwise, returns only devices assigned to the user via user_devices table.
+     */
+    public List<Device> listForUser(UUID orgId, UUID userId, boolean seeAllDevices) {
+        if (seeAllDevices) {
+            return listForOrg(orgId);
+        }
+        return jdbc.query(
+                SELECT_FIELDS + """
+                 FROM devices d
+                 WHERE d.org_id = :orgId
+                   AND d.imei IN (SELECT device_imei FROM user_devices WHERE user_id = :userId)
+                 ORDER BY d.created_at DESC
+                """,
+                new MapSqlParameterSource("orgId", orgId).addValue("userId", userId),
+                ROW_MAPPER);
+    }
+
+    /**
+     * Check if a user can access a specific device.
+     */
+    public boolean canUserAccessDevice(UUID orgId, UUID userId, String imei, boolean seeAllDevices) {
+        if (seeAllDevices) {
+            // User can see all devices, just verify org ownership
+            return findByOrgAndImei(orgId, imei).isPresent();
+        }
+        // Check if device is assigned to user
+        var sql = """
+            SELECT COUNT(*) FROM devices d
+            JOIN user_devices ud ON ud.device_imei = d.imei
+            WHERE d.org_id = :orgId AND d.imei = :imei AND ud.user_id = :userId
+            """;
+        Integer count = jdbc.queryForObject(sql,
+                new MapSqlParameterSource("orgId", orgId).addValue("imei", imei).addValue("userId", userId),
+                Integer.class);
+        return count != null && count > 0;
+    }
+
     public List<Device> listForOrgByStatus(UUID orgId, String status) {
         return jdbc.query(
                 SELECT_FIELDS + " FROM devices WHERE org_id = :orgId AND status = :status ORDER BY last_seen_at DESC NULLS LAST",

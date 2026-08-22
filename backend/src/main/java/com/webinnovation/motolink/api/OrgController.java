@@ -1,5 +1,6 @@
 package com.webinnovation.motolink.api;
 
+import com.webinnovation.motolink.domain.Device;
 import com.webinnovation.motolink.domain.Organization;
 import com.webinnovation.motolink.domain.User;
 import com.webinnovation.motolink.dto.OrgDtos.OrgUpdate;
@@ -7,10 +8,15 @@ import com.webinnovation.motolink.dto.OrgDtos.OrgView;
 import com.webinnovation.motolink.dto.OrgDtos.UserCreate;
 import com.webinnovation.motolink.dto.OrgDtos.UserUpdate;
 import com.webinnovation.motolink.dto.OrgDtos.UserView;
+import com.webinnovation.motolink.dto.UserDeviceDtos.AssignDevicesRequest;
+import com.webinnovation.motolink.dto.UserDeviceDtos.SetUserDevicesRequest;
+import com.webinnovation.motolink.dto.UserDeviceDtos.UpdateSeeAllDevicesRequest;
 import com.webinnovation.motolink.exception.DomainException;
 import com.webinnovation.motolink.exception.ForbiddenException;
 import com.webinnovation.motolink.exception.NotFoundException;
+import com.webinnovation.motolink.repository.DeviceRepository;
 import com.webinnovation.motolink.repository.OrganizationRepository;
+import com.webinnovation.motolink.repository.UserDeviceRepository;
 import com.webinnovation.motolink.repository.UserRepository;
 import com.webinnovation.motolink.security.TenantContext;
 import com.webinnovation.motolink.service.AuditService;
@@ -42,6 +48,8 @@ public class OrgController {
 
     private final OrganizationRepository orgRepo;
     private final UserRepository userRepo;
+    private final UserDeviceRepository userDeviceRepo;
+    private final DeviceRepository deviceRepo;
     private final PasswordEncoder passwordEncoder;
     private final AuditService audit;
 
@@ -71,7 +79,9 @@ public class OrgController {
     @GetMapping("/me/users")
     public List<UserView> listUsers() {
         UUID orgId = TenantContext.requireOrgId();
-        return userRepo.listByOrg(orgId).stream().map(UserView::of).toList();
+        return userRepo.listByOrg(orgId).stream()
+                .map(u -> UserView.of(u, userDeviceRepo.countByUser(u.id())))
+                .toList();
     }
 
     @PostMapping("/me/users")
@@ -135,6 +145,159 @@ public class OrgController {
         }
         audit.record("USER_DISABLE", "user", id.toString(), null);
         return ResponseEntity.noContent().build();
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // User-Device Assignments
+    // ─────────────────────────────────────────────────────────────
+
+    /**
+     * Get devices assigned to a specific user.
+     */
+    @GetMapping("/me/users/{userId}/devices")
+    public List<String> getUserDevices(@PathVariable UUID userId) {
+        requireAdmin();
+        UUID orgId = TenantContext.requireOrgId();
+        verifyUserInOrg(userId, orgId);
+        return userDeviceRepo.getDeviceImeis(userId);
+    }
+
+    /**
+     * Assign devices to a user.
+     */
+    @PostMapping("/me/users/{userId}/devices")
+    public ResponseEntity<List<String>> assignDevices(
+            @PathVariable UUID userId,
+            @Valid @RequestBody AssignDevicesRequest body) {
+        requireAdmin();
+        UUID orgId = TenantContext.requireOrgId();
+        UUID assignedBy = TenantContext.currentUserId();
+
+        verifyUserInOrg(userId, orgId);
+        verifyDevicesInOrg(body.deviceImeis(), orgId);
+
+        userDeviceRepo.assignMultiple(userId, body.deviceImeis(), assignedBy);
+
+        audit.record("USER_DEVICES_ASSIGN", "user", userId.toString(),
+                Map.of("devices", body.deviceImeis()));
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(userDeviceRepo.getDeviceImeis(userId));
+    }
+
+    /**
+     * Set (replace) all device assignments for a user.
+     */
+    @PatchMapping("/me/users/{userId}/devices")
+    public List<String> setUserDevices(
+            @PathVariable UUID userId,
+            @Valid @RequestBody SetUserDevicesRequest body) {
+        requireAdmin();
+        UUID orgId = TenantContext.requireOrgId();
+        UUID assignedBy = TenantContext.currentUserId();
+
+        verifyUserInOrg(userId, orgId);
+        if (body.deviceImeis() != null && !body.deviceImeis().isEmpty()) {
+            verifyDevicesInOrg(body.deviceImeis(), orgId);
+        }
+
+        List<String> imeis = body.deviceImeis() == null ? List.of() : body.deviceImeis();
+        userDeviceRepo.replaceAssignments(userId, imeis, assignedBy);
+
+        audit.record("USER_DEVICES_SET", "user", userId.toString(),
+                Map.of("devices", imeis));
+
+        return userDeviceRepo.getDeviceImeis(userId);
+    }
+
+    /**
+     * Unassign a specific device from a user.
+     */
+    @DeleteMapping("/me/users/{userId}/devices/{imei}")
+    public ResponseEntity<Void> unassignDevice(
+            @PathVariable UUID userId,
+            @PathVariable String imei) {
+        requireAdmin();
+        UUID orgId = TenantContext.requireOrgId();
+
+        verifyUserInOrg(userId, orgId);
+
+        userDeviceRepo.unassign(userId, imei);
+
+        audit.record("USER_DEVICE_UNASSIGN", "user", userId.toString(),
+                Map.of("device", imei));
+
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Update user's seeAllDevices setting.
+     */
+    @PatchMapping("/me/users/{userId}/see-all-devices")
+    public UserView updateSeeAllDevices(
+            @PathVariable UUID userId,
+            @Valid @RequestBody UpdateSeeAllDevicesRequest body) {
+        requireAdmin();
+        UUID orgId = TenantContext.requireOrgId();
+
+        User user = verifyUserInOrg(userId, orgId);
+
+        userRepo.updateSeeAllDevices(userId, orgId, body.seeAllDevices());
+
+        audit.record("USER_SEE_ALL_DEVICES_UPDATE", "user", userId.toString(),
+                Map.of("seeAllDevices", body.seeAllDevices()));
+
+        User updated = userRepo.findById(userId).orElseThrow();
+        return UserView.of(updated, userDeviceRepo.countByUser(userId));
+    }
+
+    /**
+     * Get all org devices with user assignment info (for assignment UI).
+     */
+    @GetMapping("/me/devices/assignments")
+    public List<Map<String, Object>> getDeviceAssignments() {
+        requireAdmin();
+        UUID orgId = TenantContext.requireOrgId();
+
+        List<Device> devices = deviceRepo.listForOrg(orgId);
+        List<User> users = userRepo.listByOrg(orgId);
+
+        return devices.stream().map(d -> {
+            List<UUID> assignedUserIds = userDeviceRepo.getUserIds(d.imei());
+            List<Map<String, Object>> assignedUsers = users.stream()
+                    .filter(u -> assignedUserIds.contains(u.id()))
+                    .map(u -> Map.<String, Object>of(
+                            "id", u.id(),
+                            "email", u.email(),
+                            "fullName", u.fullName() != null ? u.fullName() : ""))
+                    .toList();
+
+            return Map.<String, Object>of(
+                    "imei", d.imei(),
+                    "name", d.name() != null ? d.name() : "",
+                    "vehiclePlate", d.vehiclePlate() != null ? d.vehiclePlate() : "",
+                    "assignedUsers", assignedUsers);
+        }).toList();
+    }
+
+    private User verifyUserInOrg(UUID userId, UUID orgId) {
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new NotFoundException("user", userId.toString()));
+        if (!orgId.equals(user.orgId())) {
+            throw new NotFoundException("user", userId.toString());
+        }
+        return user;
+    }
+
+    private void verifyDevicesInOrg(List<String> imeis, UUID orgId) {
+        for (String imei : imeis) {
+            Device device = deviceRepo.findByImei(imei)
+                    .orElseThrow(() -> new NotFoundException("device", imei));
+            if (!orgId.equals(device.orgId())) {
+                throw new DomainException("DEVICE_NOT_IN_ORG",
+                        "Device " + imei + " does not belong to this organization");
+            }
+        }
     }
 
     private static void requireAdmin() {

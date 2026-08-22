@@ -52,13 +52,20 @@ public final class OrgDtos {
             String fullName,
             String role,
             boolean isActive,
+            boolean seeAllDevices,
+            int assignedDeviceCount,
             Instant lastLoginAt,
             Instant createdAt
     ) {
         public static UserView of(User u) {
+            return of(u, 0);
+        }
+
+        public static UserView of(User u, int assignedDeviceCount) {
             return new UserView(
                     u.id(), u.orgId(), u.email(), u.phone(), u.fullName(),
-                    u.role(), u.isActive(), u.lastLoginAt(), u.createdAt());
+                    u.role(), u.isActive(), u.seeAllDevices(), assignedDeviceCount,
+                    u.lastLoginAt(), u.createdAt());
         }
     }
 

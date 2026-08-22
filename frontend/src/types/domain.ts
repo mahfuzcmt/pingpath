@@ -33,6 +33,8 @@ export interface UserDetail {
   fullName: string | null;
   role: UserRole;
   isActive: boolean;
+  seeAllDevices: boolean;
+  assignedDeviceCount: number;
   lastLoginAt: string | null;
   createdAt: string;
 }
@@ -394,4 +396,21 @@ export interface AdminStats {
   totalDevices: number;
   onlineDevices: number;
   totalUsers: number;
+}
+
+// ─────────────────────────────────────────────────────────────
+// User-Device Assignment types
+// ─────────────────────────────────────────────────────────────
+
+export interface DeviceAssignment {
+  imei: string;
+  name: string;
+  vehiclePlate: string;
+  assignedUsers: AssignedUserInfo[];
+}
+
+export interface AssignedUserInfo {
+  id: string;
+  email: string;
+  fullName: string;
 }

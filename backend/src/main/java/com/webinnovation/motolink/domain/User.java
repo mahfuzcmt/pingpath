@@ -12,6 +12,7 @@ public record User(
         String fullName,
         String role,
         boolean isActive,
+        boolean seeAllDevices,
         Instant lastLoginAt,
         Instant createdAt,
         Instant updatedAt

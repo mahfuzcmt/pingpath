@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { api } from "@/lib/api";
-import type { UserCreate, UserDetail, UserUpdate } from "@/types/domain";
+import type { DeviceView, UserCreate, UserDetail, UserUpdate } from "@/types/domain";
 
 export function useUsers() {
   const [users, setUsers] = useState<UserDetail[]>([]);
@@ -45,5 +45,51 @@ export function useUsers() {
     );
   }, []);
 
-  return { users, loading, error, refresh, create, update, disable };
+  // ── Device assignment methods ───────────────────────────────────────
+
+  const getUserDevices = useCallback(async (userId: string): Promise<string[]> => {
+    const r = await api.get<string[]>(`/orgs/me/users/${userId}/devices`);
+    return r.data;
+  }, []);
+
+  const setUserDevices = useCallback(async (userId: string, deviceImeis: string[]): Promise<string[]> => {
+    const r = await api.patch<string[]>(`/orgs/me/users/${userId}/devices`, { deviceImeis });
+    // Refresh users to update assignedDeviceCount
+    await refresh();
+    return r.data;
+  }, [refresh]);
+
+  const updateSeeAllDevices = useCallback(async (userId: string, seeAllDevices: boolean): Promise<UserDetail> => {
+    const r = await api.patch<UserDetail>(`/orgs/me/users/${userId}/see-all-devices`, { seeAllDevices });
+    setUsers((prev) => prev.map((u) => (u.id === userId ? r.data : u)));
+    return r.data;
+  }, []);
+
+  return {
+    users,
+    loading,
+    error,
+    refresh,
+    create,
+    update,
+    disable,
+    getUserDevices,
+    setUserDevices,
+    updateSeeAllDevices,
+  };
+}
+
+/** Hook to get all devices for device assignment UI */
+export function useOrgDevices() {
+  const [devices, setDevices] = useState<DeviceView[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    api.get<DeviceView[]>("/devices")
+      .then((r) => setDevices(r.data))
+      .catch(() => setDevices([]))
+      .finally(() => setLoading(false));
+  }, []);
+
+  return { devices, loading };
 }

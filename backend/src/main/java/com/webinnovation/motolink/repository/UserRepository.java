@@ -29,6 +29,7 @@ public class UserRepository {
             rs.getString("full_name"),
             rs.getString("role"),
             rs.getBoolean("is_active"),
+            rs.getBoolean("see_all_devices"),
             toInstant(rs.getObject("last_login_at", OffsetDateTime.class)),
             rs.getObject("created_at", OffsetDateTime.class).toInstant(),
             rs.getObject("updated_at", OffsetDateTime.class).toInstant()
@@ -150,6 +151,20 @@ public class UserRepository {
                 .addValue("orgId", orgId);
         return jdbc.update("""
                 UPDATE users SET is_active = false, updated_at = now()
+                 WHERE id = :id AND org_id = :orgId
+                """, params);
+    }
+
+    /**
+     * Update whether user can see all devices in org or only assigned ones.
+     */
+    public int updateSeeAllDevices(UUID id, UUID orgId, boolean seeAllDevices) {
+        var params = new MapSqlParameterSource()
+                .addValue("id", id)
+                .addValue("orgId", orgId)
+                .addValue("seeAllDevices", seeAllDevices);
+        return jdbc.update("""
+                UPDATE users SET see_all_devices = :seeAllDevices, updated_at = now()
                  WHERE id = :id AND org_id = :orgId
                 """, params);
     }

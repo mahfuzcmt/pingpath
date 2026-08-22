@@ -238,6 +238,15 @@ const STRINGS = {
   "users.role.SUPER_ADMIN": { en: "Super admin", bn: "সুপার অ্যাডমিন" },
   "users.role.ORG_ADMIN": { en: "Admin", bn: "অ্যাডমিন" },
   "users.role.ORG_USER": { en: "User", bn: "ব্যবহারকারী" },
+  "users.devices": { en: "Devices", bn: "ডিভাইস" },
+  "users.manageDevices": { en: "Manage Devices", bn: "ডিভাইস পরিচালনা" },
+  "users.assignDevices": { en: "Assign Devices", bn: "ডিভাইস বরাদ্দ করুন" },
+  "users.assignedDevices": { en: "Assigned Devices", bn: "বরাদ্দকৃত ডিভাইস" },
+  "users.seeAllDevices": { en: "See all devices", bn: "সব ডিভাইস দেখুন" },
+  "users.seeAllDevicesHint": { en: "When enabled, user can see all org devices regardless of assignments", bn: "সক্রিয় থাকলে, ব্যবহারকারী বরাদ্দ নির্বিশেষে সব প্রতিষ্ঠানের ডিভাইস দেখতে পারবেন" },
+  "users.noDevicesAssigned": { en: "No devices assigned", bn: "কোনো ডিভাইস বরাদ্দ করা হয়নি" },
+  "users.selectDevices": { en: "Select devices to assign", bn: "বরাদ্দ করতে ডিভাইস নির্বাচন করুন" },
+  "users.deviceCount": { en: "device(s)", bn: "ডিভাইস" },
 
   // ── Scheduled commands ────────────────────────────────────────────
   "sched.title": { en: "Scheduled commands", bn: "নির্ধারিত কমান্ড" },

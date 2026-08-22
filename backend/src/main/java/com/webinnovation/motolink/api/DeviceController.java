@@ -1,14 +1,17 @@
 package com.webinnovation.motolink.api;
 
 import com.webinnovation.motolink.domain.Device;
+import com.webinnovation.motolink.domain.User;
 import com.webinnovation.motolink.dto.DeviceDtos.DeviceUpdateRequest;
 import com.webinnovation.motolink.dto.DeviceDtos.DeviceView;
 import com.webinnovation.motolink.exception.DomainException;
+import com.webinnovation.motolink.exception.ForbiddenException;
 import com.webinnovation.motolink.exception.NotFoundException;
 import com.webinnovation.motolink.repository.DeviceRepository;
 import com.webinnovation.motolink.repository.SubscriptionRepository;
 import com.webinnovation.motolink.repository.SubscriptionRepository.SubInfo;
 import com.webinnovation.motolink.repository.TripRepository;
+import com.webinnovation.motolink.repository.UserRepository;
 import com.webinnovation.motolink.security.TenantContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -34,13 +37,24 @@ public class DeviceController {
     private final DeviceRepository deviceRepo;
     private final SubscriptionRepository subscriptionRepo;
     private final TripRepository tripRepo;
+    private final UserRepository userRepo;
 
     @GetMapping
     public List<DeviceView> list(@RequestParam(value = "status", required = false) String status) {
         UUID orgId = TenantContext.requireOrgId();
-        List<Device> devices = (status == null || status.isBlank())
-                ? deviceRepo.listForOrg(orgId)
-                : deviceRepo.listForOrgByStatus(orgId, status);
+        UUID userId = TenantContext.currentUserId();
+        boolean seeAllDevices = canSeeAllDevices(userId);
+
+        List<Device> devices;
+        if (status == null || status.isBlank()) {
+            devices = deviceRepo.listForUser(orgId, userId, seeAllDevices);
+        } else {
+            // For status filter, get user's visible devices then filter
+            devices = deviceRepo.listForUser(orgId, userId, seeAllDevices).stream()
+                    .filter(d -> status.equalsIgnoreCase(d.status()))
+                    .toList();
+        }
+
         Map<String, SubInfo> subs = subscriptionRepo.latestByOrg(orgId);
         Map<String, Instant> parked = tripRepo.parkedSinceByImei(orgId);
         return devices.stream()
@@ -51,11 +65,32 @@ public class DeviceController {
     @GetMapping("/{imei}")
     public DeviceView get(@PathVariable String imei) {
         UUID orgId = TenantContext.requireOrgId();
+        UUID userId = TenantContext.currentUserId();
+        boolean seeAllDevices = canSeeAllDevices(userId);
+
+        // Check access
+        if (!deviceRepo.canUserAccessDevice(orgId, userId, imei, seeAllDevices)) {
+            throw new ForbiddenException("You do not have access to this device");
+        }
+
         Device d = deviceRepo.findByOrgAndImei(orgId, imei)
                 .orElseThrow(() -> new NotFoundException("device", imei));
         return DeviceView.of(d,
                 subscriptionRepo.latestForImei(orgId, imei).orElse(null),
                 tripRepo.parkedSinceForImei(orgId, imei).orElse(null));
+    }
+
+    private boolean canSeeAllDevices(UUID userId) {
+        if (userId == null) return true; // fallback
+        String role = TenantContext.currentRole();
+        // Admins always see all devices
+        if ("SUPER_ADMIN".equals(role) || "ORG_ADMIN".equals(role)) {
+            return true;
+        }
+        // Check user's seeAllDevices flag
+        return userRepo.findById(userId)
+                .map(User::seeAllDevices)
+                .orElse(false);
     }
 
     private static final Set<String> VEHICLE_TYPES = Set.of("MOTORBIKE", "CAR", "TRUCK", "CNG", "BUS");
@@ -64,6 +99,14 @@ public class DeviceController {
     @PatchMapping("/{imei}")
     public DeviceView update(@PathVariable String imei, @RequestBody DeviceUpdateRequest req) {
         UUID orgId = TenantContext.requireOrgId();
+        UUID userId = TenantContext.currentUserId();
+        boolean seeAllDevices = canSeeAllDevices(userId);
+
+        // Check access
+        if (!deviceRepo.canUserAccessDevice(orgId, userId, imei, seeAllDevices)) {
+            throw new ForbiddenException("You do not have access to this device");
+        }
+
         if (req.vehicleType() != null && !VEHICLE_TYPES.contains(req.vehicleType())) {
             throw new DomainException("INVALID_VEHICLE_TYPE",
                     "vehicleType must be one of " + VEHICLE_TYPES);
