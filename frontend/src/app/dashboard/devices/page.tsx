@@ -183,8 +183,11 @@ function VehicleCard({
   const accOn = live?.accOn ?? null;
   const overspeed = speedLimits.isOverspeed(d.imei, speed);
   const color = overspeed ? OVERSPEED_COLOR : VEHICLE_STATE_COLOR[state];
-  // Real parking duration (latest trip end) when not moving; falls back to fix age.
-  const sinceTs = state === "moving" || state === "idle" ? ts : d.parkedSince ?? ts;
+  // Different "since" times per state:
+  // - moving/idle: last update time
+  // - stopped: parking duration (trip end time)
+  // - offline/expired/nodata: last seen time (how long disconnected)
+  const sinceTs = state === "stopped" ? (d.parkedSince ?? ts) : ts;
 
   return (
     <Link

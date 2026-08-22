@@ -230,8 +230,11 @@ export function DeviceList({ devices, locations, selectedImei, onSelect }: Devic
           const state = vehicleState(d, live);
           const overspeed = speedLimits.isOverspeed(d.imei, live?.speed ?? d.lastSpeed);
           const statusColor = overspeed ? OVERSPEED_COLOR : VEHICLE_STATE_COLOR[state];
-          // Real parking duration (trip end) when stopped; falls back to last-fix age.
-          const sinceTs = state === "moving" || state === "idle" ? ts : d.parkedSince ?? ts;
+          // Different "since" times per state:
+          // - moving/idle: last update time
+          // - stopped: parking duration (trip end time)
+          // - offline/expired/nodata: last seen time (how long disconnected)
+          const sinceTs = state === "stopped" ? (d.parkedSince ?? ts) : ts;
 
           return (
             <li
