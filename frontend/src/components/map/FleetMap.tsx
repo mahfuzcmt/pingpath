@@ -172,6 +172,42 @@ function hasNoFix(location: LocationView | undefined): boolean {
   return location != null && !location.valid;
 }
 
+/** Stale threshold in milliseconds (5 minutes) */
+const STALE_THRESHOLD_MS = 5 * 60 * 1000;
+
+/**
+ * True when the last location update is older than STALE_THRESHOLD_MS.
+ * Stale data means the GPS position shown may not reflect current location.
+ */
+function isStaleData(location: LocationView | undefined, device: DeviceView | undefined): boolean {
+  const ts = location?.ts || device?.lastSeenAt;
+  if (!ts) return true;
+  const age = Date.now() - new Date(ts).getTime();
+  return age > STALE_THRESHOLD_MS;
+}
+
+/**
+ * Returns human-readable GPS quality status with icon
+ */
+function gpsQualityInfo(location: LocationView | undefined, device: DeviceView | undefined): { status: string; color: string; icon: string } {
+  const stale = isStaleData(location, device);
+  const noFix = hasNoFix(location);
+
+  if (!location && !device?.lastSeenAt) {
+    return { status: "No Data", color: "#D97706", icon: "⚠" };
+  }
+  if (noFix && stale) {
+    return { status: "GPS Lost", color: "#DC2626", icon: "✕" };
+  }
+  if (noFix) {
+    return { status: "No GPS Fix", color: "#F59E0B", icon: "?" };
+  }
+  if (stale) {
+    return { status: "Stale Data", color: "#F59E0B", icon: "⏱" };
+  }
+  return { status: "Live", color: "#16A34A", icon: "●" };
+}
+
 // Vehicle marker: top-down realistic vehicle icon, centered on position.
 function createVehicleIcon(
   vehicleType: string | null | undefined,
@@ -181,6 +217,7 @@ function createVehicleIcon(
   isOverspeed = false,
   noFix = false,
   isMoving = false,
+  isStale = false,
 ): L.DivIcon {
   const baseSize = isSelected ? 44 : 40;
   const classes = [
@@ -188,11 +225,33 @@ function createVehicleIcon(
     isSelected && 'pp-selected',
     isOverspeed && 'pp-overspeed',
     noFix && 'pp-nofix',
+    isStale && 'pp-stale',
     isMoving && !isOverspeed && 'pp-moving',
   ].filter(Boolean).join(' ');
 
+  // Add GPS warning badge for nofix or stale
+  const warningBadge = (noFix || isStale) ? `
+    <div class="pp-gps-badge" style="
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      width: 14px;
+      height: 14px;
+      background: ${noFix ? '#DC2626' : '#F59E0B'};
+      border: 2px solid #0A1928;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      font-weight: bold;
+      color: white;
+      z-index: 10;
+    ">${noFix ? '?' : '!'}</div>
+  ` : '';
+
   return L.divIcon({
-    html: buildVehicleSvg(vehicleType, isOverspeed ? OVERSPEED_COLOR : bodyColor, rotation, baseSize),
+    html: `<div style="position: relative;">${buildVehicleSvg(vehicleType, isOverspeed ? OVERSPEED_COLOR : bodyColor, rotation, baseSize)}${warningBadge}</div>`,
     className: classes,
     iconSize: [baseSize, baseSize],
     iconAnchor: [baseSize / 2, baseSize / 2], // Center anchor for top-down view
@@ -203,7 +262,15 @@ function createVehicleIcon(
 function plateLabelHtml(device: DeviceView | undefined, location: LocationView | undefined, stateColor: string): string {
   const text = device?.vehiclePlate || device?.name || device?.imei.slice(-8) || "—";
   const speed = filterSpeed(location?.speed, location?.valid);
-  return `<div class="pp-label" style="--state-color:${stateColor}">
+  const gpsInfo = gpsQualityInfo(location, device);
+  const showWarning = gpsInfo.status !== "Live";
+
+  const warningIndicator = showWarning
+    ? `<span class="pp-label-gps" style="background: ${gpsInfo.color};" title="${gpsInfo.status}">${gpsInfo.icon}</span>`
+    : '';
+
+  return `<div class="pp-label${showWarning ? ' pp-label-warning' : ''}" style="--state-color:${stateColor}">
+    ${warningIndicator}
     <span class="pp-label-name">${text}</span>
     <span class="pp-label-speed">${speed} kph</span>
   </div>`;
@@ -290,6 +357,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
     const status = overspeed ? "Overspeed" : statusText(device, location);
     const statusColor = overspeed ? OVERSPEED_COLOR : markerColor(device, location);
     const accStatus = location?.accOn == null ? "—" : location.accOn ? "ON" : "OFF";
+    const gpsInfo = gpsQualityInfo(location, device);
     const parkedRow = device?.parkedSince && speed === 0
       ? `<div class="pp-popup-row">
            <span class="pp-popup-label">Parked for</span>
@@ -297,6 +365,13 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
          </div>`
       : "";
 
+    // GPS quality warning banner
+    const gpsWarningBanner = gpsInfo.status !== "Live"
+      ? `<div class="pp-popup-gps-warning" style="background: ${gpsInfo.color}15; border-left: 3px solid ${gpsInfo.color}; color: ${gpsInfo.color};">
+           <span class="pp-popup-gps-icon">${gpsInfo.icon}</span>
+           <span class="pp-popup-gps-text">${gpsInfo.status} - Position may be inaccurate</span>
+         </div>`
+      : "";
 
     return `
       <div class="pp-popup">
@@ -305,16 +380,22 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           <span class="pp-popup-status" style="background: ${statusColor}20; color: ${statusColor};">${status}</span>
         </div>
 
+        ${gpsWarningBanner}
+
         <!-- Live Speed Display -->
         <div class="pp-popup-speed-section">
           <div class="pp-popup-speedometer">
             <span class="pp-popup-speed-value">${speed}</span>
             <span class="pp-popup-speed-unit">kph</span>
           </div>
-          <div class="pp-popup-speed-label">Live Speed</div>
+          <div class="pp-popup-speed-label">${gpsInfo.status === "Live" ? "Live Speed" : "Last Known Speed"}</div>
         </div>
 
         <div class="pp-popup-grid">
+          <div class="pp-popup-row">
+            <span class="pp-popup-label">GPS</span>
+            <span class="pp-popup-value" style="color: ${gpsInfo.color}; font-weight: 600;">${gpsInfo.icon} ${gpsInfo.status}</span>
+          </div>
           <div class="pp-popup-row">
             <span class="pp-popup-label">ACC</span>
             <span class="pp-popup-value" style="color: ${accStatus === 'ON' ? '#16A34A' : '#64748B'}; font-weight: 600;">${accStatus}</span>
@@ -478,11 +559,12 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
       const course = loc.course ?? 0;
       const bodyColor = device?.iconColor || "#E8900A";
       const noFix = hasNoFix(loc);
+      const isStale = isStaleData(loc, device);
       const isMoving = filterSpeed(loc.speed, loc.valid) > 0; // Moving if speed above noise threshold
 
       if (!marker) {
         // Create new marker
-        const icon = createVehicleIcon(device?.vehicleType, bodyColor, course, isSelected, isOverspeed, noFix, isMoving);
+        const icon = createVehicleIcon(device?.vehicleType, bodyColor, course, isSelected, isOverspeed, noFix, isMoving, isStale);
         marker = L.marker([loc.latitude, loc.longitude], { icon })
           .addTo(map)
           .bindPopup(createPopupContent(device, loc), {
@@ -567,7 +649,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
         // Store current position for next comparison
         prevPositionsRef.current.set(imei, newPos);
 
-        marker.setIcon(createVehicleIcon(device?.vehicleType, bodyColor, course, isSelected, isOverspeed, noFix, isMoving));
+        marker.setIcon(createVehicleIcon(device?.vehicleType, bodyColor, course, isSelected, isOverspeed, noFix, isMoving, isStale));
         marker.setPopupContent(createPopupContent(device, loc));
         marker.setTooltipContent(plateLabelHtml(device, loc, color));
       }
@@ -835,9 +917,30 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           content: '';
           position: absolute;
           inset: -4px;
-          border: 1.5px dashed rgba(148, 163, 184, 0.9);
+          border: 2px dashed #DC2626;
           border-radius: 50%;
           pointer-events: none;
+          animation: pp-nofix-pulse 1.5s ease-in-out infinite;
+        }
+        @keyframes pp-nofix-pulse {
+          0%, 100% { opacity: 0.5; }
+          50% { opacity: 1; }
+        }
+        /* Stale data: position may be outdated */
+        .pp-vehicle-icon.pp-stale {
+          opacity: 0.65;
+        }
+        .pp-vehicle-icon.pp-stale::after {
+          content: '';
+          position: absolute;
+          inset: -4px;
+          border: 2px dashed #F59E0B;
+          border-radius: 50%;
+          pointer-events: none;
+        }
+        /* GPS warning badge on vehicle icon */
+        .pp-gps-badge {
+          box-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
         .pp-search-pin {
           width: 14px;
@@ -885,6 +988,21 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           font-size: 9px;
           font-weight: 500;
           padding: 4px 6px;
+        }
+        /* GPS warning indicator in plate label */
+        .pp-label-gps {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 18px;
+          height: 100%;
+          min-height: 22px;
+          font-size: 10px;
+          color: white;
+          border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .pp-label-warning {
+          border: 1px solid rgba(245, 158, 11, 0.5);
         }
 
         /* Popup styles - Glassy dark theme */
@@ -934,6 +1052,21 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           gap: 12px;
           padding: 12px 14px;
           border-bottom: 1px solid rgba(100, 116, 139, 0.2);
+        }
+        /* GPS warning banner in popup */
+        .pp-popup-gps-warning {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 12px;
+          font-size: 11px;
+          font-weight: 500;
+        }
+        .pp-popup-gps-icon {
+          font-size: 14px;
+        }
+        .pp-popup-gps-text {
+          flex: 1;
         }
         .pp-popup-name {
           font-size: 14px;
