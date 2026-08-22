@@ -21,9 +21,6 @@ import { buildVehicleSvg } from "@/lib/vehicleIcons";
 import { useSpeedLimits } from "@/hooks/useSpeedLimits";
 import type { DeviceView, LocationView } from "@/types/domain";
 
-/** Auto-refresh interval in seconds (must match useLiveLocations). */
-const AUTO_REFRESH_INTERVAL_S = 10;
-
 interface FleetMapProps {
   devices: DeviceView[];
   locations: Map<string, LocationView>;
@@ -175,7 +172,7 @@ function hasNoFix(location: LocationView | undefined): boolean {
   return location != null && !location.valid;
 }
 
-// Vehicle marker: teardrop pin with vehicle icon inside, anchored at bottom point.
+// Vehicle marker: top-down realistic vehicle icon, centered on position.
 function createVehicleIcon(
   vehicleType: string | null | undefined,
   bodyColor: string,
@@ -185,8 +182,7 @@ function createVehicleIcon(
   noFix = false,
   isMoving = false,
 ): L.DivIcon {
-  const baseSize = isSelected ? 44 : 38;
-  const height = Math.round(baseSize * 1.25);
+  const baseSize = isSelected ? 44 : 40;
   const classes = [
     'pp-vehicle-icon',
     isSelected && 'pp-selected',
@@ -198,8 +194,8 @@ function createVehicleIcon(
   return L.divIcon({
     html: buildVehicleSvg(vehicleType, isOverspeed ? OVERSPEED_COLOR : bodyColor, rotation, baseSize),
     className: classes,
-    iconSize: [baseSize, height],
-    iconAnchor: [baseSize / 2, height], // Anchor at bottom tip of teardrop
+    iconSize: [baseSize, baseSize],
+    iconAnchor: [baseSize / 2, baseSize / 2], // Center anchor for top-down view
   });
 }
 
@@ -274,45 +270,8 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
   const [searching, setSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<GeocodeResult[]>([]);
   const [autoFollow, setAutoFollow] = useState(true); // Auto-follow selected vehicle
-  const [countdown, setCountdown] = useState(AUTO_REFRESH_INTERVAL_S);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const lastRefreshAtRef = useRef<Date | null>(null);
 
   const speedLimits = useSpeedLimits();
-
-  // Countdown timer effect - counts down from 10 to 0, shows refreshing state
-  useEffect(() => {
-    // Detect when refresh completes (lastRefreshAt changed)
-    if (lastRefreshAt && lastRefreshAt !== lastRefreshAtRef.current) {
-      lastRefreshAtRef.current = lastRefreshAt;
-      setIsRefreshing(false);
-      setCountdown(AUTO_REFRESH_INTERVAL_S);
-    }
-
-    const updateCountdown = () => {
-      if (!lastRefreshAt) {
-        setCountdown(AUTO_REFRESH_INTERVAL_S);
-        return;
-      }
-
-      const elapsed = Math.floor((Date.now() - lastRefreshAt.getTime()) / 1000);
-      const remaining = Math.max(0, AUTO_REFRESH_INTERVAL_S - elapsed);
-
-      if (remaining === 0 && !isRefreshing) {
-        setIsRefreshing(true);
-      }
-
-      setCountdown(remaining);
-    };
-
-    // Update immediately
-    updateCountdown();
-
-    // Update every second
-    const intervalId = setInterval(updateCountdown, 1000);
-
-    return () => clearInterval(intervalId);
-  }, [lastRefreshAt, isRefreshing]);
 
   const deviceByImei = useMemo(() => {
     const m = new Map<string, DeviceView>();
@@ -714,61 +673,14 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
     <div className="relative h-full w-full" style={{ minHeight: "400px" }}>
       <div ref={containerRef} className="absolute inset-0" style={{ width: "100%", height: "100%" }} />
 
-      {/* Countdown timer (top-left, above toolbar) - Glassy */}
-      <div className="absolute left-3 top-3 z-[1000]">
-        <div
-          className={`glass-btn flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-medium ${
-            isRefreshing
-              ? "!bg-brand-50/90 !border-brand-400/50"
-              : ""
-          }`}
-          title={isRefreshing ? "Updating positions..." : "Auto-refresh countdown"}
-        >
-          {isRefreshing ? (
-            /* Spinning refresh icon when fetching new data */
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="text-brand-500 animate-spin"
-            >
-              <path d="M23 4v6h-6M1 20v-6h6" />
-              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
-            </svg>
-          ) : (
-            /* Clock icon for countdown */
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              className={`${countdown <= 2 ? "text-brand-500 animate-pulse" : "text-ink-500"}`}
-            >
-              <circle cx="12" cy="12" r="10" />
-              <polyline points="12 6 12 12 16 14" />
-            </svg>
-          )}
-          <span className={`tabular-nums ${isRefreshing || countdown <= 2 ? "text-brand-500" : "text-ink-700"}`}>
-            {isRefreshing ? "..." : `${countdown}s`}
-          </span>
-        </div>
-      </div>
-
-      {/* Map toolbar (top-left, below countdown) — zoom, measure, fit all, locate */}
+      {/* Map toolbar (top-left) — zoom, measure, fit all, locate */}
       <MapToolbar
         map={mapRef.current}
         onFitAll={handleFitAll}
         onLocate={handleLocate}
         locating={locating}
         disabled={locations.size === 0}
-        className="top-14"
+        className="top-3"
       />
 
       {/* Address search (top-left, below toolbar when enabled) - Glassy */}

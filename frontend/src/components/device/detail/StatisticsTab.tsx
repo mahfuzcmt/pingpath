@@ -28,9 +28,13 @@ export default function StatisticsTab({ device, orgId }: { device: DeviceView; o
     const durationS = trips.reduce((s, tr) => s + (tr.durationS ?? 0), 0);
     const idleS = trips.reduce((s, tr) => s + tr.idleTimeS, 0);
     const maxSpeed = trips.reduce((m, tr) => Math.max(m, tr.maxSpeed), 0);
-    const avgSpeed = durationS > 0 ? Math.round(distanceM / 1000 / (durationS / 3600)) : 0;
+    const moveS = Math.max(0, durationS - idleS);
+    // Calculate avg speed using move time only (not idle), and cap at maxSpeed to filter GPS noise
+    // GPS jumps inflate distances; avgSpeed should never exceed maxSpeed recorded during the trip
+    const rawAvgSpeed = moveS > 0 ? Math.round(distanceM / 1000 / (moveS / 3600)) : 0;
+    const avgSpeed = rawAvgSpeed > 0 ? Math.min(rawAvgSpeed, maxSpeed > 0 ? maxSpeed : 120) : 0;
     const elapsedS = Math.max(0, (Date.now() - new Date(range.from).getTime()) / 1000);
-    return { distanceM, moveS: Math.max(0, durationS - idleS), idleS, stopS: Math.max(0, elapsedS - durationS), maxSpeed, avgSpeed, trips: trips.length };
+    return { distanceM, moveS, idleS, stopS: Math.max(0, elapsedS - durationS), maxSpeed, avgSpeed, trips: trips.length };
   }, [trips, range.from]);
 
   const serverTime = new Date().toLocaleString("en-GB", { timeZone: "Asia/Dhaka", dateStyle: "medium", timeStyle: "short" });

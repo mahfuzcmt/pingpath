@@ -1,19 +1,10 @@
-// Modern teardrop pin markers for fleet tracking.
-// Inspired by professional GPS tracking UIs with glassy, 3D effects.
+// AutoNemo-style realistic top-down vehicle icons for fleet tracking.
+// These icons rotate with the vehicle's heading direction.
 
-export const VEHICLE_TYPES = ["CAR", "MOTORBIKE", "TRUCK", "BUS", "CNG"] as const;
+export const VEHICLE_TYPES = ["CAR", "MOTORBIKE", "TRUCK", "BUS", "CNG", "MICROBUS"] as const;
 export type VehicleTypeId = (typeof VEHICLE_TYPES)[number];
 
 export const DEFAULT_ICON_COLOR = "#E8900A";
-
-// Vehicle type icons (simplified silhouettes for inside the pin)
-const VEHICLE_SILHOUETTES: Record<VehicleTypeId, string> = {
-  CAR: `<path d="M7 11h10l1-3H6l1 3zm-1 1v2h1v1h2v-1h6v1h2v-1h1v-2H6zm2-5h8l1.5 2H6.5L8 7z" fill="currentColor"/>`,
-  MOTORBIKE: `<path d="M6 13a2 2 0 104 0 2 2 0 00-4 0zm8 0a2 2 0 104 0 2 2 0 00-4 0zm-6-4l2-3h4l2 3H8zm2 1h4v2H10v-2z" fill="currentColor"/>`,
-  TRUCK: `<path d="M4 9h6V7h8v6h-3v-2h-2v2H7v-2H5v2H4V9zm1 5h2v1H5v-1zm8 0h2v1h-2v-1z" fill="currentColor"/>`,
-  BUS: `<path d="M5 7h14v8H5V7zm1 1v6h12V8H6zm1 1h2v2H7V9zm4 0h2v2h-2V9zm4 0h2v2h-2V9zm-8 3h10v1H7v-1z" fill="currentColor"/>`,
-  CNG: `<path d="M8 7l-2 4v4h2v1h2v-1h4v1h2v-1h2v-4l-2-4H8zm0 5a1 1 0 102 0 1 1 0 00-2 0zm6 0a1 1 0 102 0 1 1 0 00-2 0z" fill="currentColor"/>`,
-};
 
 // Helper functions to lighten/darken colors
 function lightenColor(hex: string, percent: number): string {
@@ -37,98 +28,377 @@ function darkenColor(hex: string, percent: number): string {
 /** Generate unique ID for SVG gradients to avoid conflicts */
 let iconIdCounter = 0;
 function generateIconId(): string {
-  return `pin${++iconIdCounter}`;
+  return `v${++iconIdCounter}`;
 }
 
 /**
- * Modern teardrop pin marker with glassy effect.
- * The pin has a 3D look with gradients, shadows, and a subtle glass reflection.
+ * AutoNemo-style realistic top-down vehicle icons.
+ * These rotate based on the vehicle's heading (0° = North, 90° = East, etc.)
  */
 export function buildVehicleSvg(
   vehicleType: string | null | undefined,
   bodyColor: string | null | undefined,
   rotation = 0,
-  size = 48,
+  size = 40,
 ): string {
   const c = bodyColor || DEFAULT_ICON_COLOR;
   const id = generateIconId();
-  const type = (vehicleType ?? "CAR") as VehicleTypeId;
-  const silhouette = VEHICLE_SILHOUETTES[type] ?? VEHICLE_SILHOUETTES.CAR;
+  const type = ((vehicleType ?? "CAR").toUpperCase()) as VehicleTypeId;
 
-  // Teardrop pin path (scaled for 48x60 viewBox, anchor at bottom point)
-  // Original path was for 48x48, adjusting for bottom anchor
+  // Get the appropriate vehicle SVG
+  switch (type) {
+    case "CAR":
+      return buildCarIcon(c, rotation, size, id);
+    case "MICROBUS":
+      return buildMicrobusIcon(c, rotation, size, id);
+    case "BUS":
+      return buildBusIcon(c, rotation, size, id);
+    case "TRUCK":
+      return buildTruckIcon(c, rotation, size, id);
+    case "MOTORBIKE":
+      return buildMotorbikeIcon(c, rotation, size, id);
+    case "CNG":
+      return buildCngIcon(c, rotation, size, id);
+    default:
+      return buildCarIcon(c, rotation, size, id);
+  }
+}
+
+/**
+ * Sedan/Car - Top-down view with realistic proportions
+ */
+function buildCarIcon(color: string, rotation: number, size: number, id: string): string {
+  const dark = darkenColor(color, 20);
+  const light = lightenColor(color, 15);
+
   return `
-    <svg width="${size}" height="${Math.round(size * 1.25)}" viewBox="0 0 48 60" xmlns="http://www.w3.org/2000/svg">
+    <svg width="${size}" height="${size}" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
       <defs>
-        <!-- Main body gradient (top to bottom for 3D depth) -->
-        <linearGradient id="pin_body_${id}" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" style="stop-color:${lightenColor(c, 25)}"/>
-          <stop offset="50%" style="stop-color:${c}"/>
-          <stop offset="100%" style="stop-color:${darkenColor(c, 20)}"/>
+        <linearGradient id="car_body_${id}" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" style="stop-color:${dark}"/>
+          <stop offset="50%" style="stop-color:${color}"/>
+          <stop offset="100%" style="stop-color:${dark}"/>
         </linearGradient>
-
-        <!-- Glass reflection gradient -->
-        <linearGradient id="pin_glass_${id}" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" style="stop-color:rgba(255,255,255,0.6)"/>
-          <stop offset="50%" style="stop-color:rgba(255,255,255,0.1)"/>
-          <stop offset="100%" style="stop-color:rgba(255,255,255,0)"/>
-        </linearGradient>
-
-        <!-- Inner shadow for depth -->
-        <radialGradient id="pin_inner_${id}" cx="50%" cy="30%" r="60%">
-          <stop offset="0%" style="stop-color:rgba(255,255,255,0.3)"/>
-          <stop offset="100%" style="stop-color:rgba(0,0,0,0.1)"/>
-        </radialGradient>
-
-        <!-- Drop shadow filter -->
-        <filter id="pin_shadow_${id}" x="-30%" y="-10%" width="160%" height="140%">
-          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="rgba(0,0,0,0.35)"/>
-        </filter>
-
-        <!-- Glow filter for selected state -->
-        <filter id="pin_glow_${id}" x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur stdDeviation="4" result="blur"/>
-          <feMerge>
-            <feMergeNode in="blur"/>
-            <feMergeNode in="SourceGraphic"/>
-          </feMerge>
+        <filter id="car_shadow_${id}" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="rgba(0,0,0,0.4)"/>
         </filter>
       </defs>
 
-      <!-- Ground shadow (ellipse at bottom) -->
-      <ellipse cx="24" cy="57" rx="10" ry="3" fill="rgba(0,0,0,0.15)"/>
+      <g transform="rotate(${rotation}, 20, 20)" filter="url(#car_shadow_${id})">
+        <!-- Car body (sedan shape) -->
+        <path d="M14 6 L26 6 Q30 6 30 10 L30 30 Q30 34 26 34 L14 34 Q10 34 10 30 L10 10 Q10 6 14 6 Z"
+              fill="url(#car_body_${id})" stroke="${dark}" stroke-width="0.5"/>
 
-      <!-- Main teardrop pin shape -->
-      <g filter="url(#pin_shadow_${id})">
-        <!-- Pin body -->
-        <path
-          d="M24 2 C13.5 2 5 10.5 5 21 C5 33.5 24 55 24 55 C24 55 43 33.5 43 21 C43 10.5 34.5 2 24 2 Z"
-          fill="url(#pin_body_${id})"
-        />
+        <!-- Hood (front) -->
+        <path d="M12 8 L28 8 Q29 8 29 9 L29 12 L11 12 L11 9 Q11 8 12 8 Z"
+              fill="${light}" opacity="0.3"/>
 
-        <!-- Glass highlight (top-left reflection) -->
-        <path
-          d="M24 4 C15 4 8 11 8 20 C8 26 14 34 20 42 C14 32 10 24 10 19 C10 11.5 16 5.5 24 5.5 C28 5.5 31.5 7 34 9.5 C31 6 27.5 4 24 4 Z"
-          fill="url(#pin_glass_${id})"
-        />
+        <!-- Windshield -->
+        <rect x="13" y="12" width="14" height="6" rx="1" fill="#1a2634" opacity="0.85"/>
 
-        <!-- Inner circle (icon container) -->
-        <circle cx="24" cy="20" r="13" fill="rgba(255,255,255,0.95)"/>
-        <circle cx="24" cy="20" r="12" fill="url(#pin_inner_${id})"/>
+        <!-- Roof -->
+        <rect x="13" y="18" width="14" height="8" rx="1" fill="${light}" opacity="0.2"/>
 
-        <!-- Vehicle silhouette icon -->
-        <g transform="translate(12, 8)" style="color: ${darkenColor(c, 10)}">
-          ${silhouette}
-        </g>
+        <!-- Rear window -->
+        <rect x="13" y="26" width="14" height="4" rx="1" fill="#1a2634" opacity="0.75"/>
 
-        <!-- Subtle border/outline -->
-        <path
-          d="M24 2 C13.5 2 5 10.5 5 21 C5 33.5 24 55 24 55 C24 55 43 33.5 43 21 C43 10.5 34.5 2 24 2 Z"
-          fill="none"
-          stroke="${darkenColor(c, 15)}"
-          stroke-width="0.5"
-          opacity="0.5"
-        />
+        <!-- Front headlights -->
+        <rect x="12" y="7" width="3" height="2" rx="0.5" fill="#fff" opacity="0.9"/>
+        <rect x="25" y="7" width="3" height="2" rx="0.5" fill="#fff" opacity="0.9"/>
+
+        <!-- Rear lights -->
+        <rect x="12" y="32" width="3" height="1.5" rx="0.3" fill="#dc2626" opacity="0.9"/>
+        <rect x="25" y="32" width="3" height="1.5" rx="0.3" fill="#dc2626" opacity="0.9"/>
+
+        <!-- Side mirrors -->
+        <ellipse cx="9" cy="14" rx="1.5" ry="1" fill="${dark}"/>
+        <ellipse cx="31" cy="14" rx="1.5" ry="1" fill="${dark}"/>
+
+        <!-- Direction arrow indicator -->
+        <path d="M20 3 L17 7 L20 5.5 L23 7 Z" fill="#fff" stroke="${dark}" stroke-width="0.3"/>
+      </g>
+    </svg>`;
+}
+
+/**
+ * Microbus/Van - Taller, boxier top-down view
+ */
+function buildMicrobusIcon(color: string, rotation: number, size: number, id: string): string {
+  const dark = darkenColor(color, 20);
+  const light = lightenColor(color, 15);
+
+  return `
+    <svg width="${size}" height="${size}" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="microbus_body_${id}" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" style="stop-color:${dark}"/>
+          <stop offset="50%" style="stop-color:${color}"/>
+          <stop offset="100%" style="stop-color:${dark}"/>
+        </linearGradient>
+        <filter id="microbus_shadow_${id}" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="rgba(0,0,0,0.4)"/>
+        </filter>
+      </defs>
+
+      <g transform="rotate(${rotation}, 20, 20)" filter="url(#microbus_shadow_${id})">
+        <!-- Microbus body (rectangular with rounded front) -->
+        <path d="M12 5 L28 5 Q32 5 32 9 L32 32 Q32 36 28 36 L12 36 Q8 36 8 32 L8 9 Q8 5 12 5 Z"
+              fill="url(#microbus_body_${id})" stroke="${dark}" stroke-width="0.5"/>
+
+        <!-- Large front windshield -->
+        <rect x="10" y="7" width="20" height="8" rx="2" fill="#1a2634" opacity="0.85"/>
+
+        <!-- Roof section -->
+        <rect x="10" y="15" width="20" height="14" rx="1" fill="${light}" opacity="0.15"/>
+
+        <!-- Side windows (3 rows) -->
+        <rect x="10" y="16" width="4" height="4" rx="0.5" fill="#1a2634" opacity="0.6"/>
+        <rect x="26" y="16" width="4" height="4" rx="0.5" fill="#1a2634" opacity="0.6"/>
+        <rect x="10" y="21" width="4" height="4" rx="0.5" fill="#1a2634" opacity="0.6"/>
+        <rect x="26" y="21" width="4" height="4" rx="0.5" fill="#1a2634" opacity="0.6"/>
+        <rect x="10" y="26" width="4" height="4" rx="0.5" fill="#1a2634" opacity="0.6"/>
+        <rect x="26" y="26" width="4" height="4" rx="0.5" fill="#1a2634" opacity="0.6"/>
+
+        <!-- Rear window -->
+        <rect x="12" y="31" width="16" height="3" rx="1" fill="#1a2634" opacity="0.7"/>
+
+        <!-- Front lights -->
+        <rect x="10" y="5.5" width="4" height="2" rx="0.5" fill="#fff" opacity="0.9"/>
+        <rect x="26" y="5.5" width="4" height="2" rx="0.5" fill="#fff" opacity="0.9"/>
+
+        <!-- Rear lights -->
+        <rect x="10" y="34.5" width="3" height="1.5" rx="0.3" fill="#dc2626" opacity="0.9"/>
+        <rect x="27" y="34.5" width="3" height="1.5" rx="0.3" fill="#dc2626" opacity="0.9"/>
+
+        <!-- Direction arrow -->
+        <path d="M20 2 L16 6 L20 4 L24 6 Z" fill="#fff" stroke="${dark}" stroke-width="0.3"/>
+      </g>
+    </svg>`;
+}
+
+/**
+ * Bus - Long rectangular top-down view
+ */
+function buildBusIcon(color: string, rotation: number, size: number, id: string): string {
+  const dark = darkenColor(color, 20);
+  const light = lightenColor(color, 15);
+
+  return `
+    <svg width="${size}" height="${size}" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="bus_body_${id}" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" style="stop-color:${dark}"/>
+          <stop offset="50%" style="stop-color:${color}"/>
+          <stop offset="100%" style="stop-color:${dark}"/>
+        </linearGradient>
+        <filter id="bus_shadow_${id}" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="rgba(0,0,0,0.4)"/>
+        </filter>
+      </defs>
+
+      <g transform="rotate(${rotation}, 20, 20)" filter="url(#bus_shadow_${id})">
+        <!-- Bus body (long rectangle) -->
+        <rect x="10" y="3" width="20" height="34" rx="3"
+              fill="url(#bus_body_${id})" stroke="${dark}" stroke-width="0.5"/>
+
+        <!-- Front windshield -->
+        <rect x="12" y="5" width="16" height="5" rx="1.5" fill="#1a2634" opacity="0.85"/>
+
+        <!-- Roof stripe -->
+        <rect x="12" y="11" width="16" height="20" rx="1" fill="${light}" opacity="0.1"/>
+
+        <!-- Side windows (multiple) -->
+        <rect x="11" y="12" width="3" height="3" rx="0.3" fill="#1a2634" opacity="0.6"/>
+        <rect x="26" y="12" width="3" height="3" rx="0.3" fill="#1a2634" opacity="0.6"/>
+        <rect x="11" y="16" width="3" height="3" rx="0.3" fill="#1a2634" opacity="0.6"/>
+        <rect x="26" y="16" width="3" height="3" rx="0.3" fill="#1a2634" opacity="0.6"/>
+        <rect x="11" y="20" width="3" height="3" rx="0.3" fill="#1a2634" opacity="0.6"/>
+        <rect x="26" y="20" width="3" height="3" rx="0.3" fill="#1a2634" opacity="0.6"/>
+        <rect x="11" y="24" width="3" height="3" rx="0.3" fill="#1a2634" opacity="0.6"/>
+        <rect x="26" y="24" width="3" height="3" rx="0.3" fill="#1a2634" opacity="0.6"/>
+        <rect x="11" y="28" width="3" height="3" rx="0.3" fill="#1a2634" opacity="0.6"/>
+        <rect x="26" y="28" width="3" height="3" rx="0.3" fill="#1a2634" opacity="0.6"/>
+
+        <!-- Rear window -->
+        <rect x="14" y="33" width="12" height="2.5" rx="0.5" fill="#1a2634" opacity="0.7"/>
+
+        <!-- Front lights -->
+        <rect x="11" y="3.5" width="3" height="1.5" rx="0.3" fill="#fff" opacity="0.9"/>
+        <rect x="26" y="3.5" width="3" height="1.5" rx="0.3" fill="#fff" opacity="0.9"/>
+
+        <!-- Rear lights -->
+        <rect x="11" y="35.5" width="3" height="1.5" rx="0.3" fill="#dc2626" opacity="0.9"/>
+        <rect x="26" y="35.5" width="3" height="1.5" rx="0.3" fill="#dc2626" opacity="0.9"/>
+
+        <!-- Direction arrow -->
+        <path d="M20 1 L16 4 L20 2.5 L24 4 Z" fill="#fff" stroke="${dark}" stroke-width="0.3"/>
+      </g>
+    </svg>`;
+}
+
+/**
+ * Truck - With cargo bed
+ */
+function buildTruckIcon(color: string, rotation: number, size: number, id: string): string {
+  const dark = darkenColor(color, 20);
+  const light = lightenColor(color, 15);
+
+  return `
+    <svg width="${size}" height="${size}" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="truck_body_${id}" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" style="stop-color:${dark}"/>
+          <stop offset="50%" style="stop-color:${color}"/>
+          <stop offset="100%" style="stop-color:${dark}"/>
+        </linearGradient>
+        <filter id="truck_shadow_${id}" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="rgba(0,0,0,0.4)"/>
+        </filter>
+      </defs>
+
+      <g transform="rotate(${rotation}, 20, 20)" filter="url(#truck_shadow_${id})">
+        <!-- Truck cab -->
+        <path d="M12 4 L28 4 Q31 4 31 7 L31 14 Q31 15 30 15 L10 15 Q9 15 9 14 L9 7 Q9 4 12 4 Z"
+              fill="url(#truck_body_${id})" stroke="${dark}" stroke-width="0.5"/>
+
+        <!-- Cab windshield -->
+        <rect x="11" y="5.5" width="18" height="5" rx="1" fill="#1a2634" opacity="0.85"/>
+
+        <!-- Cargo bed (container) -->
+        <rect x="9" y="16" width="22" height="20" rx="1"
+              fill="${darkenColor(color, 5)}" stroke="${dark}" stroke-width="0.5"/>
+
+        <!-- Cargo bed ridges -->
+        <line x1="9" y1="20" x2="31" y2="20" stroke="${dark}" stroke-width="0.3" opacity="0.5"/>
+        <line x1="9" y1="24" x2="31" y2="24" stroke="${dark}" stroke-width="0.3" opacity="0.5"/>
+        <line x1="9" y1="28" x2="31" y2="28" stroke="${dark}" stroke-width="0.3" opacity="0.5"/>
+        <line x1="9" y1="32" x2="31" y2="32" stroke="${dark}" stroke-width="0.3" opacity="0.5"/>
+
+        <!-- Front lights -->
+        <rect x="10" y="4.5" width="4" height="1.5" rx="0.3" fill="#fff" opacity="0.9"/>
+        <rect x="26" y="4.5" width="4" height="1.5" rx="0.3" fill="#fff" opacity="0.9"/>
+
+        <!-- Rear lights -->
+        <rect x="10" y="35" width="3" height="1.5" rx="0.3" fill="#dc2626" opacity="0.9"/>
+        <rect x="27" y="35" width="3" height="1.5" rx="0.3" fill="#dc2626" opacity="0.9"/>
+
+        <!-- Side mirrors -->
+        <rect x="7" y="8" width="2" height="3" rx="0.5" fill="${dark}"/>
+        <rect x="31" y="8" width="2" height="3" rx="0.5" fill="${dark}"/>
+
+        <!-- Direction arrow -->
+        <path d="M20 1 L16 4 L20 2.5 L24 4 Z" fill="#fff" stroke="${dark}" stroke-width="0.3"/>
+      </g>
+    </svg>`;
+}
+
+/**
+ * Motorbike - Top-down view
+ */
+function buildMotorbikeIcon(color: string, rotation: number, size: number, id: string): string {
+  const dark = darkenColor(color, 25);
+  const light = lightenColor(color, 15);
+
+  return `
+    <svg width="${size}" height="${size}" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="bike_body_${id}" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" style="stop-color:${dark}"/>
+          <stop offset="50%" style="stop-color:${color}"/>
+          <stop offset="100%" style="stop-color:${dark}"/>
+        </linearGradient>
+        <filter id="bike_shadow_${id}" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="1" stdDeviation="1.5" flood-color="rgba(0,0,0,0.4)"/>
+        </filter>
+      </defs>
+
+      <g transform="rotate(${rotation}, 20, 20)" filter="url(#bike_shadow_${id})">
+        <!-- Front wheel -->
+        <ellipse cx="20" cy="8" rx="5" ry="3" fill="#1a1a1a" stroke="#333" stroke-width="0.5"/>
+        <ellipse cx="20" cy="8" rx="3" ry="1.5" fill="#444"/>
+
+        <!-- Bike body/frame -->
+        <path d="M17 10 L23 10 L24 14 L26 18 L26 28 L24 32 L16 32 L14 28 L14 18 L16 14 Z"
+              fill="url(#bike_body_${id})" stroke="${dark}" stroke-width="0.5"/>
+
+        <!-- Seat -->
+        <ellipse cx="20" cy="22" rx="4" ry="6" fill="#1a1a1a"/>
+        <ellipse cx="20" cy="22" rx="3" ry="5" fill="#333"/>
+
+        <!-- Handlebars -->
+        <rect x="13" y="11" width="14" height="2" rx="1" fill="#555"/>
+        <circle cx="13" cy="12" r="1.5" fill="#333"/>
+        <circle cx="27" cy="12" r="1.5" fill="#333"/>
+
+        <!-- Rear wheel -->
+        <ellipse cx="20" cy="32" rx="5" ry="3" fill="#1a1a1a" stroke="#333" stroke-width="0.5"/>
+        <ellipse cx="20" cy="32" rx="3" ry="1.5" fill="#444"/>
+
+        <!-- Headlight -->
+        <ellipse cx="20" cy="7" rx="2" ry="1" fill="#fff" opacity="0.9"/>
+
+        <!-- Tail light -->
+        <rect x="18" y="34" width="4" height="1" rx="0.3" fill="#dc2626" opacity="0.9"/>
+
+        <!-- Direction arrow -->
+        <path d="M20 3 L17 6 L20 4.5 L23 6 Z" fill="#fff" stroke="${dark}" stroke-width="0.3"/>
+      </g>
+    </svg>`;
+}
+
+/**
+ * CNG/Auto-rickshaw - Three-wheeler top-down view
+ */
+function buildCngIcon(color: string, rotation: number, size: number, id: string): string {
+  const dark = darkenColor(color, 20);
+  const light = lightenColor(color, 15);
+
+  return `
+    <svg width="${size}" height="${size}" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="cng_body_${id}" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" style="stop-color:${dark}"/>
+          <stop offset="50%" style="stop-color:${color}"/>
+          <stop offset="100%" style="stop-color:${dark}"/>
+        </linearGradient>
+        <filter id="cng_shadow_${id}" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="rgba(0,0,0,0.4)"/>
+        </filter>
+      </defs>
+
+      <g transform="rotate(${rotation}, 20, 20)" filter="url(#cng_shadow_${id})">
+        <!-- Front wheel (single) -->
+        <ellipse cx="20" cy="7" rx="3" ry="2" fill="#1a1a1a" stroke="#333" stroke-width="0.5"/>
+
+        <!-- CNG body (rounded cabin) -->
+        <path d="M12 10 L28 10 Q32 10 32 14 L32 30 Q32 34 28 34 L12 34 Q8 34 8 30 L8 14 Q8 10 12 10 Z"
+              fill="url(#cng_body_${id})" stroke="${dark}" stroke-width="0.5"/>
+
+        <!-- Roof/Canopy -->
+        <rect x="10" y="12" width="20" height="18" rx="3" fill="${light}" opacity="0.2"/>
+
+        <!-- Front windshield area -->
+        <rect x="12" y="11" width="16" height="6" rx="2" fill="#1a2634" opacity="0.75"/>
+
+        <!-- Passenger area -->
+        <rect x="12" y="18" width="16" height="10" rx="1" fill="#1a2634" opacity="0.4"/>
+
+        <!-- Rear wheels (two) -->
+        <ellipse cx="10" cy="32" rx="3" ry="2" fill="#1a1a1a" stroke="#333" stroke-width="0.5"/>
+        <ellipse cx="30" cy="32" rx="3" ry="2" fill="#1a1a1a" stroke="#333" stroke-width="0.5"/>
+
+        <!-- Handlebar -->
+        <rect x="17" y="9" width="6" height="2" rx="1" fill="#555"/>
+
+        <!-- Headlight -->
+        <ellipse cx="20" cy="6" rx="2" ry="1" fill="#fff" opacity="0.9"/>
+
+        <!-- Rear lights -->
+        <rect x="9" y="33" width="2" height="1" rx="0.2" fill="#dc2626" opacity="0.9"/>
+        <rect x="29" y="33" width="2" height="1" rx="0.2" fill="#dc2626" opacity="0.9"/>
+
+        <!-- Direction arrow -->
+        <path d="M20 3 L17 6 L20 4.5 L23 6 Z" fill="#fff" stroke="${dark}" stroke-width="0.3"/>
       </g>
     </svg>`;
 }
