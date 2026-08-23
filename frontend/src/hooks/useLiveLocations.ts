@@ -8,25 +8,44 @@ import type { LocationView } from "@/types/domain";
 /** Animation interval in milliseconds (matches backend batch interval). */
 const BATCH_INTERVAL_MS = 10_000;
 
+/** A waypoint in the animation queue. */
+interface Waypoint {
+  latitude: number;
+  longitude: number;
+  ts: string;
+  speed: number;
+  course: number;
+}
+
 /**
  * Extended location view with animation state for smooth marker movement.
  *
- * The map uses `prevLatitude`/`prevLongitude` as the animation start point
- * and interpolates toward `latitude`/`longitude` over the batch interval.
+ * The map animates through the waypoint queue sequentially, showing
+ * smooth movement through ALL received positions, not just jumping to the latest.
  */
 export interface LiveLocationView extends LocationView {
   /** Whether this was just updated (for pulse animation). Resets after ~2 seconds. */
   justUpdated?: boolean;
-  /** Previous latitude for animation interpolation. */
+  /** Queue of waypoints to animate through. Frontend pops from front as animation progresses. */
+  waypointQueue?: Waypoint[];
+  /** Current animation segment start position. */
   prevLatitude?: number;
-  /** Previous longitude for animation interpolation. */
+  /** Current animation segment start position. */
   prevLongitude?: number;
-  /** Timestamp when the batch update arrived (for animation progress calculation). */
+  /** When the current animation segment started. */
   animationStartMs?: number;
+  /** Duration for the current animation segment in ms. */
+  animationDurationMs?: number;
+  /** Target position for current segment (next waypoint). */
+  targetLatitude?: number;
+  /** Target position for current segment (next waypoint). */
+  targetLongitude?: number;
 }
 
 /**
  * Calculate interpolated position for smooth marker animation.
+ * Handles sequential waypoint animation - when one segment completes,
+ * automatically moves to the next waypoint in the queue.
  *
  * @param loc Location with animation state
  * @param now Current timestamp (defaults to Date.now())
@@ -40,23 +59,24 @@ export function getInterpolatedPosition(
   if (
     loc.prevLatitude === undefined ||
     loc.prevLongitude === undefined ||
-    loc.animationStartMs === undefined
+    loc.targetLatitude === undefined ||
+    loc.targetLongitude === undefined ||
+    loc.animationStartMs === undefined ||
+    loc.animationDurationMs === undefined
   ) {
     return { lat: loc.latitude, lng: loc.longitude };
   }
 
-  // Calculate animation progress (0 to 1 over BATCH_INTERVAL_MS, clamped)
+  // Calculate animation progress (0 to 1)
   const elapsed = now - loc.animationStartMs;
-  // Use 9 seconds for animation (leaving 1 second buffer before next batch)
-  const animationDuration = BATCH_INTERVAL_MS - 1000;
-  const progress = Math.min(elapsed / animationDuration, 1);
+  const progress = Math.min(elapsed / loc.animationDurationMs, 1);
 
   // Ease-out cubic for smooth deceleration
   const eased = 1 - Math.pow(1 - progress, 3);
 
-  // Interpolate between previous and current position
-  const lat = loc.prevLatitude + (loc.latitude - loc.prevLatitude) * eased;
-  const lng = loc.prevLongitude + (loc.longitude - loc.prevLongitude) * eased;
+  // Interpolate between previous and target position
+  const lat = loc.prevLatitude + (loc.targetLatitude - loc.prevLatitude) * eased;
+  const lng = loc.prevLongitude + (loc.targetLongitude - loc.prevLongitude) * eased;
 
   return { lat, lng };
 }
@@ -69,9 +89,61 @@ export function getInterpolatedPosition(
  * @returns true if animation is in progress
  */
 export function isAnimating(loc: LiveLocationView, now: number = Date.now()): boolean {
-  if (!loc.animationStartMs) return false;
+  if (!loc.animationStartMs || !loc.animationDurationMs) return false;
   const elapsed = now - loc.animationStartMs;
-  return elapsed < BATCH_INTERVAL_MS - 1000;
+  return elapsed < loc.animationDurationMs;
+}
+
+/**
+ * Check if animation segment is complete and advance to next waypoint if available.
+ * Returns the updated location if waypoint was advanced, or null if no change.
+ */
+export function advanceWaypointIfNeeded(
+  loc: LiveLocationView,
+  now: number = Date.now()
+): LiveLocationView | null {
+  if (!loc.waypointQueue || loc.waypointQueue.length === 0) {
+    return null;
+  }
+
+  // Check if current animation segment is complete
+  if (loc.animationStartMs && loc.animationDurationMs) {
+    const elapsed = now - loc.animationStartMs;
+    if (elapsed < loc.animationDurationMs) {
+      return null; // Still animating current segment
+    }
+  }
+
+  // Pop next waypoint from queue
+  const nextWaypoint = loc.waypointQueue[0];
+  const remainingQueue = loc.waypointQueue.slice(1);
+
+  // Calculate duration for this segment
+  // Divide remaining time equally among remaining waypoints
+  const remainingTimeMs = Math.max(BATCH_INTERVAL_MS - 1500, 2000); // At least 2s
+  const segmentDuration = remainingQueue.length > 0
+    ? remainingTimeMs / (remainingQueue.length + 1)
+    : remainingTimeMs;
+
+  return {
+    ...loc,
+    // Update current position to previous target
+    prevLatitude: loc.targetLatitude ?? loc.latitude,
+    prevLongitude: loc.targetLongitude ?? loc.longitude,
+    // Set new target
+    targetLatitude: nextWaypoint.latitude,
+    targetLongitude: nextWaypoint.longitude,
+    // Update telemetry
+    latitude: nextWaypoint.latitude,
+    longitude: nextWaypoint.longitude,
+    speed: nextWaypoint.speed,
+    course: nextWaypoint.course,
+    ts: nextWaypoint.ts,
+    // Animation state
+    animationStartMs: now,
+    animationDurationMs: segmentDuration,
+    waypointQueue: remainingQueue,
+  };
 }
 
 /**
@@ -100,31 +172,96 @@ function merge(
     incoming.valid &&
     (existing.latitude !== incoming.latitude || existing.longitude !== incoming.longitude);
 
-  if (incoming.valid) {
+  if (incoming.valid && positionChanged) {
+    // Add to waypoint queue instead of immediately jumping
+    const newWaypoint: Waypoint = {
+      latitude: incoming.latitude,
+      longitude: incoming.longitude,
+      ts: incoming.ts,
+      speed: incoming.speed,
+      course: incoming.course,
+    };
+
+    const existingQueue = existing.waypointQueue ?? [];
+
     return {
+      ...existing,
+      // Keep current animation state, just add to queue
+      waypointQueue: [...existingQueue, newWaypoint],
+      justUpdated: true,
+      // Update telemetry that doesn't affect position
+      satellites: incoming.satellites,
+      accOn: incoming.accOn,
+      voltageMv: incoming.voltageMv,
+      gsmSignal: incoming.gsmSignal,
+      valid: incoming.valid,
+    };
+  }
+
+  if (incoming.valid && !positionChanged) {
+    // Valid but same position - just update telemetry
+    return {
+      ...existing,
       ...incoming,
       justUpdated: true,
-      // Store previous position for animation
-      prevLatitude: positionChanged ? existing.latitude : undefined,
-      prevLongitude: positionChanged ? existing.longitude : undefined,
-      animationStartMs: positionChanged ? now : undefined,
+      // Keep animation state
+      waypointQueue: existing.waypointQueue,
+      prevLatitude: existing.prevLatitude,
+      prevLongitude: existing.prevLongitude,
+      targetLatitude: existing.targetLatitude,
+      targetLongitude: existing.targetLongitude,
+      animationStartMs: existing.animationStartMs,
+      animationDurationMs: existing.animationDurationMs,
     };
   }
 
   // Invalid GPS fix: position is stale, so the reported speed is also unreliable
   // (GT06 derives speed from GPS). Show 0 speed to avoid confusing "moving but stuck" display.
   return {
-    ...incoming,
-    latitude: existing.latitude,
-    longitude: existing.longitude,
+    ...existing,
     speed: 0,
-    course: existing.course,
     lastValidTs: incoming.lastValidTs ?? existing.lastValidTs ?? null,
     justUpdated: true,
-    // Clear animation state since position didn't change
-    prevLatitude: undefined,
-    prevLongitude: undefined,
-    animationStartMs: undefined,
+    // Update telemetry
+    satellites: incoming.satellites,
+    accOn: incoming.accOn,
+    voltageMv: incoming.voltageMv,
+    gsmSignal: incoming.gsmSignal,
+    ts: incoming.ts,
+  };
+}
+
+/**
+ * Start animation for a device that has waypoints queued.
+ * Call this after adding waypoints to begin the animation sequence.
+ */
+function startAnimationIfNeeded(
+  loc: LiveLocationView,
+  now: number
+): LiveLocationView {
+  // If already animating or no waypoints, no change needed
+  if (loc.animationStartMs || !loc.waypointQueue || loc.waypointQueue.length === 0) {
+    return loc;
+  }
+
+  // Start animating to first waypoint
+  const firstWaypoint = loc.waypointQueue[0];
+  const remainingQueue = loc.waypointQueue.slice(1);
+
+  // Calculate duration per segment - divide animation time by number of waypoints
+  const totalWaypoints = loc.waypointQueue.length;
+  const animationWindow = BATCH_INTERVAL_MS - 1500; // Leave 1.5s buffer
+  const segmentDuration = Math.max(animationWindow / totalWaypoints, 500); // At least 500ms per segment
+
+  return {
+    ...loc,
+    prevLatitude: loc.latitude,
+    prevLongitude: loc.longitude,
+    targetLatitude: firstWaypoint.latitude,
+    targetLongitude: firstWaypoint.longitude,
+    animationStartMs: now,
+    animationDurationMs: segmentDuration,
+    waypointQueue: remainingQueue,
   };
 }
 
@@ -137,9 +274,9 @@ function merge(
  * Returns a map keyed by IMEI plus a `bumpId` that increments on every
  * mutation so consumers (the map) can re-render markers cheaply.
  *
- * Animation: Each location includes `prevLatitude`, `prevLongitude`, and
- * `animationStartMs` for smooth marker interpolation. Use `getInterpolatedPosition()`
- * to get the current animated position.
+ * Animation: Each location includes a waypoint queue. Use `getInterpolatedPosition()`
+ * to get the current animated position, and call `advanceWaypointIfNeeded()` in
+ * your animation loop to progress through waypoints.
  */
 export function useLiveLocations(orgId: string) {
   const [locations, setLocations] = useState<Map<string, LiveLocationView>>(new Map());
@@ -153,7 +290,8 @@ export function useLiveLocations(orgId: string) {
 
   /**
    * Process a batch of location updates from WebSocket.
-   * Updates multiple devices atomically with animation state.
+   * The batch may contain multiple points per device, sorted by timestamp.
+   * All points are queued for sequential animation.
    */
   const processBatch = useCallback((batch: LocationView[]) => {
     const now = Date.now();
@@ -161,18 +299,40 @@ export function useLiveLocations(orgId: string) {
       const next = new Map(prev);
       let changed = false;
 
+      // Group locations by IMEI to process in order
+      const byImei = new Map<string, LocationView[]>();
       for (const loc of batch) {
-        const existing = next.get(loc.imei);
-        if (existing && new Date(existing.ts).getTime() >= new Date(loc.ts).getTime()) {
-          continue; // ignore out-of-order
-        }
-        changed = true;
+        const existing = byImei.get(loc.imei) ?? [];
+        existing.push(loc);
+        byImei.set(loc.imei, existing);
+      }
 
-        if (existing) {
-          next.set(loc.imei, merge(existing, loc, now));
-        } else {
-          // First time seeing this device - no animation, just set position
-          next.set(loc.imei, { ...loc, justUpdated: true });
+      // Process each device's locations in timestamp order
+      for (const [imei, locs] of byImei) {
+        // Sort by timestamp (should already be sorted from backend, but ensure)
+        locs.sort((a, b) => new Date(a.ts).getTime() - new Date(b.ts).getTime());
+
+        let current = next.get(imei);
+
+        for (const loc of locs) {
+          if (current) {
+            // Check if this is newer data
+            if (new Date(loc.ts).getTime() <= new Date(current.ts).getTime()) {
+              continue; // Skip out-of-order
+            }
+            current = merge(current, loc, now);
+            changed = true;
+          } else {
+            // First time seeing this device
+            current = { ...loc, justUpdated: true };
+            changed = true;
+          }
+        }
+
+        if (current) {
+          // Start animation if we have waypoints queued
+          current = startAnimationIfNeeded(current, now);
+          next.set(imei, current);
         }
       }
 
@@ -201,14 +361,28 @@ export function useLiveLocations(orgId: string) {
               l.valid &&
               (existing.latitude !== l.latitude || existing.longitude !== l.longitude);
 
-            next.set(l.imei, {
-              ...l,
-              justUpdated: dataChanged,
-              // Set up animation if position changed
-              prevLatitude: positionChanged ? existing.latitude : undefined,
-              prevLongitude: positionChanged ? existing.longitude : undefined,
-              animationStartMs: positionChanged ? now : undefined,
-            });
+            if (positionChanged && existing) {
+              // Queue the new position for animation
+              const newWaypoint: Waypoint = {
+                latitude: l.latitude,
+                longitude: l.longitude,
+                ts: l.ts,
+                speed: l.speed,
+                course: l.course,
+              };
+              let updated: LiveLocationView = {
+                ...existing,
+                waypointQueue: [...(existing.waypointQueue ?? []), newWaypoint],
+                justUpdated: dataChanged,
+              };
+              updated = startAnimationIfNeeded(updated, now);
+              next.set(l.imei, updated);
+            } else {
+              next.set(l.imei, {
+                ...l,
+                justUpdated: dataChanged,
+              });
+            }
           }
         }
         return next;
@@ -220,6 +394,31 @@ export function useLiveLocations(orgId: string) {
     } catch (err) {
       if (mounted.current) setError(err instanceof Error ? err.message : "snapshot failed");
     }
+  }, []);
+
+  /**
+   * Advance waypoint animations. Call this from your animation loop (requestAnimationFrame).
+   * Returns true if any location was updated.
+   */
+  const advanceAnimations = useCallback(() => {
+    const now = Date.now();
+    let anyUpdated = false;
+
+    setLocations((prev) => {
+      const next = new Map(prev);
+
+      for (const [imei, loc] of prev) {
+        const updated = advanceWaypointIfNeeded(loc, now);
+        if (updated) {
+          next.set(imei, updated);
+          anyUpdated = true;
+        }
+      }
+
+      return anyUpdated ? next : prev;
+    });
+
+    return anyUpdated;
   }, []);
 
   useEffect(() => {
@@ -291,5 +490,5 @@ export function useLiveLocations(orgId: string) {
     };
   }, [locations]);
 
-  return { locations, loaded, error, bumpId, refresh, lastRefreshAt };
+  return { locations, loaded, error, bumpId, refresh, lastRefreshAt, advanceAnimations };
 }

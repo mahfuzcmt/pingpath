@@ -17,14 +17,14 @@ import java.util.concurrent.ConcurrentHashMap;
  * Buffers location updates in memory and publishes batched updates every 10 seconds.
  *
  * This reduces WebSocket message overhead from 3-10 messages/second (per device) to
- * a single batch message every 10 seconds per organization. The frontend can then
- * smoothly animate markers between positions.
+ * a single batch message every 10 seconds per organization. The frontend receives
+ * ALL location points and can animate through them sequentially for smooth playback.
  *
  * <p>Thread-safe: Multiple Netty handler threads can call {@link #buffer} concurrently.
  * The scheduled flush runs on the Spring scheduler thread and drains the buffer atomically.
  *
- * <p>Memory usage: ~200 bytes per device × number of active devices. For 100 devices
- * per org with 10 orgs = ~200 KB total — negligible.
+ * <p>Memory usage: ~200 bytes per location × ~3 locations per device × 100 devices
+ * = ~60 KB per org — negligible.
  *
  * @see com.webinnovation.motolink.ws.BatchLocationFanout
  */
@@ -37,10 +37,11 @@ public class LocationBufferService {
     private final ObjectMapper objectMapper;
 
     /**
-     * Buffer structure: orgId -> (imei -> latest LocationData).
+     * Buffer structure: orgId -> (imei -> list of LocationData).
+     * Keeps ALL locations received in the batch window for smooth playback.
      * Uses ConcurrentHashMap for thread-safe concurrent writes from Netty handlers.
      */
-    private final ConcurrentHashMap<UUID, ConcurrentHashMap<String, LocationData>> buffer = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<UUID, ConcurrentHashMap<String, List<LocationData>>> buffer = new ConcurrentHashMap<>();
 
     /**
      * Stores cell accuracy from lookup (set by LocationService before calling buffer).
@@ -50,8 +51,8 @@ public class LocationBufferService {
 
     /**
      * Buffer a location update. Called from LocationService after DB persistence.
-     * Latest-wins semantics: if multiple packets arrive within the 10-second window,
-     * only the packet with the newest timestamp is kept.
+     * Keeps ALL locations received within the batch window, sorted by timestamp,
+     * so the frontend can animate through them sequentially.
      *
      * @param loc Location data to buffer
      */
@@ -66,12 +67,12 @@ public class LocationBufferService {
         buffer.computeIfAbsent(loc.getOrgId(), k -> new ConcurrentHashMap<>())
               .compute(loc.getImei(), (imei, existing) -> {
                   if (existing == null) {
-                      return loc;
+                      List<LocationData> list = new ArrayList<>();
+                      list.add(loc);
+                      return list;
                   }
-                  // Latest-wins: keep the newer timestamp
-                  if (loc.getTimestamp().isAfter(existing.getTimestamp())) {
-                      return loc;
-                  }
+                  // Add to list (will be sorted on flush)
+                  existing.add(loc);
                   return existing;
               });
     }
@@ -91,7 +92,8 @@ public class LocationBufferService {
 
     /**
      * Flush the buffer and publish batch updates to Redis every 10 seconds.
-     * Each organization gets a single message containing all its devices' latest positions.
+     * Each organization gets a single message containing ALL location points
+     * for all its devices, sorted by timestamp for sequential playback.
      */
     @Scheduled(fixedRate = 10_000)
     public void flushAndBroadcast() {
@@ -101,9 +103,9 @@ public class LocationBufferService {
         }
 
         // Drain the buffer atomically by swapping with a new empty map
-        Map<UUID, ConcurrentHashMap<String, LocationData>> snapshot = new HashMap<>();
+        Map<UUID, ConcurrentHashMap<String, List<LocationData>>> snapshot = new HashMap<>();
         for (UUID orgId : buffer.keySet()) {
-            ConcurrentHashMap<String, LocationData> orgBuffer = buffer.remove(orgId);
+            ConcurrentHashMap<String, List<LocationData>> orgBuffer = buffer.remove(orgId);
             if (orgBuffer != null && !orgBuffer.isEmpty()) {
                 snapshot.put(orgId, orgBuffer);
             }
@@ -118,14 +120,19 @@ public class LocationBufferService {
         }
 
         int totalDevices = 0;
-        for (Map.Entry<UUID, ConcurrentHashMap<String, LocationData>> entry : snapshot.entrySet()) {
+        int totalPoints = 0;
+        for (Map.Entry<UUID, ConcurrentHashMap<String, List<LocationData>>> entry : snapshot.entrySet()) {
             UUID orgId = entry.getKey();
-            Map<String, LocationData> devices = entry.getValue();
+            Map<String, List<LocationData>> devices = entry.getValue();
             totalDevices += devices.size();
 
             try {
                 String json = toBatchJson(orgId, devices, cellAccuracySnapshot);
                 if (json != null) {
+                    // Count total points for logging
+                    for (List<LocationData> locs : devices.values()) {
+                        totalPoints += locs.size();
+                    }
                     redis.convertAndSend(RedisConfig.BATCH_LOCATION_EVENTS_CHANNEL, json);
                 }
             } catch (Exception e) {
@@ -133,25 +140,36 @@ public class LocationBufferService {
             }
         }
 
-        log.debug("Flushed location buffer: {} orgs, {} devices", snapshot.size(), totalDevices);
+        log.debug("Flushed location buffer: {} orgs, {} devices, {} points", snapshot.size(), totalDevices, totalPoints);
     }
 
     /**
      * Serialize a batch of locations for one organization.
+     * ALL points are included, sorted by timestamp for sequential playback.
      *
      * Format:
      * {
      *   "orgId": "uuid",
      *   "locations": [
      *     { "imei": "...", "ts": "...", "latitude": ..., ... },
+     *     { "imei": "...", "ts": "...", "latitude": ..., ... },  // same imei, later ts
      *     ...
      *   ]
      * }
      */
-    private String toBatchJson(UUID orgId, Map<String, LocationData> devices, Map<String, Integer> cellAccuracyMap) {
+    private String toBatchJson(UUID orgId, Map<String, List<LocationData>> devices, Map<String, Integer> cellAccuracyMap) {
         List<Map<String, Object>> locationList = new ArrayList<>();
 
-        for (LocationData d : devices.values()) {
+        // Collect all locations from all devices
+        List<LocationData> allLocations = new ArrayList<>();
+        for (List<LocationData> deviceLocs : devices.values()) {
+            allLocations.addAll(deviceLocs);
+        }
+
+        // Sort by timestamp for sequential playback
+        allLocations.sort((a, b) -> a.getTimestamp().compareTo(b.getTimestamp()));
+
+        for (LocationData d : allLocations) {
             Map<String, Object> m = new LinkedHashMap<>();
             m.put("imei", d.getImei());
             m.put("ts", d.getTimestamp().toString());
@@ -186,12 +204,14 @@ public class LocationBufferService {
     /**
      * Get current buffer size for monitoring.
      *
-     * @return Total number of buffered locations across all orgs
+     * @return Total number of buffered location points across all orgs
      */
     public int getBufferSize() {
         int total = 0;
-        for (ConcurrentHashMap<String, LocationData> orgBuffer : buffer.values()) {
-            total += orgBuffer.size();
+        for (ConcurrentHashMap<String, List<LocationData>> orgBuffer : buffer.values()) {
+            for (List<LocationData> locs : orgBuffer.values()) {
+                total += locs.size();
+            }
         }
         return total;
     }

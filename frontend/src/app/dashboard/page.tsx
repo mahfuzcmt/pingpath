@@ -32,7 +32,7 @@ export default function DashboardPage() {
   const { orgId } = useSession();
   const { t } = useLocale();
   const { devices, loading } = useDevices();
-  const { locations, error, refresh, lastRefreshAt } = useLiveLocations(orgId);
+  const { locations, error, refresh, lastRefreshAt, advanceAnimations } = useLiveLocations(orgId);
   const [selectedImei, setSelectedImei] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState(false);
   const [showLiveTracking, setShowLiveTracking] = useState(false);
@@ -89,6 +89,7 @@ export default function DashboardPage() {
           onSelect={setSelectedImei}
           onRefresh={refresh}
           lastRefreshAt={lastRefreshAt}
+          onAdvanceAnimations={advanceAnimations}
         />
 
         {/* Live KPIs — floating overlay, collapsible */}

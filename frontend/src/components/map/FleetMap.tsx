@@ -33,6 +33,8 @@ interface FleetMapProps {
   lastRefreshAt?: Date | null;
   /** Address search box (geocoding). Off by default — single-vehicle embeds don't need it. */
   showSearch?: boolean;
+  /** Callback to advance waypoint animations. Called from the animation loop. */
+  onAdvanceAnimations?: () => boolean;
 }
 
 const OVERSPEED_COLOR = "#DC2626";
@@ -443,7 +445,7 @@ function BatchCountdown({ lastRefreshAt }: { lastRefreshAt: Date | null }) {
   );
 }
 
-export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh, lastRefreshAt, showSearch = false }: FleetMapProps) {
+export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh, lastRefreshAt, showSearch = false, onAdvanceAnimations }: FleetMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
@@ -819,6 +821,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
     if (locations.size === 0) return;
 
     let running = true;
+    let frameCount = 0;
 
     const animate = () => {
       if (!running) return;
@@ -826,11 +829,20 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
       const now = Date.now();
       let hasAnimating = false;
 
+      // Every 10 frames (~6 times/sec), check if we need to advance waypoints
+      frameCount++;
+      if (frameCount % 10 === 0 && onAdvanceAnimations) {
+        onAdvanceAnimations();
+      }
+
       for (const [imei, loc] of locations.entries()) {
         const liveLoc = loc as LiveLocationView;
 
-        // Check if this location has animation state
-        if (isAnimating(liveLoc, now)) {
+        // Check if this location has animation state or waypoints queued
+        const animating = isAnimating(liveLoc, now);
+        const hasWaypoints = (liveLoc.waypointQueue?.length ?? 0) > 0;
+
+        if (animating || hasWaypoints) {
           hasAnimating = true;
           const marker = markersRef.current.get(imei);
           if (marker) {
@@ -850,7 +862,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
         }
       }
 
-      // Continue animation loop only if there are animating markers
+      // Continue animation loop only if there are animating markers or waypoints
       if (hasAnimating) {
         animationFrameRef.current = requestAnimationFrame(animate);
       } else {
@@ -868,7 +880,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
         animationFrameRef.current = null;
       }
     };
-  }, [locations]);
+  }, [locations, onAdvanceAnimations]);
 
   // Address search (Nominatim; biased to the current viewport). Free, no key —
   // matches the OSM fallback strategy of lib/leaflet.ts.
