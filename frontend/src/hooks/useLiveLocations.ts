@@ -239,9 +239,15 @@ function startAnimationIfNeeded(
   loc: LiveLocationView,
   now: number
 ): LiveLocationView {
-  // If already animating or no waypoints, no change needed
-  if (loc.animationStartMs || !loc.waypointQueue || loc.waypointQueue.length === 0) {
+  // No waypoints to animate
+  if (!loc.waypointQueue || loc.waypointQueue.length === 0) {
     return loc;
+  }
+
+  // Check if currently animating (not just if animationStartMs is set)
+  const currentlyAnimating = isAnimating(loc, now);
+  if (currentlyAnimating) {
+    return loc; // Let current animation finish
   }
 
   // Start animating to first waypoint
@@ -253,10 +259,21 @@ function startAnimationIfNeeded(
   const animationWindow = BATCH_INTERVAL_MS - 1500; // Leave 1.5s buffer
   const segmentDuration = Math.max(animationWindow / totalWaypoints, 500); // At least 500ms per segment
 
+  // Determine the correct starting position:
+  // - If we have a previous target (from completed animation), use that
+  // - Otherwise use the current lat/lng
+  const startLat = loc.targetLatitude ?? loc.latitude;
+  const startLng = loc.targetLongitude ?? loc.longitude;
+
   return {
     ...loc,
-    prevLatitude: loc.latitude,
-    prevLongitude: loc.longitude,
+    // Use the actual current position (target of previous animation if any)
+    prevLatitude: startLat,
+    prevLongitude: startLng,
+    // Also update lat/lng to match the visual position
+    latitude: startLat,
+    longitude: startLng,
+    // Set new target
     targetLatitude: firstWaypoint.latitude,
     targetLongitude: firstWaypoint.longitude,
     animationStartMs: now,
