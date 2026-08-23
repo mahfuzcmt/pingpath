@@ -48,7 +48,8 @@ class LocationServiceTest {
                 new ObjectMapper(),
                 mock(GeofenceService.class),
                 mock(TripService.class),
-                mock(AlarmRuleService.class));
+                mock(AlarmRuleService.class),
+                mock(CellLocationService.class));
     }
 
     private static LocationData packet(boolean valid) {
