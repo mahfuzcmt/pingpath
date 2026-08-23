@@ -409,6 +409,40 @@ function getFreshnessStatusFromAge(secondsAgo: number): FreshnessStatus {
   return "no-signal";
 }
 
+/** Countdown timer for next batch update */
+function BatchCountdown({ lastRefreshAt }: { lastRefreshAt: Date | null }) {
+  const [secondsLeft, setSecondsLeft] = useState(10);
+
+  useEffect(() => {
+    if (!lastRefreshAt) {
+      setSecondsLeft(10);
+      return;
+    }
+
+    const updateCountdown = () => {
+      const elapsed = (Date.now() - lastRefreshAt.getTime()) / 1000;
+      const remaining = Math.max(0, Math.ceil(10 - elapsed));
+      setSecondsLeft(remaining);
+    };
+
+    // Update immediately
+    updateCountdown();
+
+    // Update every second
+    const interval = setInterval(updateCountdown, 1000);
+    return () => clearInterval(interval);
+  }, [lastRefreshAt]);
+
+  return (
+    <div className="glass-btn flex items-center gap-1.5 rounded-lg px-2 py-1 text-[10px] font-medium text-ink-600">
+      <div
+        className={`h-1.5 w-1.5 rounded-full ${secondsLeft <= 2 ? "animate-pulse bg-brand-500" : "bg-emerald-500"}`}
+      />
+      <span>Next update in {secondsLeft}s</span>
+    </div>
+  );
+}
+
 export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh, lastRefreshAt, showSearch = false }: FleetMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
@@ -905,6 +939,13 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
     <div className="relative h-full w-full" style={{ minHeight: "400px" }}>
       <div ref={containerRef} className="absolute inset-0" style={{ width: "100%", height: "100%" }} />
 
+      {/* Batch update countdown (top-left, above toolbar) */}
+      {lastRefreshAt && (
+        <div className="absolute left-3 top-3 z-[1000]">
+          <BatchCountdown lastRefreshAt={lastRefreshAt} />
+        </div>
+      )}
+
       {/* Map toolbar (top-left) — zoom, measure, fit all, locate */}
       <MapToolbar
         map={mapRef.current}
@@ -912,12 +953,12 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
         onLocate={handleLocate}
         locating={locating}
         disabled={locations.size === 0}
-        className="top-3"
+        className={lastRefreshAt ? "top-10" : "top-3"}
       />
 
-      {/* Address search (top-left, below toolbar when enabled) - Glassy */}
+      {/* Address search (top-left, beside toolbar when enabled) - Glassy */}
       {showSearch && (
-        <div className="absolute left-14 top-3 z-[1000] w-64">
+        <div className={`absolute left-14 z-[1000] w-64 ${lastRefreshAt ? "top-10" : "top-3"}`}>
           <div className="glass-btn flex overflow-hidden rounded-xl">
             <input
               type="search"
