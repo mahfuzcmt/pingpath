@@ -9,12 +9,11 @@ import type { LocationView } from "@/types/domain";
 const AUTO_REFRESH_INTERVAL_MS = 10_000;
 
 /**
- * Extended location view with frontend update tracking.
- * `frontendUpdatedAt` tracks when the frontend received this data (for freshness UI).
+ * Extended location view with update tracking for UI effects.
+ * Uses the actual GPS timestamp (ts) for data age calculation.
+ * `justUpdated` is only for the brief pulse animation when new data arrives.
  */
 export interface LiveLocationView extends LocationView {
-  /** Timestamp when this data was received by the frontend (not GPS time). */
-  frontendUpdatedAt: number;
   /** Whether this was just updated (for pulse animation). Resets after ~2 seconds. */
   justUpdated?: boolean;
 }
@@ -38,9 +37,11 @@ export interface LiveLocationView extends LocationView {
  * confirmed fix put it. This mirrors the backend rule in LocationService.
  */
 function merge(existing: LiveLocationView, incoming: LocationView): LiveLocationView {
-  const now = Date.now();
+  // Check if this is actually new data (newer timestamp)
+  const isNewData = new Date(incoming.ts).getTime() > new Date(existing.ts).getTime();
+
   if (incoming.valid) {
-    return { ...incoming, frontendUpdatedAt: now, justUpdated: true };
+    return { ...incoming, justUpdated: isNewData };
   }
   // Invalid GPS fix: position is stale, so the reported speed is also unreliable
   // (GT06 derives speed from GPS). Show 0 speed to avoid confusing "moving but stuck" display.
@@ -51,8 +52,7 @@ function merge(existing: LiveLocationView, incoming: LocationView): LiveLocation
     speed: 0,
     course: existing.course,
     lastValidTs: incoming.lastValidTs ?? existing.lastValidTs ?? null,
-    frontendUpdatedAt: now,
-    justUpdated: true,
+    justUpdated: isNewData,
   };
 }
 
@@ -67,7 +67,6 @@ export function useLiveLocations(orgId: string) {
   const mounted = useRef(true);
 
   const upsert = useCallback((loc: LocationView) => {
-    const now = Date.now();
     setLocations((prev) => {
       const next = new Map(prev);
       const existing = next.get(loc.imei);
@@ -77,7 +76,8 @@ export function useLiveLocations(orgId: string) {
       if (existing) {
         next.set(loc.imei, merge(existing, loc));
       } else {
-        next.set(loc.imei, { ...loc, frontendUpdatedAt: now, justUpdated: true });
+        // First time seeing this device - mark as justUpdated for pulse effect
+        next.set(loc.imei, { ...loc, justUpdated: true });
       }
       return next;
     });
@@ -87,7 +87,6 @@ export function useLiveLocations(orgId: string) {
   /** Re-pull the last-known snapshot (the map's "Refresh" control). */
   const refresh = useCallback(async () => {
     try {
-      const now = Date.now();
       const r = await api.get<LocationView[]>("/devices/locations/last");
       if (!mounted.current) return;
       setLocations((prev) => {
@@ -95,12 +94,11 @@ export function useLiveLocations(orgId: string) {
         for (const l of r.data) {
           const existing = next.get(l.imei);
           if (!existing || new Date(l.ts).getTime() >= new Date(existing.ts).getTime()) {
-            // Mark as justUpdated only if the data actually changed
-            const dataChanged = !existing || existing.ts !== l.ts;
+            // Only mark as justUpdated if data actually changed (newer timestamp)
+            const dataChanged = existing && existing.ts !== l.ts;
             next.set(l.imei, {
               ...l,
-              frontendUpdatedAt: existing?.frontendUpdatedAt ?? now,
-              justUpdated: dataChanged,
+              justUpdated: dataChanged, // false on initial load, true only when data changes
             });
           }
         }

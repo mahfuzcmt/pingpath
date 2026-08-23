@@ -18,8 +18,9 @@ type FreshnessStatus = "live" | "stale" | "no-signal";
 
 function getFreshnessStatus(location: LocationView | LiveLocationView | undefined): FreshnessStatus {
   if (!location) return "no-signal";
-  const updateTime = (location as LiveLocationView).frontendUpdatedAt ?? new Date(location.ts).getTime();
-  const age = Date.now() - updateTime;
+  // Use the actual GPS timestamp to calculate real data age
+  const gpsTime = new Date(location.ts).getTime();
+  const age = Date.now() - gpsTime;
   if (age < FRESHNESS_LIVE_MS) return "live";
   if (age < FRESHNESS_STALE_MS) return "stale";
   return "no-signal";
@@ -27,8 +28,9 @@ function getFreshnessStatus(location: LocationView | LiveLocationView | undefine
 
 function getSecondsSinceUpdate(location: LocationView | LiveLocationView | undefined): number {
   if (!location) return 999;
-  const updateTime = (location as LiveLocationView).frontendUpdatedAt ?? new Date(location.ts).getTime();
-  return Math.floor((Date.now() - updateTime) / 1000);
+  // Use the actual GPS timestamp to show real data age
+  const gpsTime = new Date(location.ts).getTime();
+  return Math.floor((Date.now() - gpsTime) / 1000);
 }
 
 const FRESHNESS_CONFIG = {

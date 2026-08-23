@@ -193,17 +193,17 @@ function isStaleData(location: LocationView | undefined, device: DeviceView | un
 }
 
 /**
- * Returns freshness status based on frontend update timestamp.
- * This is for the real-time UI feedback (🟢/🟡/🔴 indicator).
+ * Returns freshness status based on the actual GPS timestamp.
+ * This shows how old the data really is (🟢/🟡/🔴 indicator).
  */
 type FreshnessStatus = "live" | "stale" | "no-signal";
 
 function getFreshnessStatus(location: LocationView | LiveLocationView | undefined): FreshnessStatus {
   if (!location) return "no-signal";
 
-  // Use frontendUpdatedAt if available (LiveLocationView), otherwise fall back to ts
-  const updateTime = (location as LiveLocationView).frontendUpdatedAt ?? new Date(location.ts).getTime();
-  const age = Date.now() - updateTime;
+  // Use the actual GPS timestamp to calculate real data age
+  const gpsTime = new Date(location.ts).getTime();
+  const age = Date.now() - gpsTime;
 
   if (age < FRESHNESS_LIVE_MS) return "live";
   if (age < FRESHNESS_STALE_MS) return "stale";
@@ -211,12 +211,13 @@ function getFreshnessStatus(location: LocationView | LiveLocationView | undefine
 }
 
 /**
- * Returns the seconds since last frontend update, for "Updated X sec ago" display.
+ * Returns the seconds since the GPS timestamp, for "X sec ago" display.
+ * This shows the real age of the data, not when frontend received it.
  */
 function getSecondsSinceUpdate(location: LocationView | LiveLocationView | undefined): number {
   if (!location) return 999;
-  const updateTime = (location as LiveLocationView).frontendUpdatedAt ?? new Date(location.ts).getTime();
-  return Math.floor((Date.now() - updateTime) / 1000);
+  const gpsTime = new Date(location.ts).getTime();
+  return Math.floor((Date.now() - gpsTime) / 1000);
 }
 
 /**
@@ -337,7 +338,7 @@ function plateLabelHtml(device: DeviceView | undefined, location: LocationView |
 
 /**
  * Global data freshness indicator showing overall system status.
- * Shows when data was last received from any device.
+ * Shows how fresh the most recent GPS data is across all devices.
  */
 function GlobalFreshnessIndicator({
   locations,
@@ -346,16 +347,16 @@ function GlobalFreshnessIndicator({
   locations: Map<string, LocationView | LiveLocationView>;
   lastRefreshAt?: Date | null;
 }) {
-  // Find the most recent update across all locations
-  let mostRecentUpdate = 0;
+  // Find the most recent GPS timestamp across all locations
+  let mostRecentGpsTime = 0;
   let liveCount = 0;
   let staleCount = 0;
   let noSignalCount = 0;
 
   for (const loc of locations.values()) {
-    const updateTime = (loc as LiveLocationView).frontendUpdatedAt ?? new Date(loc.ts).getTime();
-    if (updateTime > mostRecentUpdate) {
-      mostRecentUpdate = updateTime;
+    const gpsTime = new Date(loc.ts).getTime();
+    if (gpsTime > mostRecentGpsTime) {
+      mostRecentGpsTime = gpsTime;
     }
 
     const freshness = getFreshnessStatus(loc);
@@ -366,7 +367,7 @@ function GlobalFreshnessIndicator({
 
   const totalDevices = locations.size;
   const now = Date.now();
-  const secondsAgo = mostRecentUpdate ? Math.floor((now - mostRecentUpdate) / 1000) : 999;
+  const secondsAgo = mostRecentGpsTime ? Math.floor((now - mostRecentGpsTime) / 1000) : 999;
   const overallFreshness = getFreshnessStatusFromAge(secondsAgo);
   const config = FRESHNESS_CONFIG[overallFreshness];
 
