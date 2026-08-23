@@ -57,9 +57,11 @@ public class LocationBufferService {
      */
     public void buffer(LocationData loc) {
         if (loc.getOrgId() == null) {
-            log.debug("Skipping buffer for location without orgId: imei={}", loc.getImei());
+            log.warn("Skipping buffer for location without orgId: imei={}", loc.getImei());
             return;
         }
+
+        log.info("Buffering location: imei={} orgId={} valid={}", loc.getImei(), loc.getOrgId(), loc.isValid());
 
         buffer.computeIfAbsent(loc.getOrgId(), k -> new ConcurrentHashMap<>())
               .compute(loc.getImei(), (imei, existing) -> {
@@ -93,7 +95,9 @@ public class LocationBufferService {
      */
     @Scheduled(fixedRate = 10_000)
     public void flushAndBroadcast() {
+        log.info("Batch flush triggered, buffer size: {}", getBufferSize());
         if (buffer.isEmpty()) {
+            log.info("Buffer is empty, skipping broadcast");
             return;
         }
 
@@ -130,7 +134,7 @@ public class LocationBufferService {
             }
         }
 
-        log.debug("Flushed location buffer: {} orgs, {} devices", snapshot.size(), totalDevices);
+        log.info("Flushed location buffer: {} orgs, {} devices", snapshot.size(), totalDevices);
     }
 
     /**
