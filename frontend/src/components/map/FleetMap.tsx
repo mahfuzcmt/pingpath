@@ -454,6 +454,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
   const userMarkerRef = useRef<L.Marker | null>(null);
   const searchMarkerRef = useRef<L.Marker | null>(null);
   const animationFrameRef = useRef<number | null>(null);
+  const locationsRef = useRef<Map<string, LocationView | LiveLocationView>>(locations);
 
   const [baseLayer, setBaseLayer] = useState<BaseLayerKind>(getDefaultLayer);
   const [googleAvailable, setGoogleAvailable] = useState(hasGoogleMapsKey);
@@ -816,15 +817,26 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
     }
   }, [locations, deviceByImei, selectedImei, onSelect, createPopupContent, speedLimits, autoFollow]);
 
-  // 60fps animation loop for smooth marker interpolation between batch updates
+  // Keep locationsRef in sync with state (doesn't trigger animation restart)
   useEffect(() => {
-    if (locations.size === 0) return;
+    locationsRef.current = locations;
+  }, [locations]);
 
+  // 60fps animation loop for smooth marker interpolation between batch updates
+  // Uses ref to avoid restarting on every state change
+  useEffect(() => {
     let running = true;
     let frameCount = 0;
 
     const animate = () => {
       if (!running) return;
+
+      const currentLocations = locationsRef.current;
+      if (currentLocations.size === 0) {
+        // No locations yet, keep polling
+        animationFrameRef.current = requestAnimationFrame(animate);
+        return;
+      }
 
       const now = Date.now();
       let hasAnimating = false;
@@ -835,7 +847,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
         onAdvanceAnimations();
       }
 
-      for (const [imei, loc] of locations.entries()) {
+      for (const [imei, loc] of currentLocations.entries()) {
         const liveLoc = loc as LiveLocationView;
 
         // Check if this location has animation state or waypoints queued
@@ -862,15 +874,12 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
         }
       }
 
-      // Continue animation loop only if there are animating markers or waypoints
-      if (hasAnimating) {
-        animationFrameRef.current = requestAnimationFrame(animate);
-      } else {
-        animationFrameRef.current = null;
-      }
+      // Always continue the animation loop (don't stop between batches)
+      // This prevents markers from vanishing when animation finishes
+      animationFrameRef.current = requestAnimationFrame(animate);
     };
 
-    // Start animation loop
+    // Start animation loop once and keep it running
     animationFrameRef.current = requestAnimationFrame(animate);
 
     return () => {
@@ -880,7 +889,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
         animationFrameRef.current = null;
       }
     };
-  }, [locations, onAdvanceAnimations]);
+  }, [onAdvanceAnimations]); // Only restart if onAdvanceAnimations changes (it shouldn't)
 
   // Address search (Nominatim; biased to the current viewport). Free, no key —
   // matches the OSM fallback strategy of lib/leaflet.ts.
