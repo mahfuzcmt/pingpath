@@ -23,6 +23,7 @@ export default function Page() {
   const [selectedImeis, setSelectedImeis] = useState<Set<string>>(new Set());
   const [assignLoading, setAssignLoading] = useState(false);
   const [deviceCounts, setDeviceCounts] = useState<Record<string, number>>({});
+  const [deviceSearch, setDeviceSearch] = useState("");
 
   // Load device counts for all geofences
   useEffect(() => {
@@ -56,6 +57,7 @@ export default function Page() {
   const openAssignDialog = async (geofence: { id: string; name: string }) => {
     setAssigningGeofence(geofence);
     setAssignLoading(true);
+    setDeviceSearch("");
     try {
       const imeis = await getAssignedDevices(geofence.id);
       setAssignedImeis(imeis);
@@ -79,6 +81,27 @@ export default function Page() {
       return next;
     });
   };
+
+  // Filter devices based on search
+  const filteredDevices = devices.filter((d) => {
+    if (!deviceSearch.trim()) return true;
+    const q = deviceSearch.toLowerCase();
+    return (
+      d.imei.toLowerCase().includes(q) ||
+      (d.name?.toLowerCase().includes(q)) ||
+      (d.vehiclePlate?.toLowerCase().includes(q))
+    );
+  });
+
+  const selectAllDevices = () => {
+    setSelectedImeis(new Set(devices.map((d) => d.imei)));
+  };
+
+  const deselectAllDevices = () => {
+    setSelectedImeis(new Set());
+  };
+
+  const allDevicesSelected = devices.length > 0 && selectedImeis.size === devices.length;
 
   const handleSaveAssignment = async () => {
     if (!assigningGeofence) return;
@@ -194,48 +217,76 @@ export default function Page() {
             {assignLoading ? (
               <div className="py-8 text-center text-sm text-ink-400">{t("common.loading")}</div>
             ) : (
-              <div className="max-h-80 overflow-y-auto rounded border border-ink-400/20 bg-ink-900/50">
-                {devices.length === 0 ? (
-                  <div className="py-6 text-center text-sm text-ink-400">
-                    {t("common.empty")}
-                  </div>
-                ) : (
-                  <ul className="divide-y divide-ink-400/10">
-                    {devices.map((d) => (
-                      <li
-                        key={d.imei}
-                        className="flex cursor-pointer items-center gap-3 px-3 py-2 hover:bg-ink-800/50"
-                        onClick={() => toggleDevice(d.imei)}
+              <>
+                {/* Search and Select All */}
+                {devices.length > 0 && (
+                  <div className="mb-3 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <input
+                        type="text"
+                        className="input flex-1 text-sm"
+                        placeholder="Search by name, plate, or IMEI..."
+                        value={deviceSearch}
+                        onChange={(e) => setDeviceSearch(e.target.value)}
+                      />
+                      <button
+                        type="button"
+                        className="ml-2 text-xs text-brand-500 hover:text-brand-400 whitespace-nowrap"
+                        onClick={allDevicesSelected ? deselectAllDevices : selectAllDevices}
                       >
-                        <input
-                          type="checkbox"
-                          checked={selectedImeis.has(d.imei)}
-                          onChange={() => toggleDevice(d.imei)}
-                          className="h-4 w-4 rounded border-ink-400 bg-ink-900 text-brand-500 focus:ring-brand-500"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <div className="truncate font-medium text-ink-50">
-                            {d.name || d.vehiclePlate || d.imei}
-                          </div>
-                          <div className="truncate text-xs text-ink-400">
-                            {d.vehiclePlate && d.name ? d.vehiclePlate : d.imei}
-                          </div>
-                        </div>
-                        <span
-                          className={`h-2 w-2 rounded-full ${
-                            d.status === "ONLINE" ? "bg-alarm-green" : "bg-ink-400"
-                          }`}
-                        />
-                      </li>
-                    ))}
-                  </ul>
+                        {allDevicesSelected ? "Deselect All" : "Select All"}
+                      </button>
+                    </div>
+                  </div>
                 )}
-              </div>
+
+                <div className="max-h-80 overflow-y-auto rounded border border-ink-400/20 bg-ink-900/50">
+                  {devices.length === 0 ? (
+                    <div className="py-6 text-center text-sm text-ink-400">
+                      {t("common.empty")}
+                    </div>
+                  ) : filteredDevices.length === 0 ? (
+                    <div className="py-6 text-center text-sm text-ink-400">
+                      No devices match your search
+                    </div>
+                  ) : (
+                    <ul className="divide-y divide-ink-400/10">
+                      {filteredDevices.map((d) => (
+                        <li
+                          key={d.imei}
+                          className="flex cursor-pointer items-center gap-3 px-3 py-2 hover:bg-ink-800/50"
+                          onClick={() => toggleDevice(d.imei)}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedImeis.has(d.imei)}
+                            onChange={() => toggleDevice(d.imei)}
+                            className="h-4 w-4 rounded border-ink-400 bg-ink-900 text-brand-500 focus:ring-brand-500"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="truncate font-medium text-ink-50">
+                              {d.name || d.vehiclePlate || d.imei}
+                            </div>
+                            <div className="truncate text-xs text-ink-400">
+                              {d.vehiclePlate && d.name ? d.vehiclePlate : d.imei}
+                            </div>
+                          </div>
+                          <span
+                            className={`h-2 w-2 rounded-full ${
+                              d.status === "ONLINE" ? "bg-alarm-green" : "bg-ink-400"
+                            }`}
+                          />
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </>
             )}
 
             <div className="mt-4 flex items-center justify-between">
               <span className="text-sm text-ink-400">
-                {selectedImeis.size} {t("geo.selected") || "selected"}
+                {selectedImeis.size} / {devices.length} {t("geo.selected") || "selected"}
               </span>
               <div className="flex gap-2">
                 <button

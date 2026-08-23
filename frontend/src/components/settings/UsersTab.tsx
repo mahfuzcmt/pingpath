@@ -336,6 +336,7 @@ function DeviceAssignmentDialog({
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     getUserDevices(user.id)
@@ -343,6 +344,17 @@ function DeviceAssignmentDialog({
       .catch((err) => setError(extractError(err).message))
       .finally(() => setLoading(false));
   }, [user.id, getUserDevices]);
+
+  // Filter devices based on search
+  const filteredDevices = devices.filter((d) => {
+    if (!search.trim()) return true;
+    const q = search.toLowerCase();
+    return (
+      d.imei.toLowerCase().includes(q) ||
+      (d.name?.toLowerCase().includes(q)) ||
+      (d.vehiclePlate?.toLowerCase().includes(q))
+    );
+  });
 
   const toggleDevice = (imei: string) => {
     setAssignedImeis((prev) => {
@@ -355,6 +367,16 @@ function DeviceAssignmentDialog({
       return next;
     });
   };
+
+  const selectAll = () => {
+    setAssignedImeis(new Set(devices.map((d) => d.imei)));
+  };
+
+  const deselectAll = () => {
+    setAssignedImeis(new Set());
+  };
+
+  const allSelected = devices.length > 0 && assignedImeis.size === devices.length;
 
   const handleSave = async () => {
     setSaving(true);
@@ -409,16 +431,41 @@ function DeviceAssignmentDialog({
         {/* Device List */}
         {!seeAll && (
           <div className="mb-4">
-            <div className="text-xs uppercase tracking-wide text-ink-400 mb-2">
-              {t("users.selectDevices")}
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-xs uppercase tracking-wide text-ink-400">
+                {t("users.selectDevices")}
+              </div>
+              {!loading && !devicesLoading && devices.length > 0 && (
+                <button
+                  type="button"
+                  className="text-xs text-brand-500 hover:text-brand-400"
+                  onClick={allSelected ? deselectAll : selectAll}
+                >
+                  {allSelected ? "Deselect All" : "Select All"}
+                </button>
+              )}
             </div>
+
+            {/* Search Box */}
+            {!loading && !devicesLoading && devices.length > 0 && (
+              <input
+                type="text"
+                className="input mb-2 text-sm"
+                placeholder="Search by name, plate, or IMEI..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            )}
+
             {loading || devicesLoading ? (
               <div className="text-sm text-ink-400 py-4 text-center">{t("common.loading")}</div>
             ) : devices.length === 0 ? (
               <div className="text-sm text-ink-400 py-4 text-center">{t("fleet.noDevices")}</div>
+            ) : filteredDevices.length === 0 ? (
+              <div className="text-sm text-ink-400 py-4 text-center">No devices match your search</div>
             ) : (
               <div className="max-h-60 overflow-y-auto space-y-1 border border-ink-400/10 rounded p-2">
-                {devices.map((d) => (
+                {filteredDevices.map((d) => (
                   <label
                     key={d.imei}
                     className="flex items-center gap-3 p-2 rounded hover:bg-ink-900/50 cursor-pointer"
@@ -451,7 +498,7 @@ function DeviceAssignmentDialog({
               </div>
             )}
             <div className="text-xs text-ink-400 mt-2">
-              {assignedImeis.size} {t("users.deviceCount")}
+              {assignedImeis.size} / {devices.length} {t("users.deviceCount")}
             </div>
           </div>
         )}
