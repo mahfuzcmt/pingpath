@@ -269,6 +269,7 @@ function createVehicleIcon(
   isMoving = false,
   isStale = false,
   justUpdated = false,
+  speed = 0,
 ): L.DivIcon {
   const baseSize = isSelected ? 44 : 40;
   const classes = [
@@ -279,6 +280,9 @@ function createVehicleIcon(
     isStale && 'pp-stale',
     isMoving && !isOverspeed && 'pp-moving',
     justUpdated && 'pp-just-updated',
+    // Speed-based intensity classes
+    speed > 80 && !isOverspeed && 'pp-very-high-speed',
+    speed > 50 && speed <= 80 && !isOverspeed && 'pp-high-speed',
   ].filter(Boolean).join(' ');
 
   // Add GPS warning badge for nofix or stale
@@ -455,6 +459,9 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
   const searchMarkerRef = useRef<L.Marker | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const locationsRef = useRef<Map<string, LocationView | LiveLocationView>>(locations);
+  const trailsRef = useRef<Map<string, L.Polyline>>(new Map());
+  const trailPointsRef = useRef<Map<string, Array<[number, number]>>>(new Map());
+  const predictiveMarkersRef = useRef<Map<string, L.CircleMarker>>(new Map());
 
   const [baseLayer, setBaseLayer] = useState<BaseLayerKind>(getDefaultLayer);
   const [googleAvailable, setGoogleAvailable] = useState(hasGoogleMapsKey);
@@ -719,7 +726,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
 
       if (!marker) {
         // Create new marker
-        const icon = createVehicleIcon(device?.vehicleType, bodyColor, course, isSelected, isOverspeed, noFix, isMoving, isStale, justUpdated);
+        const icon = createVehicleIcon(device?.vehicleType, bodyColor, course, isSelected, isOverspeed, noFix, isMoving, isStale, justUpdated, filterSpeed(loc.speed, loc.valid));
         marker = L.marker([loc.latitude, loc.longitude], { icon })
           .addTo(map)
           .bindPopup(createPopupContent(device, loc), {
@@ -769,7 +776,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
       } else {
         // Update existing marker - position will be animated by the animation loop
         // Here we just update icon, popup, and tooltip
-        marker.setIcon(createVehicleIcon(device?.vehicleType, bodyColor, course, isSelected, isOverspeed, noFix, isMoving, isStale, justUpdated));
+        marker.setIcon(createVehicleIcon(device?.vehicleType, bodyColor, course, isSelected, isOverspeed, noFix, isMoving, isStale, justUpdated, filterSpeed(loc.speed, loc.valid)));
         marker.setPopupContent(createPopupContent(device, loc));
         marker.setTooltipContent(plateLabelHtml(device, loc, color));
 
@@ -792,6 +799,18 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
       if (!seen.has(imei)) {
         marker.remove();
         markersRef.current.delete(imei);
+        // Also clean up trails and predictive markers
+        const trail = trailsRef.current.get(imei);
+        if (trail) {
+          trail.remove();
+          trailsRef.current.delete(imei);
+        }
+        trailPointsRef.current.delete(imei);
+        const predictive = predictiveMarkersRef.current.get(imei);
+        if (predictive) {
+          predictive.remove();
+          predictiveMarkersRef.current.delete(imei);
+        }
       }
     }
 
@@ -825,8 +844,112 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
   // 60fps animation loop for smooth marker interpolation between batch updates
   // Uses ref to avoid restarting on every state change
   useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
     let running = true;
     let frameCount = 0;
+
+    // Maximum trail points to keep (fades out older points)
+    const MAX_TRAIL_POINTS = 15;
+    // Minimum distance (meters) between trail points to avoid clustering
+    const MIN_TRAIL_DISTANCE = 5;
+
+    // Calculate distance between two points in meters (Haversine approximation)
+    const getDistance = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
+      const R = 6371000; // Earth's radius in meters
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLng = (lng2 - lng1) * Math.PI / 180;
+      const a = Math.sin(dLat / 2) ** 2 +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLng / 2) ** 2;
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    };
+
+    // Create or update trail polyline with gradient effect
+    const updateTrail = (imei: string, points: Array<[number, number]>, speed: number) => {
+      const existingTrail = trailsRef.current.get(imei);
+
+      if (points.length < 2) {
+        // Remove trail if less than 2 points
+        if (existingTrail) {
+          existingTrail.remove();
+          trailsRef.current.delete(imei);
+        }
+        return;
+      }
+
+      // Speed-based trail color: green for slow, orange for medium, red for fast
+      const trailColor = speed > 60 ? '#DC2626' : speed > 30 ? '#E8900A' : '#16A34A';
+      const trailOpacity = Math.min(0.8, 0.3 + (speed / 100));
+
+      if (existingTrail) {
+        existingTrail.setLatLngs(points);
+        existingTrail.setStyle({ color: trailColor, opacity: trailOpacity });
+      } else {
+        const trail = L.polyline(points, {
+          color: trailColor,
+          weight: 3,
+          opacity: trailOpacity,
+          lineCap: 'round',
+          lineJoin: 'round',
+          className: 'pp-motion-trail',
+        }).addTo(map);
+        trail.bringToBack();
+        trailsRef.current.set(imei, trail);
+      }
+    };
+
+    // Create predictive position marker (ghost showing where vehicle is heading)
+    const updatePredictiveMarker = (imei: string, lat: number, lng: number, course: number, speed: number) => {
+      if (speed < 5) {
+        // Remove predictive marker if vehicle is slow/stopped
+        const existing = predictiveMarkersRef.current.get(imei);
+        if (existing) {
+          existing.remove();
+          predictiveMarkersRef.current.delete(imei);
+        }
+        return;
+      }
+
+      // Calculate predicted position (3 seconds ahead based on speed and course)
+      const predictSeconds = 3;
+      const distanceM = (speed * 1000 / 3600) * predictSeconds; // meters in predictSeconds
+      const R = 6371000; // Earth's radius in meters
+      const courseRad = course * Math.PI / 180;
+
+      const lat1 = lat * Math.PI / 180;
+      const lng1 = lng * Math.PI / 180;
+
+      const lat2 = Math.asin(
+        Math.sin(lat1) * Math.cos(distanceM / R) +
+        Math.cos(lat1) * Math.sin(distanceM / R) * Math.cos(courseRad)
+      );
+      const lng2 = lng1 + Math.atan2(
+        Math.sin(courseRad) * Math.sin(distanceM / R) * Math.cos(lat1),
+        Math.cos(distanceM / R) - Math.sin(lat1) * Math.sin(lat2)
+      );
+
+      const predictedLat = lat2 * 180 / Math.PI;
+      const predictedLng = lng2 * 180 / Math.PI;
+
+      const existing = predictiveMarkersRef.current.get(imei);
+      if (existing) {
+        existing.setLatLng([predictedLat, predictedLng]);
+      } else {
+        const predictiveMarker = L.circleMarker([predictedLat, predictedLng], {
+          radius: 4,
+          color: '#E8900A',
+          fillColor: '#E8900A',
+          fillOpacity: 0.4,
+          weight: 2,
+          opacity: 0.6,
+          className: 'pp-predictive-marker',
+        }).addTo(map);
+        predictiveMarker.bringToBack();
+        predictiveMarkersRef.current.set(imei, predictiveMarker);
+      }
+    };
 
     const animate = () => {
       if (!running) return;
@@ -839,7 +962,6 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
       }
 
       const now = Date.now();
-      let hasAnimating = false;
 
       // Every 10 frames (~6 times/sec), check if we need to advance waypoints
       frameCount++;
@@ -849,21 +971,26 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
 
       for (const [imei, loc] of currentLocations.entries()) {
         const liveLoc = loc as LiveLocationView;
+        const marker = markersRef.current.get(imei);
 
         // Check if this location has animation state or waypoints queued
         const animating = isAnimating(liveLoc, now);
         const hasWaypoints = (liveLoc.waypointQueue?.length ?? 0) > 0;
 
+        let currentLat: number;
+        let currentLng: number;
+
         if (animating || hasWaypoints) {
-          hasAnimating = true;
-          const marker = markersRef.current.get(imei);
+          const { lat, lng } = getInterpolatedPosition(liveLoc, now);
+          currentLat = lat;
+          currentLng = lng;
           if (marker) {
-            const { lat, lng } = getInterpolatedPosition(liveLoc, now);
             marker.setLatLng([lat, lng]);
           }
         } else {
           // Animation complete or no animation - set final position
-          const marker = markersRef.current.get(imei);
+          currentLat = loc.latitude;
+          currentLng = loc.longitude;
           if (marker) {
             const currentLatLng = marker.getLatLng();
             // Only update if position differs (avoid unnecessary DOM operations)
@@ -872,7 +999,46 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
             }
           }
         }
-      }
+
+        // Update motion trail for moving vehicles (every 3 frames to reduce load)
+        const speed = filterSpeed(loc.speed, loc.valid);
+        if (frameCount % 3 === 0 && speed > 3) {
+          const trailPoints = trailPointsRef.current.get(imei) || [];
+          const lastPoint = trailPoints[trailPoints.length - 1];
+
+          // Only add point if moved minimum distance (avoid clustering)
+          if (!lastPoint || getDistance(lastPoint[0], lastPoint[1], currentLat, currentLng) > MIN_TRAIL_DISTANCE) {
+            trailPoints.push([currentLat, currentLng]);
+
+            // Keep only recent points (creates fading trail effect)
+            while (trailPoints.length > MAX_TRAIL_POINTS) {
+              trailPoints.shift();
+            }
+
+            trailPointsRef.current.set(imei, trailPoints);
+            updateTrail(imei, trailPoints, speed);
+          }
+
+          // Update predictive marker
+          updatePredictiveMarker(imei, currentLat, currentLng, loc.course ?? 0, speed);
+        } else if (speed <= 3) {
+          // Clear trail when vehicle stops
+          const trail = trailsRef.current.get(imei);
+          if (trail) {
+            trail.remove();
+            trailsRef.current.delete(imei);
+          }
+          trailPointsRef.current.delete(imei);
+
+          // Clear predictive marker
+          const predictive = predictiveMarkersRef.current.get(imei);
+          if (predictive) {
+            predictive.remove();
+            predictiveMarkersRef.current.delete(imei);
+          }
+        }
+
+        }
 
       // Always continue the animation loop (don't stop between batches)
       // This prevents markers from vanishing when animation finishes
@@ -888,6 +1054,15 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
         cancelAnimationFrame(animationFrameRef.current);
         animationFrameRef.current = null;
       }
+      // Cleanup trails and predictive markers
+      for (const trail of trailsRef.current.values()) {
+        trail.remove();
+      }
+      trailsRef.current.clear();
+      for (const pred of predictiveMarkersRef.current.values()) {
+        pred.remove();
+      }
+      predictiveMarkersRef.current.clear();
     };
   }, [onAdvanceAnimations]); // Only restart if onAdvanceAnimations changes (it shouldn't)
 
@@ -1121,6 +1296,45 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           }
           50% {
             filter: drop-shadow(0 0 8px rgba(22, 163, 74, 0.9));
+          }
+        }
+
+        /* Motion trail effect - fading polyline behind moving vehicles */
+        .pp-motion-trail {
+          pointer-events: none;
+          filter: blur(0.5px);
+        }
+
+        /* Predictive marker - ghost showing where vehicle is heading */
+        .pp-predictive-marker {
+          pointer-events: none;
+          animation: pp-predictive-pulse 1.5s ease-in-out infinite;
+        }
+        @keyframes pp-predictive-pulse {
+          0%, 100% {
+            opacity: 0.4;
+            transform: scale(1);
+          }
+          50% {
+            opacity: 0.7;
+            transform: scale(1.3);
+          }
+        }
+
+        /* Speed-based intensity effect (applied via inline style based on speed) */
+        .pp-high-speed {
+          filter: drop-shadow(0 0 8px rgba(232, 144, 10, 0.9)) brightness(1.1);
+        }
+        .pp-very-high-speed {
+          filter: drop-shadow(0 0 12px rgba(220, 38, 38, 0.9)) brightness(1.15);
+          animation: pp-speed-pulse 0.5s ease-in-out infinite;
+        }
+        @keyframes pp-speed-pulse {
+          0%, 100% {
+            filter: drop-shadow(0 0 12px rgba(220, 38, 38, 0.9)) brightness(1.15);
+          }
+          50% {
+            filter: drop-shadow(0 0 18px rgba(220, 38, 38, 1)) brightness(1.25);
           }
         }
         /* No GPS fix: the marker sits on the last confirmed position, so mute it
