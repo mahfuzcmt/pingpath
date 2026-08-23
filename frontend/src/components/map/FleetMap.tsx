@@ -20,10 +20,11 @@ import { filterSpeed, formatSince, vehicleState, VEHICLE_STATE_COLOR, type Vehic
 import { buildVehicleSvg } from "@/lib/vehicleIcons";
 import { useSpeedLimits } from "@/hooks/useSpeedLimits";
 import type { DeviceView, LocationView } from "@/types/domain";
+import type { LiveLocationView } from "@/hooks/useLiveLocations";
 
 interface FleetMapProps {
   devices: DeviceView[];
-  locations: Map<string, LocationView>;
+  locations: Map<string, LocationView | LiveLocationView>;
   selectedImei: string | null;
   onSelect: (imei: string | null) => void;
   /** AutoNemo "Refresh" control — re-pull last-known positions. */
@@ -172,8 +173,13 @@ function hasNoFix(location: LocationView | undefined): boolean {
   return location != null && !location.valid;
 }
 
-/** Stale threshold in milliseconds (5 minutes) */
+/** Stale threshold in milliseconds (5 minutes for GPS data) */
 const STALE_THRESHOLD_MS = 5 * 60 * 1000;
+
+/** Freshness thresholds in milliseconds for UI feedback */
+const FRESHNESS_LIVE_MS = 30 * 1000;    // 🟢 Live: < 30 seconds
+const FRESHNESS_STALE_MS = 60 * 1000;   // 🟡 Stale: 30-60 seconds
+// > 60 seconds = 🔴 No Signal
 
 /**
  * True when the last location update is older than STALE_THRESHOLD_MS.
@@ -185,6 +191,47 @@ function isStaleData(location: LocationView | undefined, device: DeviceView | un
   const age = Date.now() - new Date(ts).getTime();
   return age > STALE_THRESHOLD_MS;
 }
+
+/**
+ * Returns freshness status based on frontend update timestamp.
+ * This is for the real-time UI feedback (🟢/🟡/🔴 indicator).
+ */
+type FreshnessStatus = "live" | "stale" | "no-signal";
+
+function getFreshnessStatus(location: LocationView | LiveLocationView | undefined): FreshnessStatus {
+  if (!location) return "no-signal";
+
+  // Use frontendUpdatedAt if available (LiveLocationView), otherwise fall back to ts
+  const updateTime = (location as LiveLocationView).frontendUpdatedAt ?? new Date(location.ts).getTime();
+  const age = Date.now() - updateTime;
+
+  if (age < FRESHNESS_LIVE_MS) return "live";
+  if (age < FRESHNESS_STALE_MS) return "stale";
+  return "no-signal";
+}
+
+/**
+ * Returns the seconds since last frontend update, for "Updated X sec ago" display.
+ */
+function getSecondsSinceUpdate(location: LocationView | LiveLocationView | undefined): number {
+  if (!location) return 999;
+  const updateTime = (location as LiveLocationView).frontendUpdatedAt ?? new Date(location.ts).getTime();
+  return Math.floor((Date.now() - updateTime) / 1000);
+}
+
+/**
+ * Checks if location was just updated (for pulse animation).
+ */
+function isJustUpdated(location: LocationView | LiveLocationView | undefined): boolean {
+  if (!location) return false;
+  return (location as LiveLocationView).justUpdated === true;
+}
+
+const FRESHNESS_CONFIG = {
+  live: { label: "Live", color: "#16A34A", icon: "🟢", bgColor: "rgba(22, 163, 74, 0.15)" },
+  stale: { label: "Stale", color: "#F59E0B", icon: "🟡", bgColor: "rgba(245, 158, 11, 0.15)" },
+  "no-signal": { label: "No Signal", color: "#DC2626", icon: "🔴", bgColor: "rgba(220, 38, 38, 0.15)" },
+} as const;
 
 /**
  * Returns human-readable GPS quality status with icon
@@ -218,6 +265,7 @@ function createVehicleIcon(
   noFix = false,
   isMoving = false,
   isStale = false,
+  justUpdated = false,
 ): L.DivIcon {
   const baseSize = isSelected ? 44 : 40;
   const classes = [
@@ -227,6 +275,7 @@ function createVehicleIcon(
     noFix && 'pp-nofix',
     isStale && 'pp-stale',
     isMoving && !isOverspeed && 'pp-moving',
+    justUpdated && 'pp-just-updated',
   ].filter(Boolean).join(' ');
 
   // Add GPS warning badge for nofix or stale
@@ -259,21 +308,104 @@ function createVehicleIcon(
 }
 
 // Compact plate-number pill with speed inline (professional style).
-function plateLabelHtml(device: DeviceView | undefined, location: LocationView | undefined, stateColor: string): string {
+function plateLabelHtml(device: DeviceView | undefined, location: LocationView | LiveLocationView | undefined, stateColor: string): string {
   const text = device?.vehiclePlate || device?.name || device?.imei.slice(-8) || "—";
   const speed = filterSpeed(location?.speed, location?.valid);
   const gpsInfo = gpsQualityInfo(location, device);
   const showWarning = gpsInfo.status !== "Live";
 
+  // Freshness status for real-time feedback
+  const freshness = getFreshnessStatus(location);
+  const freshnessConfig = FRESHNESS_CONFIG[freshness];
+  const secondsAgo = getSecondsSinceUpdate(location);
+  const justUpdated = isJustUpdated(location);
+
   const warningIndicator = showWarning
     ? `<span class="pp-label-gps" style="background: ${gpsInfo.color};" title="${gpsInfo.status}">${gpsInfo.icon}</span>`
     : '';
+
+  // Freshness indicator with seconds ago
+  const freshnessIndicator = `<span class="pp-label-freshness ${justUpdated ? 'pp-label-pulse' : ''}" style="background: ${freshnessConfig.bgColor}; color: ${freshnessConfig.color};" title="${freshnessConfig.label}">${freshnessConfig.icon} ${secondsAgo}s</span>`;
 
   return `<div class="pp-label${showWarning ? ' pp-label-warning' : ''}" style="--state-color:${stateColor}">
     ${warningIndicator}
     <span class="pp-label-name">${text}</span>
     <span class="pp-label-speed">${speed} kph</span>
+    ${freshnessIndicator}
   </div>`;
+}
+
+/**
+ * Global data freshness indicator showing overall system status.
+ * Shows when data was last received from any device.
+ */
+function GlobalFreshnessIndicator({
+  locations,
+  lastRefreshAt,
+}: {
+  locations: Map<string, LocationView | LiveLocationView>;
+  lastRefreshAt?: Date | null;
+}) {
+  // Find the most recent update across all locations
+  let mostRecentUpdate = 0;
+  let liveCount = 0;
+  let staleCount = 0;
+  let noSignalCount = 0;
+
+  for (const loc of locations.values()) {
+    const updateTime = (loc as LiveLocationView).frontendUpdatedAt ?? new Date(loc.ts).getTime();
+    if (updateTime > mostRecentUpdate) {
+      mostRecentUpdate = updateTime;
+    }
+
+    const freshness = getFreshnessStatus(loc);
+    if (freshness === "live") liveCount++;
+    else if (freshness === "stale") staleCount++;
+    else noSignalCount++;
+  }
+
+  const totalDevices = locations.size;
+  const now = Date.now();
+  const secondsAgo = mostRecentUpdate ? Math.floor((now - mostRecentUpdate) / 1000) : 999;
+  const overallFreshness = getFreshnessStatusFromAge(secondsAgo);
+  const config = FRESHNESS_CONFIG[overallFreshness];
+
+  // Determine if we should show "pulsing live" status
+  const isLive = secondsAgo < 30;
+
+  if (totalDevices === 0) return null;
+
+  return (
+    <div className="absolute bottom-6 left-3 z-[1000] flex items-center gap-2">
+      {/* Overall system status */}
+      <div
+        className={`glass-btn flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold ${
+          isLive ? "pp-global-live" : ""
+        }`}
+        style={{ borderColor: `${config.color}40` }}
+      >
+        <span className="pp-status-dot" style={{ background: config.color }} />
+        <span style={{ color: config.color }}>
+          {isLive ? "LIVE" : secondsAgo < 60 ? `${secondsAgo}s` : secondsAgo < 3600 ? `${Math.floor(secondsAgo / 60)}m` : "—"}
+        </span>
+        <span className="text-ink-400">|</span>
+        <span className="text-ink-100">
+          <span style={{ color: FRESHNESS_CONFIG.live.color }}>{liveCount}</span>
+          {" / "}
+          <span style={{ color: FRESHNESS_CONFIG.stale.color }}>{staleCount}</span>
+          {" / "}
+          <span style={{ color: FRESHNESS_CONFIG["no-signal"].color }}>{noSignalCount}</span>
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/** Helper to get freshness status from seconds age */
+function getFreshnessStatusFromAge(secondsAgo: number): FreshnessStatus {
+  if (secondsAgo < 30) return "live";
+  if (secondsAgo < 60) return "stale";
+  return "no-signal";
 }
 
 // Smoothly animate a marker from its current position to a new position
@@ -337,8 +469,17 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
   const [searching, setSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<GeocodeResult[]>([]);
   const [autoFollow, setAutoFollow] = useState(true); // Auto-follow selected vehicle
+  const [, setTick] = useState(0); // Force re-render every second for freshness timer
 
   const speedLimits = useSpeedLimits();
+
+  // Tick every second to update the "X sec ago" freshness display
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTick((n) => n + 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const deviceByImei = useMemo(() => {
     const m = new Map<string, DeviceView>();
@@ -347,7 +488,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
   }, [devices]);
 
   // Function to create popup content
-  const createPopupContent = useCallback((device: DeviceView | undefined, location: LocationView | undefined): string => {
+  const createPopupContent = useCallback((device: DeviceView | undefined, location: LocationView | LiveLocationView | undefined): string => {
     const name = device?.name || device?.vehiclePlate || device?.imei.slice(-8) || "Unknown";
     const lat = location?.latitude?.toFixed(6) || "—";
     const lng = location?.longitude?.toFixed(6) || "—";
@@ -365,6 +506,16 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
          </div>`
       : "";
 
+    // Freshness status for real-time feedback
+    const freshness = getFreshnessStatus(location);
+    const freshnessConfig = FRESHNESS_CONFIG[freshness];
+    const secondsAgo = getSecondsSinceUpdate(location);
+    const freshnessText = secondsAgo < 60
+      ? `${secondsAgo}s ago`
+      : secondsAgo < 3600
+        ? `${Math.floor(secondsAgo / 60)}m ago`
+        : `${Math.floor(secondsAgo / 3600)}h ago`;
+
     // GPS quality warning banner
     const gpsWarningBanner = gpsInfo.status !== "Live"
       ? `<div class="pp-popup-gps-warning" style="background: ${gpsInfo.color}15; border-left: 3px solid ${gpsInfo.color}; color: ${gpsInfo.color};">
@@ -377,7 +528,12 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
       <div class="pp-popup">
         <div class="pp-popup-header">
           <span class="pp-popup-name">${name}</span>
-          <span class="pp-popup-status" style="background: ${statusColor}20; color: ${statusColor};">${status}</span>
+          <div class="pp-popup-badges">
+            <span class="pp-popup-freshness" style="background: ${freshnessConfig.bgColor}; color: ${freshnessConfig.color};">
+              ${freshnessConfig.icon} ${freshnessText}
+            </span>
+            <span class="pp-popup-status" style="background: ${statusColor}20; color: ${statusColor};">${status}</span>
+          </div>
         </div>
 
         ${gpsWarningBanner}
@@ -561,10 +717,11 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
       const noFix = hasNoFix(loc);
       const isStale = isStaleData(loc, device);
       const isMoving = filterSpeed(loc.speed, loc.valid) > 0; // Moving if speed above noise threshold
+      const justUpdated = isJustUpdated(loc);
 
       if (!marker) {
         // Create new marker
-        const icon = createVehicleIcon(device?.vehicleType, bodyColor, course, isSelected, isOverspeed, noFix, isMoving, isStale);
+        const icon = createVehicleIcon(device?.vehicleType, bodyColor, course, isSelected, isOverspeed, noFix, isMoving, isStale, justUpdated);
         marker = L.marker([loc.latitude, loc.longitude], { icon })
           .addTo(map)
           .bindPopup(createPopupContent(device, loc), {
@@ -649,7 +806,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
         // Store current position for next comparison
         prevPositionsRef.current.set(imei, newPos);
 
-        marker.setIcon(createVehicleIcon(device?.vehicleType, bodyColor, course, isSelected, isOverspeed, noFix, isMoving, isStale));
+        marker.setIcon(createVehicleIcon(device?.vehicleType, bodyColor, course, isSelected, isOverspeed, noFix, isMoving, isStale, justUpdated));
         marker.setPopupContent(createPopupContent(device, loc));
         marker.setTooltipContent(plateLabelHtml(device, loc, color));
       }
@@ -858,6 +1015,9 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
         />
       </div>
 
+      {/* Global data freshness indicator (bottom-left) */}
+      <GlobalFreshnessIndicator locations={locations} lastRefreshAt={lastRefreshAt} />
+
       {/* Refresh button (bottom-right) - Glassy */}
       <div className="absolute bottom-6 right-3 z-[1000]">
         <button
@@ -1004,6 +1164,66 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
         .pp-label-warning {
           border: 1px solid rgba(245, 158, 11, 0.5);
         }
+        /* Freshness indicator in label */
+        .pp-label-freshness {
+          display: inline-flex;
+          align-items: center;
+          gap: 2px;
+          font-size: 8px;
+          font-weight: 600;
+          padding: 2px 4px;
+          border-radius: 4px;
+          white-space: nowrap;
+          transition: background 0.3s ease;
+        }
+        /* Pulse animation when data just arrived */
+        .pp-label-pulse {
+          animation: pp-freshness-pulse 0.8s ease-out;
+        }
+        @keyframes pp-freshness-pulse {
+          0% {
+            transform: scale(1.2);
+            box-shadow: 0 0 8px currentColor;
+          }
+          100% {
+            transform: scale(1);
+            box-shadow: none;
+          }
+        }
+        /* Just updated vehicle marker - bright glow pulse */
+        .pp-vehicle-icon.pp-just-updated {
+          animation: pp-data-arrived 0.8s ease-out;
+        }
+        @keyframes pp-data-arrived {
+          0% {
+            filter: drop-shadow(0 0 12px rgba(22, 163, 74, 1)) brightness(1.3);
+            transform: scale(1.15);
+          }
+          100% {
+            filter: drop-shadow(0 0 4px rgba(22, 163, 74, 0.6));
+            transform: scale(1);
+          }
+        }
+        /* Global freshness indicator */
+        .pp-status-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          box-shadow: 0 0 4px currentColor;
+        }
+        .pp-global-live .pp-status-dot {
+          animation: pp-status-pulse 1.5s ease-in-out infinite;
+        }
+        @keyframes pp-status-pulse {
+          0%, 100% {
+            box-shadow: 0 0 4px #16A34A;
+            opacity: 1;
+          }
+          50% {
+            box-shadow: 0 0 12px #16A34A, 0 0 20px rgba(22, 163, 74, 0.5);
+            opacity: 0.8;
+          }
+        }
 
         /* Popup styles - Glassy dark theme */
         .pp-popup-container .leaflet-popup-content-wrapper {
@@ -1052,6 +1272,21 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           gap: 12px;
           padding: 12px 14px;
           border-bottom: 1px solid rgba(100, 116, 139, 0.2);
+        }
+        .pp-popup-badges {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+        .pp-popup-freshness {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          font-size: 10px;
+          font-weight: 600;
+          padding: 3px 6px;
+          border-radius: 4px;
+          white-space: nowrap;
         }
         /* GPS warning banner in popup */
         .pp-popup-gps-warning {

@@ -6,12 +6,40 @@ import { filterSpeed, formatSince, formatVoltage, gsmBars, vehicleState, VEHICLE
 import { useSpeedLimits } from "@/hooks/useSpeedLimits";
 import { useTicker } from "@/hooks/useTicker";
 import type { DeviceView, LocationView } from "@/types/domain";
+import type { LiveLocationView } from "@/hooks/useLiveLocations";
 
 const OVERSPEED_COLOR = "#DC2626";
 
+/** Freshness thresholds in milliseconds for UI feedback */
+const FRESHNESS_LIVE_MS = 30 * 1000;    // 🟢 Live: < 30 seconds
+const FRESHNESS_STALE_MS = 60 * 1000;   // 🟡 Stale: 30-60 seconds
+
+type FreshnessStatus = "live" | "stale" | "no-signal";
+
+function getFreshnessStatus(location: LocationView | LiveLocationView | undefined): FreshnessStatus {
+  if (!location) return "no-signal";
+  const updateTime = (location as LiveLocationView).frontendUpdatedAt ?? new Date(location.ts).getTime();
+  const age = Date.now() - updateTime;
+  if (age < FRESHNESS_LIVE_MS) return "live";
+  if (age < FRESHNESS_STALE_MS) return "stale";
+  return "no-signal";
+}
+
+function getSecondsSinceUpdate(location: LocationView | LiveLocationView | undefined): number {
+  if (!location) return 999;
+  const updateTime = (location as LiveLocationView).frontendUpdatedAt ?? new Date(location.ts).getTime();
+  return Math.floor((Date.now() - updateTime) / 1000);
+}
+
+const FRESHNESS_CONFIG = {
+  live: { label: "Live", color: "#16A34A", icon: "🟢" },
+  stale: { label: "Stale", color: "#F59E0B", icon: "🟡" },
+  "no-signal": { label: "No Signal", color: "#DC2626", icon: "🔴" },
+} as const;
+
 interface DeviceListProps {
   devices: DeviceView[];
-  locations: Map<string, LocationView>;
+  locations: Map<string, LocationView | LiveLocationView>;
   selectedImei: string | null;
   onSelect: (imei: string | null) => void;
 }
@@ -40,6 +68,33 @@ function VehicleIcon({ type, color }: { type?: string | null; color: string }) {
       <circle cx="14" cy="13" r="2" fill="#333" />
       <circle cx="20" cy="13" r="1.5" fill="#333" />
     </svg>
+  );
+}
+
+// Freshness indicator showing data recency
+function FreshnessIndicator({ location }: { location: LocationView | LiveLocationView | undefined }) {
+  const freshness = getFreshnessStatus(location);
+  const config = FRESHNESS_CONFIG[freshness];
+  const secondsAgo = getSecondsSinceUpdate(location);
+
+  const text = secondsAgo < 60
+    ? `${secondsAgo}s`
+    : secondsAgo < 3600
+      ? `${Math.floor(secondsAgo / 60)}m`
+      : "—";
+
+  return (
+    <span
+      className="inline-flex items-center gap-0.5 rounded px-1 py-0.5 text-[9px] font-semibold"
+      style={{
+        backgroundColor: `${config.color}15`,
+        color: config.color,
+      }}
+      title={`${config.label} - Updated ${text} ago`}
+    >
+      <span className="text-[8px]">{config.icon}</span>
+      <span>{text}</span>
+    </span>
   );
 }
 
@@ -271,6 +326,8 @@ export function DeviceList({ devices, locations, selectedImei, onSelect }: Devic
                   </div>
                 </button>
                 <div className="flex items-center gap-2">
+                  {/* Freshness indicator */}
+                  <FreshnessIndicator location={live} />
                   <span
                     className={`min-w-[40px] text-right text-xs font-semibold ${overspeed ? "animate-pulse" : "text-ink-900"}`}
                     style={{ color: overspeed ? OVERSPEED_COLOR : undefined }}

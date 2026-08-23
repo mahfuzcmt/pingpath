@@ -9,6 +9,17 @@ import type { LocationView } from "@/types/domain";
 const AUTO_REFRESH_INTERVAL_MS = 10_000;
 
 /**
+ * Extended location view with frontend update tracking.
+ * `frontendUpdatedAt` tracks when the frontend received this data (for freshness UI).
+ */
+export interface LiveLocationView extends LocationView {
+  /** Timestamp when this data was received by the frontend (not GPS time). */
+  frontendUpdatedAt: number;
+  /** Whether this was just updated (for pulse animation). Resets after ~2 seconds. */
+  justUpdated?: boolean;
+}
+
+/**
  * Holds the current last-known position per IMEI for the org. On mount:
  * 1. REST GET /devices/locations/all-last for the bootstrap snapshot
  * 2. STOMP subscribe /topic/org/{orgId}/locations for live updates
@@ -26,8 +37,11 @@ const AUTO_REFRESH_INTERVAL_MS = 10_000;
  * except position from the new packet and leave the marker where the last
  * confirmed fix put it. This mirrors the backend rule in LocationService.
  */
-function merge(existing: LocationView, incoming: LocationView): LocationView {
-  if (incoming.valid) return incoming;
+function merge(existing: LiveLocationView, incoming: LocationView): LiveLocationView {
+  const now = Date.now();
+  if (incoming.valid) {
+    return { ...incoming, frontendUpdatedAt: now, justUpdated: true };
+  }
   // Invalid GPS fix: position is stale, so the reported speed is also unreliable
   // (GT06 derives speed from GPS). Show 0 speed to avoid confusing "moving but stuck" display.
   return {
@@ -37,11 +51,13 @@ function merge(existing: LocationView, incoming: LocationView): LocationView {
     speed: 0,
     course: existing.course,
     lastValidTs: incoming.lastValidTs ?? existing.lastValidTs ?? null,
+    frontendUpdatedAt: now,
+    justUpdated: true,
   };
 }
 
 export function useLiveLocations(orgId: string) {
-  const [locations, setLocations] = useState<Map<string, LocationView>>(new Map());
+  const [locations, setLocations] = useState<Map<string, LiveLocationView>>(new Map());
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // bumpId is unused here directly but lets consumers depend on a primitive.
@@ -51,13 +67,18 @@ export function useLiveLocations(orgId: string) {
   const mounted = useRef(true);
 
   const upsert = useCallback((loc: LocationView) => {
+    const now = Date.now();
     setLocations((prev) => {
       const next = new Map(prev);
       const existing = next.get(loc.imei);
       if (existing && new Date(existing.ts).getTime() >= new Date(loc.ts).getTime()) {
         return prev; // ignore out-of-order
       }
-      next.set(loc.imei, existing ? merge(existing, loc) : loc);
+      if (existing) {
+        next.set(loc.imei, merge(existing, loc));
+      } else {
+        next.set(loc.imei, { ...loc, frontendUpdatedAt: now, justUpdated: true });
+      }
       return next;
     });
     setBumpId((n) => n + 1);
@@ -66,6 +87,7 @@ export function useLiveLocations(orgId: string) {
   /** Re-pull the last-known snapshot (the map's "Refresh" control). */
   const refresh = useCallback(async () => {
     try {
+      const now = Date.now();
       const r = await api.get<LocationView[]>("/devices/locations/last");
       if (!mounted.current) return;
       setLocations((prev) => {
@@ -73,7 +95,13 @@ export function useLiveLocations(orgId: string) {
         for (const l of r.data) {
           const existing = next.get(l.imei);
           if (!existing || new Date(l.ts).getTime() >= new Date(existing.ts).getTime()) {
-            next.set(l.imei, l);
+            // Mark as justUpdated only if the data actually changed
+            const dataChanged = !existing || existing.ts !== l.ts;
+            next.set(l.imei, {
+              ...l,
+              frontendUpdatedAt: existing?.frontendUpdatedAt ?? now,
+              justUpdated: dataChanged,
+            });
           }
         }
         return next;
@@ -150,6 +178,29 @@ export function useLiveLocations(orgId: string) {
       window.removeEventListener("focus", handleFocus);
     };
   }, [orgId, upsert, refresh]);
+
+  // Clear justUpdated flag after 2 seconds for each location
+  useEffect(() => {
+    const timeoutIds: ReturnType<typeof setTimeout>[] = [];
+    for (const [imei, loc] of locations) {
+      if (loc.justUpdated) {
+        const timeoutId = setTimeout(() => {
+          setLocations((prev) => {
+            const next = new Map(prev);
+            const current = next.get(imei);
+            if (current?.justUpdated) {
+              next.set(imei, { ...current, justUpdated: false });
+            }
+            return next;
+          });
+        }, 2000);
+        timeoutIds.push(timeoutId);
+      }
+    }
+    return () => {
+      for (const id of timeoutIds) clearTimeout(id);
+    };
+  }, [locations]);
 
   return { locations, loaded, error, bumpId, refresh, lastRefreshAt };
 }
