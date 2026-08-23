@@ -12,6 +12,7 @@ import java.time.ZoneOffset;
  * the content length (excludes Length, ProtocolNumber, Serial, CRC, Stop).
  */
 @Component
+@lombok.extern.slf4j.Slf4j
 public class PacketDecoder {
 
     /** Decode 8-byte BCD-packed IMEI from a login (0x01) packet. */
@@ -67,6 +68,7 @@ public class PacketDecoder {
         loc.setLongitude(lon);
 
         // LBS (cell tower)
+        int remainingBeforeLbs = content.readableBytes();
         if (protocolNumber == PacketType.LOCATION_4G) {
             int mcc = content.readUnsignedShort();
             boolean mncLong = (mcc & 0x8000) != 0;
@@ -74,11 +76,17 @@ public class PacketDecoder {
             loc.setMnc(mncLong ? content.readUnsignedShort() : content.readUnsignedByte());
             loc.setLac((int) content.readUnsignedInt());
             loc.setCellId(content.readLong());
-        } else if (content.readableBytes() >= 8) {
+            log.debug("LBS 4G: mcc={} mnc={} lac={} cell={}", loc.getMcc(), loc.getMnc(), loc.getLac(), loc.getCellId());
+        } else if (remainingBeforeLbs >= 8) {
             loc.setMcc(content.readUnsignedShort());
             loc.setMnc(content.readUnsignedByte());
             loc.setLac(content.readUnsignedShort());
             loc.setCellId(read24BitInt(content));
+            log.debug("LBS extracted: mcc={} mnc={} lac={} cell={} (remaining was {})",
+                    loc.getMcc(), loc.getMnc(), loc.getLac(), loc.getCellId(), remainingBeforeLbs);
+        } else {
+            log.debug("LBS skipped: proto=0x{} remaining={} (need 8)",
+                    Integer.toHexString(protocolNumber), remainingBeforeLbs);
         }
 
         // V3 / V4 / 4G additional fields
