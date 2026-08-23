@@ -179,6 +179,9 @@ const STRINGS = {
   "geo.assignedDevices": { en: "Assigned devices", bn: "নির্ধারিত ডিভাইস" },
   "geo.clickToSetCenter": { en: "Click on the map to set the center", bn: "কেন্দ্র সেট করতে মানচিত্রে ক্লিক করুন" },
   "geo.clickToAddVertex": { en: "Click to add a vertex (≥3 to save)", bn: "ভার্টেক্স যোগ করতে ক্লিক করুন (সংরক্ষণে ≥৩)" },
+  "geo.vehicles": { en: "Vehicles", bn: "যানবাহন" },
+  "geo.assignVehicles": { en: "Assign Vehicles", bn: "যানবাহন বরাদ্দ করুন" },
+  "geo.selected": { en: "selected", bn: "নির্বাচিত" },
 
   // ── Trips ─────────────────────────────────────────────────────────
   "trips.title": { en: "Trips", bn: "ট্রিপ" },

@@ -37,5 +37,18 @@ export function useGeofences() {
     setGeofences((prev) => prev.filter((g) => g.id !== id));
   }, []);
 
-  return { geofences, loading, error, refresh, create, remove };
+  const getAssignedDevices = useCallback(async (geofenceId: string): Promise<string[]> => {
+    const r = await api.get<string[]>(`/geofences/${geofenceId}/devices`);
+    return r.data;
+  }, []);
+
+  const assignDevices = useCallback(async (geofenceId: string, imeis: string[]) => {
+    await api.post(`/geofences/${geofenceId}/devices`, { imeis });
+  }, []);
+
+  const unassignDevice = useCallback(async (geofenceId: string, imei: string) => {
+    await api.delete(`/geofences/${geofenceId}/devices/${imei}`);
+  }, []);
+
+  return { geofences, loading, error, refresh, create, remove, getAssignedDevices, assignDevices, unassignDevice };
 }
