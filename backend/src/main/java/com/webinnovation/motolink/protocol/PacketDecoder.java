@@ -12,7 +12,6 @@ import java.time.ZoneOffset;
  * the content length (excludes Length, ProtocolNumber, Serial, CRC, Stop).
  */
 @Component
-@lombok.extern.slf4j.Slf4j
 public class PacketDecoder {
 
     /** Decode 8-byte BCD-packed IMEI from a login (0x01) packet. */
@@ -30,11 +29,9 @@ public class PacketDecoder {
 
     /** Decode location packet variants 0x12 / 0x22 / 0x32 / 0xA0 (CLAUDE.md §6.5). */
     public LocationData decodeLocation(ByteBuf content, int protocolNumber) {
-        int initialBytes = content.readableBytes();
         LocationData loc = new LocationData();
         loc.setProtocolNumber(protocolNumber);
         loc.setTimestamp(decodeDateTime(content));
-        log.info("Decoding proto=0x{} initialBytes={}", Integer.toHexString(protocolNumber), initialBytes);
 
         int gpsByte = content.readUnsignedByte();
         loc.setGpsInfoLength((gpsByte >> 4) & 0x0F);
@@ -70,8 +67,6 @@ public class PacketDecoder {
         loc.setLongitude(lon);
 
         // LBS (cell tower)
-        int remainingBeforeLbs = content.readableBytes();
-        log.info("LBS check: remainingBytes={} proto=0x{}", remainingBeforeLbs, Integer.toHexString(protocolNumber));
         if (protocolNumber == PacketType.LOCATION_4G) {
             int mcc = content.readUnsignedShort();
             boolean mncLong = (mcc & 0x8000) != 0;
@@ -79,15 +74,11 @@ public class PacketDecoder {
             loc.setMnc(mncLong ? content.readUnsignedShort() : content.readUnsignedByte());
             loc.setLac((int) content.readUnsignedInt());
             loc.setCellId(content.readLong());
-            log.info("LBS 4G: mcc={} mnc={} lac={} cell={}", loc.getMcc(), loc.getMnc(), loc.getLac(), loc.getCellId());
-        } else if (remainingBeforeLbs >= 8) {
+        } else if (content.readableBytes() >= 8) {
             loc.setMcc(content.readUnsignedShort());
             loc.setMnc(content.readUnsignedByte());
             loc.setLac(content.readUnsignedShort());
             loc.setCellId(read24BitInt(content));
-            log.info("LBS extracted: mcc={} mnc={} lac={} cell={}", loc.getMcc(), loc.getMnc(), loc.getLac(), loc.getCellId());
-        } else {
-            log.info("LBS skipped: proto=0x{} remaining={} (need 8)", Integer.toHexString(protocolNumber), remainingBeforeLbs);
         }
 
         // V3 / V4 / 4G additional fields
