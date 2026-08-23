@@ -33,8 +33,23 @@ public class LocationService {
     private final GeofenceService geofenceService;
     private final TripService tripService;
     private final AlarmRuleService alarmRuleService;
+    private final CellLocationService cellLocationService;
 
     public void saveAndBroadcast(LocationData loc) {
+        // When GPS is invalid, try to get better coordinates from cell tower lookup
+        Integer cellAccuracy = null;
+        if (!loc.isValid() && loc.getMcc() > 0 && loc.getLac() > 0 && loc.getCellId() > 0) {
+            var cellLoc = cellLocationService.lookup(loc.getMcc(), loc.getMnc(), loc.getLac(), loc.getCellId());
+            if (cellLoc.isPresent()) {
+                var cell = cellLoc.get();
+                log.info("Cell tower lookup improved location for imei={}: ({}, {}) -> ({}, {}) accuracy={}m",
+                    loc.getImei(), loc.getLatitude(), loc.getLongitude(),
+                    cell.getLatitude(), cell.getLongitude(), cell.getAccuracyMeters());
+                loc.setLatitude(cell.getLatitude());
+                loc.setLongitude(cell.getLongitude());
+                cellAccuracy = cell.getAccuracyMeters();
+            }
+        }
         try {
             locationRepo.insert(loc);
 
@@ -66,7 +81,7 @@ public class LocationService {
                 );
             }
 
-            String json = toJson(loc);
+            String json = toJson(loc, cellAccuracy);
             if (json != null) {
                 redis.opsForValue().set("device:last:" + loc.getImei(), json, Duration.ofHours(24));
                 redis.convertAndSend(RedisConfig.LOCATION_EVENTS_CHANNEL, json);
@@ -82,7 +97,7 @@ public class LocationService {
         }
     }
 
-    private String toJson(LocationData d) {
+    private String toJson(LocationData d, Integer cellAccuracyMeters) {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("imei", d.getImei());
         m.put("orgId", d.getOrgId());
@@ -101,6 +116,8 @@ public class LocationService {
         m.put("mileageMeters", d.getMileageMeters());
         m.put("gsmSignal", d.getGsmSignal());
         m.put("engineHoursSeconds", d.getAccOnTimeSeconds() == null ? null : d.getAccOnTimeSeconds().intValue());
+        // Cell tower accuracy when GPS is invalid and we used OpenCellID/UnwiredLabs
+        m.put("cellAccuracyMeters", cellAccuracyMeters);
         try {
             return objectMapper.writeValueAsString(m);
         } catch (JsonProcessingException e) {

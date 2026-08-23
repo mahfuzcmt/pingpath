@@ -67,6 +67,13 @@ motolink:
     expo-url: https://exp.host/--/api/v2/push/send
     # Optional Expo access token (Expo dashboard → Access tokens); blank = unauthenticated.
     access-token: ${PINGPATH_EXPO_ACCESS_TOKEN:}
+  # Cell tower location APIs for GSM-based location when GPS is unavailable.
+  # UnwiredLabs: https://unwiredlabs.com (100 free requests/day, better accuracy)
+  # OpenCellID: https://opencellid.org (free, unlimited with API key)
+  unwiredlabs:
+    api-key: ${MOTOLINK_UNWIREDLABS_API_KEY:}
+  opencellid:
+    api-key: ${MOTOLINK_OPENCELLID_API_KEY:}
 
 logging:
   level:

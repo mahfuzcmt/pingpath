@@ -71,19 +71,25 @@ public class LocationRepository {
                 .addValue("mileage", d.getMileageMeters())
                 .addValue("gsmSignal", d.getGsmSignal())
                 .addValue("engineHours", engineHours)
-                .addValue("rawPayload", d.getRawPayload());
+                .addValue("rawPayload", d.getRawPayload())
+                .addValue("mcc", d.getMcc() > 0 ? d.getMcc() : null)
+                .addValue("mnc", d.getMnc() > 0 ? d.getMnc() : null)
+                .addValue("lac", d.getLac() > 0 ? d.getLac() : null)
+                .addValue("cellId", d.getCellId() > 0 ? d.getCellId() : null);
 
         jdbc.update("""
                 INSERT INTO locations
                   (device_imei, org_id, ts, geom, latitude, longitude,
                    speed, course, satellites, valid, acc_on, voltage_mv, mileage_m,
-                   gsm_signal, engine_hours_seconds, raw_payload)
+                   gsm_signal, engine_hours_seconds, raw_payload,
+                   mcc, mnc, lac, cell_id)
                 VALUES
                   (:imei, :orgId, :ts,
                    ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography,
                    :lat, :lng, :speed, :course, :satellites, :valid,
                    :accOn, :voltageMv, :mileage,
-                   :gsmSignal, :engineHours, :rawPayload)
+                   :gsmSignal, :engineHours, :rawPayload,
+                   :mcc, :mnc, :lac, :cellId)
                 """, params);
     }
 
