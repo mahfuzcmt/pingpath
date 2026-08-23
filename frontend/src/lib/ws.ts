@@ -145,6 +145,21 @@ export function subscribeLocations(
   return get().subscribe<LocationView>(`/topic/org/${orgId}/locations`, listener);
 }
 
+/**
+ * Subscribe to batched location updates (published every 10 seconds).
+ * Each batch contains all devices that had location updates in the last interval.
+ *
+ * @param orgId Organization ID to subscribe to
+ * @param listener Callback that receives an array of location updates
+ * @returns Unsubscribe function
+ */
+export function subscribeBatchLocations(
+  orgId: string,
+  listener: (locations: LocationView[]) => void,
+): Promise<() => void> {
+  return get().subscribe<LocationView[]>(`/topic/org/${orgId}/locations/batch`, listener);
+}
+
 export function subscribeAlarms(
   orgId: string,
   listener: (alarm: AlarmView) => void,

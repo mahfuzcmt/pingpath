@@ -34,6 +34,7 @@ public class LocationService {
     private final TripService tripService;
     private final AlarmRuleService alarmRuleService;
     private final CellLocationService cellLocationService;
+    private final LocationBufferService locationBufferService;
 
     public void saveAndBroadcast(LocationData loc) {
         // When GPS is invalid, try to get better coordinates from cell tower lookup
@@ -83,9 +84,12 @@ public class LocationService {
 
             String json = toJson(loc, cellAccuracy);
             if (json != null) {
+                // Hot cache for REST API queries (last-known position)
                 redis.opsForValue().set("device:last:" + loc.getImei(), json, Duration.ofHours(24));
-                redis.convertAndSend(RedisConfig.LOCATION_EVENTS_CHANNEL, json);
             }
+
+            // Buffer for batched WebSocket broadcast (every 10 seconds)
+            locationBufferService.buffer(loc, cellAccuracy);
 
             // Phase 3: evaluate geofences and progress trip detection. Both run on the
             // ingest virtual-thread executor — they share its budget, not the event loop.

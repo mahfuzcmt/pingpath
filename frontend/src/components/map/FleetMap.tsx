@@ -20,7 +20,7 @@ import { filterSpeed, formatSince, vehicleState, VEHICLE_STATE_COLOR, type Vehic
 import { buildVehicleSvg } from "@/lib/vehicleIcons";
 import { useSpeedLimits } from "@/hooks/useSpeedLimits";
 import type { DeviceView, LocationView } from "@/types/domain";
-import type { LiveLocationView } from "@/hooks/useLiveLocations";
+import { type LiveLocationView, getInterpolatedPosition, isAnimating } from "@/hooks/useLiveLocations";
 
 interface FleetMapProps {
   devices: DeviceView[];
@@ -409,55 +409,15 @@ function getFreshnessStatusFromAge(secondsAgo: number): FreshnessStatus {
   return "no-signal";
 }
 
-// Smoothly animate a marker from its current position to a new position
-function animateMarker(
-  marker: L.Marker,
-  targetLat: number,
-  targetLng: number,
-  duration: number = 800,
-): void {
-  const start = marker.getLatLng();
-  const startLat = start.lat;
-  const startLng = start.lng;
-
-  // Skip animation if distance is negligible (< 1 meter)
-  const latDiff = Math.abs(targetLat - startLat);
-  const lngDiff = Math.abs(targetLng - startLng);
-  if (latDiff < 0.00001 && lngDiff < 0.00001) {
-    return;
-  }
-
-  const startTime = performance.now();
-
-  function step(currentTime: number) {
-    const elapsed = currentTime - startTime;
-    const progress = Math.min(elapsed / duration, 1);
-
-    // Ease-out cubic for smooth deceleration
-    const eased = 1 - Math.pow(1 - progress, 3);
-
-    const lat = startLat + (targetLat - startLat) * eased;
-    const lng = startLng + (targetLng - startLng) * eased;
-
-    marker.setLatLng([lat, lng]);
-
-    if (progress < 1) {
-      requestAnimationFrame(step);
-    }
-  }
-
-  requestAnimationFrame(step);
-}
-
 export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh, lastRefreshAt, showSearch = false }: FleetMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
-  const prevPositionsRef = useRef<Map<string, { lat: number; lng: number }>>(new Map());
   const initialFitDoneRef = useRef(false);
   const tileLayerRef = useRef<L.GridLayer | null>(null);
   const userMarkerRef = useRef<L.Marker | null>(null);
   const searchMarkerRef = useRef<L.Marker | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
 
   const [baseLayer, setBaseLayer] = useState<BaseLayerKind>(getDefaultLayer);
   const [googleAvailable, setGoogleAvailable] = useState(hasGoogleMapsKey);
@@ -769,47 +729,24 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
         });
 
         markersRef.current.set(imei, marker);
-        // Store initial position for animation tracking
-        prevPositionsRef.current.set(imei, { lat: loc.latitude, lng: loc.longitude });
       } else {
-        // Update existing marker with smooth animation
-        const prevPos = prevPositionsRef.current.get(imei);
-        const newPos = { lat: loc.latitude, lng: loc.longitude };
-
-        // Animate if position changed significantly (vehicle is moving)
-        if (prevPos && (prevPos.lat !== newPos.lat || prevPos.lng !== newPos.lng)) {
-          // Calculate distance to determine animation duration
-          const latDiff = Math.abs(newPos.lat - prevPos.lat);
-          const lngDiff = Math.abs(newPos.lng - prevPos.lng);
-          const distance = Math.sqrt(latDiff * latDiff + lngDiff * lngDiff);
-
-          // Scale animation duration based on distance (faster for small moves, slower for big jumps)
-          const baseDuration = 800; // ms
-          const maxDuration = 2000; // ms
-          const duration = Math.min(baseDuration + distance * 50000, maxDuration);
-
-          animateMarker(marker, loc.latitude, loc.longitude, duration);
-
-          // Auto-follow: pan map to keep selected vehicle in view
-          if (autoFollow && isSelected && map) {
-            const bounds = map.getBounds();
-            const point = L.latLng(loc.latitude, loc.longitude);
-            // Only pan if vehicle moved outside visible area (with some padding)
-            const paddedBounds = bounds.pad(-0.2); // 20% padding from edges
-            if (!paddedBounds.contains(point)) {
-              map.panTo(point, { animate: true, duration: 0.5 });
-            }
-          }
-        } else {
-          marker.setLatLng([loc.latitude, loc.longitude]);
-        }
-
-        // Store current position for next comparison
-        prevPositionsRef.current.set(imei, newPos);
-
+        // Update existing marker - position will be animated by the animation loop
+        // Here we just update icon, popup, and tooltip
         marker.setIcon(createVehicleIcon(device?.vehicleType, bodyColor, course, isSelected, isOverspeed, noFix, isMoving, isStale, justUpdated));
         marker.setPopupContent(createPopupContent(device, loc));
         marker.setTooltipContent(plateLabelHtml(device, loc, color));
+
+        // Auto-follow: pan map to keep selected vehicle in view when position changes
+        const liveLoc = loc as LiveLocationView;
+        if (autoFollow && isSelected && map && liveLoc.animationStartMs) {
+          const bounds = map.getBounds();
+          const point = L.latLng(loc.latitude, loc.longitude);
+          // Only pan if vehicle moved outside visible area (with some padding)
+          const paddedBounds = bounds.pad(-0.2); // 20% padding from edges
+          if (!paddedBounds.contains(point)) {
+            map.panTo(point, { animate: true, duration: 0.5 });
+          }
+        }
       }
     }
 
@@ -818,7 +755,6 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
       if (!seen.has(imei)) {
         marker.remove();
         markersRef.current.delete(imei);
-        prevPositionsRef.current.delete(imei);
       }
     }
 
@@ -843,6 +779,62 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
       initialFitDoneRef.current = true;
     }
   }, [locations, deviceByImei, selectedImei, onSelect, createPopupContent, speedLimits, autoFollow]);
+
+  // 60fps animation loop for smooth marker interpolation between batch updates
+  useEffect(() => {
+    if (locations.size === 0) return;
+
+    let running = true;
+
+    const animate = () => {
+      if (!running) return;
+
+      const now = Date.now();
+      let hasAnimating = false;
+
+      for (const [imei, loc] of locations.entries()) {
+        const liveLoc = loc as LiveLocationView;
+
+        // Check if this location has animation state
+        if (isAnimating(liveLoc, now)) {
+          hasAnimating = true;
+          const marker = markersRef.current.get(imei);
+          if (marker) {
+            const { lat, lng } = getInterpolatedPosition(liveLoc, now);
+            marker.setLatLng([lat, lng]);
+          }
+        } else {
+          // Animation complete or no animation - set final position
+          const marker = markersRef.current.get(imei);
+          if (marker) {
+            const currentLatLng = marker.getLatLng();
+            // Only update if position differs (avoid unnecessary DOM operations)
+            if (currentLatLng.lat !== loc.latitude || currentLatLng.lng !== loc.longitude) {
+              marker.setLatLng([loc.latitude, loc.longitude]);
+            }
+          }
+        }
+      }
+
+      // Continue animation loop only if there are animating markers
+      if (hasAnimating) {
+        animationFrameRef.current = requestAnimationFrame(animate);
+      } else {
+        animationFrameRef.current = null;
+      }
+    };
+
+    // Start animation loop
+    animationFrameRef.current = requestAnimationFrame(animate);
+
+    return () => {
+      running = false;
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
+      }
+    };
+  }, [locations]);
 
   // Address search (Nominatim; biased to the current viewport). Free, no key —
   // matches the OSM fallback strategy of lib/leaflet.ts.

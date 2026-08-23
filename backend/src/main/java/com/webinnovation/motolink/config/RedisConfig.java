@@ -11,6 +11,7 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 public class RedisConfig {
 
     public static final String LOCATION_EVENTS_CHANNEL = "location-events";
+    public static final String BATCH_LOCATION_EVENTS_CHANNEL = "batch-location-events";
     public static final String ALARM_EVENTS_CHANNEL = "alarm-events";
 
     @Bean

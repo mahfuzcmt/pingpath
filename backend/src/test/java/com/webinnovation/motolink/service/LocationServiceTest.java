@@ -49,7 +49,8 @@ class LocationServiceTest {
                 mock(GeofenceService.class),
                 mock(TripService.class),
                 mock(AlarmRuleService.class),
-                mock(CellLocationService.class));
+                mock(CellLocationService.class),
+                mock(LocationBufferService.class));
     }
 
     private static LocationData packet(boolean valid) {
