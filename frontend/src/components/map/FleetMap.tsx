@@ -237,23 +237,30 @@ const FRESHNESS_CONFIG = {
 } as const;
 
 /**
- * Returns human-readable GPS quality status with icon
+ * Returns human-readable GPS quality status with icon.
+ * Uses user-friendly messages similar to other GPS tracking software.
  */
 function gpsQualityInfo(location: LocationView | undefined, device: DeviceView | undefined): { status: string; color: string; icon: string } {
   const stale = isStaleData(location, device);
   const noFix = hasNoFix(location);
+  const ts = location?.ts || device?.lastSeenAt;
 
   if (!location && !device?.lastSeenAt) {
-    return { status: "No Data", color: "#D97706", icon: "⚠" };
+    return { status: "Never Connected", color: "#6B7280", icon: "○" };
   }
   if (noFix && stale) {
-    return { status: "GPS Lost", color: "#DC2626", icon: "✕" };
+    // Device hasn't reported valid GPS in a while - show "Parked" or time since last seen
+    const since = ts ? formatSince(ts) : "";
+    return { status: since ? `Parked · ${since} ago` : "Parked", color: "#6B7280", icon: "P" };
   }
   if (noFix) {
-    return { status: "No GPS Fix", color: "#F59E0B", icon: "?" };
+    // Device is communicating but no GPS fix - likely indoors or weak signal
+    return { status: "Weak Signal", color: "#F59E0B", icon: "◐" };
   }
   if (stale) {
-    return { status: "Stale Data", color: "#F59E0B", icon: "⏱" };
+    // Has GPS but data is old
+    const since = ts ? formatSince(ts) : "";
+    return { status: since ? `Last seen ${since} ago` : "Last seen", color: "#F59E0B", icon: "⏱" };
   }
   return { status: "Live", color: "#16A34A", icon: "●" };
 }
@@ -527,11 +534,18 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
         ? `${Math.floor(secondsAgo / 60)}m ago`
         : `${Math.floor(secondsAgo / 3600)}h ago`;
 
-    // GPS quality warning banner
+    // GPS quality warning banner with context-specific messages
+    const getGpsWarningText = () => {
+      if (gpsInfo.status === "Live") return "";
+      if (gpsInfo.status === "Never Connected") return "No position data available";
+      if (gpsInfo.status.startsWith("Parked")) return "Showing last known position";
+      if (gpsInfo.status === "Weak Signal") return "GPS signal weak, position may be approximate";
+      return "Showing last known position";
+    };
     const gpsWarningBanner = gpsInfo.status !== "Live"
       ? `<div class="pp-popup-gps-warning" style="background: ${gpsInfo.color}15; border-left: 3px solid ${gpsInfo.color}; color: ${gpsInfo.color};">
            <span class="pp-popup-gps-icon">${gpsInfo.icon}</span>
-           <span class="pp-popup-gps-text">${gpsInfo.status} - Position may be inaccurate</span>
+           <span class="pp-popup-gps-text">${getGpsWarningText()}</span>
          </div>`
       : "";
 
