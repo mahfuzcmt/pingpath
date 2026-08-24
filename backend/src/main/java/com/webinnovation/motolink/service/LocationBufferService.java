@@ -14,10 +14,10 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Buffers location updates in memory and publishes batched updates every 10 seconds.
+ * Buffers location updates in memory and publishes batched updates every 3 seconds.
  *
  * This reduces WebSocket message overhead from 3-10 messages/second (per device) to
- * a single batch message every 10 seconds per organization. The frontend receives
+ * a single batch message every 3 seconds per organization. The frontend receives
  * ALL location points and can animate through them sequentially for smooth playback.
  *
  * <p>Thread-safe: Multiple Netty handler threads can call {@link #buffer} concurrently.
@@ -91,11 +91,11 @@ public class LocationBufferService {
     }
 
     /**
-     * Flush the buffer and publish batch updates to Redis every 10 seconds.
+     * Flush the buffer and publish batch updates to Redis every 3 seconds.
      * Each organization gets a single message containing ALL location points
      * for all its devices, sorted by timestamp for sequential playback.
      */
-    @Scheduled(fixedRate = 10_000)
+    @Scheduled(fixedRate = 3_000)
     public void flushAndBroadcast() {
         int bufferSize = getBufferSize();
         if (bufferSize > 0) {
