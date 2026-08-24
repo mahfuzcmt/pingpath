@@ -271,8 +271,8 @@ function createVehicleIcon(
   justUpdated = false,
   speed = 0,
 ): L.DivIcon {
-  // GoMax-style: smaller icons to fit on roads (was 44/40, now 32/28)
-  const baseSize = isSelected ? 32 : 28;
+  // GoMax-style: smaller icons to fit on roads (24/20 for road-fitting)
+  const baseSize = isSelected ? 24 : 20;
   const classes = [
     'pp-vehicle-icon',
     isSelected && 'pp-selected',
@@ -286,21 +286,21 @@ function createVehicleIcon(
     speed > 50 && speed <= 80 && !isOverspeed && 'pp-high-speed',
   ].filter(Boolean).join(' ');
 
-  // Add GPS warning badge for nofix or stale (scaled for smaller icon)
+  // Add GPS warning badge for nofix or stale (scaled for 24/20 icons)
   const warningBadge = (noFix || isStale) ? `
     <div class="pp-gps-badge" style="
       position: absolute;
-      top: -3px;
-      right: -3px;
-      width: 12px;
-      height: 12px;
+      top: -2px;
+      right: -2px;
+      width: 10px;
+      height: 10px;
       background: ${noFix ? '#DC2626' : '#F59E0B'};
-      border: 1.5px solid #0A1928;
+      border: 1px solid #0A1928;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 8px;
+      font-size: 7px;
       font-weight: bold;
       color: white;
       z-index: 10;

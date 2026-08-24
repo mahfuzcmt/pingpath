@@ -17,6 +17,7 @@ public final class DeviceDtos {
      */
     public record DeviceUpdateRequest(
             String name,
+            String simMsisdn,
             String vehiclePlate,
             String vehicleType,
             String iconColor

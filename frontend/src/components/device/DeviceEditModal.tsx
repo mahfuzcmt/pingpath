@@ -27,6 +27,7 @@ const COLOR_SWATCHES = [
 export function DeviceEditModal({ device, onClose, onSaved }: Props) {
   const { t } = useLocale();
   const [name, setName] = useState(device.name ?? "");
+  const [simMsisdn, setSimMsisdn] = useState(device.simMsisdn ?? "");
   const [plate, setPlate] = useState(device.vehiclePlate ?? "");
   const [vehicleType, setVehicleType] = useState<VehicleTypeId>(
     (VEHICLE_TYPES as readonly string[]).includes(device.vehicleType ?? "")
@@ -43,6 +44,7 @@ export function DeviceEditModal({ device, onClose, onSaved }: Props) {
     try {
       const r = await api.patch<DeviceView>(`/devices/${encodeURIComponent(device.imei)}`, {
         name: name.trim() || null,
+        simMsisdn: simMsisdn.trim() || null,
         vehiclePlate: plate.trim() || null,
         vehicleType,
         iconColor,
@@ -73,6 +75,17 @@ export function DeviceEditModal({ device, onClose, onSaved }: Props) {
           <label className="text-xs">
             <span className="mb-1 block text-ink-500">{t("veh.name")}</span>
             <input type="text" className="input" value={name} onChange={(e) => setName(e.target.value)} />
+          </label>
+
+          <label className="text-xs">
+            <span className="mb-1 block text-ink-500">{t("fleet.sim")}</span>
+            <input
+              type="tel"
+              className="input font-mono"
+              value={simMsisdn}
+              onChange={(e) => setSimMsisdn(e.target.value)}
+              placeholder="+8801XXXXXXXXX"
+            />
           </label>
 
           <label className="text-xs">

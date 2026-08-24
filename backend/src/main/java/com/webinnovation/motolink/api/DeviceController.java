@@ -115,7 +115,7 @@ public class DeviceController {
             throw new DomainException("INVALID_ICON_COLOR", "iconColor must be #RRGGBB");
         }
         int updated = deviceRepo.updateProfile(orgId, imei,
-                req.name(), req.vehiclePlate(), req.vehicleType(), req.iconColor());
+                req.name(), req.simMsisdn(), req.vehiclePlate(), req.vehicleType(), req.iconColor());
         if (updated == 0) throw new NotFoundException("device", imei);
         Device d = deviceRepo.findByOrgAndImei(orgId, imei)
                 .orElseThrow(() -> new NotFoundException("device", imei));

@@ -244,11 +244,12 @@ public class DeviceRepository {
     }
 
     /** Partial profile update — null params keep the current value (scoped by org). */
-    public int updateProfile(UUID orgId, String imei, String name, String vehiclePlate,
-                             String vehicleType, String iconColor) {
+    public int updateProfile(UUID orgId, String imei, String name, String simMsisdn,
+                             String vehiclePlate, String vehicleType, String iconColor) {
         return jdbc.update("""
                 UPDATE devices SET
                   name = COALESCE(:name, name),
+                  sim_msisdn = COALESCE(:simMsisdn, sim_msisdn),
                   vehicle_plate = COALESCE(:plate, vehicle_plate),
                   vehicle_type = COALESCE(:type, vehicle_type),
                   icon_color = COALESCE(:color, icon_color),
@@ -257,6 +258,7 @@ public class DeviceRepository {
                 """, new MapSqlParameterSource("orgId", orgId)
                 .addValue("imei", imei)
                 .addValue("name", name)
+                .addValue("simMsisdn", simMsisdn)
                 .addValue("plate", vehiclePlate)
                 .addValue("type", vehicleType)
                 .addValue("color", iconColor));
