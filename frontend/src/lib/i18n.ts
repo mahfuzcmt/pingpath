@@ -612,7 +612,8 @@ export function LocaleProvider({
     () => ({
       locale,
       setLocale,
-      t: (key: StringKey) => STRINGS[key][locale],
+      // Defensive: return the key itself if translation is missing (prevents crashes from dynamic keys)
+      t: (key: StringKey) => STRINGS[key]?.[locale] ?? key,
     }),
     [locale, setLocale],
   );

@@ -173,28 +173,31 @@ function merge(
     (existing.latitude !== incoming.latitude || existing.longitude !== incoming.longitude);
 
   if (incoming.valid && positionChanged) {
-    // Add to waypoint queue instead of immediately jumping
-    const newWaypoint: Waypoint = {
+    // For CSS-transition based animation:
+    // Update position directly and let CSS handle smooth visual transition
+    return {
+      ...existing,
+      // Store previous position for animation reference
+      prevLatitude: existing.latitude,
+      prevLongitude: existing.longitude,
+      // Update to new position - CSS transition handles visual animation
       latitude: incoming.latitude,
       longitude: incoming.longitude,
+      // Update all telemetry
       ts: incoming.ts,
       speed: incoming.speed,
       course: incoming.course,
-    };
-
-    const existingQueue = existing.waypointQueue ?? [];
-
-    return {
-      ...existing,
-      // Keep current animation state, just add to queue
-      waypointQueue: [...existingQueue, newWaypoint],
-      justUpdated: true,
-      // Update telemetry that doesn't affect position
       satellites: incoming.satellites,
       accOn: incoming.accOn,
       voltageMv: incoming.voltageMv,
       gsmSignal: incoming.gsmSignal,
       valid: incoming.valid,
+      // Target matches current position
+      targetLatitude: incoming.latitude,
+      targetLongitude: incoming.longitude,
+      // Clear waypoint queue - no queued animation needed
+      waypointQueue: [],
+      justUpdated: true,
     };
   }
 
@@ -233,7 +236,8 @@ function merge(
 
 /**
  * Start animation for a device that has waypoints queued.
- * Call this after adding waypoints to begin the animation sequence.
+ * For CSS-transition based animation: immediately set lat/lng to the TARGET position,
+ * and the CSS transition handles the visual animation from wherever the marker currently is.
  */
 function startAnimationIfNeeded(
   loc: LiveLocationView,
@@ -244,41 +248,35 @@ function startAnimationIfNeeded(
     return loc;
   }
 
-  // Check if currently animating (not just if animationStartMs is set)
-  const currentlyAnimating = isAnimating(loc, now);
-  if (currentlyAnimating) {
-    return loc; // Let current animation finish
-  }
+  // For CSS transitions, we immediately jump to the final waypoint
+  // The CSS transition on .leaflet-marker-icon handles smooth visual animation
+  // Process all queued waypoints and set position to the last one
+  const lastWaypoint = loc.waypointQueue[loc.waypointQueue.length - 1];
 
-  // Start animating to first waypoint
-  const firstWaypoint = loc.waypointQueue[0];
-  const remainingQueue = loc.waypointQueue.slice(1);
-
-  // Calculate duration per segment - divide animation time by number of waypoints
-  const totalWaypoints = loc.waypointQueue.length;
-  const animationWindow = BATCH_INTERVAL_MS - 1500; // Leave 1.5s buffer
-  const segmentDuration = Math.max(animationWindow / totalWaypoints, 500); // At least 500ms per segment
-
-  // Determine the correct starting position:
-  // - If we have a previous target (from completed animation), use that
-  // - Otherwise use the current lat/lng
-  const startLat = loc.targetLatitude ?? loc.latitude;
-  const startLng = loc.targetLongitude ?? loc.longitude;
+  // Store previous position for reference (where we're animating FROM)
+  const prevLat = loc.latitude;
+  const prevLng = loc.longitude;
 
   return {
     ...loc,
-    // Use the actual current position (target of previous animation if any)
-    prevLatitude: startLat,
-    prevLongitude: startLng,
-    // Also update lat/lng to match the visual position
-    latitude: startLat,
-    longitude: startLng,
-    // Set new target
-    targetLatitude: firstWaypoint.latitude,
-    targetLongitude: firstWaypoint.longitude,
+    // Store previous position
+    prevLatitude: prevLat,
+    prevLongitude: prevLng,
+    // Set lat/lng to TARGET position - CSS transition animates the visual change
+    latitude: lastWaypoint.latitude,
+    longitude: lastWaypoint.longitude,
+    // Update telemetry from latest waypoint
+    speed: lastWaypoint.speed,
+    course: lastWaypoint.course,
+    ts: lastWaypoint.ts,
+    // Target is same as current now
+    targetLatitude: lastWaypoint.latitude,
+    targetLongitude: lastWaypoint.longitude,
+    // Animation state (for tracking purposes)
     animationStartMs: now,
-    animationDurationMs: segmentDuration,
-    waypointQueue: remainingQueue,
+    animationDurationMs: 1000, // CSS transition duration
+    // Clear waypoint queue since we consumed them all
+    waypointQueue: [],
   };
 }
 
@@ -308,50 +306,76 @@ export function useLiveLocations(orgId: string) {
   /**
    * Process a batch of location updates from WebSocket.
    * The batch may contain multiple points per device, sorted by timestamp.
-   * All points are queued for sequential animation.
+   * For CSS-transition animation, we take the latest point and update position directly.
    */
   const processBatch = useCallback((batch: LocationView[]) => {
     // Debug: log when batch is received
     console.log(`[useLiveLocations] Received batch of ${batch.length} locations`, batch.slice(0, 2));
-    const now = Date.now();
     setLocations((prev) => {
       const next = new Map(prev);
       let changed = false;
 
-      // Group locations by IMEI to process in order
-      const byImei = new Map<string, LocationView[]>();
+      // Group locations by IMEI and take the latest one (highest timestamp)
+      const latestByImei = new Map<string, LocationView>();
       for (const loc of batch) {
-        const existing = byImei.get(loc.imei) ?? [];
-        existing.push(loc);
-        byImei.set(loc.imei, existing);
+        const existing = latestByImei.get(loc.imei);
+        if (!existing || new Date(loc.ts).getTime() > new Date(existing.ts).getTime()) {
+          latestByImei.set(loc.imei, loc);
+        }
       }
 
-      // Process each device's locations in timestamp order
-      for (const [imei, locs] of byImei) {
-        // Sort by timestamp (should already be sorted from backend, but ensure)
-        locs.sort((a, b) => new Date(a.ts).getTime() - new Date(b.ts).getTime());
-
-        let current = next.get(imei);
-
-        for (const loc of locs) {
-          if (current) {
-            // Check if this is newer data
-            if (new Date(loc.ts).getTime() <= new Date(current.ts).getTime()) {
-              continue; // Skip out-of-order
-            }
-            current = merge(current, loc, now);
-            changed = true;
-          } else {
-            // First time seeing this device
-            current = { ...loc, justUpdated: true };
-            changed = true;
-          }
-        }
+      // Process each device's latest location
+      for (const [imei, loc] of latestByImei) {
+        const current = next.get(imei);
 
         if (current) {
-          // Start animation if we have waypoints queued
-          current = startAnimationIfNeeded(current, now);
-          next.set(imei, current);
+          // Check if this is newer data
+          if (new Date(loc.ts).getTime() <= new Date(current.ts).getTime()) {
+            continue; // Skip out-of-order
+          }
+
+          // Check if position actually changed
+          const positionChanged =
+            loc.valid &&
+            (current.latitude !== loc.latitude || current.longitude !== loc.longitude);
+
+          if (positionChanged) {
+            // Update position directly - CSS handles visual animation
+            next.set(imei, {
+              ...current,
+              ...loc,
+              prevLatitude: current.latitude,
+              prevLongitude: current.longitude,
+              targetLatitude: loc.latitude,
+              targetLongitude: loc.longitude,
+              waypointQueue: [],
+              justUpdated: true,
+            });
+          } else {
+            // Same position or invalid - just update telemetry
+            next.set(imei, {
+              ...current,
+              ...loc,
+              // Keep position unchanged if not valid
+              latitude: loc.valid ? loc.latitude : current.latitude,
+              longitude: loc.valid ? loc.longitude : current.longitude,
+              speed: loc.valid ? loc.speed : 0,
+              justUpdated: true,
+            });
+          }
+          changed = true;
+        } else {
+          // First time seeing this device
+          next.set(imei, {
+            ...loc,
+            prevLatitude: loc.latitude,
+            prevLongitude: loc.longitude,
+            targetLatitude: loc.latitude,
+            targetLongitude: loc.longitude,
+            waypointQueue: [],
+            justUpdated: true,
+          });
+          changed = true;
         }
       }
 
@@ -367,7 +391,6 @@ export function useLiveLocations(orgId: string) {
       const r = await api.get<LocationView[]>("/devices/locations/last");
       if (!mounted.current) return;
 
-      const now = Date.now();
       setLocations((prev) => {
         const next = new Map(prev);
         for (const l of r.data) {
@@ -381,24 +404,26 @@ export function useLiveLocations(orgId: string) {
               (existing.latitude !== l.latitude || existing.longitude !== l.longitude);
 
             if (positionChanged && existing) {
-              // Queue the new position for animation
-              const newWaypoint: Waypoint = {
-                latitude: l.latitude,
-                longitude: l.longitude,
-                ts: l.ts,
-                speed: l.speed,
-                course: l.course,
-              };
-              let updated: LiveLocationView = {
-                ...existing,
-                waypointQueue: [...(existing.waypointQueue ?? []), newWaypoint],
-                justUpdated: dataChanged,
-              };
-              updated = startAnimationIfNeeded(updated, now);
-              next.set(l.imei, updated);
-            } else {
+              // For CSS-transition: update position directly, CSS handles visual animation
               next.set(l.imei, {
                 ...l,
+                prevLatitude: existing.latitude,
+                prevLongitude: existing.longitude,
+                targetLatitude: l.latitude,
+                targetLongitude: l.longitude,
+                waypointQueue: [],
+                justUpdated: dataChanged,
+              });
+            } else {
+              // New device or same position - just set directly
+              next.set(l.imei, {
+                ...l,
+                // For new devices, set prev = current (no animation needed)
+                prevLatitude: existing?.latitude ?? l.latitude,
+                prevLongitude: existing?.longitude ?? l.longitude,
+                targetLatitude: l.latitude,
+                targetLongitude: l.longitude,
+                waypointQueue: [],
                 justUpdated: dataChanged,
               });
             }
