@@ -474,6 +474,8 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
   const [searching, setSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<GeocodeResult[]>([]);
   const [autoFollow, setAutoFollow] = useState(true); // Auto-follow selected vehicle
+  const [showTrails, setShowTrails] = useState(false); // Motion trails (off by default, like GoMax)
+  const showTrailsRef = useRef(showTrails);
   const [, setTick] = useState(0); // Force re-render every second for freshness timer
 
   const speedLimits = useSpeedLimits();
@@ -648,6 +650,11 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
     showTrafficRef.current = showTraffic;
     setLayerTraffic(tileLayerRef.current, showTraffic);
   }, [showTraffic]);
+
+  // Sync showTrailsRef with showTrails state for animation loop access
+  useEffect(() => {
+    showTrailsRef.current = showTrails;
+  }, [showTrails]);
 
   const handleRefresh = useCallback(async () => {
     if (!onRefresh) return;
@@ -1001,36 +1008,52 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
         }
 
         // Update motion trail for moving vehicles (every 3 frames to reduce load)
+        // Only show trails if enabled (off by default like GoMax)
         const speed = filterSpeed(loc.speed, loc.valid);
-        if (frameCount % 3 === 0 && speed > 3) {
-          const trailPoints = trailPointsRef.current.get(imei) || [];
-          const lastPoint = trailPoints[trailPoints.length - 1];
+        if (showTrailsRef.current) {
+          if (frameCount % 3 === 0 && speed > 3) {
+            const trailPoints = trailPointsRef.current.get(imei) || [];
+            const lastPoint = trailPoints[trailPoints.length - 1];
 
-          // Only add point if moved minimum distance (avoid clustering)
-          if (!lastPoint || getDistance(lastPoint[0], lastPoint[1], currentLat, currentLng) > MIN_TRAIL_DISTANCE) {
-            trailPoints.push([currentLat, currentLng]);
+            // Only add point if moved minimum distance (avoid clustering)
+            if (!lastPoint || getDistance(lastPoint[0], lastPoint[1], currentLat, currentLng) > MIN_TRAIL_DISTANCE) {
+              trailPoints.push([currentLat, currentLng]);
 
-            // Keep only recent points (creates fading trail effect)
-            while (trailPoints.length > MAX_TRAIL_POINTS) {
-              trailPoints.shift();
+              // Keep only recent points (creates fading trail effect)
+              while (trailPoints.length > MAX_TRAIL_POINTS) {
+                trailPoints.shift();
+              }
+
+              trailPointsRef.current.set(imei, trailPoints);
+              updateTrail(imei, trailPoints, speed);
             }
 
-            trailPointsRef.current.set(imei, trailPoints);
-            updateTrail(imei, trailPoints, speed);
-          }
+            // Update predictive marker
+            updatePredictiveMarker(imei, currentLat, currentLng, loc.course ?? 0, speed);
+          } else if (speed <= 3) {
+            // Clear trail when vehicle stops
+            const trail = trailsRef.current.get(imei);
+            if (trail) {
+              trail.remove();
+              trailsRef.current.delete(imei);
+            }
+            trailPointsRef.current.delete(imei);
 
-          // Update predictive marker
-          updatePredictiveMarker(imei, currentLat, currentLng, loc.course ?? 0, speed);
-        } else if (speed <= 3) {
-          // Clear trail when vehicle stops
+            // Clear predictive marker
+            const predictive = predictiveMarkersRef.current.get(imei);
+            if (predictive) {
+              predictive.remove();
+              predictiveMarkersRef.current.delete(imei);
+            }
+          }
+        } else {
+          // Trails disabled - clean up any existing trails
           const trail = trailsRef.current.get(imei);
           if (trail) {
             trail.remove();
             trailsRef.current.delete(imei);
           }
           trailPointsRef.current.delete(imei);
-
-          // Clear predictive marker
           const predictive = predictiveMarkersRef.current.get(imei);
           if (predictive) {
             predictive.remove();
@@ -1271,6 +1294,13 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
       <style jsx global>{`
         .pp-vehicle-icon {
           transition: transform 300ms ease-out;
+        }
+        /* GoMax-style smooth position transitions - CSS handles the animation */
+        .leaflet-marker-icon {
+          transition: transform 1s ease-out !important;
+        }
+        .leaflet-marker-pane .leaflet-marker-icon {
+          will-change: transform;
         }
         .pp-vehicle-icon.pp-selected {
           filter: drop-shadow(0 0 6px #e8900a);
