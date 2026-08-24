@@ -14,17 +14,17 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Buffers location updates in memory and publishes batched updates every 3 seconds.
+ * Buffers location updates in memory and publishes batched updates every 10 seconds.
  *
- * This reduces WebSocket message overhead from 3-10 messages/second (per device) to
- * a single batch message every 3 seconds per organization. The frontend receives
- * ALL location points and can animate through them sequentially for smooth playback.
+ * This aligns with the device's 10-second reporting interval (TIMER,10,300#).
+ * Each organization gets a single batch message containing all location points
+ * received in the window, sorted by timestamp for sequential playback.
  *
  * <p>Thread-safe: Multiple Netty handler threads can call {@link #buffer} concurrently.
  * The scheduled flush runs on the Spring scheduler thread and drains the buffer atomically.
  *
- * <p>Memory usage: ~200 bytes per location × ~3 locations per device × 100 devices
- * = ~60 KB per org — negligible.
+ * <p>Memory usage: ~200 bytes per location × ~1 location per device × 100 devices
+ * = ~20 KB per org — negligible.
  *
  * @see com.webinnovation.motolink.ws.BatchLocationFanout
  */
@@ -91,11 +91,12 @@ public class LocationBufferService {
     }
 
     /**
-     * Flush the buffer and publish batch updates to Redis every 3 seconds.
+     * Flush the buffer and publish batch updates to Redis every 10 seconds.
+     * Aligned with device TIMER setting (10 seconds when moving).
      * Each organization gets a single message containing ALL location points
      * for all its devices, sorted by timestamp for sequential playback.
      */
-    @Scheduled(fixedRate = 3_000)
+    @Scheduled(fixedRate = 10_000)
     public void flushAndBroadcast() {
         int bufferSize = getBufferSize();
         if (bufferSize > 0) {
