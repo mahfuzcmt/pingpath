@@ -780,7 +780,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
             autoPanPaddingBottomRight: L.point(20, 100), // Account for bottom controls
           })
           .bindTooltip(plateLabelHtml(device, loc, color), {
-            permanent: true,
+            permanent: false,  // GoMax-style: tooltip only on hover, vehicle icon always visible
             direction: 'top',
             offset: [0, -16],  // Small gap for taller icons (28-34px height)
             className: 'pp-plate-tooltip',
