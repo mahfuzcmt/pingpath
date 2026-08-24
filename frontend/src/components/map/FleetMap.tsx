@@ -175,8 +175,8 @@ function hasNoFix(location: LocationView | undefined): boolean {
   return location != null && !location.valid;
 }
 
-/** Stale threshold in milliseconds (5 minutes for GPS data) */
-const STALE_THRESHOLD_MS = 5 * 60 * 1000;
+/** Stale threshold in milliseconds (10 minutes for GPS data) */
+const STALE_THRESHOLD_MS = 10 * 60 * 1000;
 
 /** Freshness thresholds in milliseconds for UI feedback */
 const FRESHNESS_LIVE_MS = 30 * 1000;    // 🟢 Live: < 30 seconds
