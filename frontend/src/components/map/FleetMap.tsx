@@ -596,6 +596,8 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
       center: DHAKA_CENTER,
       zoom: DEFAULT_ZOOM,
       zoomControl: false, // We use our own MapToolbar instead
+      minZoom: 3,         // Prevent zooming out too far
+      maxZoom: 18,        // GoMax-style: limit max zoom to prevent excessive detail
     });
 
     mapRef.current = map;
@@ -781,15 +783,20 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
 
         markersRef.current.set(imei, marker);
       } else {
-        // Update existing marker - position will be animated by the animation loop
-        // Here we just update icon, popup, and tooltip
+        // Update existing marker - GoMax style: update position directly, CSS transition handles smooth animation
+        // Update icon, popup, tooltip, and POSITION
         marker.setIcon(createVehicleIcon(device?.vehicleType, bodyColor, course, isSelected, isOverspeed, noFix, isMoving, isStale, justUpdated, filterSpeed(loc.speed, loc.valid)));
         marker.setPopupContent(createPopupContent(device, loc));
         marker.setTooltipContent(plateLabelHtml(device, loc, color));
 
+        // Update position - CSS transition will animate smoothly
+        const currentLatLng = marker.getLatLng();
+        if (currentLatLng.lat !== loc.latitude || currentLatLng.lng !== loc.longitude) {
+          marker.setLatLng([loc.latitude, loc.longitude]);
+        }
+
         // Auto-follow: pan map to keep selected vehicle in view when position changes
-        const liveLoc = loc as LiveLocationView;
-        if (autoFollow && isSelected && map && liveLoc.animationStartMs) {
+        if (autoFollow && isSelected && map) {
           const bounds = map.getBounds();
           const point = L.latLng(loc.latitude, loc.longitude);
           // Only pan if vehicle moved outside visible area (with some padding)
@@ -968,50 +975,24 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
         return;
       }
 
-      const now = Date.now();
-
-      // Every 10 frames (~6 times/sec), check if we need to advance waypoints
       frameCount++;
-      if (frameCount % 10 === 0 && onAdvanceAnimations) {
-        onAdvanceAnimations();
-      }
 
-      for (const [imei, loc] of currentLocations.entries()) {
-        const liveLoc = loc as LiveLocationView;
-        const marker = markersRef.current.get(imei);
+      // GoMax-style: NO JavaScript position interpolation
+      // Marker positions are updated in the marker sync useEffect when data changes
+      // CSS transitions handle the smooth animation automatically
 
-        // Check if this location has animation state or waypoints queued
-        const animating = isAnimating(liveLoc, now);
-        const hasWaypoints = (liveLoc.waypointQueue?.length ?? 0) > 0;
+      // Only handle trail updates if enabled (every 30 frames = ~2/sec to reduce load)
+      if (showTrailsRef.current && frameCount % 30 === 0) {
+        for (const [imei, loc] of currentLocations.entries()) {
+          const marker = markersRef.current.get(imei);
+          if (!marker) continue;
 
-        let currentLat: number;
-        let currentLng: number;
+          const currentLatLng = marker.getLatLng();
+          const currentLat = currentLatLng.lat;
+          const currentLng = currentLatLng.lng;
+          const speed = filterSpeed(loc.speed, loc.valid);
 
-        if (animating || hasWaypoints) {
-          const { lat, lng } = getInterpolatedPosition(liveLoc, now);
-          currentLat = lat;
-          currentLng = lng;
-          if (marker) {
-            marker.setLatLng([lat, lng]);
-          }
-        } else {
-          // Animation complete or no animation - set final position
-          currentLat = loc.latitude;
-          currentLng = loc.longitude;
-          if (marker) {
-            const currentLatLng = marker.getLatLng();
-            // Only update if position differs (avoid unnecessary DOM operations)
-            if (currentLatLng.lat !== loc.latitude || currentLatLng.lng !== loc.longitude) {
-              marker.setLatLng([loc.latitude, loc.longitude]);
-            }
-          }
-        }
-
-        // Update motion trail for moving vehicles (every 3 frames to reduce load)
-        // Only show trails if enabled (off by default like GoMax)
-        const speed = filterSpeed(loc.speed, loc.valid);
-        if (showTrailsRef.current) {
-          if (frameCount % 3 === 0 && speed > 3) {
+          if (speed > 3) {
             const trailPoints = trailPointsRef.current.get(imei) || [];
             const lastPoint = trailPoints[trailPoints.length - 1];
 
@@ -1030,7 +1011,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
 
             // Update predictive marker
             updatePredictiveMarker(imei, currentLat, currentLng, loc.course ?? 0, speed);
-          } else if (speed <= 3) {
+          } else {
             // Clear trail when vehicle stops
             const trail = trailsRef.current.get(imei);
             if (trail) {
@@ -1046,8 +1027,10 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
               predictiveMarkersRef.current.delete(imei);
             }
           }
-        } else {
-          // Trails disabled - clean up any existing trails
+        }
+      } else if (!showTrailsRef.current && frameCount % 60 === 0) {
+        // Clean up trails if disabled (once per second)
+        for (const [imei] of currentLocations.entries()) {
           const trail = trailsRef.current.get(imei);
           if (trail) {
             trail.remove();
@@ -1060,8 +1043,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
             predictiveMarkersRef.current.delete(imei);
           }
         }
-
-        }
+      }
 
       // Always continue the animation loop (don't stop between batches)
       // This prevents markers from vanishing when animation finishes
