@@ -6,7 +6,7 @@ import { subscribeBatchLocations } from "@/lib/ws";
 import type { LocationView } from "@/types/domain";
 
 /** Animation interval in milliseconds (matches backend batch interval). */
-const BATCH_INTERVAL_MS = 10_000;
+const BATCH_INTERVAL_MS = 3_000;
 
 /** A waypoint in the animation queue. */
 interface Waypoint {
