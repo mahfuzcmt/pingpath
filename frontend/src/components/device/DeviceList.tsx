@@ -413,15 +413,18 @@ export function DeviceList({ devices, locations, selectedImei, onSelect, onViewH
                 <div className="flex items-center gap-1">
                   {/* Freshness indicator */}
                   <FreshnessIndicator location={live} />
+                  {/* Speed with kph unit */}
                   <span
-                    className={`min-w-[32px] text-right text-[10px] font-semibold ${overspeed ? "animate-pulse" : "text-ink-900"}`}
+                    className={`min-w-[40px] text-right text-[10px] font-semibold ${overspeed ? "animate-pulse" : "text-ink-900"}`}
                     style={{ color: overspeed ? OVERSPEED_COLOR : undefined }}
+                    title="Current speed"
                   >
-                    {filterSpeed(live?.speed, live?.valid)}
+                    {filterSpeed(live?.speed, live?.valid)} <span className="text-[8px] font-normal text-ink-500">kph</span>
                   </span>
+                  {/* GSM signal - use live data if available, fallback to device data */}
                   <SignalIcon
-                    bars={gsmBars(d.lastGsmSignal)}
-                    title={d.lastGsmSignal != null ? `GSM ${d.lastGsmSignal}/31` : "No GSM data"}
+                    bars={gsmBars(live?.gsmSignal ?? d.lastGsmSignal)}
+                    title={`GSM ${live?.gsmSignal ?? d.lastGsmSignal ?? 0}/31`}
                   />
                   <span className="min-w-[28px] text-right font-mono text-[9px] text-ink-500" title="External voltage">
                     {formatVoltage(live?.voltageMv ?? d.lastVoltageMv, locale)}
