@@ -147,22 +147,28 @@ public class TripService {
 
     /**
      * Compute distance from the prior persisted location for this device. Returns 0
-     * when no prior point exists or the prior point is the one we just inserted.
+     * when no prior point exists.
+     *
+     * Uses findPreviousValidLocation to get the immediately previous valid GPS point,
+     * ensuring accurate incremental distance calculation (not from old points).
      */
     private int computeDeltaMeters(LocationData loc) {
-        // The current sample has already been persisted by LocationRepository.insert before
-        // we run, so query for the second-most-recent row to get the real prior point.
-        return locationRepo.findHistory(
-                loc.getOrgId(), loc.getImei(),
-                loc.getTimestamp().minusSeconds(3600),
-                loc.getTimestamp().plusSeconds(1),
-                2)
-                .stream()
-                .filter(l -> l.ts().isBefore(loc.getTimestamp()))
-                .findFirst()
-                .map(prev -> (int) Math.round(
-                        haversineMeters(prev.latitude(), prev.longitude(),
-                                loc.getLatitude(), loc.getLongitude())))
+        return locationRepo.findPreviousValidLocation(loc.getOrgId(), loc.getImei(), loc.getTimestamp())
+                .map(prev -> {
+                    int distanceM = (int) Math.round(
+                            haversineMeters(prev.latitude(), prev.longitude(),
+                                    loc.getLatitude(), loc.getLongitude()));
+                    // Sanity check: if distance is unreasonably large (>10km between points),
+                    // it's likely a GPS jump - ignore it
+                    if (distanceM > 10_000) {
+                        log.warn("Ignoring GPS jump for imei={}: {} meters from ({},{}) to ({},{})",
+                                loc.getImei(), distanceM,
+                                prev.latitude(), prev.longitude(),
+                                loc.getLatitude(), loc.getLongitude());
+                        return 0;
+                    }
+                    return distanceM;
+                })
                 .orElse(0);
     }
 

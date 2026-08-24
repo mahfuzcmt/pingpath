@@ -118,6 +118,28 @@ public class LocationRepository {
                 params, ROW_MAPPER);
     }
 
+    /**
+     * Find the most recent valid location BEFORE the given timestamp.
+     * Used for trip distance calculation - gets the immediately previous point.
+     */
+    public Optional<Location> findPreviousValidLocation(UUID orgId, String imei, Instant beforeTs) {
+        var params = new MapSqlParameterSource()
+                .addValue("orgId", orgId)
+                .addValue("imei", imei)
+                .addValue("beforeTs", Timestamp.from(beforeTs));
+        try {
+            Location l = jdbc.queryForObject(
+                    "SELECT " + SELECT_FIELDS + " FROM locations" +
+                            " WHERE org_id = :orgId AND device_imei = :imei" +
+                            " AND ts < :beforeTs AND valid = true" +
+                            " ORDER BY ts DESC LIMIT 1",
+                    params, ROW_MAPPER);
+            return Optional.ofNullable(l);
+        } catch (EmptyResultDataAccessException e) {
+            return Optional.empty();
+        }
+    }
+
     public List<Location> findAllLastKnownForOrg(UUID orgId) {
         return jdbc.query("""
                 SELECT DISTINCT ON (device_imei) %s
