@@ -89,6 +89,7 @@ services:
       BACKEND_BASE: http://backend:8080
       SESSION_COOKIE_NAME: ${SESSION_COOKIE_NAME:-pp_session}
       SESSION_COOKIE_MAX_AGE: ${SESSION_COOKIE_MAX_AGE:-86400}
+      COOKIE_SECURE: "true"
     ports:
       - "3000:3000"
 
