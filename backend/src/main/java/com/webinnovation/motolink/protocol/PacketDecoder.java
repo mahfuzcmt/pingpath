@@ -66,15 +66,23 @@ public class PacketDecoder {
         loc.setLatitude(lat);
         loc.setLongitude(lon);
 
-        // LBS (cell tower)
+        // LBS (cell tower) - layout differs by protocol variant
         if (protocolNumber == PacketType.LOCATION_4G) {
+            // 4G: MCC(2, bit15=MNC length flag) + MNC(1-2) + LAC(4) + CellID(8)
             int mcc = content.readUnsignedShort();
             boolean mncLong = (mcc & 0x8000) != 0;
             loc.setMcc(mcc & 0x7FFF);
             loc.setMnc(mncLong ? content.readUnsignedShort() : content.readUnsignedByte());
             loc.setLac((int) content.readUnsignedInt());
             loc.setCellId(content.readLong());
+        } else if (protocolNumber == PacketType.LOCATION_V4 && content.readableBytes() >= 9) {
+            // V4 (0x32): MCC(2) + MNC(1) + LAC(2) + CellID(4) = 9 bytes
+            loc.setMcc(content.readUnsignedShort());
+            loc.setMnc(content.readUnsignedByte());
+            loc.setLac(content.readUnsignedShort());
+            loc.setCellId(content.readUnsignedInt());
         } else if (content.readableBytes() >= 8) {
+            // V1.8 / V3: MCC(2) + MNC(1) + LAC(2) + CellID(3) = 8 bytes
             loc.setMcc(content.readUnsignedShort());
             loc.setMnc(content.readUnsignedByte());
             loc.setLac(content.readUnsignedShort());

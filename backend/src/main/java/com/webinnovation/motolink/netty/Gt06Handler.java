@@ -232,22 +232,36 @@ public class Gt06Handler extends SimpleChannelInboundHandler<ByteBuf> {
                 // Persist as a location row + run geofence/trip evaluation
                 locationService.saveAndBroadcast(loc);
 
-                // Then translate the alarm code into a domain alarm
+                // Then translate the alarm code into a domain alarm (GT06 Protocol V3.0 codes)
                 com.webinnovation.motolink.domain.enums.AlarmType type =
                         switch (loc.getAlarmCode()) {
-                            case 1 -> com.webinnovation.motolink.domain.enums.AlarmType.SHOCK;
-                            case 2 -> com.webinnovation.motolink.domain.enums.AlarmType.POWER_CUT;
-                            case 3 -> com.webinnovation.motolink.domain.enums.AlarmType.LOW_BATTERY;
-                            case 4 -> com.webinnovation.motolink.domain.enums.AlarmType.SOS;
+                            case 0x01 -> com.webinnovation.motolink.domain.enums.AlarmType.SOS;
+                            case 0x02 -> com.webinnovation.motolink.domain.enums.AlarmType.POWER_CUT;
+                            case 0x03 -> com.webinnovation.motolink.domain.enums.AlarmType.SHOCK;
+                            case 0x06 -> com.webinnovation.motolink.domain.enums.AlarmType.OVERSPEED;
+                            case 0x09 -> com.webinnovation.motolink.domain.enums.AlarmType.GEOFENCE_EXIT;
+                            case 0x0E -> com.webinnovation.motolink.domain.enums.AlarmType.EXTERNAL_LOW_VOLTAGE;
+                            case 0x13 -> com.webinnovation.motolink.domain.enums.AlarmType.REMOVE;
+                            case 0x14 -> com.webinnovation.motolink.domain.enums.AlarmType.DOOR;
+                            case 0x19 -> com.webinnovation.motolink.domain.enums.AlarmType.LOW_BATTERY;
+                            case 0xF0 -> com.webinnovation.motolink.domain.enums.AlarmType.URGENT_ACCELERATION;
+                            case 0xF1 -> com.webinnovation.motolink.domain.enums.AlarmType.URGENT_DECELERATION;
+                            case 0xF2 -> com.webinnovation.motolink.domain.enums.AlarmType.COLLISION;
+                            case 0xFE -> com.webinnovation.motolink.domain.enums.AlarmType.ACC_ON;
+                            case 0xFF -> com.webinnovation.motolink.domain.enums.AlarmType.ACC_OFF;
                             default -> null;
                         };
                 if (type == null) return;
 
                 com.webinnovation.motolink.domain.enums.AlarmSeverity sev =
-                        (type == com.webinnovation.motolink.domain.enums.AlarmType.SOS
-                                || type == com.webinnovation.motolink.domain.enums.AlarmType.POWER_CUT)
-                                ? com.webinnovation.motolink.domain.enums.AlarmSeverity.CRITICAL
-                                : com.webinnovation.motolink.domain.enums.AlarmSeverity.WARNING;
+                        switch (type) {
+                            case SOS, POWER_CUT, COLLISION, REMOVE ->
+                                com.webinnovation.motolink.domain.enums.AlarmSeverity.CRITICAL;
+                            case SHOCK, OVERSPEED, URGENT_ACCELERATION, URGENT_DECELERATION,
+                                 GEOFENCE_EXIT, EXTERNAL_LOW_VOLTAGE, LOW_BATTERY ->
+                                com.webinnovation.motolink.domain.enums.AlarmSeverity.WARNING;
+                            default -> com.webinnovation.motolink.domain.enums.AlarmSeverity.INFO;
+                        };
 
                 alarmService.raise(orgId, imei, type, sev,
                         loc.getTimestamp(), loc.getLatitude(), loc.getLongitude(),
