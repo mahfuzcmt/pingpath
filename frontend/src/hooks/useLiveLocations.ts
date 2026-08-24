@@ -311,6 +311,8 @@ export function useLiveLocations(orgId: string) {
    * All points are queued for sequential animation.
    */
   const processBatch = useCallback((batch: LocationView[]) => {
+    // Debug: log when batch is received
+    console.log(`[useLiveLocations] Received batch of ${batch.length} locations`, batch.slice(0, 2));
     const now = Date.now();
     setLocations((prev) => {
       const next = new Map(prev);

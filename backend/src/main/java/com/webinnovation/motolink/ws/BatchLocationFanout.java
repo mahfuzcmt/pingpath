@@ -83,7 +83,7 @@ public class BatchLocationFanout implements MessageListener {
             String topic = "/topic/org/" + orgId + "/locations/batch";
             broker.convertAndSend(topic, payload);
 
-            log.debug("Fanned out batch of {} locations to {}", payload.size(), topic);
+            log.info("Fanned out batch of {} locations to {}", payload.size(), topic);
         } catch (Exception e) {
             log.warn("Failed to fan out batch location event: {}", e.getMessage());
         }

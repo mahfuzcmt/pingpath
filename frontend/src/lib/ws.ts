@@ -84,6 +84,7 @@ class WsClient {
     if (this.subs.has(destination)) return;
 
     const sub = this.client.subscribe(destination, (msg: IMessage) => {
+      console.log(`[ws] Message received on ${destination}, body length: ${msg.body.length}`);
       const set = this.listeners.get(destination);
       if (!set || set.size === 0) return;
       let parsed: unknown = msg.body;
@@ -157,7 +158,12 @@ export function subscribeBatchLocations(
   orgId: string,
   listener: (locations: LocationView[]) => void,
 ): Promise<() => void> {
-  return get().subscribe<LocationView[]>(`/topic/org/${orgId}/locations/batch`, listener);
+  const topic = `/topic/org/${orgId}/locations/batch`;
+  console.log(`[ws] Subscribing to batch topic: ${topic}`);
+  return get().subscribe<LocationView[]>(topic, (locations) => {
+    console.log(`[ws] Received batch message on ${topic}: ${locations.length} locations`);
+    listener(locations);
+  });
 }
 
 export function subscribeAlarms(

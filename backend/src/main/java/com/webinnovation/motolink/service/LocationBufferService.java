@@ -97,7 +97,10 @@ public class LocationBufferService {
      */
     @Scheduled(fixedRate = 10_000)
     public void flushAndBroadcast() {
-        log.debug("Batch flush triggered, buffer size: {}", getBufferSize());
+        int bufferSize = getBufferSize();
+        if (bufferSize > 0) {
+            log.info("Batch flush triggered, buffer size: {}", bufferSize);
+        }
         if (buffer.isEmpty()) {
             return;
         }
@@ -140,7 +143,7 @@ public class LocationBufferService {
             }
         }
 
-        log.debug("Flushed location buffer: {} orgs, {} devices, {} points", snapshot.size(), totalDevices, totalPoints);
+        log.info("Flushed location buffer: {} orgs, {} devices, {} points", snapshot.size(), totalDevices, totalPoints);
     }
 
     /**
