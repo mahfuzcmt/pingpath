@@ -179,3 +179,78 @@ export function formatEngineHours(seconds: number | null | undefined, locale: Lo
   if (hours > 0) return `${formatNumber(hours, locale)}h ${formatNumber(minutes, locale)}m`;
   return `${formatNumber(minutes, locale)}m`;
 }
+
+/**
+ * GoMax-style precise stop duration: "Stopped 2h 15min 30sec"
+ * Used in sidebar vehicle list for stopped/idle vehicles.
+ */
+export function formatStopDuration(ts: string | null | undefined): string {
+  if (!ts) return "";
+  const secs = Math.max(0, Math.floor((Date.now() - new Date(ts).getTime()) / 1000));
+  const h = Math.floor(secs / 3600);
+  const m = Math.floor((secs % 3600) / 60);
+  const s = secs % 60;
+
+  if (h > 0) {
+    return `${h}h ${m}min ${s}sec`;
+  }
+  if (m > 0) {
+    return `${m}min ${s}sec`;
+  }
+  return `${s}sec`;
+}
+
+/**
+ * Convert vehicle battery voltage (mV) to percentage.
+ * Based on typical 12V vehicle battery:
+ * - 12.7V+ (12700mV) = 100% (fully charged)
+ * - 12.4V (12400mV) = 75%
+ * - 12.2V (12200mV) = 50%
+ * - 12.0V (12000mV) = 25%
+ * - 11.8V (11800mV) = 0% (discharged)
+ *
+ * For vehicles with external power (charging), voltage can go up to 14.4V.
+ */
+export function voltageToBatteryPercent(mv: number | null | undefined): number | null {
+  if (mv == null) return null;
+
+  // Voltage thresholds in millivolts
+  const MIN_VOLTAGE = 11800;  // 0% - discharged
+  const MAX_VOLTAGE = 12700;  // 100% - fully charged
+
+  // Clamp to 0-100%
+  if (mv <= MIN_VOLTAGE) return 0;
+  if (mv >= MAX_VOLTAGE) return 100;
+
+  // Linear interpolation between min and max
+  return Math.round(((mv - MIN_VOLTAGE) / (MAX_VOLTAGE - MIN_VOLTAGE)) * 100);
+}
+
+/**
+ * Format battery percentage with icon indicator.
+ */
+export function formatBatteryPercent(mv: number | null | undefined): string {
+  const pct = voltageToBatteryPercent(mv);
+  if (pct == null) return "—";
+  return `${pct}%`;
+}
+
+/**
+ * Get battery color based on percentage (for UI indicators).
+ */
+export function getBatteryColor(mv: number | null | undefined): string {
+  const pct = voltageToBatteryPercent(mv);
+  if (pct == null) return "#9CA3AF"; // gray
+  if (pct <= 20) return "#DC2626";   // red - critical
+  if (pct <= 40) return "#F59E0B";   // orange - low
+  return "#16A34A";                   // green - good
+}
+
+/**
+ * GSM signal strength as percentage (0-100%).
+ * GT06 reports 0-31 scale.
+ */
+export function gsmToPercent(value: number | null | undefined): number | null {
+  if (value == null) return null;
+  return Math.round(Math.min(100, (value / 31) * 100));
+}

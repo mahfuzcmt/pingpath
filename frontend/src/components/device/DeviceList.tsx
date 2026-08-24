@@ -3,7 +3,7 @@
 import { useMemo, useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale, type StringKey } from "@/lib/i18n";
-import { filterSpeed, formatSince, formatVoltage, gsmBars, vehicleState, VEHICLE_STATE_COLOR, type VehicleState } from "@/lib/format";
+import { filterSpeed, formatSince, formatStopDuration, formatBatteryPercent, getBatteryColor, gsmBars, gsmToPercent, vehicleState, VEHICLE_STATE_COLOR, type VehicleState } from "@/lib/format";
 import { useSpeedLimits } from "@/hooks/useSpeedLimits";
 import { useTicker } from "@/hooks/useTicker";
 import type { DeviceView, LocationView } from "@/types/domain";
@@ -141,16 +141,72 @@ const STATE_LABEL: Record<VehicleState, StringKey> = {
   nodata: "veh.nodata",
 };
 
-// Vehicle icon SVG based on type
+// Vehicle icon SVG based on type - GoMax-style clearer icons
 function VehicleIcon({ type, color }: { type?: string | null; color: string }) {
-  // Simple truck/car icon
+  // Motorbike icon (default for Bangladesh market)
+  if (type === "MOTORBIKE" || type === "BIKE" || !type) {
+    return (
+      <svg width="24" height="18" viewBox="0 0 24 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+        {/* Rear wheel */}
+        <circle cx="5" cy="13" r="4" stroke={color} strokeWidth="2" fill="none" />
+        <circle cx="5" cy="13" r="1.5" fill={color} />
+        {/* Front wheel */}
+        <circle cx="19" cy="13" r="4" stroke={color} strokeWidth="2" fill="none" />
+        <circle cx="19" cy="13" r="1.5" fill={color} />
+        {/* Frame */}
+        <path d="M5 13L10 6L14 6L19 13" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        {/* Seat */}
+        <path d="M8 6L12 4L14 6" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        {/* Handlebar */}
+        <path d="M14 6L16 3L18 4" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    );
+  }
+
+  // Car/CNG icon
+  if (type === "CAR" || type === "CNG" || type === "TAXI") {
+    return (
+      <svg width="28" height="16" viewBox="0 0 28 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        {/* Body */}
+        <path d="M3 10L5 4H19L23 10H3Z" fill={color} />
+        <rect x="2" y="10" width="24" height="4" rx="1" fill={color} />
+        {/* Windows */}
+        <path d="M6 5L7 9H13L13 5H6Z" fill="white" fillOpacity="0.6" />
+        <path d="M14 5L14 9H20L18 5H14Z" fill="white" fillOpacity="0.6" />
+        {/* Wheels */}
+        <circle cx="7" cy="14" r="2.5" fill="#1F2937" stroke="#374151" strokeWidth="0.5" />
+        <circle cx="21" cy="14" r="2.5" fill="#1F2937" stroke="#374151" strokeWidth="0.5" />
+        {/* Headlights */}
+        <rect x="23" y="11" width="2" height="1.5" rx="0.5" fill="#FCD34D" />
+      </svg>
+    );
+  }
+
+  // Truck/Bus icon
+  if (type === "TRUCK" || type === "BUS" || type === "VAN") {
+    return (
+      <svg width="28" height="16" viewBox="0 0 28 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        {/* Cargo body */}
+        <rect x="1" y="3" width="18" height="10" rx="1" fill={color} />
+        {/* Cabin */}
+        <path d="M19 5H24C25.1 5 26 5.9 26 7V13H19V5Z" fill={color} />
+        {/* Window */}
+        <rect x="20" y="6" width="5" height="4" rx="0.5" fill="white" fillOpacity="0.6" />
+        {/* Wheels */}
+        <circle cx="6" cy="14" r="2.5" fill="#1F2937" stroke="#374151" strokeWidth="0.5" />
+        <circle cx="15" cy="14" r="2.5" fill="#1F2937" stroke="#374151" strokeWidth="0.5" />
+        <circle cx="23" cy="14" r="2.5" fill="#1F2937" stroke="#374151" strokeWidth="0.5" />
+        {/* Headlight */}
+        <rect x="25" y="9" width="2" height="1.5" rx="0.5" fill="#FCD34D" />
+      </svg>
+    );
+  }
+
+  // Default: Generic vehicle marker (arrow-like for direction)
   return (
-    <svg width="24" height="16" viewBox="0 0 24 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="1" y="4" width="16" height="8" rx="1" fill={color} />
-      <rect x="17" y="6" width="6" height="6" rx="1" fill={color} />
-      <circle cx="5" cy="13" r="2" fill="#333" />
-      <circle cx="14" cy="13" r="2" fill="#333" />
-      <circle cx="20" cy="13" r="1.5" fill="#333" />
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="10" cy="10" r="8" fill={color} stroke="white" strokeWidth="1.5" />
+      <path d="M10 5L14 12H6L10 5Z" fill="white" />
     </svg>
   );
 }
@@ -406,7 +462,14 @@ export function DeviceList({ devices, locations, selectedImei, onSelect, onViewH
                       {d.name || d.vehiclePlate || d.imei.slice(-8)}
                     </div>
                     <div className="text-[10px]" style={{ color: statusColor }}>
-                      {overspeed ? "Overspeed" : t(STATE_LABEL[state])} {formatSince(sinceTs)}
+                      {/* GoMax-style: "Stopped 2h 15min 30sec" for stopped/idle vehicles */}
+                      {overspeed
+                        ? "Overspeed"
+                        : state === "stopped" || state === "idle"
+                          ? `${t(STATE_LABEL[state])} ${formatStopDuration(sinceTs)}`
+                          : state === "moving"
+                            ? t(STATE_LABEL[state])
+                            : `${t(STATE_LABEL[state])} ${formatSince(sinceTs)}`}
                     </div>
                   </div>
                 </button>
@@ -421,13 +484,18 @@ export function DeviceList({ devices, locations, selectedImei, onSelect, onViewH
                   >
                     {filterSpeed(live?.speed, live?.valid)} <span className="text-[8px] font-normal text-ink-500">kph</span>
                   </span>
-                  {/* GSM signal - use live data if available, fallback to device data */}
-                  <SignalIcon
-                    bars={gsmBars(live?.gsmSignal ?? d.lastGsmSignal)}
-                    title={`GSM ${live?.gsmSignal ?? d.lastGsmSignal ?? 0}/31`}
-                  />
-                  <span className="min-w-[28px] text-right font-mono text-[9px] text-ink-500" title="External voltage">
-                    {formatVoltage(live?.voltageMv ?? d.lastVoltageMv, locale)}
+                  {/* GSM signal with percentage - GoMax style */}
+                  <span className="flex items-center gap-0.5" title={`GSM ${gsmToPercent(live?.gsmSignal ?? d.lastGsmSignal) ?? 0}%`}>
+                    <SignalIcon bars={gsmBars(live?.gsmSignal ?? d.lastGsmSignal)} />
+                    <span className="text-[8px] text-ink-500">{gsmToPercent(live?.gsmSignal ?? d.lastGsmSignal) ?? 0}%</span>
+                  </span>
+                  {/* Battery percentage - GoMax style */}
+                  <span
+                    className="min-w-[28px] text-right font-mono text-[9px] font-semibold"
+                    style={{ color: getBatteryColor(live?.voltageMv ?? d.lastVoltageMv) }}
+                    title={`Battery: ${formatBatteryPercent(live?.voltageMv ?? d.lastVoltageMv)}`}
+                  >
+                    {formatBatteryPercent(live?.voltageMv ?? d.lastVoltageMv)}
                   </span>
                   <DeviceActionsMenu
                     imei={d.imei}
