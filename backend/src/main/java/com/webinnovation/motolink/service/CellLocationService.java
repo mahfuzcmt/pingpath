@@ -144,6 +144,9 @@ public class CellLocationService {
                 log.info("OpenCellID lookup success: mcc={} mnc={} lac={} cell={} -> ({}, {})",
                     mcc, mnc, lac, cellId, loc.getLatitude(), loc.getLongitude());
                 return Optional.of(loc);
+            } else if (response != null && response.getError() != null) {
+                log.debug("OpenCellID cell not found: mcc={} mnc={} lac={} cell={} error={}",
+                    mcc, mnc, lac, cellId, response.getError());
             }
         } catch (Exception e) {
             log.error("OpenCellID API error: {}", e.getMessage());
