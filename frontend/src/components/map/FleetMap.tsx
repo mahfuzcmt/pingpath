@@ -325,15 +325,14 @@ function plateLabelHtml(device: DeviceView | undefined, location: LocationView |
   // Freshness status for real-time feedback
   const freshness = getFreshnessStatus(location);
   const freshnessConfig = FRESHNESS_CONFIG[freshness];
-  const secondsAgo = getSecondsSinceUpdate(location);
   const justUpdated = isJustUpdated(location);
 
   const warningIndicator = showWarning
     ? `<span class="pp-label-gps" style="background: ${gpsInfo.color};" title="${gpsInfo.status}">${gpsInfo.icon}</span>`
     : '';
 
-  // Freshness indicator with seconds ago
-  const freshnessIndicator = `<span class="pp-label-freshness ${justUpdated ? 'pp-label-pulse' : ''}" style="background: ${freshnessConfig.bgColor}; color: ${freshnessConfig.color};" title="${freshnessConfig.label}">${freshnessConfig.icon} ${secondsAgo}s</span>`;
+  // Freshness indicator (icon only, no seconds count)
+  const freshnessIndicator = `<span class="pp-label-freshness ${justUpdated ? 'pp-label-pulse' : ''}" style="background: ${freshnessConfig.bgColor}; color: ${freshnessConfig.color};" title="${freshnessConfig.label}">${freshnessConfig.icon}</span>`;
 
   return `<div class="pp-label${showWarning ? ' pp-label-warning' : ''}" style="--state-color:${stateColor}">
     ${warningIndicator}
