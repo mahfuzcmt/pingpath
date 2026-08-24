@@ -141,72 +141,96 @@ const STATE_LABEL: Record<VehicleState, StringKey> = {
   nodata: "veh.nodata",
 };
 
-// Vehicle icon SVG based on type - GoMax-style clearer icons
+// Vehicle icon SVG - Top-down view matching map markers (simplified for sidebar)
 function VehicleIcon({ type, color }: { type?: string | null; color: string }) {
-  // Motorbike icon (default for Bangladesh market)
+  const dark = `${color}CC`; // slightly transparent for depth
+
+  // Motorbike - top-down view (default for Bangladesh market)
   if (type === "MOTORBIKE" || type === "BIKE" || !type) {
     return (
-      <svg width="24" height="18" viewBox="0 0 24 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-        {/* Rear wheel */}
-        <circle cx="5" cy="13" r="4" stroke={color} strokeWidth="2" fill="none" />
-        <circle cx="5" cy="13" r="1.5" fill={color} />
+      <svg width="18" height="28" viewBox="0 0 18 28" fill="none" xmlns="http://www.w3.org/2000/svg">
         {/* Front wheel */}
-        <circle cx="19" cy="13" r="4" stroke={color} strokeWidth="2" fill="none" />
-        <circle cx="19" cy="13" r="1.5" fill={color} />
-        {/* Frame */}
-        <path d="M5 13L10 6L14 6L19 13" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        <ellipse cx="9" cy="3" rx="4" ry="2.5" fill="#1a1a1a" stroke="#333" strokeWidth="0.5"/>
+        {/* Handlebars */}
+        <rect x="4" y="5" width="10" height="1.5" rx="0.75" fill="#444"/>
+        {/* Tank */}
+        <ellipse cx="9" cy="9" rx="3.5" ry="2.5" fill={color}/>
         {/* Seat */}
-        <path d="M8 6L12 4L14 6" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-        {/* Handlebar */}
-        <path d="M14 6L16 3L18 4" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        <ellipse cx="9" cy="16" rx="3" ry="6" fill="#1a1a1a"/>
+        {/* Tail */}
+        <path d="M6 22L12 22L11 25L7 25Z" fill={color}/>
+        {/* Rear wheel */}
+        <ellipse cx="9" cy="26" rx="4" ry="2" fill="#1a1a1a" stroke="#333" strokeWidth="0.5"/>
       </svg>
     );
   }
 
-  // Car/CNG icon
+  // Car - top-down view
   if (type === "CAR" || type === "CNG" || type === "TAXI") {
     return (
-      <svg width="28" height="16" viewBox="0 0 28 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg width="18" height="28" viewBox="0 0 18 28" fill="none" xmlns="http://www.w3.org/2000/svg">
         {/* Body */}
-        <path d="M3 10L5 4H19L23 10H3Z" fill={color} />
-        <rect x="2" y="10" width="24" height="4" rx="1" fill={color} />
-        {/* Windows */}
-        <path d="M6 5L7 9H13L13 5H6Z" fill="white" fillOpacity="0.6" />
-        <path d="M14 5L14 9H20L18 5H14Z" fill="white" fillOpacity="0.6" />
-        {/* Wheels */}
-        <circle cx="7" cy="14" r="2.5" fill="#1F2937" stroke="#374151" strokeWidth="0.5" />
-        <circle cx="21" cy="14" r="2.5" fill="#1F2937" stroke="#374151" strokeWidth="0.5" />
+        <rect x="3" y="2" width="12" height="24" rx="2" fill={color}/>
+        {/* Windshield */}
+        <rect x="4" y="5" width="10" height="5" rx="1" fill="#1e3a5f" opacity="0.8"/>
+        {/* Roof */}
+        <rect x="4.5" y="10" width="9" height="6" rx="0.5" fill={dark}/>
+        {/* Rear window */}
+        <rect x="4" y="17" width="10" height="4" rx="1" fill="#1e3a5f" opacity="0.8"/>
         {/* Headlights */}
-        <rect x="23" y="11" width="2" height="1.5" rx="0.5" fill="#FCD34D" />
-      </svg>
-    );
-  }
-
-  // Truck/Bus icon
-  if (type === "TRUCK" || type === "BUS" || type === "VAN") {
-    return (
-      <svg width="28" height="16" viewBox="0 0 28 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-        {/* Cargo body */}
-        <rect x="1" y="3" width="18" height="10" rx="1" fill={color} />
-        {/* Cabin */}
-        <path d="M19 5H24C25.1 5 26 5.9 26 7V13H19V5Z" fill={color} />
-        {/* Window */}
-        <rect x="20" y="6" width="5" height="4" rx="0.5" fill="white" fillOpacity="0.6" />
+        <rect x="4" y="2.5" width="2" height="1" rx="0.3" fill="#fffef0"/>
+        <rect x="12" y="2.5" width="2" height="1" rx="0.3" fill="#fffef0"/>
+        {/* Tail lights */}
+        <rect x="4" y="24" width="2" height="1" rx="0.3" fill="#ff3333"/>
+        <rect x="12" y="24" width="2" height="1" rx="0.3" fill="#ff3333"/>
         {/* Wheels */}
-        <circle cx="6" cy="14" r="2.5" fill="#1F2937" stroke="#374151" strokeWidth="0.5" />
-        <circle cx="15" cy="14" r="2.5" fill="#1F2937" stroke="#374151" strokeWidth="0.5" />
-        <circle cx="23" cy="14" r="2.5" fill="#1F2937" stroke="#374151" strokeWidth="0.5" />
-        {/* Headlight */}
-        <rect x="25" y="9" width="2" height="1.5" rx="0.5" fill="#FCD34D" />
+        <rect x="1.5" y="5" width="2" height="4" rx="0.5" fill="#1a1a1a"/>
+        <rect x="14.5" y="5" width="2" height="4" rx="0.5" fill="#1a1a1a"/>
+        <rect x="1.5" y="19" width="2" height="4" rx="0.5" fill="#1a1a1a"/>
+        <rect x="14.5" y="19" width="2" height="4" rx="0.5" fill="#1a1a1a"/>
       </svg>
     );
   }
 
-  // Default: Generic vehicle marker (arrow-like for direction)
+  // Truck/Bus - top-down view
+  if (type === "TRUCK" || type === "BUS" || type === "VAN" || type === "MICROBUS") {
+    return (
+      <svg width="18" height="28" viewBox="0 0 18 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+        {/* Cab */}
+        <rect x="3" y="1" width="12" height="8" rx="1.5" fill={color}/>
+        {/* Windshield */}
+        <rect x="4" y="2" width="10" height="4" rx="0.8" fill="#1e3a5f" opacity="0.8"/>
+        {/* Cargo */}
+        <rect x="2.5" y="9" width="13" height="17" rx="0.8" fill="#e8e8e8" stroke="#999" strokeWidth="0.3"/>
+        {/* Cargo lines */}
+        <line x1="2.5" y1="14" x2="15.5" y2="14" stroke="#ccc" strokeWidth="0.3"/>
+        <line x1="2.5" y1="19" x2="15.5" y2="19" stroke="#ccc" strokeWidth="0.3"/>
+        {/* Headlights */}
+        <rect x="4" y="1.5" width="2" height="1" rx="0.3" fill="#fffef0"/>
+        <rect x="12" y="1.5" width="2" height="1" rx="0.3" fill="#fffef0"/>
+        {/* Tail lights */}
+        <rect x="3" y="24.5" width="2" height="1" rx="0.3" fill="#ff3333"/>
+        <rect x="13" y="24.5" width="2" height="1" rx="0.3" fill="#ff3333"/>
+        {/* Wheels */}
+        <rect x="1" y="4" width="2" height="3.5" rx="0.5" fill="#1a1a1a"/>
+        <rect x="15" y="4" width="2" height="3.5" rx="0.5" fill="#1a1a1a"/>
+        <rect x="1" y="21" width="2" height="4" rx="0.5" fill="#1a1a1a"/>
+        <rect x="15" y="21" width="2" height="4" rx="0.5" fill="#1a1a1a"/>
+      </svg>
+    );
+  }
+
+  // Default: Generic vehicle marker (top-down car)
   return (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="10" cy="10" r="8" fill={color} stroke="white" strokeWidth="1.5" />
-      <path d="M10 5L14 12H6L10 5Z" fill="white" />
+    <svg width="18" height="28" viewBox="0 0 18 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="3" y="2" width="12" height="24" rx="2" fill={color}/>
+      <rect x="4" y="5" width="10" height="5" rx="1" fill="#1e3a5f" opacity="0.8"/>
+      <rect x="4.5" y="10" width="9" height="6" rx="0.5" fill={dark}/>
+      <rect x="4" y="17" width="10" height="4" rx="1" fill="#1e3a5f" opacity="0.8"/>
+      <rect x="1.5" y="5" width="2" height="4" rx="0.5" fill="#1a1a1a"/>
+      <rect x="14.5" y="5" width="2" height="4" rx="0.5" fill="#1a1a1a"/>
+      <rect x="1.5" y="19" width="2" height="4" rx="0.5" fill="#1a1a1a"/>
+      <rect x="14.5" y="19" width="2" height="4" rx="0.5" fill="#1a1a1a"/>
     </svg>
   );
 }
