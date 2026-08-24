@@ -3,19 +3,19 @@ import type { DeviceView, LocationView } from "@/types/domain";
 
 const TIMEZONE = "Asia/Dhaka";
 
-/** Speeds below this threshold (kph) are considered GPS noise and displayed as 0. */
+/** Speeds at or below this threshold (kph) are considered GPS noise and displayed as 0. */
 const SPEED_NOISE_THRESHOLD = 3;
 
 /**
  * Filter out unreliable speed readings:
  * 1. When GPS fix is invalid (valid=false), speed is meaningless - show 0
- * 2. Speeds below 3 kph are typically GPS drift when stationary - show 0
+ * 2. Speeds at or below 3 kph are typically GPS drift when stationary - show 0
  */
 export function filterSpeed(speed: number | null | undefined, valid?: boolean | null): number {
   if (speed == null) return 0;
   // When GPS fix is invalid, speed is unreliable (cell tower can't measure speed)
   if (valid === false) return 0;
-  return speed < SPEED_NOISE_THRESHOLD ? 0 : speed;
+  return speed <= SPEED_NOISE_THRESHOLD ? 0 : speed;
 }
 
 /**
