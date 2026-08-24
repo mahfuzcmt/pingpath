@@ -454,6 +454,8 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
+  // Track previous icon state to avoid unnecessary setIcon calls that break CSS transitions
+  const iconStateRef = useRef<Map<string, string>>(new Map());
   const initialFitDoneRef = useRef(false);
   const tileLayerRef = useRef<L.GridLayer | null>(null);
   const userMarkerRef = useRef<L.Marker | null>(null);
@@ -734,6 +736,9 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
       const isMoving = filterSpeed(loc.speed, loc.valid) > 0; // Moving if speed above noise threshold
       const justUpdated = isJustUpdated(loc);
 
+      // Create a key for icon state to detect changes (skip justUpdated as it's transient)
+      const iconStateKey = `${device?.vehicleType || ''}|${bodyColor}|${Math.round(course / 10)}|${isSelected}|${isOverspeed}|${noFix}|${isMoving}|${isStale}`;
+
       if (!marker) {
         // Create new marker
         const icon = createVehicleIcon(device?.vehicleType, bodyColor, course, isSelected, isOverspeed, noFix, isMoving, isStale, justUpdated, filterSpeed(loc.speed, loc.valid));
@@ -748,7 +753,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           .bindTooltip(plateLabelHtml(device, loc, color), {
             permanent: true,
             direction: 'top',
-            offset: [0, -50],  // Clear teardrop marker height (47-55px)
+            offset: [0, -12],  // Small gap for 20-24px icons (half icon + small padding)
             className: 'pp-plate-tooltip',
           });
 
@@ -783,10 +788,15 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
         });
 
         markersRef.current.set(imei, marker);
+        iconStateRef.current.set(imei, iconStateKey);
       } else {
         // Update existing marker - GoMax style: update position directly, CSS transition handles smooth animation
-        // Update icon, popup, tooltip, and POSITION
-        marker.setIcon(createVehicleIcon(device?.vehicleType, bodyColor, course, isSelected, isOverspeed, noFix, isMoving, isStale, justUpdated, filterSpeed(loc.speed, loc.valid)));
+        // ONLY update icon if state actually changed (prevents DOM replacement that breaks CSS transitions)
+        const prevIconState = iconStateRef.current.get(imei);
+        if (prevIconState !== iconStateKey) {
+          marker.setIcon(createVehicleIcon(device?.vehicleType, bodyColor, course, isSelected, isOverspeed, noFix, isMoving, isStale, justUpdated, filterSpeed(loc.speed, loc.valid)));
+          iconStateRef.current.set(imei, iconStateKey);
+        }
         marker.setPopupContent(createPopupContent(device, loc));
         marker.setTooltipContent(plateLabelHtml(device, loc, color));
 
@@ -814,6 +824,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
       if (!seen.has(imei)) {
         marker.remove();
         markersRef.current.delete(imei);
+        iconStateRef.current.delete(imei);
         // Also clean up trails and predictive markers
         const trail = trailsRef.current.get(imei);
         if (trail) {
