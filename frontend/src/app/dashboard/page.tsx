@@ -78,6 +78,7 @@ export default function DashboardPage() {
           locations={locations}
           selectedImei={selectedImei}
           onSelect={setSelectedImei}
+          onViewHistory={() => setShowHistory(true)}
         />
       </aside>
 

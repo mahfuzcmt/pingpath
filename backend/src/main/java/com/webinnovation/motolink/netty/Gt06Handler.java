@@ -108,11 +108,28 @@ public class Gt06Handler extends SimpleChannelInboundHandler<ByteBuf> {
     private void dispatch(ChannelHandlerContext ctx, int proto, int serial, ByteBuf content) {
         switch (proto) {
             case PacketType.LOGIN -> handleLogin(ctx, serial, content);
+
+            // Location packets (GT06 and Jimi IoT share 0x22)
             case PacketType.LOCATION_V18, PacketType.LOCATION_V3,
                  PacketType.LOCATION_V4, PacketType.LOCATION_4G ->
                     handleLocation(ctx, proto, serial, content);
+
+            // Heartbeat: GT06 uses 0x13, Jimi EG02/EG03 uses 0x23
             case PacketType.HEARTBEAT -> handleHeartbeat(ctx, serial, content);
+            case PacketType.JIMI_HEARTBEAT -> handleJimiHeartbeat(ctx, serial, content);
+
+            // Alarms: GT06 uses 0x16, Jimi uses 0x26/0x27/0x19
             case PacketType.ALARM -> handleAlarm(ctx, serial, content);
+            case PacketType.JIMI_ALARM -> handleJimiAlarm(ctx, serial, content);
+            case PacketType.JIMI_ALARM_HVT001 -> handleJimiAlarmHvt001(ctx, serial, content);
+            case PacketType.JIMI_LBS_ALARM -> handleJimiLbsAlarm(ctx, serial, content);
+
+            // Jimi IoT specific packets
+            case PacketType.JIMI_LBS_EXTENSION -> handleJimiLbsExtension(ctx, serial, content);
+            case PacketType.JIMI_WIFI -> handleJimiWifi(ctx, serial, content);
+            case PacketType.JIMI_TIME_CALIBRATION -> handleJimiTimeCalibration(ctx, serial, content);
+            case PacketType.JIMI_INFO_TRANSMISSION -> handleJimiInfoTransmission(ctx, serial, content);
+
             case PacketType.COMMAND_REPLY -> handleCommandReply(ctx, content);
             default -> {
                 log.debug("Unhandled protocol 0x{}, ACKing serial {}",
@@ -312,6 +329,255 @@ public class Gt06Handler extends SimpleChannelInboundHandler<ByteBuf> {
                 deviceService.markOnline(imei);
             }
         });
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Jimi IoT Protocol V3.2 Handlers
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Jimi EG02/EG03 heartbeat (0x23). Same structure as GT06 heartbeat but
+     * different protocol number.
+     */
+    private void handleJimiHeartbeat(ChannelHandlerContext ctx, int serial, ByteBuf content) {
+        ctx.writeAndFlush(packetEncoder.buildAck(PacketType.JIMI_HEARTBEAT, serial));
+        String imei = ctx.channel().attr(ChannelKeys.IMEI_KEY).get();
+        if (imei == null) return;
+
+        byte[] raw = new byte[content.readableBytes()];
+        content.getBytes(content.readerIndex(), raw);
+
+        ingestExecutor.execute(() -> {
+            try {
+                io.netty.buffer.ByteBuf detached = io.netty.buffer.Unpooled.wrappedBuffer(raw);
+                PacketDecoder.HeartbeatStatus status = packetDecoder.decodeHeartbeat(detached);
+                if (status != null) {
+                    deviceService.applyHeartbeatStatus(imei, status.gsmSignal());
+                } else {
+                    deviceService.markOnline(imei);
+                }
+            } catch (Exception e) {
+                log.warn("Jimi heartbeat decode failed for imei={}: {}", imei, e.getMessage());
+                deviceService.markOnline(imei);
+            }
+        });
+    }
+
+    /**
+     * Jimi alarm packet (0x26). Similar to GT06 alarm but with Jimi-specific alarm codes.
+     */
+    private void handleJimiAlarm(ChannelHandlerContext ctx, int serial, ByteBuf content) {
+        ctx.writeAndFlush(packetEncoder.buildAck(PacketType.JIMI_ALARM, serial));
+
+        Boolean registered = ctx.channel().attr(ChannelKeys.REGISTERED_KEY).get();
+        if (registered == null || !registered) {
+            log.debug("Dropping Jimi alarm from unregistered channel id={}", ctx.channel().id());
+            return;
+        }
+        String imei = ctx.channel().attr(ChannelKeys.IMEI_KEY).get();
+        UUID orgId = ctx.channel().attr(ChannelKeys.ORG_ID_KEY).get();
+        if (imei == null || orgId == null) return;
+
+        byte[] raw = new byte[content.readableBytes()];
+        content.getBytes(content.readerIndex(), raw);
+
+        ingestExecutor.execute(() -> {
+            try {
+                io.netty.buffer.ByteBuf detached = io.netty.buffer.Unpooled.wrappedBuffer(raw);
+                LocationData loc = packetDecoder.decodeJimiAlarm(detached);
+                loc.setImei(imei);
+                loc.setOrgId(orgId);
+                loc.setRawPayload(raw);
+                locationService.saveAndBroadcast(loc);
+
+                // Map Jimi alarm codes to domain alarm types
+                com.webinnovation.motolink.domain.enums.AlarmType type = mapJimiAlarmCode(loc.getAlarmCode());
+                if (type == null) return;
+
+                com.webinnovation.motolink.domain.enums.AlarmSeverity sev = getAlarmSeverity(type);
+                alarmService.raise(orgId, imei, type, sev,
+                        loc.getTimestamp(), loc.getLatitude(), loc.getLongitude(),
+                        java.util.Map.of("source", "device", "alarmCode", loc.getAlarmCode(), "protocol", "jimi"));
+            } catch (Exception e) {
+                log.error("Jimi alarm decode/persist failed for imei={}: {}", imei, e.getMessage(), e);
+            }
+        });
+    }
+
+    /**
+     * Jimi HVT001 alarm packet (0x27). Specialized video tracker alarm.
+     */
+    private void handleJimiAlarmHvt001(ChannelHandlerContext ctx, int serial, ByteBuf content) {
+        ctx.writeAndFlush(packetEncoder.buildAck(PacketType.JIMI_ALARM_HVT001, serial));
+
+        Boolean registered = ctx.channel().attr(ChannelKeys.REGISTERED_KEY).get();
+        if (registered == null || !registered) {
+            log.debug("Dropping Jimi HVT001 alarm from unregistered channel id={}", ctx.channel().id());
+            return;
+        }
+        String imei = ctx.channel().attr(ChannelKeys.IMEI_KEY).get();
+        UUID orgId = ctx.channel().attr(ChannelKeys.ORG_ID_KEY).get();
+        if (imei == null || orgId == null) return;
+
+        byte[] raw = new byte[content.readableBytes()];
+        content.getBytes(content.readerIndex(), raw);
+
+        ingestExecutor.execute(() -> {
+            try {
+                io.netty.buffer.ByteBuf detached = io.netty.buffer.Unpooled.wrappedBuffer(raw);
+                // HVT001 uses the same alarm format as standard Jimi alarm
+                LocationData loc = packetDecoder.decodeJimiAlarm(detached);
+                loc.setImei(imei);
+                loc.setOrgId(orgId);
+                loc.setRawPayload(raw);
+                locationService.saveAndBroadcast(loc);
+
+                com.webinnovation.motolink.domain.enums.AlarmType type = mapJimiAlarmCode(loc.getAlarmCode());
+                if (type == null) return;
+
+                com.webinnovation.motolink.domain.enums.AlarmSeverity sev = getAlarmSeverity(type);
+                alarmService.raise(orgId, imei, type, sev,
+                        loc.getTimestamp(), loc.getLatitude(), loc.getLongitude(),
+                        java.util.Map.of("source", "device", "alarmCode", loc.getAlarmCode(), "protocol", "jimi-hvt001"));
+            } catch (Exception e) {
+                log.error("Jimi HVT001 alarm decode/persist failed for imei={}: {}", imei, e.getMessage(), e);
+            }
+        });
+    }
+
+    /**
+     * Jimi LBS alarm packet (0x19). Cell tower only positioning with alarm.
+     */
+    private void handleJimiLbsAlarm(ChannelHandlerContext ctx, int serial, ByteBuf content) {
+        ctx.writeAndFlush(packetEncoder.buildAck(PacketType.JIMI_LBS_ALARM, serial));
+
+        Boolean registered = ctx.channel().attr(ChannelKeys.REGISTERED_KEY).get();
+        if (registered == null || !registered) return;
+        String imei = ctx.channel().attr(ChannelKeys.IMEI_KEY).get();
+        UUID orgId = ctx.channel().attr(ChannelKeys.ORG_ID_KEY).get();
+        if (imei == null || orgId == null) return;
+
+        byte[] raw = new byte[content.readableBytes()];
+        content.getBytes(content.readerIndex(), raw);
+
+        ingestExecutor.execute(() -> {
+            try {
+                io.netty.buffer.ByteBuf detached = io.netty.buffer.Unpooled.wrappedBuffer(raw);
+                LocationData loc = packetDecoder.decodeJimiLbsAlarm(detached);
+                loc.setImei(imei);
+                loc.setOrgId(orgId);
+                loc.setRawPayload(raw);
+                // LBS-only alarm has no GPS coordinates, only cell tower info
+                // Save with valid=false to indicate approximate position
+                loc.setValid(false);
+                locationService.saveAndBroadcast(loc);
+
+                com.webinnovation.motolink.domain.enums.AlarmType type = mapJimiAlarmCode(loc.getAlarmCode());
+                if (type == null) return;
+
+                com.webinnovation.motolink.domain.enums.AlarmSeverity sev = getAlarmSeverity(type);
+                alarmService.raise(orgId, imei, type, sev,
+                        loc.getTimestamp(), loc.getLatitude(), loc.getLongitude(),
+                        java.util.Map.of("source", "device", "alarmCode", loc.getAlarmCode(), "protocol", "jimi-lbs"));
+            } catch (Exception e) {
+                log.error("Jimi LBS alarm decode failed for imei={}: {}", imei, e.getMessage(), e);
+            }
+        });
+    }
+
+    /**
+     * Jimi LBS extension (0x28). Extended cell tower information.
+     * ACK and log only — no location data to persist.
+     */
+    private void handleJimiLbsExtension(ChannelHandlerContext ctx, int serial, ByteBuf content) {
+        ctx.writeAndFlush(packetEncoder.buildAck(PacketType.JIMI_LBS_EXTENSION, serial));
+        String imei = ctx.channel().attr(ChannelKeys.IMEI_KEY).get();
+        log.debug("Jimi LBS extension received for imei={}, {} bytes", imei, content.readableBytes());
+    }
+
+    /**
+     * Jimi WiFi positioning (0x2C). Contains nearby WiFi AP info for positioning.
+     * ACK and log only for now — could be used for indoor positioning in future.
+     */
+    private void handleJimiWifi(ChannelHandlerContext ctx, int serial, ByteBuf content) {
+        ctx.writeAndFlush(packetEncoder.buildAck(PacketType.JIMI_WIFI, serial));
+        String imei = ctx.channel().attr(ChannelKeys.IMEI_KEY).get();
+        log.debug("Jimi WiFi positioning received for imei={}, {} bytes", imei, content.readableBytes());
+    }
+
+    /**
+     * Jimi time calibration request (0x8A). Device requests current server time.
+     */
+    private void handleJimiTimeCalibration(ChannelHandlerContext ctx, int serial, ByteBuf content) {
+        // Build time calibration response with current UTC time
+        ctx.writeAndFlush(packetEncoder.buildTimeCalibrationResponse(serial));
+        String imei = ctx.channel().attr(ChannelKeys.IMEI_KEY).get();
+        log.debug("Jimi time calibration request from imei={}", imei);
+    }
+
+    /**
+     * Jimi info transmission (0x94). Device uploads firmware version and other info.
+     * ACK and log the info.
+     */
+    private void handleJimiInfoTransmission(ChannelHandlerContext ctx, int serial, ByteBuf content) {
+        ctx.writeAndFlush(packetEncoder.buildAck(PacketType.JIMI_INFO_TRANSMISSION, serial));
+        String imei = ctx.channel().attr(ChannelKeys.IMEI_KEY).get();
+
+        byte[] raw = new byte[content.readableBytes()];
+        content.getBytes(content.readerIndex(), raw);
+
+        ingestExecutor.execute(() -> {
+            try {
+                io.netty.buffer.ByteBuf detached = io.netty.buffer.Unpooled.wrappedBuffer(raw);
+                String info = packetDecoder.decodeJimiInfoTransmission(detached);
+                log.info("Jimi device info for imei={}: {}", imei, info);
+            } catch (Exception e) {
+                log.warn("Jimi info transmission decode failed for imei={}: {}", imei, e.getMessage());
+            }
+        });
+    }
+
+    /**
+     * Map Jimi IoT alarm codes to domain alarm types.
+     * Jimi Protocol V3.2 alarm codes differ from GT06.
+     */
+    private com.webinnovation.motolink.domain.enums.AlarmType mapJimiAlarmCode(int alarmCode) {
+        return switch (alarmCode) {
+            case 0x01 -> com.webinnovation.motolink.domain.enums.AlarmType.SOS;
+            case 0x02 -> com.webinnovation.motolink.domain.enums.AlarmType.POWER_CUT;
+            case 0x03 -> com.webinnovation.motolink.domain.enums.AlarmType.SHOCK;         // Vibration
+            case 0x04 -> com.webinnovation.motolink.domain.enums.AlarmType.GEOFENCE_ENTER;
+            case 0x05 -> com.webinnovation.motolink.domain.enums.AlarmType.GEOFENCE_EXIT;
+            case 0x06 -> com.webinnovation.motolink.domain.enums.AlarmType.OVERSPEED;
+            case 0x09 -> com.webinnovation.motolink.domain.enums.AlarmType.LOW_BATTERY;
+            case 0x0A -> com.webinnovation.motolink.domain.enums.AlarmType.EXTERNAL_LOW_VOLTAGE;
+            case 0x0B -> com.webinnovation.motolink.domain.enums.AlarmType.REMOVE;        // GPS antenna cut
+            case 0x0D -> com.webinnovation.motolink.domain.enums.AlarmType.ACC_ON;
+            case 0x0E -> com.webinnovation.motolink.domain.enums.AlarmType.ACC_OFF;
+            case 0x0F -> com.webinnovation.motolink.domain.enums.AlarmType.DOOR;
+            case 0x10 -> com.webinnovation.motolink.domain.enums.AlarmType.DOOR;          // Door 1
+            case 0x11 -> com.webinnovation.motolink.domain.enums.AlarmType.DOOR;          // Door 2
+            case 0x29 -> com.webinnovation.motolink.domain.enums.AlarmType.URGENT_ACCELERATION;
+            case 0x30 -> com.webinnovation.motolink.domain.enums.AlarmType.URGENT_DECELERATION;
+            case 0x2A -> com.webinnovation.motolink.domain.enums.AlarmType.COLLISION;     // Sharp turn
+            case 0x2B -> com.webinnovation.motolink.domain.enums.AlarmType.COLLISION;     // Collision
+            default -> null;
+        };
+    }
+
+    /**
+     * Get alarm severity based on alarm type.
+     */
+    private com.webinnovation.motolink.domain.enums.AlarmSeverity getAlarmSeverity(
+            com.webinnovation.motolink.domain.enums.AlarmType type) {
+        return switch (type) {
+            case SOS, POWER_CUT, COLLISION, REMOVE ->
+                com.webinnovation.motolink.domain.enums.AlarmSeverity.CRITICAL;
+            case SHOCK, OVERSPEED, URGENT_ACCELERATION, URGENT_DECELERATION,
+                 GEOFENCE_EXIT, GEOFENCE_ENTER, EXTERNAL_LOW_VOLTAGE, LOW_BATTERY ->
+                com.webinnovation.motolink.domain.enums.AlarmSeverity.WARNING;
+            default -> com.webinnovation.motolink.domain.enums.AlarmSeverity.INFO;
+        };
     }
 
     @Override

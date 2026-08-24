@@ -205,6 +205,161 @@ public class PacketDecoder {
      */
     public record HeartbeatStatus(boolean accOn, int voltageLevel, int gsmSignal, int alarmCode) {}
 
+    // ─────────────────────────────────────────────────────────────────────────
+    // Jimi IoT Protocol V3.2 Decoders
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Decode a Jimi 0x26 alarm packet. Layout is similar to GT06 alarm but with
+     * Jimi-specific alarm codes:
+     * <pre>
+     *   [date-time:6][gps-info:1][lat:4][lon:4][speed:1][course-status:2]
+     *   [mcc:2][mnc:1][lac:2][cell-id:3]
+     *   [acc:1][upload-mode:1][gps-real:1][mileage:4]
+     *   [status:1][alarm-code:1][reserve:2]
+     * </pre>
+     */
+    public LocationData decodeJimiAlarm(ByteBuf content) {
+        LocationData loc = new LocationData();
+        loc.setProtocolNumber(PacketType.JIMI_ALARM);
+        loc.setTimestamp(decodeDateTime(content));
+
+        int gpsByte = content.readUnsignedByte();
+        loc.setGpsInfoLength((gpsByte >> 4) & 0x0F);
+        loc.setSatellites(gpsByte & 0x0F);
+
+        long latRaw = content.readUnsignedInt();
+        long lonRaw = content.readUnsignedInt();
+        loc.setSpeed(content.readUnsignedByte());
+
+        int courseStatus = content.readUnsignedShort();
+        loc.setCourse(courseStatus & 0x03FF);
+        loc.setValid((courseStatus & 0x1000) != 0);
+        boolean south = (courseStatus & 0x0400) == 0;
+        boolean west = (courseStatus & 0x0800) != 0;
+
+        // Jimi uses the same coordinate encoding as GT06 V3/V4/4G
+        double lat = latRaw / 1_800_000.0;
+        double lon = lonRaw / 1_800_000.0;
+        if (south) lat = -lat;
+        if (west) lon = -lon;
+        loc.setLatitude(lat);
+        loc.setLongitude(lon);
+
+        // LBS data
+        if (content.readableBytes() >= 8) {
+            loc.setMcc(content.readUnsignedShort());
+            loc.setMnc(content.readUnsignedByte());
+            loc.setLac(content.readUnsignedShort());
+            loc.setCellId(read24BitInt(content));
+        }
+
+        // Extended Jimi fields
+        if (content.readableBytes() >= 7) {
+            loc.setAccOn(content.readUnsignedByte() == 1);
+            loc.setUploadMode((int) content.readUnsignedByte());
+            loc.setRealtimeFlag((int) content.readUnsignedByte());
+            loc.setMileageMeters(content.readUnsignedInt() * 1000L);  // km → m
+        }
+
+        // Status and alarm code
+        if (content.readableBytes() >= 2) {
+            int status = content.readUnsignedByte();
+            loc.setAccOn((status & 0x02) != 0);  // Override with status byte ACC
+            loc.setAlarmCode(content.readUnsignedByte());
+        }
+
+        // Skip reserved bytes if present
+        if (content.readableBytes() >= 2) {
+            content.skipBytes(2);
+        }
+
+        return loc;
+    }
+
+    /**
+     * Decode a Jimi LBS-only alarm (0x19). No GPS coordinates, only cell tower info.
+     * <pre>
+     *   [date-time:6][mcc:2][mnc:1][lac:2][cell-id:3]
+     *   [status:1][alarm-code:1][language:1]
+     * </pre>
+     */
+    public LocationData decodeJimiLbsAlarm(ByteBuf content) {
+        LocationData loc = new LocationData();
+        loc.setProtocolNumber(PacketType.JIMI_LBS_ALARM);
+        loc.setTimestamp(decodeDateTime(content));
+
+        // LBS data only — no GPS
+        if (content.readableBytes() >= 8) {
+            loc.setMcc(content.readUnsignedShort());
+            loc.setMnc(content.readUnsignedByte());
+            loc.setLac(content.readUnsignedShort());
+            loc.setCellId(read24BitInt(content));
+        }
+
+        // No actual coordinates — set to 0,0 with valid=false
+        loc.setLatitude(0);
+        loc.setLongitude(0);
+        loc.setValid(false);
+
+        // Status block
+        if (content.readableBytes() >= 3) {
+            int status = content.readUnsignedByte();
+            loc.setAccOn((status & 0x02) != 0);
+            loc.setAlarmCode(content.readUnsignedByte());
+            content.readUnsignedByte();  // language byte — discarded
+        }
+
+        return loc;
+    }
+
+    /**
+     * Decode Jimi info transmission packet (0x94).
+     * Contains sub-protocol and variable content based on sub-protocol type.
+     */
+    public String decodeJimiInfoTransmission(ByteBuf content) {
+        if (content.readableBytes() < 2) {
+            return "Empty info packet";
+        }
+
+        int subProtocol = content.readUnsignedByte();
+        int infoLength = content.readUnsignedByte();
+
+        if (content.readableBytes() < infoLength) {
+            return "Sub-protocol: 0x" + Integer.toHexString(subProtocol) + ", truncated";
+        }
+
+        byte[] infoBytes = new byte[infoLength];
+        content.readBytes(infoBytes);
+
+        return switch (subProtocol) {
+            case 0x00 -> "External power voltage: " + bytesToInt(infoBytes) + " mV";
+            case 0x01 -> "Terminal state: 0x" + bytesToHex(infoBytes);
+            case 0x02 -> "Signal strength: " + (infoBytes.length > 0 ? infoBytes[0] & 0xFF : 0);
+            case 0x03 -> "Device ID: " + new String(infoBytes, java.nio.charset.StandardCharsets.US_ASCII);
+            case 0x04 -> "Device IMEI: " + new String(infoBytes, java.nio.charset.StandardCharsets.US_ASCII);
+            case 0x05 -> "ICCID: " + new String(infoBytes, java.nio.charset.StandardCharsets.US_ASCII);
+            case 0x06 -> "Firmware version: " + new String(infoBytes, java.nio.charset.StandardCharsets.US_ASCII);
+            default -> "Sub-protocol 0x" + Integer.toHexString(subProtocol) + ": " + bytesToHex(infoBytes);
+        };
+    }
+
+    private static int bytesToInt(byte[] bytes) {
+        int result = 0;
+        for (byte b : bytes) {
+            result = (result << 8) | (b & 0xFF);
+        }
+        return result;
+    }
+
+    private static String bytesToHex(byte[] bytes) {
+        StringBuilder sb = new StringBuilder();
+        for (byte b : bytes) {
+            sb.append(String.format("%02X", b & 0xFF));
+        }
+        return sb.toString();
+    }
+
     private static java.time.Instant decodeDateTime(ByteBuf buf) {
         int yy = buf.readUnsignedByte();
         int mo = buf.readUnsignedByte();

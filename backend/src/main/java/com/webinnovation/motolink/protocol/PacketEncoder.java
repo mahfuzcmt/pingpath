@@ -64,4 +64,37 @@ public class PacketEncoder {
         buf.writeByte(0x0A);
         return buf;
     }
+
+    /**
+     * Build a Jimi time calibration response (0x8A).
+     * Layout: [0x78 0x78][Length=0x0B][0x8A][YY][MM][DD][HH][mm][ss][Serial:2][CRC:2][0x0D 0x0A]
+     *
+     * Sends current UTC time to the device for clock synchronization.
+     */
+    public ByteBuf buildTimeCalibrationResponse(int serial) {
+        java.time.ZonedDateTime now = java.time.ZonedDateTime.now(java.time.ZoneOffset.UTC);
+
+        // Length = proto(1) + datetime(6) + serial(2) + crc(2) = 11 (0x0B)
+        ByteBuf buf = Unpooled.buffer(15);
+        buf.writeByte(0x78);
+        buf.writeByte(0x78);
+        buf.writeByte(0x0B);
+        buf.writeByte(PacketType.JIMI_TIME_CALIBRATION);
+
+        // DateTime: YY MM DD HH mm ss (all 1 byte, YY is year minus 2000)
+        buf.writeByte(now.getYear() - 2000);
+        buf.writeByte(now.getMonthValue());
+        buf.writeByte(now.getDayOfMonth());
+        buf.writeByte(now.getHour());
+        buf.writeByte(now.getMinute());
+        buf.writeByte(now.getSecond());
+
+        buf.writeShort(serial);
+
+        int crc = ChecksumUtil.crcItu(buf, 2, buf.writerIndex() - 2);
+        buf.writeShort(crc);
+        buf.writeByte(0x0D);
+        buf.writeByte(0x0A);
+        return buf;
+    }
 }
