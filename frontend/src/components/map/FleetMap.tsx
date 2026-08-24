@@ -16,7 +16,7 @@ import {
 } from "@/lib/leaflet";
 import { MapLayerDropdown } from "./MapLayerDropdown";
 import { MapToolbar } from "./MapToolbar";
-import { filterSpeed, formatSince, vehicleState, VEHICLE_STATE_COLOR, type VehicleState } from "@/lib/format";
+import { filterSpeed, formatSince, vehicleState, VEHICLE_STATE_COLOR, type VehicleState, formatBatteryPercent, getBatteryColor, gsmToPercent, gsmBars } from "@/lib/format";
 import { buildVehicleSvg, getIconDimensions } from "@/lib/vehicleIcons";
 import { useSpeedLimits } from "@/hooks/useSpeedLimits";
 import type { DeviceView, LocationView } from "@/types/domain";
@@ -580,6 +580,20 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           <div class="pp-popup-row">
             <span class="pp-popup-label">ACC</span>
             <span class="pp-popup-value" style="color: ${accStatus === 'ON' ? '#16A34A' : '#64748B'}; font-weight: 600;">${accStatus}</span>
+          </div>
+          <div class="pp-popup-row">
+            <span class="pp-popup-label">Battery</span>
+            <span class="pp-popup-value" style="color: ${getBatteryColor(location?.voltageMv ?? device?.lastVoltageMv)}; font-weight: 600;">
+              ${formatBatteryPercent(location?.voltageMv ?? device?.lastVoltageMv)}
+            </span>
+          </div>
+          <div class="pp-popup-row">
+            <span class="pp-popup-label">Signal</span>
+            <span class="pp-popup-value" style="font-weight: 600;">
+              ${'<span style="display:inline-flex;gap:1px;vertical-align:middle;">' +
+                [0,1,2,3].map(i => `<span style="display:inline-block;width:3px;height:${4+i*2}px;background:${i < gsmBars(location?.gsmSignal ?? device?.lastGsmSignal) ? '#4DA74D' : '#DDD'};border-radius:1px;"></span>`).join('') +
+                '</span>'} ${gsmToPercent(location?.gsmSignal ?? device?.lastGsmSignal) ?? 0}%
+            </span>
           </div>
           <div class="pp-popup-row">
             <span class="pp-popup-label">Last Update</span>

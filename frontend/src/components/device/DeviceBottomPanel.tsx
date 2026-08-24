@@ -6,7 +6,7 @@ import { useTrips } from "@/hooks/useTrips";
 import { useLocationHistory } from "@/hooks/useLocationHistory";
 import { cutFuel, restoreFuel, queryAddress, rebootDevice, sendRawCommand } from "@/lib/deviceCommands";
 import { extractError } from "@/lib/api";
-import { dhakaTodayStartIso, filterSpeed, formatDurationS, formatNumber, formatSince } from "@/lib/format";
+import { dhakaTodayStartIso, filterSpeed, formatDurationS, formatNumber, formatSince, formatBatteryPercent } from "@/lib/format";
 import { TimeSeriesChart, chartColors } from "@/components/charts/TimeSeriesChart";
 import type { DeviceView, LocationView } from "@/types/domain";
 
@@ -193,7 +193,7 @@ export function DeviceBottomPanel({ device, location, onClose, onViewHistory, on
           <div className="flex-1 grid grid-cols-1 gap-x-8 p-3 sm:grid-cols-2">
             <DataRow icon="🕐" label="Time (position)" value={formatDateTime(location?.ts)} />
             <DataRow icon="🕐" label="Time (server)" value={formatDateTime(location?.ts)} />
-            <DataRow icon="🔋" label="Battery Level" value={location?.voltageMv ? `${Math.min(100, Math.max(0, Math.round((location.voltageMv - 10000) / 50)))} %` : "— %"} />
+            <DataRow icon="🔋" label="Battery Level" value={formatBatteryPercent(location?.voltageMv)} />
             <DataRow icon="🔑" label="Engine ACC" value={location?.accOn == null ? "—" : location.accOn ? "ON" : "OFF"} valueColor={location?.accOn ? "text-status-moving" : "text-ink-500"} />
             <DataRow icon="⚡" label="External Power" value={location?.voltageMv ? "ON" : "—"} valueColor={location?.voltageMv ? "text-status-moving" : "text-ink-500"} />
           </div>

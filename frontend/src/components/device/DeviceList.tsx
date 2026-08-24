@@ -3,7 +3,7 @@
 import { useMemo, useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale, type StringKey } from "@/lib/i18n";
-import { filterSpeed, formatSince, formatStopDuration, formatBatteryPercent, getBatteryColor, gsmBars, gsmToPercent, vehicleState, VEHICLE_STATE_COLOR, type VehicleState } from "@/lib/format";
+import { filterSpeed, formatSince, formatStopDuration, formatBatteryPercent, getBatteryColor, voltageToBatteryPercent, gsmBars, gsmToPercent, vehicleState, VEHICLE_STATE_COLOR, type VehicleState } from "@/lib/format";
 import { useSpeedLimits } from "@/hooks/useSpeedLimits";
 import { useTicker } from "@/hooks/useTicker";
 import type { DeviceView, LocationView } from "@/types/domain";
@@ -473,29 +473,33 @@ export function DeviceList({ devices, locations, selectedImei, onSelect, onViewH
                     </div>
                   </div>
                 </button>
-                <div className="flex items-center gap-1">
+                <div className="flex shrink-0 items-center gap-1">
                   {/* Freshness indicator */}
                   <FreshnessIndicator location={live} />
-                  {/* Speed with kph unit */}
+                  {/* Speed - compact */}
                   <span
-                    className={`min-w-[40px] text-right text-[10px] font-semibold ${overspeed ? "animate-pulse" : "text-ink-900"}`}
+                    className={`text-[10px] font-semibold ${overspeed ? "animate-pulse" : "text-ink-900"}`}
                     style={{ color: overspeed ? OVERSPEED_COLOR : undefined }}
-                    title="Current speed"
+                    title="Speed"
                   >
-                    {filterSpeed(live?.speed, live?.valid)} <span className="text-[8px] font-normal text-ink-500">kph</span>
+                    {filterSpeed(live?.speed, live?.valid)}<span className="text-[8px] font-normal text-ink-400">kph</span>
                   </span>
-                  {/* GSM signal with percentage - GoMax style */}
-                  <span className="flex items-center gap-0.5" title={`GSM ${gsmToPercent(live?.gsmSignal ?? d.lastGsmSignal) ?? 0}%`}>
-                    <SignalIcon bars={gsmBars(live?.gsmSignal ?? d.lastGsmSignal)} />
-                    <span className="text-[8px] text-ink-500">{gsmToPercent(live?.gsmSignal ?? d.lastGsmSignal) ?? 0}%</span>
-                  </span>
-                  {/* Battery percentage - GoMax style */}
+                  {/* GSM signal - bars only, % in tooltip */}
+                  <SignalIcon
+                    bars={gsmBars(live?.gsmSignal ?? d.lastGsmSignal)}
+                    title={`Signal: ${gsmToPercent(live?.gsmSignal ?? d.lastGsmSignal) ?? 0}%`}
+                  />
+                  {/* Battery - icon + % */}
                   <span
-                    className="min-w-[28px] text-right font-mono text-[9px] font-semibold"
+                    className="flex items-center text-[9px] font-semibold"
                     style={{ color: getBatteryColor(live?.voltageMv ?? d.lastVoltageMv) }}
                     title={`Battery: ${formatBatteryPercent(live?.voltageMv ?? d.lastVoltageMv)}`}
                   >
-                    {formatBatteryPercent(live?.voltageMv ?? d.lastVoltageMv)}
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                      <rect x="2" y="6" width="18" height="12" rx="2" stroke="currentColor" strokeWidth="2" fill="none"/>
+                      <rect x="20" y="9" width="2" height="6" rx="0.5" fill="currentColor"/>
+                      <rect x="4" y="8" width={`${Math.max(2, (voltageToBatteryPercent(live?.voltageMv ?? d.lastVoltageMv) ?? 0) * 0.14)}`} height="8" rx="1" fill="currentColor"/>
+                    </svg>
                   </span>
                   <DeviceActionsMenu
                     imei={d.imei}
