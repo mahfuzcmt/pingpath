@@ -57,6 +57,7 @@ services:
       PINGPATH_CORS_ALLOWED_ORIGINS: ${PINGPATH_CORS_ALLOWED_ORIGINS}
       SSL_SMS_API_TOKEN: ${SSL_SMS_API_TOKEN:-}
       SSL_SMS_SENDER_ID: ${SSL_SMS_SENDER_ID:-PINGPATH}
+      MOTOLINK_UNWIREDLABS_API_KEY: ${MOTOLINK_UNWIREDLABS_API_KEY:-}
       # First-run admin seeding — overrides application-prod.yml's enabled:false.
       # Idempotent: DataSeeder skips if any user already exists.
       PINGPATH_SEED_ENABLED: ${PINGPATH_SEED_ENABLED:-true}
