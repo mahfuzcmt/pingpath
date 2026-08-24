@@ -17,7 +17,7 @@ import {
 import { MapLayerDropdown } from "./MapLayerDropdown";
 import { MapToolbar } from "./MapToolbar";
 import { filterSpeed, formatSince, vehicleState, VEHICLE_STATE_COLOR, type VehicleState } from "@/lib/format";
-import { buildVehicleSvg } from "@/lib/vehicleIcons";
+import { buildVehicleSvg, getIconDimensions } from "@/lib/vehicleIcons";
 import { useSpeedLimits } from "@/hooks/useSpeedLimits";
 import type { DeviceView, LocationView } from "@/types/domain";
 import { type LiveLocationView, getInterpolatedPosition, isAnimating } from "@/hooks/useLiveLocations";
@@ -273,6 +273,8 @@ function createVehicleIcon(
 ): L.DivIcon {
   // GoMax-style: smaller icons to fit on roads (24/20 for road-fitting)
   const baseSize = isSelected ? 24 : 20;
+  // Get proper dimensions for taller icons (aspect ratio 1.4)
+  const { width, height } = getIconDimensions(baseSize);
   const classes = [
     'pp-vehicle-icon',
     isSelected && 'pp-selected',
@@ -286,7 +288,7 @@ function createVehicleIcon(
     speed > 50 && speed <= 80 && !isOverspeed && 'pp-high-speed',
   ].filter(Boolean).join(' ');
 
-  // Add GPS warning badge for nofix or stale (scaled for 24/20 icons)
+  // Add GPS warning badge for nofix or stale (scaled for taller icons)
   const warningBadge = (noFix || isStale) ? `
     <div class="pp-gps-badge" style="
       position: absolute;
@@ -310,8 +312,8 @@ function createVehicleIcon(
   return L.divIcon({
     html: `<div style="position: relative;">${buildVehicleSvg(vehicleType, isOverspeed ? OVERSPEED_COLOR : bodyColor, rotation, baseSize)}${warningBadge}</div>`,
     className: classes,
-    iconSize: [baseSize, baseSize],
-    iconAnchor: [baseSize / 2, baseSize / 2], // Center anchor for top-down view
+    iconSize: [width, height],
+    iconAnchor: [width / 2, height / 2], // Center anchor for top-down view
   });
 }
 
@@ -752,7 +754,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           .bindTooltip(plateLabelHtml(device, loc, color), {
             permanent: true,
             direction: 'top',
-            offset: [0, -12],  // Small gap for 20-24px icons (half icon + small padding)
+            offset: [0, -16],  // Small gap for taller icons (28-34px height)
             className: 'pp-plate-tooltip',
           });
 
