@@ -4,6 +4,7 @@ import { useMemo, useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale, type StringKey } from "@/lib/i18n";
 import { filterSpeed, formatSince, formatStopDuration, formatBatteryPercent, getBatteryColor, voltageToBatteryPercent, gsmBars, gsmToPercent, vehicleState, VEHICLE_STATE_COLOR, type VehicleState } from "@/lib/format";
+import { buildVehicleSvg } from "@/lib/vehicleIcons";
 import { useSpeedLimits } from "@/hooks/useSpeedLimits";
 import { useTicker } from "@/hooks/useTicker";
 import type { DeviceView, LocationView } from "@/types/domain";
@@ -141,98 +142,11 @@ const STATE_LABEL: Record<VehicleState, StringKey> = {
   nodata: "veh.nodata",
 };
 
-// Vehicle icon SVG - Top-down view matching map markers (simplified for sidebar)
+// Vehicle icon - uses same SVG as map markers for consistency
 function VehicleIcon({ type, color }: { type?: string | null; color: string }) {
-  const dark = `${color}CC`; // slightly transparent for depth
-
-  // Motorbike - top-down view (default for Bangladesh market)
-  if (type === "MOTORBIKE" || type === "BIKE" || !type) {
-    return (
-      <svg width="18" height="28" viewBox="0 0 18 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-        {/* Front wheel */}
-        <ellipse cx="9" cy="3" rx="4" ry="2.5" fill="#1a1a1a" stroke="#333" strokeWidth="0.5"/>
-        {/* Handlebars */}
-        <rect x="4" y="5" width="10" height="1.5" rx="0.75" fill="#444"/>
-        {/* Tank */}
-        <ellipse cx="9" cy="9" rx="3.5" ry="2.5" fill={color}/>
-        {/* Seat */}
-        <ellipse cx="9" cy="16" rx="3" ry="6" fill="#1a1a1a"/>
-        {/* Tail */}
-        <path d="M6 22L12 22L11 25L7 25Z" fill={color}/>
-        {/* Rear wheel */}
-        <ellipse cx="9" cy="26" rx="4" ry="2" fill="#1a1a1a" stroke="#333" strokeWidth="0.5"/>
-      </svg>
-    );
-  }
-
-  // Car - top-down view
-  if (type === "CAR" || type === "CNG" || type === "TAXI") {
-    return (
-      <svg width="18" height="28" viewBox="0 0 18 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-        {/* Body */}
-        <rect x="3" y="2" width="12" height="24" rx="2" fill={color}/>
-        {/* Windshield */}
-        <rect x="4" y="5" width="10" height="5" rx="1" fill="#1e3a5f" opacity="0.8"/>
-        {/* Roof */}
-        <rect x="4.5" y="10" width="9" height="6" rx="0.5" fill={dark}/>
-        {/* Rear window */}
-        <rect x="4" y="17" width="10" height="4" rx="1" fill="#1e3a5f" opacity="0.8"/>
-        {/* Headlights */}
-        <rect x="4" y="2.5" width="2" height="1" rx="0.3" fill="#fffef0"/>
-        <rect x="12" y="2.5" width="2" height="1" rx="0.3" fill="#fffef0"/>
-        {/* Tail lights */}
-        <rect x="4" y="24" width="2" height="1" rx="0.3" fill="#ff3333"/>
-        <rect x="12" y="24" width="2" height="1" rx="0.3" fill="#ff3333"/>
-        {/* Wheels */}
-        <rect x="1.5" y="5" width="2" height="4" rx="0.5" fill="#1a1a1a"/>
-        <rect x="14.5" y="5" width="2" height="4" rx="0.5" fill="#1a1a1a"/>
-        <rect x="1.5" y="19" width="2" height="4" rx="0.5" fill="#1a1a1a"/>
-        <rect x="14.5" y="19" width="2" height="4" rx="0.5" fill="#1a1a1a"/>
-      </svg>
-    );
-  }
-
-  // Truck/Bus - top-down view
-  if (type === "TRUCK" || type === "BUS" || type === "VAN" || type === "MICROBUS") {
-    return (
-      <svg width="18" height="28" viewBox="0 0 18 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-        {/* Cab */}
-        <rect x="3" y="1" width="12" height="8" rx="1.5" fill={color}/>
-        {/* Windshield */}
-        <rect x="4" y="2" width="10" height="4" rx="0.8" fill="#1e3a5f" opacity="0.8"/>
-        {/* Cargo */}
-        <rect x="2.5" y="9" width="13" height="17" rx="0.8" fill="#e8e8e8" stroke="#999" strokeWidth="0.3"/>
-        {/* Cargo lines */}
-        <line x1="2.5" y1="14" x2="15.5" y2="14" stroke="#ccc" strokeWidth="0.3"/>
-        <line x1="2.5" y1="19" x2="15.5" y2="19" stroke="#ccc" strokeWidth="0.3"/>
-        {/* Headlights */}
-        <rect x="4" y="1.5" width="2" height="1" rx="0.3" fill="#fffef0"/>
-        <rect x="12" y="1.5" width="2" height="1" rx="0.3" fill="#fffef0"/>
-        {/* Tail lights */}
-        <rect x="3" y="24.5" width="2" height="1" rx="0.3" fill="#ff3333"/>
-        <rect x="13" y="24.5" width="2" height="1" rx="0.3" fill="#ff3333"/>
-        {/* Wheels */}
-        <rect x="1" y="4" width="2" height="3.5" rx="0.5" fill="#1a1a1a"/>
-        <rect x="15" y="4" width="2" height="3.5" rx="0.5" fill="#1a1a1a"/>
-        <rect x="1" y="21" width="2" height="4" rx="0.5" fill="#1a1a1a"/>
-        <rect x="15" y="21" width="2" height="4" rx="0.5" fill="#1a1a1a"/>
-      </svg>
-    );
-  }
-
-  // Default: Generic vehicle marker (top-down car)
-  return (
-    <svg width="18" height="28" viewBox="0 0 18 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="3" y="2" width="12" height="24" rx="2" fill={color}/>
-      <rect x="4" y="5" width="10" height="5" rx="1" fill="#1e3a5f" opacity="0.8"/>
-      <rect x="4.5" y="10" width="9" height="6" rx="0.5" fill={dark}/>
-      <rect x="4" y="17" width="10" height="4" rx="1" fill="#1e3a5f" opacity="0.8"/>
-      <rect x="1.5" y="5" width="2" height="4" rx="0.5" fill="#1a1a1a"/>
-      <rect x="14.5" y="5" width="2" height="4" rx="0.5" fill="#1a1a1a"/>
-      <rect x="1.5" y="19" width="2" height="4" rx="0.5" fill="#1a1a1a"/>
-      <rect x="14.5" y="19" width="2" height="4" rx="0.5" fill="#1a1a1a"/>
-    </svg>
-  );
+  // Use buildVehicleSvg (same as map markers) with size 24 for sidebar
+  const svg = buildVehicleSvg(type, color, 0, 20);
+  return <span dangerouslySetInnerHTML={{ __html: svg }} style={{ display: 'inline-flex' }} />;
 }
 
 // Freshness indicator showing data recency
