@@ -64,16 +64,16 @@ export function Topbar({ user, orgId }: { user: UserView; orgId: string }) {
       <button
         type="button"
         onClick={() => setMenuOpen((o) => !o)}
-        className="flex w-12 shrink-0 items-center justify-center border-r border-white/20 text-ink-700 transition active:bg-brand-100 hover:bg-white/50 md:hidden"
+        className="flex w-14 shrink-0 items-center justify-center border-r border-white/20 text-ink-700 transition-all duration-150 active:bg-brand-100 active:scale-95 hover:bg-white/50 touch-manipulation md:hidden"
         aria-label="Menu"
         aria-expanded={menuOpen}
       >
         {menuOpen ? (
-          <svg {...ICON_PROPS} width={20} height={20}>
+          <svg {...ICON_PROPS} width={22} height={22}>
             <path d="M18 6 6 18M6 6l12 12" />
           </svg>
         ) : (
-          <svg {...ICON_PROPS} width={20} height={20}>
+          <svg {...ICON_PROPS} width={22} height={22}>
             <path d="M4 6h16M4 12h16M4 18h16" />
           </svg>
         )}
@@ -134,15 +134,15 @@ export function Topbar({ user, orgId }: { user: UserView; orgId: string }) {
       {menuOpen && (
         <>
           <div
-            className="fixed inset-0 top-10 z-[1900] bg-ink-950/40 backdrop-blur-sm md:hidden"
+            className="fixed inset-0 top-10 z-[1900] bg-ink-950/40 backdrop-blur-sm animate-in fade-in duration-200 md:hidden"
             onClick={() => setMenuOpen(false)}
           />
-          <nav className="fixed left-0 top-10 z-[2000] w-64 max-w-[85vw] rounded-br-xl border-b border-r border-ink-200 bg-white shadow-xl md:hidden">
+          <nav className="fixed left-0 top-10 z-[2000] w-64 max-w-[85vw] rounded-br-xl border-b border-r border-ink-200 bg-white shadow-xl animate-in slide-in-from-left duration-200 md:hidden">
             {items.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-2.5 border-b border-ink-100 px-4 py-3 text-sm font-semibold transition ${
+                className={`flex items-center gap-3 border-b border-ink-100 px-4 py-3.5 text-sm font-semibold transition-colors active:bg-brand-100 touch-manipulation ${
                   isActive(item.href)
                     ? "bg-brand-50 text-brand-700"
                     : "text-ink-700 hover:bg-ink-50"

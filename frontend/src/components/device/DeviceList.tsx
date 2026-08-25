@@ -80,30 +80,32 @@ function DeviceActionsMenu({
         type="button"
         onClick={(e) => {
           e.stopPropagation();
+          e.preventDefault();
           setOpen(!open);
         }}
-        className="flex h-5 w-5 items-center justify-center rounded text-ink-400 transition hover:bg-white/60 hover:text-ink-700"
+        className="flex h-8 w-8 items-center justify-center rounded-lg text-ink-400 transition-all duration-150 hover:bg-white/60 hover:text-ink-700 active:scale-95 active:bg-brand-50 touch-manipulation"
         title="More actions"
       >
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-          <circle cx="12" cy="5" r="2" />
-          <circle cx="12" cy="12" r="2" />
-          <circle cx="12" cy="19" r="2" />
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+          <circle cx="12" cy="5" r="2.5" />
+          <circle cx="12" cy="12" r="2.5" />
+          <circle cx="12" cy="19" r="2.5" />
         </svg>
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-1 min-w-[140px] rounded-lg border border-white/30 bg-white/95 py-1 shadow-lg backdrop-blur-xl">
+        <div className="absolute right-0 top-full z-[100] mt-1 min-w-[160px] animate-in fade-in slide-in-from-top-1 duration-150 rounded-xl border border-white/40 bg-white py-1.5 shadow-xl">
           <button
             type="button"
             onClick={(e) => {
               e.stopPropagation();
+              e.preventDefault();
               setOpen(false);
               onEdit();
             }}
-            className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs text-ink-700 transition hover:bg-brand-50/50"
+            className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm text-ink-700 transition-colors hover:bg-brand-50 active:bg-brand-100 touch-manipulation"
           >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
               <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
             </svg>
@@ -113,12 +115,13 @@ function DeviceActionsMenu({
             type="button"
             onClick={(e) => {
               e.stopPropagation();
+              e.preventDefault();
               setOpen(false);
               onViewHistory();
             }}
-            className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs text-ink-700 transition hover:bg-brand-50/50"
+            className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm text-ink-700 transition-colors hover:bg-brand-50 active:bg-brand-100 touch-manipulation"
           >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
             </svg>
             Route History
@@ -286,16 +289,16 @@ export function DeviceList({ devices, locations, selectedImei, onSelect, onViewH
       </div>
 
       {/* Status filter chips — shared 6-state model (matches Vehicles screen) */}
-      <div className="flex flex-wrap items-center gap-1 border-b border-white/20 bg-white/50 px-1.5 py-1.5 backdrop-blur-sm">
+      <div className="flex flex-wrap items-center gap-1.5 border-b border-white/20 bg-white/50 px-2 py-2 backdrop-blur-sm">
         {FILTERS.map((f) => (
           <button
             key={f.id}
             type="button"
             onClick={() => setFilter(f.id)}
-            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium transition ${
+            className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1.5 text-[11px] font-medium transition-all duration-150 active:scale-95 touch-manipulation ${
               filter === f.id
                 ? "border border-brand-400/50 bg-brand-50/80 text-brand-700 shadow-sm backdrop-blur-sm"
-                : "border border-white/30 bg-white/60 text-ink-600 hover:bg-white/80 hover:border-white/50 backdrop-blur-sm"
+                : "border border-white/30 bg-white/60 text-ink-600 hover:bg-white/80 hover:border-white/50 active:bg-brand-50/50 backdrop-blur-sm"
             }`}
           >
             {f.id !== "all" && (
