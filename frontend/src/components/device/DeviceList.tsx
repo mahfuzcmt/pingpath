@@ -369,9 +369,23 @@ export function DeviceList({ devices, locations, selectedImei, onSelect, onViewH
           const statusColor = overspeed ? OVERSPEED_COLOR : VEHICLE_STATE_COLOR[state];
           // Different "since" times per state:
           // - moving/idle: last update time
-          // - stopped: parking duration (trip end time)
+          // - stopped: parking duration (use parkedSince only if it's recent)
           // - offline/expired/nodata: last seen time (how long disconnected)
-          const sinceTs = state === "stopped" ? (d.parkedSince ?? ts) : ts;
+          //
+          // Fix: If parkedSince is much older than lastSeenAt, it's stale (vehicle moved since then).
+          // In this case, use lastSeenAt as the stop time approximation.
+          let sinceTs = ts;
+          if (state === "stopped") {
+            if (d.parkedSince && ts) {
+              const parkedTime = new Date(d.parkedSince).getTime();
+              const lastSeenTime = new Date(ts).getTime();
+              // If parkedSince is more than 1 hour older than lastSeenAt, it's stale
+              // Use lastSeenAt instead (vehicle was seen moving after parkedSince)
+              sinceTs = (lastSeenTime - parkedTime > 3600000) ? ts : d.parkedSince;
+            } else {
+              sinceTs = d.parkedSince ?? ts;
+            }
+          }
 
           return (
             <li
