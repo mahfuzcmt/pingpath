@@ -5,6 +5,7 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -31,7 +32,7 @@ public class UserDeviceRepository {
         var params = new MapSqlParameterSource()
                 .addValue("userId", userId)
                 .addValue("imei", deviceImei)
-                .addValue("now", Instant.now())
+                .addValue("now", Timestamp.from(Instant.now()))
                 .addValue("assignedBy", assignedBy);
         jdbc.update(sql, params);
     }
@@ -48,7 +49,7 @@ public class UserDeviceRepository {
             ON CONFLICT (user_id, device_imei) DO NOTHING
             """;
 
-        Instant now = Instant.now();
+        Timestamp now = Timestamp.from(Instant.now());
         for (String imei : deviceImeis) {
             var params = new MapSqlParameterSource()
                     .addValue("userId", userId)

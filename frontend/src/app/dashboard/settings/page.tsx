@@ -18,19 +18,21 @@ export default function Page() {
     <div className="flex h-full flex-col">
       <div className="flex items-center gap-4 border-b border-ink-400/15 px-4 py-3">
         <h1 className="font-display text-lg font-semibold">{t("settings.title")}</h1>
-        <div className="ml-auto flex gap-1 rounded-md border border-ink-400/20 p-0.5 text-sm">
-          <TabButton active={tab === "org"} onClick={() => setTab("org")}>
-            {t("settings.tab.org")}
-          </TabButton>
-          <TabButton active={tab === "users"} onClick={() => setTab("users")}>
-            {t("settings.tab.users")}
-          </TabButton>
-        </div>
+        {isAdmin && (
+          <div className="ml-auto flex gap-1 rounded-md border border-ink-400/20 p-0.5 text-sm">
+            <TabButton active={tab === "org"} onClick={() => setTab("org")}>
+              {t("settings.tab.org")}
+            </TabButton>
+            <TabButton active={tab === "users"} onClick={() => setTab("users")}>
+              {t("settings.tab.users")}
+            </TabButton>
+          </div>
+        )}
       </div>
 
       <div className="flex-1 overflow-y-auto p-4">
         {tab === "org" && <OrgInfoTab readOnly={!isAdmin} />}
-        {tab === "users" && <UsersTab canManage={isAdmin} />}
+        {tab === "users" && isAdmin && <UsersTab canManage={isAdmin} />}
       </div>
     </div>
   );

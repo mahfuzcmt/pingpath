@@ -751,8 +751,18 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
     const seen = new Set<string>();
 
     for (const [imei, loc] of locations.entries()) {
-      seen.add(imei);
       const device = deviceByImei.get(imei);
+      // Skip locations for devices the user doesn't have access to
+      if (!device) {
+        // Remove any existing marker for this device
+        const existingMarker = markersRef.current.get(imei);
+        if (existingMarker) {
+          existingMarker.remove();
+          markersRef.current.delete(imei);
+        }
+        continue;
+      }
+      seen.add(imei);
       const isOverspeed = speedLimits.isOverspeed(imei, loc.speed);
       const color = isOverspeed ? OVERSPEED_COLOR : markerColor(device, loc);
       const isSelected = imei === selectedImei;
