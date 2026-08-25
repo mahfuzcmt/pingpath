@@ -780,9 +780,9 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
             autoPanPaddingBottomRight: L.point(20, 100), // Account for bottom controls
           })
           .bindTooltip(plateLabelHtml(device, loc, color), {
-            permanent: false,  // GoMax-style: tooltip only on hover, vehicle icon always visible
+            permanent: true,  // Always show vehicle name/speed label
             direction: 'top',
-            offset: [0, -16],  // Small gap for taller icons (28-34px height)
+            offset: [0, -20],  // Position label above the vehicle icon
             className: 'pp-plate-tooltip',
           });
 
