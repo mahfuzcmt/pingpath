@@ -187,17 +187,29 @@ export function formatEngineHours(seconds: number | null | undefined, locale: Lo
 export function formatStopDuration(ts: string | null | undefined): string {
   if (!ts) return "";
   const secs = Math.max(0, Math.floor((Date.now() - new Date(ts).getTime()) / 1000));
-  const h = Math.floor(secs / 3600);
-  const m = Math.floor((secs % 3600) / 60);
-  const s = secs % 60;
+  const mins = Math.floor(secs / 60);
+  const hours = Math.floor(mins / 60);
+  const days = Math.floor(hours / 24);
 
-  if (h > 0) {
-    return `${h}h ${m}min ${s}sec`;
+  // For very long durations (> 24h), show days + hours
+  if (days > 0) {
+    const remainingHours = hours % 24;
+    return `${days}d ${remainingHours}h`;
   }
-  if (m > 0) {
-    return `${m}min ${s}sec`;
+
+  // For durations between 1h and 24h, show hours + minutes
+  if (hours > 0) {
+    const remainingMins = mins % 60;
+    return `${hours}h ${remainingMins}min`;
   }
-  return `${s}sec`;
+
+  // For durations under 1h, show minutes + seconds
+  if (mins > 0) {
+    const remainingSecs = secs % 60;
+    return `${mins}min ${remainingSecs}sec`;
+  }
+
+  return `${secs}sec`;
 }
 
 /**
