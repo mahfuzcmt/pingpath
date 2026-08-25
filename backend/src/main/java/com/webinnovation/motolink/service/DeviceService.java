@@ -2,6 +2,7 @@ package com.webinnovation.motolink.service;
 
 import com.webinnovation.motolink.domain.Device;
 import com.webinnovation.motolink.repository.DeviceRepository;
+import com.webinnovation.motolink.repository.SubscriptionRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -15,11 +16,14 @@ import java.util.UUID;
 public class DeviceService {
 
     private final DeviceRepository deviceRepo;
+    private final SubscriptionRepository subscriptionRepo;
     private final UUID defaultOrgId;
 
     public DeviceService(DeviceRepository deviceRepo,
+                         SubscriptionRepository subscriptionRepo,
                          @Value("${motolink.device.auto-register-org-id:00000000-0000-0000-0000-000000000001}") String defaultOrgIdStr) {
         this.deviceRepo = deviceRepo;
+        this.subscriptionRepo = subscriptionRepo;
         this.defaultOrgId = UUID.fromString(defaultOrgIdStr);
     }
 
@@ -44,11 +48,17 @@ public class DeviceService {
 
     /**
      * Auto-register a new device when it first connects.
-     * Creates the device with a generated name and the default org.
+     * Creates the device with a generated name, the default org, and a 33-day trial subscription.
      */
     public Device autoRegister(String imei) {
         String name = "New Device " + imei.substring(Math.max(0, imei.length() - 6));
         log.info("Auto-registering new device IMEI={} as '{}' in org={}", imei, name, defaultOrgId);
-        return deviceRepo.createDevice(defaultOrgId, imei, name);
+        Device device = deviceRepo.createDevice(defaultOrgId, imei, name);
+
+        // Create trial subscription (33 days: 30 active + 3 grace)
+        UUID subId = subscriptionRepo.createTrialSubscription(defaultOrgId, imei);
+        log.info("Created trial subscription {} for device IMEI={}", subId, imei);
+
+        return device;
     }
 }

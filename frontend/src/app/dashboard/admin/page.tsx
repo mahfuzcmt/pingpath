@@ -3,10 +3,11 @@
 import { useState } from "react";
 import { useLocale } from "@/lib/i18n";
 import { useAdminStats, useAdminOrgs, useAdminDevices } from "@/hooks/useAdminData";
-import type { OrgAdminView, OrgCreate, DeviceAdminView } from "@/types/domain";
+import { useAdminBillingStats, useAdminSubscriptions } from "@/hooks/useAdminSubscriptions";
+import type { OrgAdminView, OrgCreate, DeviceAdminView, SubscriptionView, ExtendRequest } from "@/types/domain";
 import { formatRelative } from "@/lib/format";
 
-type Tab = "orgs" | "devices";
+type Tab = "orgs" | "devices" | "subscriptions";
 
 export default function AdminPage() {
   const { t, locale } = useLocale();
@@ -60,6 +61,12 @@ export default function AdminPage() {
           >
             Devices
           </TabButton>
+          <TabButton
+            active={activeTab === "subscriptions"}
+            onClick={() => setActiveTab("subscriptions")}
+          >
+            Subscriptions
+          </TabButton>
         </div>
       </div>
 
@@ -67,6 +74,7 @@ export default function AdminPage() {
       <div className="min-h-0 flex-1 overflow-y-auto p-4">
         {activeTab === "orgs" && <OrgsTab />}
         {activeTab === "devices" && <DevicesTab />}
+        {activeTab === "subscriptions" && <SubscriptionsTab />}
       </div>
     </div>
   );
@@ -495,4 +503,348 @@ function DeviceStatusBadge({ status }: { status: string }) {
       {status}
     </span>
   );
+}
+
+// ─────────────────────────────────────────────────────────────
+// Subscriptions Tab
+// ─────────────────────────────────────────────────────────────
+
+function SubscriptionsTab() {
+  const { orgs } = useAdminOrgs();
+  const { stats, loading: statsLoading } = useAdminBillingStats();
+  const {
+    subscriptions,
+    loading,
+    error,
+    search,
+    extendSubscription,
+    findExpired,
+    findDueSoon,
+  } = useAdminSubscriptions();
+
+  const [imeiFilter, setImeiFilter] = useState("");
+  const [orgFilter, setOrgFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [showExtendModal, setShowExtendModal] = useState<SubscriptionView | null>(null);
+  const [extendDays, setExtendDays] = useState("30");
+  const [extendDate, setExtendDate] = useState("");
+  const [extending, setExtending] = useState(false);
+
+  const handleSearch = () => {
+    search({
+      imei: imeiFilter || undefined,
+      orgId: orgFilter || undefined,
+      status: statusFilter || undefined,
+      limit: 100,
+    });
+  };
+
+  const handleExtend = async () => {
+    if (!showExtendModal) return;
+
+    setExtending(true);
+    try {
+      const request: ExtendRequest = {};
+      if (extendDate) {
+        request.newDueAt = extendDate;
+      } else if (extendDays) {
+        request.additionalDays = parseInt(extendDays, 10);
+      }
+      await extendSubscription(showExtendModal.id, request);
+      setShowExtendModal(null);
+      setExtendDays("30");
+      setExtendDate("");
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to extend subscription");
+    } finally {
+      setExtending(false);
+    }
+  };
+
+  const getOrgName = (orgId: string) =>
+    orgs.find((o) => o.id === orgId)?.name ?? "Unknown";
+
+  if (loading) {
+    return <div className="py-10 text-center text-sm text-ink-500">Loading...</div>;
+  }
+
+  if (error) {
+    return <div className="py-10 text-center text-sm text-status-stopped">{error}</div>;
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Billing Stats */}
+      <div className="rounded-lg border border-surface-300 bg-white p-4">
+        <h3 className="mb-3 text-sm font-semibold text-ink-900">Billing Stats</h3>
+        <div className="flex flex-wrap gap-6">
+          <StatCard label="Total" value={stats?.total ?? 0} loading={statsLoading} />
+          <StatCard
+            label="Active"
+            value={stats?.active ?? 0}
+            loading={statsLoading}
+          />
+          <StatCard
+            label="Grace"
+            value={stats?.grace ?? 0}
+            loading={statsLoading}
+          />
+          <StatCard
+            label="Suspended"
+            value={stats?.suspended ?? 0}
+            loading={statsLoading}
+          />
+          <StatCard
+            label="Expiring 7d"
+            value={stats?.expiringIn7Days ?? 0}
+            loading={statsLoading}
+          />
+          <StatCard
+            label="Expired Unpaid"
+            value={stats?.expiredUnpaid ?? 0}
+            loading={statsLoading}
+          />
+        </div>
+      </div>
+
+      {/* Search Filters */}
+      <div className="flex flex-wrap items-end gap-4 rounded-lg border border-surface-300 bg-white p-4">
+        <div>
+          <label className="mb-1 block text-xs font-medium text-ink-700">
+            Search IMEI
+          </label>
+          <input
+            type="text"
+            value={imeiFilter}
+            onChange={(e) => setImeiFilter(e.target.value)}
+            placeholder="IMEI prefix..."
+            className="rounded-md border border-surface-300 px-3 py-1.5 text-sm focus:border-brand-500 focus:outline-none"
+          />
+        </div>
+        <div>
+          <label className="mb-1 block text-xs font-medium text-ink-700">
+            Organization
+          </label>
+          <select
+            value={orgFilter}
+            onChange={(e) => setOrgFilter(e.target.value)}
+            className="rounded-md border border-surface-300 px-3 py-1.5 text-sm focus:border-brand-500 focus:outline-none"
+          >
+            <option value="">All</option>
+            {orgs.map((org) => (
+              <option key={org.id} value={org.id}>
+                {org.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="mb-1 block text-xs font-medium text-ink-700">
+            Status
+          </label>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="rounded-md border border-surface-300 px-3 py-1.5 text-sm focus:border-brand-500 focus:outline-none"
+          >
+            <option value="">All</option>
+            <option value="ACTIVE">Active</option>
+            <option value="GRACE">Grace</option>
+            <option value="SUSPENDED">Suspended</option>
+            <option value="CANCELLED">Cancelled</option>
+          </select>
+        </div>
+        <button
+          type="button"
+          onClick={handleSearch}
+          className="rounded-lg bg-brand-500 px-4 py-1.5 text-sm font-medium text-white hover:bg-brand-600"
+        >
+          Search
+        </button>
+        <button
+          type="button"
+          onClick={() => findExpired()}
+          className="rounded-lg border border-surface-300 px-4 py-1.5 text-sm font-medium text-ink-700 hover:bg-surface-50"
+        >
+          Show Expired
+        </button>
+        <button
+          type="button"
+          onClick={() => findDueSoon(7)}
+          className="rounded-lg border border-surface-300 px-4 py-1.5 text-sm font-medium text-ink-700 hover:bg-surface-50"
+        >
+          Due Soon
+        </button>
+      </div>
+
+      {/* Subscriptions Table */}
+      <div className="overflow-x-auto rounded-lg border border-surface-300 bg-white">
+        <table className="w-full text-left text-sm">
+          <thead className="border-b border-surface-200 bg-surface-50">
+            <tr>
+              <th className="px-4 py-2 font-medium text-ink-700">Device IMEI</th>
+              <th className="px-4 py-2 font-medium text-ink-700">Organization</th>
+              <th className="px-4 py-2 font-medium text-ink-700">Plan</th>
+              <th className="px-4 py-2 font-medium text-ink-700">Status</th>
+              <th className="px-4 py-2 font-medium text-ink-700">Expires</th>
+              <th className="px-4 py-2 font-medium text-ink-700">Days Left</th>
+              <th className="px-4 py-2 font-medium text-ink-700">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {subscriptions.length === 0 && (
+              <tr>
+                <td colSpan={7} className="px-4 py-8 text-center text-ink-500">
+                  No subscriptions found
+                </td>
+              </tr>
+            )}
+            {subscriptions.map((sub) => (
+              <tr
+                key={sub.id}
+                className={`border-b border-surface-100 hover:bg-surface-50 ${
+                  sub.isExpired ? "bg-status-stopped/5" : ""
+                }`}
+              >
+                <td className="px-4 py-2 font-mono text-xs text-ink-700">
+                  {sub.deviceImei}
+                </td>
+                <td className="px-4 py-2 text-ink-700">
+                  {getOrgName(sub.orgId)}
+                </td>
+                <td className="px-4 py-2">
+                  <span className="rounded bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-700">
+                    {sub.planTier}
+                  </span>
+                </td>
+                <td className="px-4 py-2">
+                  <SubscriptionStatusBadge status={sub.effectiveStatus} />
+                </td>
+                <td className="px-4 py-2 text-xs text-ink-500">
+                  {formatDate(sub.nextDueAt)}
+                </td>
+                <td className="px-4 py-2">
+                  <span
+                    className={`text-xs font-medium ${
+                      sub.isExpired
+                        ? "text-status-stopped"
+                        : sub.daysUntilDue <= 7
+                        ? "text-status-idle"
+                        : "text-ink-700"
+                    }`}
+                  >
+                    {sub.isExpired ? "Expired" : sub.daysUntilDue}
+                  </span>
+                </td>
+                <td className="px-4 py-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowExtendModal(sub)}
+                    className="rounded bg-brand-500 px-2 py-1 text-xs font-medium text-white hover:bg-brand-600"
+                  >
+                    Extend
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Extend Modal */}
+      {showExtendModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+            <h3 className="mb-4 text-lg font-semibold text-ink-900">
+              Extend Subscription
+            </h3>
+            <p className="mb-4 text-sm text-ink-600">
+              Device: <span className="font-mono">{showExtendModal.deviceImei}</span>
+            </p>
+            <p className="mb-4 text-sm text-ink-600">
+              Current expiry: {formatDate(showExtendModal.nextDueAt)}
+            </p>
+
+            <div className="mb-4 space-y-4">
+              <div>
+                <label className="mb-1 block text-sm font-medium text-ink-700">
+                  Add days
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  value={extendDays}
+                  onChange={(e) => {
+                    setExtendDays(e.target.value);
+                    setExtendDate("");
+                  }}
+                  className="w-full rounded-md border border-surface-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
+                />
+              </div>
+              <div className="text-center text-xs text-ink-400">— or —</div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-ink-700">
+                  Set specific date
+                </label>
+                <input
+                  type="date"
+                  value={extendDate}
+                  onChange={(e) => {
+                    setExtendDate(e.target.value);
+                    setExtendDays("");
+                  }}
+                  className="w-full rounded-md border border-surface-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setShowExtendModal(null)}
+                className="rounded-lg border border-surface-300 px-4 py-2 text-sm font-medium text-ink-700 hover:bg-surface-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleExtend}
+                disabled={extending || (!extendDays && !extendDate)}
+                className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white hover:bg-brand-600 disabled:opacity-50"
+              >
+                {extending ? "Extending..." : "Extend"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SubscriptionStatusBadge({ status }: { status: string }) {
+  const colors: Record<string, string> = {
+    ACTIVE: "bg-status-moving/15 text-status-moving",
+    GRACE: "bg-status-idle/15 text-status-idle",
+    SUSPENDED: "bg-status-stopped/15 text-status-stopped",
+    CANCELLED: "bg-status-nodata/15 text-status-nodata",
+  };
+  return (
+    <span
+      className={`rounded px-2 py-0.5 text-xs font-medium ${
+        colors[status] ?? "bg-surface-200 text-ink-600"
+      }`}
+    >
+      {status}
+    </span>
+  );
+}
+
+function formatDate(isoDate: string): string {
+  const date = new Date(isoDate);
+  return date.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
 }

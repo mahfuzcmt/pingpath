@@ -5,6 +5,7 @@ import com.webinnovation.motolink.exception.DomainException;
 import com.webinnovation.motolink.exception.NotFoundException;
 import com.webinnovation.motolink.repository.DeviceRepository;
 import com.webinnovation.motolink.repository.LocationRepository;
+import com.webinnovation.motolink.security.SubscriptionGuard;
 import com.webinnovation.motolink.security.TenantContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -29,6 +30,7 @@ public class LocationController {
 
     private final LocationRepository locationRepo;
     private final DeviceRepository deviceRepo;
+    private final SubscriptionGuard subscriptionGuard;
 
     @GetMapping("/last")
     public LocationView last(@PathVariable String imei) {
@@ -52,6 +54,9 @@ public class LocationController {
         UUID orgId = TenantContext.requireOrgId();
         deviceRepo.findByOrgAndImei(orgId, imei)
                 .orElseThrow(() -> new NotFoundException("device", imei));
+
+        // Require active subscription for location history (not last position)
+        subscriptionGuard.requireActiveSubscription(imei);
 
         Instant now = Instant.now();
         Instant toResolved = (to == null) ? now : to;

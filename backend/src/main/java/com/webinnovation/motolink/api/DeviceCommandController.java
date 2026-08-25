@@ -3,6 +3,7 @@ package com.webinnovation.motolink.api;
 import com.webinnovation.motolink.dto.CommandDtos.CommandRequest;
 import com.webinnovation.motolink.dto.CommandDtos.CommandResponse;
 import com.webinnovation.motolink.repository.DeviceRepository;
+import com.webinnovation.motolink.security.SubscriptionGuard;
 import com.webinnovation.motolink.security.TenantContext;
 import com.webinnovation.motolink.service.AuditService;
 import com.webinnovation.motolink.service.DeviceCommandService;
@@ -39,6 +40,7 @@ public class DeviceCommandController {
     private final DeviceCommandService commandService;
     private final DeviceRepository deviceRepo;
     private final AuditService audit;
+    private final SubscriptionGuard subscriptionGuard;
 
     @GetMapping("/online")
     public Map<String, Boolean> isOnline(@PathVariable String imei) {
@@ -49,6 +51,7 @@ public class DeviceCommandController {
     public ResponseEntity<CommandResponse> cutFuel(@PathVariable String imei,
                                                    @RequestBody CommandRequest req) {
         UUID orgId = TenantContext.requireOrgId();
+        subscriptionGuard.requireActiveSubscription(imei);
         audit.record("DEVICE_CMD_CUT_FUEL", "device", imei, null);
         ResponseEntity<CommandResponse> resp = await(commandService.cutFuel(orgId, imei, password(req)));
         if (succeeded(resp)) {
@@ -61,6 +64,7 @@ public class DeviceCommandController {
     public ResponseEntity<CommandResponse> restoreFuel(@PathVariable String imei,
                                                        @RequestBody CommandRequest req) {
         UUID orgId = TenantContext.requireOrgId();
+        subscriptionGuard.requireActiveSubscription(imei);
         audit.record("DEVICE_CMD_RESTORE_FUEL", "device", imei, null);
         ResponseEntity<CommandResponse> resp = await(commandService.restoreFuel(orgId, imei, password(req)));
         if (succeeded(resp)) {
@@ -83,6 +87,7 @@ public class DeviceCommandController {
     public ResponseEntity<CommandResponse> queryAddress(@PathVariable String imei,
                                                         @RequestBody CommandRequest req) {
         UUID orgId = TenantContext.requireOrgId();
+        subscriptionGuard.requireActiveSubscription(imei);
         audit.record("DEVICE_CMD_QUERY_ADDRESS", "device", imei, null);
         return await(commandService.queryAddress(orgId, imei, req.devicePassword()));
     }
@@ -91,6 +96,7 @@ public class DeviceCommandController {
     public ResponseEntity<CommandResponse> raw(@PathVariable String imei,
                                                @RequestBody CommandRequest req) {
         UUID orgId = TenantContext.requireOrgId();
+        subscriptionGuard.requireActiveSubscription(imei);
         if (req.rawCommand() == null || req.rawCommand().isBlank()) {
             return ResponseEntity.badRequest()
                     .body(CommandResponse.failure("rawCommand required"));

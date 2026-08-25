@@ -30,6 +30,12 @@ public class GlobalExceptionHandler {
                 .body(new ErrorEnvelope(new ErrorBody(e.getCode(), e.getMessage(), null)));
     }
 
+    @ExceptionHandler(SubscriptionExpiredException.class)
+    public ResponseEntity<ErrorEnvelope> handleSubscriptionExpired(SubscriptionExpiredException e) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(new ErrorEnvelope(new ErrorBody(e.getCode(), e.getMessage(), null)));
+    }
+
     @ExceptionHandler(DomainException.class)
     public ResponseEntity<ErrorEnvelope> handleDomain(DomainException e) {
         HttpStatus status = switch (e.getCode()) {

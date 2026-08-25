@@ -414,3 +414,42 @@ export interface AssignedUserInfo {
   email: string;
   fullName: string;
 }
+
+// ─────────────────────────────────────────────────────────────
+// Subscription & Billing types
+// ─────────────────────────────────────────────────────────────
+
+export type SubscriptionStatus = "ACTIVE" | "GRACE" | "SUSPENDED" | "CANCELLED";
+
+export interface SubscriptionView {
+  id: string;
+  orgId: string;
+  deviceImei: string;
+  planTier: string;
+  monthlyPriceBdt: number;
+  startedAt: string;
+  nextDueAt: string;
+  status: SubscriptionStatus;
+  effectiveStatus: string;
+  autoRenew: boolean;
+  daysUntilDue: number;
+  isExpiringSoon: boolean;
+  isExpired: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BillingStats {
+  total: number;
+  active: number;
+  grace: number;
+  suspended: number;
+  cancelled: number;
+  expiringIn7Days: number;
+  expiredUnpaid: number;
+}
+
+export interface ExtendRequest {
+  additionalDays?: number;
+  newDueAt?: string;
+}
