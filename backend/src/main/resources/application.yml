@@ -22,7 +22,12 @@ spring:
     redis:
       host: ${SPRING_REDIS_HOST:localhost}
       port: ${SPRING_REDIS_PORT:6379}
-      timeout: 2000ms
+      timeout: 10000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 4
+          min-idle: 1
   jackson:
     serialization:
       write-dates-as-timestamps: false
