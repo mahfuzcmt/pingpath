@@ -2,9 +2,7 @@ package com.webinnovation.motolink.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -17,33 +15,33 @@ public final class UserDeviceDtos {
 
     /**
      * Request to assign devices to a user.
+     * Note: userId is taken from the path, not the body.
      */
     public record AssignDevicesRequest(
-            @NotNull UUID userId,
             @NotEmpty List<String> deviceImeis
     ) {}
 
     /**
      * Request to unassign a device from a user.
+     * Note: userId and deviceImei are taken from the path.
      */
     public record UnassignDeviceRequest(
-            @NotNull UUID userId,
             @NotBlank String deviceImei
     ) {}
 
     /**
      * Request to replace all device assignments for a user.
+     * Note: userId is taken from the path.
      */
     public record SetUserDevicesRequest(
-            @NotNull UUID userId,
-            List<String> deviceImeis  // can be empty to clear all assignments
+            List<String> deviceImeis  // can be empty or null to clear all assignments
     ) {}
 
     /**
      * Request to update user's seeAllDevices setting.
+     * Note: userId is taken from the path.
      */
     public record UpdateSeeAllDevicesRequest(
-            @NotNull UUID userId,
             boolean seeAllDevices
     ) {}
 
