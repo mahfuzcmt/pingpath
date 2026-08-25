@@ -556,88 +556,66 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
          </div>`
       : "";
 
-    const vehicleType = device?.vehicleType || "CAR";
-    const imei = device?.imei || "";
-    const plate = device?.vehiclePlate || "";
+    // GoMax-style stop duration display
+    const stopDuration = device?.parkedSince && speed === 0 ? formatSince(device.parkedSince) : "";
+    const statusWithDuration = stopDuration ? `${status} ${stopDuration}` : status;
+
+    // External power detection (voltage > 13V means charging/connected)
+    const voltage = location?.voltageMv ?? device?.lastVoltageMv;
+    const externalPower = voltage && voltage > 13000 ? "Connected" : "Disconnected";
+    const gsmLevel = gsmToPercent(location?.gsmSignal ?? device?.lastGsmSignal) ?? 0;
 
     return `
       <div class="pp-popup">
+        <!-- GoMax-style header -->
         <div class="pp-popup-header">
-          <div class="pp-popup-vehicle-info">
-            <div class="pp-popup-vehicle-icon" style="background: ${statusColor}15;">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="${statusColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                ${vehicleType === "MOTORBIKE"
-                  ? '<path d="M5 16v1a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-1"/><path d="M12 12V5a2 2 0 0 1 2-2h2"/><circle cx="5" cy="17" r="2"/><circle cx="19" cy="17" r="2"/><path d="M12 17h-5"/>'
-                  : vehicleType === "TRUCK"
-                    ? '<path d="M1 3h15v13H1z"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>'
-                    : '<path d="M5 17h14v-5H5zm0 0a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2m-2 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2m-10 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2"/>'
-                }
-              </svg>
-            </div>
-            <div class="pp-popup-name-block">
-              <span class="pp-popup-name">${name}</span>
-              ${plate ? `<span class="pp-popup-plate">${plate}</span>` : imei ? `<span class="pp-popup-imei">${imei.slice(-8)}</span>` : ""}
-            </div>
-          </div>
-          <div class="pp-popup-badges">
-            <span class="pp-popup-freshness" style="background: ${freshnessConfig.bgColor}; color: ${freshnessConfig.color};">
-              ${freshnessConfig.icon} ${freshnessText}
-            </span>
-            <span class="pp-popup-status" style="background: ${statusColor}20; color: ${statusColor};">${status}</span>
+          <div class="pp-popup-title">
+            <span class="pp-popup-dot" style="background: ${statusColor};"></span>
+            <span class="pp-popup-name">${name}</span>
+            <span class="pp-popup-badge" style="background: ${statusColor}; color: white;">${status}</span>
           </div>
         </div>
 
         ${gpsWarningBanner}
 
-        <!-- Live Speed Display -->
-        <div class="pp-popup-speed-section">
-          <div class="pp-popup-speedometer">
-            <span class="pp-popup-speed-value">${speed}</span>
-            <span class="pp-popup-speed-unit">kph</span>
+        <!-- GoMax-style simple rows -->
+        <div class="pp-popup-rows">
+          <div class="pp-popup-item">
+            <span class="pp-popup-label">Speed</span>
+            <span class="pp-popup-value">${speed} km/h</span>
           </div>
-          <div class="pp-popup-speed-label">${gpsInfo.status === "Live" ? "Live Speed" : "Last Known Speed"}</div>
-        </div>
-
-        <div class="pp-popup-grid">
-          <div class="pp-popup-row">
-            <span class="pp-popup-label">GPS</span>
-            <span class="pp-popup-value" style="color: ${gpsInfo.color}; font-weight: 600;">${gpsInfo.icon} ${gpsInfo.status}</span>
+          <div class="pp-popup-item">
+            <span class="pp-popup-label">Status</span>
+            <span class="pp-popup-value" style="color: ${statusColor};">${statusWithDuration}</span>
           </div>
-          <div class="pp-popup-row">
-            <span class="pp-popup-label">ACC</span>
-            <span class="pp-popup-value" style="color: ${accStatus === 'ON' ? '#16A34A' : '#6b7280'}; font-weight: 600;">${accStatus}</span>
+          <div class="pp-popup-item">
+            <span class="pp-popup-label">Engine</span>
+            <span class="pp-popup-value" style="color: ${accStatus === 'ON' ? '#16A34A' : '#6b7280'};">${accStatus === 'ON' ? 'On' : 'Off'}</span>
           </div>
-          <div class="pp-popup-row">
+          <div class="pp-popup-item">
             <span class="pp-popup-label">Battery</span>
-            <span class="pp-popup-value" style="color: ${getBatteryColor(location?.voltageMv ?? device?.lastVoltageMv)}; font-weight: 600;">
-              ${formatBatteryPercent(location?.voltageMv ?? device?.lastVoltageMv)}
-            </span>
+            <span class="pp-popup-value">${formatBatteryPercent(voltage)}</span>
           </div>
-          <div class="pp-popup-row">
-            <span class="pp-popup-label">Signal</span>
-            <span class="pp-popup-value" style="font-weight: 600;">
-              ${'<span style="display:inline-flex;gap:1px;vertical-align:middle;">' +
-                [0,1,2,3].map(i => `<span style="display:inline-block;width:3px;height:${4+i*2}px;background:${i < gsmBars(location?.gsmSignal ?? device?.lastGsmSignal) ? '#4DA74D' : '#DDD'};border-radius:1px;"></span>`).join('') +
-                '</span>'} ${gsmToPercent(location?.gsmSignal ?? device?.lastGsmSignal) ?? 0}%
-            </span>
+          <div class="pp-popup-item">
+            <span class="pp-popup-label">External Power</span>
+            <span class="pp-popup-value" style="color: ${externalPower === 'Connected' ? '#16A34A' : '#6b7280'};">${externalPower}</span>
           </div>
-          <div class="pp-popup-row">
+          <div class="pp-popup-item">
+            <span class="pp-popup-label">GSM Level</span>
+            <span class="pp-popup-value">${gsmLevel} %</span>
+          </div>
+          <div class="pp-popup-item">
             <span class="pp-popup-label">Last Update</span>
             <span class="pp-popup-value">${dateTime}</span>
           </div>
-          <div class="pp-popup-row pp-popup-row-full">
-            <span class="pp-popup-label">Location</span>
-            <span class="pp-popup-value pp-popup-address" data-lat="${lat}" data-lng="${lng}">Loading address...</span>
+          <div class="pp-popup-item pp-popup-item-full">
+            <span class="pp-popup-label">Position</span>
+            <span class="pp-popup-value pp-popup-address" data-lat="${lat}" data-lng="${lng}">Loading...</span>
           </div>
-          ${parkedRow}
         </div>
 
-        <!-- Live Tracking Button -->
+        <!-- Action button -->
         <button class="pp-popup-live-btn" data-imei="${device?.imei || ''}" onclick="window.dispatchEvent(new CustomEvent('openLiveTracking', {detail: '${device?.imei || ''}'}))">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"/>
-            <polygon points="10 8 16 12 10 16 10 8"/>
-          </svg>
           Live Tracking
         </button>
       </div>
@@ -1616,289 +1594,147 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           border: 1px solid #e5e7eb;
           box-shadow: none;
         }
+        /* GoMax-style popup */
         .pp-popup {
-          font-family: 'Inter', sans-serif;
-          min-width: 280px;
+          font-family: 'Inter', -apple-system, sans-serif;
+          min-width: 260px;
+          max-width: 300px;
         }
         .pp-popup-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 10px;
           padding: 10px 12px;
           background: #f8fafc;
           border-bottom: 1px solid #e5e7eb;
         }
-        .pp-popup-vehicle-info {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          min-width: 0;
-        }
-        .pp-popup-vehicle-icon {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 36px;
-          height: 36px;
-          border-radius: 8px;
-          flex-shrink: 0;
-        }
-        .pp-popup-name-block {
-          display: flex;
-          flex-direction: column;
-          gap: 2px;
-          min-width: 0;
-        }
-        .pp-popup-plate {
-          font-size: 10px;
-          font-weight: 600;
-          color: #6366f1;
-          font-family: 'JetBrains Mono', monospace;
-          letter-spacing: 0.5px;
-        }
-        .pp-popup-imei {
-          font-size: 9px;
-          color: #9ca3af;
-          font-family: 'JetBrains Mono', monospace;
-        }
-        .pp-popup-badges {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          flex-shrink: 0;
-        }
-        .pp-popup-freshness {
-          display: inline-flex;
-          align-items: center;
-          gap: 4px;
-          font-size: 10px;
-          font-weight: 600;
-          padding: 3px 6px;
-          border-radius: 4px;
-          white-space: nowrap;
-        }
-        /* GPS warning banner in popup */
-        .pp-popup-gps-warning {
+        .pp-popup-title {
           display: flex;
           align-items: center;
           gap: 8px;
-          padding: 8px 12px;
-          font-size: 11px;
-          font-weight: 500;
-          background: #fffbeb;
-          border-bottom: 1px solid #fde68a;
         }
-        .pp-popup-gps-icon {
-          font-size: 14px;
-        }
-        .pp-popup-gps-text {
-          flex: 1;
-          color: #92400e;
+        .pp-popup-dot {
+          width: 10px;
+          height: 10px;
+          border-radius: 50%;
+          flex-shrink: 0;
         }
         .pp-popup-name {
           font-size: 14px;
           font-weight: 600;
           color: #1f2937;
+          flex: 1;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
-          max-width: 140px;
         }
-        .pp-popup-status {
+        .pp-popup-badge {
           font-size: 10px;
           font-weight: 600;
-          text-transform: uppercase;
-          padding: 3px 8px;
-          border-radius: 4px;
+          padding: 2px 8px;
+          border-radius: 10px;
+          text-transform: capitalize;
         }
-
-        /* Live Speed Section - Light theme */
-        .pp-popup-speed-section {
+        /* GPS warning banner */
+        .pp-popup-gps-warning {
           display: flex;
-          flex-direction: column;
           align-items: center;
-          padding: 12px 14px;
-          background: #f0fdf4;
-          border-bottom: 1px solid #e5e7eb;
+          gap: 6px;
+          padding: 6px 12px;
+          font-size: 11px;
+          background: #fef3c7;
+          color: #92400e;
         }
-        .pp-popup-speedometer {
-          display: flex;
-          align-items: baseline;
-          gap: 4px;
+        .pp-popup-gps-icon {
+          font-size: 12px;
         }
-        .pp-popup-speed-value {
-          font-family: 'JetBrains Mono', monospace;
-          font-size: 36px;
-          font-weight: 700;
-          color: #16a34a;
-          line-height: 1;
+        .pp-popup-gps-text {
+          flex: 1;
         }
-        .pp-popup-speed-unit {
-          font-size: 14px;
-          font-weight: 500;
-          color: #6b7280;
-        }
-        .pp-popup-speed-label {
-          font-size: 10px;
-          text-transform: uppercase;
-          color: #6b7280;
-          letter-spacing: 0.5px;
-          margin-top: 4px;
-        }
-
-        .pp-popup-grid {
-          padding: 10px 14px;
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 8px;
+        /* GoMax-style simple rows */
+        .pp-popup-rows {
+          padding: 8px 0;
           background: #ffffff;
         }
-        .pp-popup-row {
+        .pp-popup-item {
           display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 5px 12px;
+          border-bottom: 1px solid #f3f4f6;
+        }
+        .pp-popup-item:last-child {
+          border-bottom: none;
+        }
+        .pp-popup-item-full {
           flex-direction: column;
+          align-items: flex-start;
           gap: 2px;
         }
-        .pp-popup-row-full {
-          grid-column: span 2;
-        }
-        .pp-popup-nofix {
-          background: #fffbeb;
-          border: 1px solid #fde68a;
-          border-radius: 6px;
-          padding: 6px 8px;
-        }
-        .pp-popup-nofix .pp-popup-label,
-        .pp-popup-nofix .pp-popup-value {
-          color: #b45309;
-        }
         .pp-popup-label {
-          font-size: 10px;
-          text-transform: uppercase;
-          color: #9ca3af;
-          letter-spacing: 0.5px;
+          font-size: 12px;
+          color: #6b7280;
         }
         .pp-popup-value {
           font-size: 12px;
-          color: #374151;
+          color: #1f2937;
           font-weight: 500;
+          text-align: right;
         }
-        .pp-popup-value.pp-mono {
-          font-family: 'JetBrains Mono', monospace;
-          font-size: 11px;
+        .pp-popup-item-full .pp-popup-value {
+          text-align: left;
+          width: 100%;
         }
         .pp-popup-address {
           font-size: 11px;
-          line-height: 1.4;
-          word-wrap: break-word;
-          max-width: 100%;
-          color: #4b5563;
-        }
-        .pp-popup-value.pp-speed {
-          color: #16a34a;
-          font-weight: 700;
-          font-family: 'JetBrains Mono', monospace;
-        }
-        .pp-popup-value.pp-speed small {
-          font-size: 10px;
-          font-weight: 400;
           color: #6b7280;
+          line-height: 1.3;
+          word-wrap: break-word;
         }
-
-        /* Live Tracking Button - Light theme */
+        /* Live Tracking Button */
         .pp-popup-live-btn {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-          width: calc(100% - 28px);
-          margin: 10px 14px 14px;
-          padding: 10px 16px;
+          display: block;
+          width: calc(100% - 24px);
+          margin: 8px 12px 12px;
+          padding: 8px 16px;
           background: #16a34a;
           border: none;
           border-radius: 6px;
           color: #fff;
           font-size: 12px;
           font-weight: 600;
+          text-align: center;
           cursor: pointer;
-          transition: all 0.2s;
+          transition: background 0.2s;
         }
         .pp-popup-live-btn:hover {
           background: #15803d;
-          transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
-        }
-        .pp-popup-live-btn:active {
-          transform: translateY(0);
-        }
-        .pp-popup-live-btn svg {
-          flex-shrink: 0;
         }
 
-        /* Mobile responsive - compact popup */
+        /* Mobile responsive */
         @media (max-width: 640px) {
           .pp-popup-container .leaflet-popup-content-wrapper {
-            max-width: 280px;
+            max-width: 260px;
           }
           .pp-popup {
-            min-width: 240px;
+            min-width: 220px;
           }
           .pp-popup-header {
             padding: 8px 10px;
-            flex-wrap: wrap;
-            gap: 8px;
-          }
-          .pp-popup-vehicle-icon {
-            width: 32px;
-            height: 32px;
-          }
-          .pp-popup-vehicle-icon svg {
-            width: 16px;
-            height: 16px;
           }
           .pp-popup-name {
             font-size: 12px;
           }
-          .pp-popup-plate {
-            font-size: 9px;
-          }
-          .pp-popup-imei {
-            font-size: 8px;
-          }
-          .pp-popup-status {
+          .pp-popup-badge {
             font-size: 9px;
             padding: 2px 6px;
           }
-          .pp-popup-badges {
-            flex-wrap: wrap;
+          .pp-popup-item {
+            padding: 4px 10px;
           }
-          .pp-popup-speed-section {
-            padding: 8px 10px;
-          }
-          .pp-popup-speed-value {
-            font-size: 24px;
-          }
-          .pp-popup-speed-unit {
+          .pp-popup-label,
+          .pp-popup-value {
             font-size: 11px;
           }
-          .pp-popup-speed-label {
-            font-size: 9px;
-          }
-          .pp-popup-grid {
-            padding: 6px 10px;
-            gap: 4px;
-          }
-          .pp-popup-label {
-            font-size: 9px;
-          }
-          .pp-popup-value {
-            font-size: 10px;
-          }
-          .pp-popup-value.pp-mono {
-            font-size: 9px;
-          }
           .pp-popup-live-btn {
-            margin: 8px 10px 10px;
+            margin: 6px 10px 10px;
             padding: 8px 12px;
             font-size: 11px;
           }
