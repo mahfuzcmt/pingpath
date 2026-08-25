@@ -353,22 +353,27 @@ function plateLabelHtml(device: DeviceView | undefined, location: LocationView |
 
 /**
  * Global data freshness indicator showing overall system status.
- * Shows how fresh the most recent GPS data is across all devices.
+ * Shows how fresh the most recent GPS data is across user's visible devices only.
  */
 function GlobalFreshnessIndicator({
   locations,
+  deviceByImei,
   lastRefreshAt,
 }: {
   locations: Map<string, LocationView | LiveLocationView>;
+  deviceByImei: Map<string, DeviceView>;
   lastRefreshAt?: Date | null;
 }) {
-  // Find the most recent GPS timestamp across all locations
+  // Find the most recent GPS timestamp across user's visible locations only
   let mostRecentGpsTime = 0;
   let liveCount = 0;
   let staleCount = 0;
   let noSignalCount = 0;
 
-  for (const loc of locations.values()) {
+  for (const [imei, loc] of locations.entries()) {
+    // Only count locations for devices the user can see
+    if (!deviceByImei.has(imei)) continue;
+
     const gpsTime = new Date(loc.ts).getTime();
     if (gpsTime > mostRecentGpsTime) {
       mostRecentGpsTime = gpsTime;
@@ -380,7 +385,7 @@ function GlobalFreshnessIndicator({
     else noSignalCount++;
   }
 
-  const totalDevices = locations.size;
+  const totalDevices = deviceByImei.size;
   const now = Date.now();
   const secondsAgo = mostRecentGpsTime ? Math.floor((now - mostRecentGpsTime) / 1000) : 999;
   const overallFreshness = getFreshnessStatusFromAge(secondsAgo);
@@ -1302,7 +1307,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
       </div>
 
       {/* Global data freshness indicator (bottom-left) */}
-      <GlobalFreshnessIndicator locations={locations} lastRefreshAt={lastRefreshAt} />
+      <GlobalFreshnessIndicator locations={locations} deviceByImei={deviceByImei} lastRefreshAt={lastRefreshAt} />
 
       {/* Refresh button (bottom-right) - Glassy */}
       <div className="absolute bottom-6 right-3 z-[1000]">
