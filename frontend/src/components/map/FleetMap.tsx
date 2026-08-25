@@ -522,12 +522,21 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
     const statusColor = overspeed ? OVERSPEED_COLOR : markerColor(device, location);
     const accStatus = location?.accOn == null ? "—" : location.accOn ? "ON" : "OFF";
     const gpsInfo = gpsQualityInfo(location, device);
-    const parkedRow = device?.parkedSince && speed === 0
-      ? `<div class="pp-popup-row">
+
+    // Only show parking duration if parkedSince is recent and reliable
+    // (within 1 hour of last update, meaning device was seen after parking)
+    let parkedRow = "";
+    if (device?.parkedSince && speed === 0 && device.lastSeenAt) {
+      const parkedTime = new Date(device.parkedSince).getTime();
+      const lastSeenTime = new Date(device.lastSeenAt).getTime();
+      // Only show if parkedSince is within 1 hour of lastSeenAt (reliable)
+      if (lastSeenTime - parkedTime <= 3600000) {
+        parkedRow = `<div class="pp-popup-row">
            <span class="pp-popup-label">Parked for</span>
            <span class="pp-popup-value">${formatSince(device.parkedSince)}</span>
-         </div>`
-      : "";
+         </div>`;
+      }
+    }
 
     // Freshness status for real-time feedback
     const freshness = getFreshnessStatus(location);
@@ -539,18 +548,11 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
         ? `${Math.floor(secondsAgo / 60)}m ago`
         : `${Math.floor(secondsAgo / 3600)}h ago`;
 
-    // GPS quality warning banner with context-specific messages
-    const getGpsWarningText = () => {
-      if (gpsInfo.status === "Live") return "";
-      if (gpsInfo.status === "Never Connected") return "No position data available";
-      if (gpsInfo.status.startsWith("Parked")) return "Showing last known position";
-      if (gpsInfo.status === "Weak Signal") return "GPS signal weak, position may be approximate";
-      return "Showing last known position";
-    };
-    const gpsWarningBanner = gpsInfo.status !== "Live"
+    // GPS status banner - only show for offline/never connected (no technical messages)
+    const gpsWarningBanner = gpsInfo.status === "Never Connected"
       ? `<div class="pp-popup-gps-warning">
            <span class="pp-popup-gps-icon">${gpsInfo.icon}</span>
-           <span class="pp-popup-gps-text">${getGpsWarningText()}</span>
+           <span class="pp-popup-gps-text">No position data</span>
          </div>`
       : "";
 

@@ -368,22 +368,21 @@ export function DeviceList({ devices, locations, selectedImei, onSelect, onViewH
           const overspeed = speedLimits.isOverspeed(d.imei, live?.speed ?? d.lastSpeed);
           const statusColor = overspeed ? OVERSPEED_COLOR : VEHICLE_STATE_COLOR[state];
           // Different "since" times per state:
-          // - moving/idle: last update time
-          // - stopped: parking duration (use parkedSince only if it's recent)
-          // - offline/expired/nodata: last seen time (how long disconnected)
+          // - moving: no duration needed
+          // - idle: no duration (engine on, momentary state)
+          // - stopped: only show duration if we have reliable parkedSince
+          // - offline/expired/nodata: show how long disconnected
           //
-          // Fix: If parkedSince is much older than lastSeenAt, it's stale (vehicle moved since then).
-          // In this case, use lastSeenAt as the stop time approximation.
+          // Only use parkedSince if it's recent and reliable (not stale)
           let sinceTs = ts;
-          if (state === "stopped") {
-            if (d.parkedSince && ts) {
-              const parkedTime = new Date(d.parkedSince).getTime();
-              const lastSeenTime = new Date(ts).getTime();
-              // If parkedSince is more than 1 hour older than lastSeenAt, it's stale
-              // Use lastSeenAt instead (vehicle was seen moving after parkedSince)
-              sinceTs = (lastSeenTime - parkedTime > 3600000) ? ts : d.parkedSince;
-            } else {
-              sinceTs = d.parkedSince ?? ts;
+          let hasReliableParkTime = false;
+          if (state === "stopped" && d.parkedSince && ts) {
+            const parkedTime = new Date(d.parkedSince).getTime();
+            const lastSeenTime = new Date(ts).getTime();
+            // Only use parkedSince if it's within 1 hour of lastSeenAt (not stale)
+            if (lastSeenTime - parkedTime <= 3600000) {
+              sinceTs = d.parkedSince;
+              hasReliableParkTime = true;
             }
           }
 
@@ -417,12 +416,14 @@ export function DeviceList({ devices, locations, selectedImei, onSelect, onViewH
                       {d.name || d.vehiclePlate || d.imei.slice(-8)}
                     </div>
                     <div className="text-[10px]" style={{ color: statusColor }}>
-                      {/* GoMax-style: "Stopped 2h 15min 30sec" for stopped/idle vehicles */}
+                      {/* Status display: duration only when we have reliable data */}
                       {overspeed
                         ? "Overspeed"
-                        : state === "stopped" || state === "idle"
-                          ? `${t(STATE_LABEL[state])} ${formatStopDuration(sinceTs)}`
-                          : state === "moving"
+                        : state === "stopped"
+                          ? hasReliableParkTime
+                            ? `${t(STATE_LABEL[state])} ${formatStopDuration(sinceTs)}`
+                            : t(STATE_LABEL[state])
+                          : state === "idle" || state === "moving"
                             ? t(STATE_LABEL[state])
                             : `${t(STATE_LABEL[state])} ${formatSince(sinceTs)}`}
                     </div>
