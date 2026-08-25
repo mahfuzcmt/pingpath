@@ -34,7 +34,7 @@ export function UsersTab({ canManage }: { canManage: boolean }) {
       </div>
 
       <table className="w-full text-sm">
-        <thead className="text-left text-xs uppercase text-ink-400">
+        <thead className="text-left text-xs uppercase text-ink-500 bg-surface-50">
           <tr>
             <th className="px-3 py-2">{t("users.email")}</th>
             <th className="px-3 py-2">{t("users.fullName")}</th>
@@ -50,21 +50,21 @@ export function UsersTab({ canManage }: { canManage: boolean }) {
             const roleKey = `users.role.${u.role}` as StringKey;
             const isAdminRole = u.role === "SUPER_ADMIN" || u.role === "ORG_ADMIN";
             return (
-              <tr key={u.id} className="border-b border-ink-400/10 hover:bg-ink-900/30">
+              <tr key={u.id} className="border-b border-surface-200 hover:bg-surface-50 transition">
                 <td className="px-3 py-2">
-                  <div className="font-medium text-ink-50">{u.email}</div>
-                  {u.phone && <div className="text-xs text-ink-400">{u.phone}</div>}
+                  <div className="font-medium text-ink-900">{u.email}</div>
+                  {u.phone && <div className="text-xs text-ink-500">{u.phone}</div>}
                 </td>
-                <td className="px-3 py-2 text-ink-100">{u.fullName ?? "—"}</td>
-                <td className="px-3 py-2 text-ink-100">{t(roleKey)}</td>
+                <td className="px-3 py-2 text-ink-900">{u.fullName ?? "—"}</td>
+                <td className="px-3 py-2 text-ink-900">{t(roleKey)}</td>
                 <td className="px-3 py-2">
                   {isAdminRole || u.seeAllDevices ? (
-                    <span className="text-xs text-ink-400">All</span>
+                    <span className="text-xs text-ink-500">All</span>
                   ) : (
-                    <span className="text-ink-100">{u.assignedDeviceCount}</span>
+                    <span className="text-ink-900">{u.assignedDeviceCount}</span>
                   )}
                 </td>
-                <td className="px-3 py-2 text-ink-100">
+                <td className="px-3 py-2 text-ink-700">
                   {u.lastLoginAt ? formatDateTime(u.lastLoginAt, locale) : "—"}
                 </td>
                 <td className="px-3 py-2">
@@ -207,18 +207,18 @@ function UserDialog({
   };
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-4">
+    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
       <form
         onSubmit={submit}
-        className="w-full max-w-md space-y-3 rounded-lg border border-ink-400/15 bg-ink-950 p-5 shadow-xl"
+        className="w-full max-w-md space-y-3 rounded-xl border border-surface-200 bg-white p-5 shadow-xl"
       >
         <div className="flex items-center justify-between">
-          <div className="font-display text-base font-semibold">
+          <div className="font-display text-base font-semibold text-ink-900">
             {isNew ? t("users.add") : t("users.edit")}
           </div>
           <button
             type="button"
-            className="text-ink-400 hover:text-ink-50"
+            className="text-ink-400 hover:text-ink-700"
             onClick={onCancel}
           >
             ×
@@ -282,11 +282,12 @@ function UserDialog({
         </Field>
 
         {!isNew && (
-          <label className="flex items-center gap-2 text-sm">
+          <label className="flex items-center gap-2 text-sm text-ink-900">
             <input
               type="checkbox"
               checked={isActive}
               onChange={(e) => setIsActive(e.target.checked)}
+              className="h-4 w-4 accent-brand-500"
             />
             {t("users.active")}
           </label>
@@ -310,7 +311,7 @@ function UserDialog({
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block text-sm">
-      <span className="mb-1 block text-xs uppercase tracking-wide text-ink-400">{label}</span>
+      <span className="mb-1 block text-xs uppercase tracking-wide text-ink-500">{label}</span>
       {children}
     </label>
   );
@@ -397,18 +398,18 @@ function DeviceAssignmentDialog({
   };
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-4">
-      <div className="w-full max-w-lg rounded-lg border border-ink-400/15 bg-ink-950 p-5 shadow-xl">
+    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+      <div className="w-full max-w-lg rounded-xl border border-surface-200 bg-white p-5 shadow-xl">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <div className="font-display text-base font-semibold">
+            <div className="font-display text-base font-semibold text-ink-900">
               {t("users.manageDevices")}
             </div>
-            <div className="text-xs text-ink-400">{user.email}</div>
+            <div className="text-xs text-ink-500">{user.email}</div>
           </div>
           <button
             type="button"
-            className="text-ink-400 hover:text-ink-50"
+            className="text-ink-400 hover:text-ink-700"
             onClick={onClose}
           >
             ×
@@ -416,15 +417,16 @@ function DeviceAssignmentDialog({
         </div>
 
         {/* See All Devices Toggle */}
-        <label className="flex items-center gap-2 text-sm mb-4 p-2 rounded bg-ink-900/30">
+        <label className="flex items-center gap-2 text-sm mb-4 p-3 rounded-lg bg-surface-50 border border-surface-200">
           <input
             type="checkbox"
             checked={seeAll}
             onChange={(e) => setSeeAll(e.target.checked)}
+            className="h-4 w-4 accent-brand-500"
           />
           <div>
-            <div className="text-ink-100">{t("users.seeAllDevices")}</div>
-            <div className="text-xs text-ink-400">{t("users.seeAllDevicesHint")}</div>
+            <div className="text-ink-900">{t("users.seeAllDevices")}</div>
+            <div className="text-xs text-ink-500">{t("users.seeAllDevicesHint")}</div>
           </div>
         </label>
 
@@ -462,24 +464,25 @@ function DeviceAssignmentDialog({
             ) : devices.length === 0 ? (
               <div className="text-sm text-ink-400 py-4 text-center">{t("fleet.noDevices")}</div>
             ) : filteredDevices.length === 0 ? (
-              <div className="text-sm text-ink-400 py-4 text-center">No devices match your search</div>
+              <div className="text-sm text-ink-500 py-4 text-center">No devices match your search</div>
             ) : (
-              <div className="max-h-60 overflow-y-auto space-y-1 border border-ink-400/10 rounded p-2">
+              <div className="max-h-60 overflow-y-auto space-y-1 border border-surface-200 rounded-lg p-2 bg-surface-50">
                 {filteredDevices.map((d) => (
                   <label
                     key={d.imei}
-                    className="flex items-center gap-3 p-2 rounded hover:bg-ink-900/50 cursor-pointer"
+                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-white cursor-pointer transition"
                   >
                     <input
                       type="checkbox"
                       checked={assignedImeis.has(d.imei)}
                       onChange={() => toggleDevice(d.imei)}
+                      className="h-4 w-4 accent-brand-500"
                     />
                     <div className="flex-1 min-w-0">
-                      <div className="font-medium text-ink-50 truncate">
+                      <div className="font-medium text-ink-900 truncate">
                         {d.name || d.vehiclePlate || d.imei}
                       </div>
-                      <div className="text-xs text-ink-400 truncate">
+                      <div className="text-xs text-ink-500 truncate">
                         {d.vehiclePlate && <span className="mr-2">{d.vehiclePlate}</span>}
                         <span className="font-mono">{d.imei}</span>
                       </div>
@@ -488,7 +491,7 @@ function DeviceAssignmentDialog({
                       className={`text-[10px] px-1.5 py-0.5 rounded ${
                         d.status === "ONLINE"
                           ? "bg-alarm-green/20 text-alarm-green"
-                          : "bg-ink-400/20 text-ink-400"
+                          : "bg-surface-200 text-ink-500"
                       }`}
                     >
                       {d.status}
@@ -497,7 +500,7 @@ function DeviceAssignmentDialog({
                 ))}
               </div>
             )}
-            <div className="text-xs text-ink-400 mt-2">
+            <div className="text-xs text-ink-500 mt-2">
               {assignedImeis.size} / {devices.length} {t("users.deviceCount")}
             </div>
           </div>

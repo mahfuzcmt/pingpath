@@ -34,7 +34,7 @@ export function BillingTab() {
 
   return (
     <div className="space-y-4">
-      <h2 className="font-display text-lg font-semibold">{t("billing.title")}</h2>
+      <h2 className="font-display text-lg font-semibold text-ink-900">{t("billing.title")}</h2>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {subscriptions.map((sub) => (
@@ -55,19 +55,19 @@ function SubscriptionCard({ subscription }: { subscription: SubscriptionView }) 
 
   return (
     <div
-      className={`rounded-lg border p-4 ${
+      className={`rounded-xl border p-4 ${
         showError
           ? "border-alarm-red/40 bg-alarm-red/5"
           : showWarning
           ? "border-alarm-amber/40 bg-alarm-amber/5"
-          : "border-ink-400/20 bg-ink-950/50"
+          : "border-surface-200 bg-white shadow-sm"
       }`}
     >
       {/* Header */}
       <div className="mb-3 flex items-start justify-between">
         <div>
-          <p className="font-mono text-sm text-ink-100">{sub.deviceImei}</p>
-          <p className="text-xs text-ink-400">
+          <p className="font-mono text-sm text-ink-900">{sub.deviceImei}</p>
+          <p className="text-xs text-ink-500">
             {sub.planTier === "TRIAL" ? t("billing.trialPlan") : sub.planTier}
           </p>
         </div>
@@ -81,21 +81,21 @@ function SubscriptionCard({ subscription }: { subscription: SubscriptionView }) 
       {/* Details */}
       <div className="space-y-2 text-sm">
         <div className="flex justify-between">
-          <span className="text-ink-400">{t("billing.expiresOn")}</span>
-          <span className="text-ink-100">
+          <span className="text-ink-500">{t("billing.expiresOn")}</span>
+          <span className="text-ink-900 font-medium">
             {formatDate(sub.nextDueAt)}
           </span>
         </div>
 
         {sub.daysUntilDue >= 0 && !sub.isExpired && (
           <div className="flex justify-between">
-            <span className="text-ink-400">{t("billing.daysLeft")}</span>
+            <span className="text-ink-500">{t("billing.daysLeft")}</span>
             <span
-              className={
+              className={`font-medium ${
                 sub.daysUntilDue <= 7
                   ? "text-alarm-amber"
-                  : "text-ink-100"
-              }
+                  : "text-ink-900"
+              }`}
             >
               {sub.daysUntilDue}
             </span>
@@ -103,14 +103,14 @@ function SubscriptionCard({ subscription }: { subscription: SubscriptionView }) 
         )}
 
         <div className="flex justify-between">
-          <span className="text-ink-400">{t("billing.startedOn")}</span>
-          <span className="text-ink-100">{formatDate(sub.startedAt)}</span>
+          <span className="text-ink-500">{t("billing.startedOn")}</span>
+          <span className="text-ink-900 font-medium">{formatDate(sub.startedAt)}</span>
         </div>
 
         {sub.monthlyPriceBdt > 0 && (
           <div className="flex justify-between">
-            <span className="text-ink-400">{t("billing.plan")}</span>
-            <span className="text-ink-100">
+            <span className="text-ink-500">{t("billing.plan")}</span>
+            <span className="text-ink-900 font-medium">
               ৳{sub.monthlyPriceBdt}/month
             </span>
           </div>

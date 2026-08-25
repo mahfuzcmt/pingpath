@@ -17,10 +17,10 @@ export default function Page() {
   const [tab, setTab] = useState<Tab>(isAdmin ? "org" : "billing");
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="flex items-center gap-4 border-b border-ink-400/15 px-4 py-3">
-        <h1 className="font-display text-lg font-semibold">{t("settings.title")}</h1>
-        <div className="ml-auto flex gap-1 rounded-md border border-ink-400/20 p-0.5 text-sm">
+    <div className="flex h-full flex-col bg-white">
+      <div className="flex items-center gap-4 border-b border-surface-200 px-4 py-3 bg-surface-50">
+        <h1 className="font-display text-lg font-semibold text-ink-900">{t("settings.title")}</h1>
+        <div className="ml-auto flex gap-1 rounded-lg border border-surface-200 bg-white p-0.5 text-sm shadow-sm">
           {isAdmin && (
             <>
               <TabButton active={tab === "org"} onClick={() => setTab("org")}>
@@ -59,10 +59,10 @@ function TabButton({
     <button
       type="button"
       onClick={onClick}
-      className={`rounded px-3 py-1 transition ${
+      className={`rounded-md px-3 py-1.5 font-medium transition ${
         active
-          ? "bg-brand-500/15 text-brand-500"
-          : "text-ink-400 hover:text-ink-50"
+          ? "bg-brand-500 text-white shadow-sm"
+          : "text-ink-600 hover:text-ink-900 hover:bg-surface-100"
       }`}
     >
       {children}

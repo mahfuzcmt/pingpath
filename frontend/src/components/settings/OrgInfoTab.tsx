@@ -60,14 +60,14 @@ export function OrgInfoTab({ readOnly }: { readOnly: boolean }) {
 
   return (
     <form onSubmit={onSubmit} className="max-w-xl space-y-4">
-      <div className="grid grid-cols-2 gap-3 rounded border border-ink-400/15 bg-ink-900/40 p-3 text-xs text-ink-400">
+      <div className="grid grid-cols-2 gap-3 rounded-lg border border-surface-200 bg-surface-50 p-3 text-xs text-ink-500">
         <div>
           <div className="uppercase">{t("settings.org.plan")}</div>
-          <div className="mt-0.5 text-ink-50">{org.planTier}</div>
+          <div className="mt-0.5 font-semibold text-ink-900">{org.planTier}</div>
         </div>
         <div>
           <div className="uppercase">Slug</div>
-          <div className="mt-0.5 font-mono text-ink-50">{org.slug}</div>
+          <div className="mt-0.5 font-mono font-semibold text-ink-900">{org.slug}</div>
         </div>
       </div>
 
@@ -156,7 +156,7 @@ export function OrgInfoTab({ readOnly }: { readOnly: boolean }) {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block text-sm">
-      <span className="mb-1 block text-xs uppercase tracking-wide text-ink-400">{label}</span>
+      <span className="mb-1 block text-xs uppercase tracking-wide text-ink-500">{label}</span>
       {children}
     </label>
   );

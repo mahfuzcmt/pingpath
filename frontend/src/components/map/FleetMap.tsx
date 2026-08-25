@@ -548,16 +548,35 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
       return "Showing last known position";
     };
     const gpsWarningBanner = gpsInfo.status !== "Live"
-      ? `<div class="pp-popup-gps-warning" style="background: ${gpsInfo.color}15; border-left: 3px solid ${gpsInfo.color}; color: ${gpsInfo.color};">
+      ? `<div class="pp-popup-gps-warning">
            <span class="pp-popup-gps-icon">${gpsInfo.icon}</span>
            <span class="pp-popup-gps-text">${getGpsWarningText()}</span>
          </div>`
       : "";
 
+    const vehicleType = device?.vehicleType || "CAR";
+    const imei = device?.imei || "";
+    const plate = device?.vehiclePlate || "";
+
     return `
       <div class="pp-popup">
         <div class="pp-popup-header">
-          <span class="pp-popup-name">${name}</span>
+          <div class="pp-popup-vehicle-info">
+            <div class="pp-popup-vehicle-icon" style="background: ${statusColor}15;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="${statusColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                ${vehicleType === "MOTORBIKE"
+                  ? '<path d="M5 16v1a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-1"/><path d="M12 12V5a2 2 0 0 1 2-2h2"/><circle cx="5" cy="17" r="2"/><circle cx="19" cy="17" r="2"/><path d="M12 17h-5"/>'
+                  : vehicleType === "TRUCK"
+                    ? '<path d="M1 3h15v13H1z"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>'
+                    : '<path d="M5 17h14v-5H5zm0 0a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2m-2 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2m-10 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2"/>'
+                }
+              </svg>
+            </div>
+            <div class="pp-popup-name-block">
+              <span class="pp-popup-name">${name}</span>
+              ${plate ? `<span class="pp-popup-plate">${plate}</span>` : imei ? `<span class="pp-popup-imei">${imei.slice(-8)}</span>` : ""}
+            </div>
+          </div>
           <div class="pp-popup-badges">
             <span class="pp-popup-freshness" style="background: ${freshnessConfig.bgColor}; color: ${freshnessConfig.color};">
               ${freshnessConfig.icon} ${freshnessText}
@@ -584,7 +603,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           </div>
           <div class="pp-popup-row">
             <span class="pp-popup-label">ACC</span>
-            <span class="pp-popup-value" style="color: ${accStatus === 'ON' ? '#16A34A' : '#64748B'}; font-weight: 600;">${accStatus}</span>
+            <span class="pp-popup-value" style="color: ${accStatus === 'ON' ? '#16A34A' : '#6b7280'}; font-weight: 600;">${accStatus}</span>
           </div>
           <div class="pp-popup-row">
             <span class="pp-popup-label">Battery</span>
@@ -1562,17 +1581,14 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           }
         }
 
-        /* Popup styles - Glassy dark theme */
+        /* Popup styles - GoMax-style clean white/light theme */
         .pp-popup-container .leaflet-popup-content-wrapper {
-          background: rgba(15, 39, 66, 0.88);
-          backdrop-filter: blur(16px);
-          -webkit-backdrop-filter: blur(16px);
-          border: 1px solid rgba(100, 116, 139, 0.25);
-          border-radius: 16px;
+          background: #ffffff;
+          border: 1px solid #e5e7eb;
+          border-radius: 8px;
           padding: 0;
-          box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35),
-                      0 4px 16px rgba(0, 0, 0, 0.2),
-                      inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15),
+                      0 2px 4px rgba(0, 0, 0, 0.08);
           max-width: 320px;
           overflow: hidden;
         }
@@ -1581,21 +1597,21 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           width: 100% !important;
         }
         .pp-popup-container .leaflet-popup-close-button {
-          color: #94a3b8 !important;
+          color: #6b7280 !important;
           font-size: 18px;
           padding: 6px 10px;
           right: 4px;
           top: 4px;
-          border-radius: 8px;
+          border-radius: 6px;
           transition: all 0.2s ease;
         }
         .pp-popup-container .leaflet-popup-close-button:hover {
-          color: #f1f5f9 !important;
-          background: rgba(255, 255, 255, 0.1);
+          color: #1f2937 !important;
+          background: #f3f4f6;
         }
         .pp-popup-container .leaflet-popup-tip {
-          background: rgba(15, 39, 66, 0.88);
-          border: 1px solid rgba(100, 116, 139, 0.25);
+          background: #ffffff;
+          border: 1px solid #e5e7eb;
           box-shadow: none;
         }
         .pp-popup {
@@ -1606,14 +1622,49 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           display: flex;
           align-items: center;
           justify-content: space-between;
-          gap: 12px;
-          padding: 12px 14px;
-          border-bottom: 1px solid rgba(100, 116, 139, 0.2);
+          gap: 10px;
+          padding: 10px 12px;
+          background: #f8fafc;
+          border-bottom: 1px solid #e5e7eb;
+        }
+        .pp-popup-vehicle-info {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          min-width: 0;
+        }
+        .pp-popup-vehicle-icon {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 36px;
+          height: 36px;
+          border-radius: 8px;
+          flex-shrink: 0;
+        }
+        .pp-popup-name-block {
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+          min-width: 0;
+        }
+        .pp-popup-plate {
+          font-size: 10px;
+          font-weight: 600;
+          color: #6366f1;
+          font-family: 'JetBrains Mono', monospace;
+          letter-spacing: 0.5px;
+        }
+        .pp-popup-imei {
+          font-size: 9px;
+          color: #9ca3af;
+          font-family: 'JetBrains Mono', monospace;
         }
         .pp-popup-badges {
           display: flex;
           align-items: center;
           gap: 6px;
+          flex-shrink: 0;
         }
         .pp-popup-freshness {
           display: inline-flex;
@@ -1633,17 +1684,24 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           padding: 8px 12px;
           font-size: 11px;
           font-weight: 500;
+          background: #fffbeb;
+          border-bottom: 1px solid #fde68a;
         }
         .pp-popup-gps-icon {
           font-size: 14px;
         }
         .pp-popup-gps-text {
           flex: 1;
+          color: #92400e;
         }
         .pp-popup-name {
           font-size: 14px;
           font-weight: 600;
-          color: #f1f5f9;
+          color: #1f2937;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          max-width: 140px;
         }
         .pp-popup-status {
           font-size: 10px;
@@ -1653,14 +1711,14 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           border-radius: 4px;
         }
 
-        /* Live Speed Section */
+        /* Live Speed Section - Light theme */
         .pp-popup-speed-section {
           display: flex;
           flex-direction: column;
           align-items: center;
           padding: 12px 14px;
-          background: linear-gradient(135deg, rgba(232, 144, 10, 0.15) 0%, rgba(232, 144, 10, 0.05) 100%);
-          border-bottom: 1px solid rgba(100, 116, 139, 0.2);
+          background: #f0fdf4;
+          border-bottom: 1px solid #e5e7eb;
         }
         .pp-popup-speedometer {
           display: flex;
@@ -1671,18 +1729,18 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           font-family: 'JetBrains Mono', monospace;
           font-size: 36px;
           font-weight: 700;
-          color: #e8900a;
+          color: #16a34a;
           line-height: 1;
         }
         .pp-popup-speed-unit {
           font-size: 14px;
           font-weight: 500;
-          color: #94a3b8;
+          color: #6b7280;
         }
         .pp-popup-speed-label {
           font-size: 10px;
           text-transform: uppercase;
-          color: #64748b;
+          color: #6b7280;
           letter-spacing: 0.5px;
           margin-top: 4px;
         }
@@ -1692,6 +1750,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           display: grid;
           grid-template-columns: 1fr 1fr;
           gap: 8px;
+          background: #ffffff;
         }
         .pp-popup-row {
           display: flex;
@@ -1702,24 +1761,24 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           grid-column: span 2;
         }
         .pp-popup-nofix {
-          background: rgba(245, 158, 11, 0.12);
-          border: 1px solid rgba(245, 158, 11, 0.35);
+          background: #fffbeb;
+          border: 1px solid #fde68a;
           border-radius: 6px;
           padding: 6px 8px;
         }
         .pp-popup-nofix .pp-popup-label,
         .pp-popup-nofix .pp-popup-value {
-          color: #f59e0b;
+          color: #b45309;
         }
         .pp-popup-label {
           font-size: 10px;
           text-transform: uppercase;
-          color: #64748b;
+          color: #9ca3af;
           letter-spacing: 0.5px;
         }
         .pp-popup-value {
           font-size: 12px;
-          color: #e2e8f0;
+          color: #374151;
           font-weight: 500;
         }
         .pp-popup-value.pp-mono {
@@ -1731,19 +1790,20 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           line-height: 1.4;
           word-wrap: break-word;
           max-width: 100%;
+          color: #4b5563;
         }
         .pp-popup-value.pp-speed {
-          color: #e8900a;
+          color: #16a34a;
           font-weight: 700;
           font-family: 'JetBrains Mono', monospace;
         }
         .pp-popup-value.pp-speed small {
           font-size: 10px;
           font-weight: 400;
-          color: #94a3b8;
+          color: #6b7280;
         }
 
-        /* Live Tracking Button */
+        /* Live Tracking Button - Light theme */
         .pp-popup-live-btn {
           display: flex;
           align-items: center;
@@ -1752,9 +1812,9 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           width: calc(100% - 28px);
           margin: 10px 14px 14px;
           padding: 10px 16px;
-          background: linear-gradient(135deg, #e8900a 0%, #d97706 100%);
+          background: #16a34a;
           border: none;
-          border-radius: 8px;
+          border-radius: 6px;
           color: #fff;
           font-size: 12px;
           font-weight: 600;
@@ -1762,9 +1822,9 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           transition: all 0.2s;
         }
         .pp-popup-live-btn:hover {
-          background: linear-gradient(135deg, #f59e0b 0%, #e8900a 100%);
+          background: #15803d;
           transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(232, 144, 10, 0.4);
+          box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
         }
         .pp-popup-live-btn:active {
           transform: translateY(0);
@@ -1783,13 +1843,32 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           }
           .pp-popup-header {
             padding: 8px 10px;
+            flex-wrap: wrap;
+            gap: 8px;
+          }
+          .pp-popup-vehicle-icon {
+            width: 32px;
+            height: 32px;
+          }
+          .pp-popup-vehicle-icon svg {
+            width: 16px;
+            height: 16px;
           }
           .pp-popup-name {
             font-size: 12px;
           }
+          .pp-popup-plate {
+            font-size: 9px;
+          }
+          .pp-popup-imei {
+            font-size: 8px;
+          }
           .pp-popup-status {
             font-size: 9px;
             padding: 2px 6px;
+          }
+          .pp-popup-badges {
+            flex-wrap: wrap;
           }
           .pp-popup-speed-section {
             padding: 8px 10px;
