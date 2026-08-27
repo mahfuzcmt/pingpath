@@ -799,28 +799,29 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
         });
 
         // Fetch address when popup opens (lazy loading, cached)
-        marker.on('popupopen', () => {
-          const popup = marker.getPopup();
+        const currentMarker = marker; // Capture for closure
+        currentMarker.on('popupopen', () => {
+          const popup = currentMarker.getPopup();
           if (!popup) return;
           const container = popup.getElement();
           if (!container) return;
           const addressEl = container.querySelector('.pp-popup-address') as HTMLElement;
           if (!addressEl) return;
 
-          const lat = parseFloat(addressEl.dataset.lat || "0");
-          const lng = parseFloat(addressEl.dataset.lng || "0");
-          if (lat === 0 && lng === 0) {
+          const popupLat = parseFloat(addressEl.dataset.lat || "0");
+          const popupLng = parseFloat(addressEl.dataset.lng || "0");
+          if (popupLat === 0 && popupLng === 0) {
             addressEl.textContent = "Unknown";
             return;
           }
 
           // Check cache first for instant display
-          const key = addressCacheKey(lat, lng);
+          const key = addressCacheKey(popupLat, popupLng);
           if (addressCache.has(key)) {
             addressEl.textContent = addressCache.get(key)!;
           } else {
             // Fetch async (free Nominatim API)
-            reverseGeocode(lat, lng).then(address => {
+            reverseGeocode(popupLat, popupLng).then(address => {
               addressEl.textContent = address;
             });
           }
