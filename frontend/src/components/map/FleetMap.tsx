@@ -603,8 +603,8 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
             <span class="pp-popup-value">${dateTime}</span>
           </div>
           <div class="pp-popup-item pp-popup-item-full">
-            <span class="pp-popup-label">Position</span>
-            <span class="pp-popup-value pp-popup-coords">${lat}, ${lng}</span>
+            <span class="pp-popup-label">Address</span>
+            <span class="pp-popup-value pp-popup-address" data-lat="${lat}" data-lng="${lng}">Loading...</span>
           </div>
         </div>
 
@@ -796,6 +796,34 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
 
         marker.on('click', () => {
           onSelect(imei);
+        });
+
+        // Fetch address when popup opens (lazy loading, cached)
+        marker.on('popupopen', () => {
+          const popup = marker.getPopup();
+          if (!popup) return;
+          const container = popup.getElement();
+          if (!container) return;
+          const addressEl = container.querySelector('.pp-popup-address') as HTMLElement;
+          if (!addressEl) return;
+
+          const lat = parseFloat(addressEl.dataset.lat || "0");
+          const lng = parseFloat(addressEl.dataset.lng || "0");
+          if (lat === 0 && lng === 0) {
+            addressEl.textContent = "Unknown";
+            return;
+          }
+
+          // Check cache first for instant display
+          const key = addressCacheKey(lat, lng);
+          if (addressCache.has(key)) {
+            addressEl.textContent = addressCache.get(key)!;
+          } else {
+            // Fetch async (free Nominatim API)
+            reverseGeocode(lat, lng).then(address => {
+              addressEl.textContent = address;
+            });
+          }
         });
 
         markersRef.current.set(imei, marker);
