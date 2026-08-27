@@ -525,18 +525,16 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
 
     // Only show parking duration if parkedSince is recent and reliable
     // (within 1 hour of last update, meaning device was seen after parking)
-    let parkedRow = "";
+    let stopDuration = "";
     if (device?.parkedSince && speed === 0 && device.lastSeenAt) {
       const parkedTime = new Date(device.parkedSince).getTime();
       const lastSeenTime = new Date(device.lastSeenAt).getTime();
       // Only show if parkedSince is within 1 hour of lastSeenAt (reliable)
       if (lastSeenTime - parkedTime <= 3600000) {
-        parkedRow = `<div class="pp-popup-row">
-           <span class="pp-popup-label">Parked for</span>
-           <span class="pp-popup-value">${formatSince(device.parkedSince)}</span>
-         </div>`;
+        stopDuration = formatSince(device.parkedSince);
       }
     }
+    const statusWithDuration = stopDuration ? `${status} ${stopDuration}` : status;
 
     // Freshness status for real-time feedback
     const freshness = getFreshnessStatus(location);
@@ -555,10 +553,6 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
            <span class="pp-popup-gps-text">No position data</span>
          </div>`
       : "";
-
-    // GoMax-style stop duration display
-    const stopDuration = device?.parkedSince && speed === 0 ? formatSince(device.parkedSince) : "";
-    const statusWithDuration = stopDuration ? `${status} ${stopDuration}` : status;
 
     // External power detection (voltage > 13V means charging/connected)
     const voltage = location?.voltageMv ?? device?.lastVoltageMv;
@@ -589,8 +583,8 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
             <span class="pp-popup-value" style="color: ${statusColor};">${statusWithDuration}</span>
           </div>
           <div class="pp-popup-item">
-            <span class="pp-popup-label">Engine</span>
-            <span class="pp-popup-value" style="color: ${accStatus === 'ON' ? '#16A34A' : '#6b7280'};">${accStatus === 'ON' ? 'On' : 'Off'}</span>
+            <span class="pp-popup-label">ACC</span>
+            <span class="pp-popup-value" style="color: ${accStatus === 'ON' ? '#16A34A' : accStatus === 'OFF' ? '#EF4444' : '#6b7280'};">${accStatus === 'ON' ? 'On' : accStatus === 'OFF' ? 'Off' : '—'}</span>
           </div>
           <div class="pp-popup-item">
             <span class="pp-popup-label">Battery</span>
@@ -610,7 +604,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           </div>
           <div class="pp-popup-item pp-popup-item-full">
             <span class="pp-popup-label">Position</span>
-            <span class="pp-popup-value pp-popup-address" data-lat="${lat}" data-lng="${lng}">Loading...</span>
+            <span class="pp-popup-value pp-popup-coords">${lat}, ${lng}</span>
           </div>
         </div>
 
@@ -802,32 +796,6 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
 
         marker.on('click', () => {
           onSelect(imei);
-        });
-
-        // Fetch and display address when popup opens
-        const currentMarker = marker; // Capture for closure
-        currentMarker.on('popupopen', () => {
-          const popup = currentMarker.getPopup();
-          if (!popup) return;
-          const container = popup.getElement();
-          if (!container) return;
-          const addressEl = container.querySelector('.pp-popup-address') as HTMLElement;
-          if (!addressEl) return;
-
-          const lat = parseFloat(addressEl.dataset.lat || "0");
-          const lng = parseFloat(addressEl.dataset.lng || "0");
-          if (lat === 0 && lng === 0) return;
-
-          // Check cache first
-          const key = addressCacheKey(lat, lng);
-          if (addressCache.has(key)) {
-            addressEl.textContent = addressCache.get(key)!;
-          } else {
-            // Fetch async
-            reverseGeocode(lat, lng).then(address => {
-              addressEl.textContent = address;
-            });
-          }
         });
 
         markersRef.current.set(imei, marker);
