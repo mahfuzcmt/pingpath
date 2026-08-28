@@ -216,7 +216,7 @@ export function RouteHistoryPanel({ device, onClose }: Props) {
   } : null;
 
   return (
-    <div className="fixed inset-0 z-[1500] flex flex-col bg-ink-950">
+    <div className="fixed inset-0 z-[2500] flex flex-col bg-ink-950">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-ink-400/15 px-4 py-3 bg-ink-900">
         <div>
