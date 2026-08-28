@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Per-minute sweepers that flip stale ONLINE devices to OFFLINE and close trips that
@@ -25,6 +26,7 @@ public class DeviceStatusJob {
     private final TripService tripService;
 
     @Scheduled(fixedRate = 60_000)
+    @Transactional
     public void sweepStale() {
         try {
             int devicesMarked = deviceRepo.markStaleOffline(STALE_DEVICE_MINUTES);

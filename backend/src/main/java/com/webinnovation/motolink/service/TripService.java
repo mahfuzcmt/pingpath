@@ -8,6 +8,7 @@ import com.webinnovation.motolink.repository.TripRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
@@ -43,6 +44,7 @@ public class TripService {
     private final TripRepository tripRepo;
     private final LocationRepository locationRepo;
 
+    @Transactional
     public void onLocation(LocationData loc) {
         if (loc.getOrgId() == null || loc.getImei() == null || !loc.isValid()) return;
         try {
@@ -74,6 +76,7 @@ public class TripService {
     }
 
     /** Periodic sweeper closes trips that have stopped receiving locations. */
+    @Transactional
     public int closeStaleTrips() {
         List<UUID> stale = tripRepo.findStaleOpenTripIds(STALE_TRIP_SECONDS);
         Instant now = Instant.now();

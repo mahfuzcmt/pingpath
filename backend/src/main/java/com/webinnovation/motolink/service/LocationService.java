@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.util.LinkedHashMap;
@@ -43,6 +44,7 @@ public class LocationService {
     private final CellLocationService cellLocationService;
     private final LocationBufferService locationBufferService;
 
+    @Transactional
     public void saveAndBroadcast(LocationData loc) {
         // Validate GPS fix based on satellite count (industry standard: ≥4 satellites)
         // Override device-reported validity if satellite count is insufficient
