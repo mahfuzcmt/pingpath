@@ -453,3 +453,23 @@ export interface ExtendRequest {
   additionalDays?: number;
   newDueAt?: string;
 }
+
+export interface DeviceWithoutSub {
+  imei: string;
+  orgId: string;
+  orgName: string;
+  deviceName: string | null;
+}
+
+export interface DevicesWithoutSubResponse {
+  total: number;
+  devices: DeviceWithoutSub[];
+}
+
+export interface CreateSubscriptionRequest {
+  imei: string;
+  orgId: string;
+  planTier?: string;
+  monthlyPriceBdt?: number;
+  days?: number;
+}

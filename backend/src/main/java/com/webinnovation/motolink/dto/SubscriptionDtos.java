@@ -108,4 +108,33 @@ public final class SubscriptionDtos {
             LocalDate dueBefore,
             Boolean expired
     ) {}
+
+    /** Device without subscription (for admin to create one). */
+    public record DeviceWithoutSubView(
+            String imei,
+            UUID orgId,
+            String orgName,
+            String deviceName
+    ) {}
+
+    /** Request to create subscription for existing device. */
+    public record CreateSubscriptionRequest(
+            String imei,
+            UUID orgId,
+            String planTier,
+            Integer monthlyPriceBdt,
+            Integer days
+    ) {
+        public String getPlanTierOrDefault() {
+            return planTier != null ? planTier : "BASIC";
+        }
+
+        public int getMonthlyPriceBdtOrDefault() {
+            return monthlyPriceBdt != null ? monthlyPriceBdt : 300;
+        }
+
+        public int getDaysOrDefault() {
+            return days != null ? days : 30;
+        }
+    }
 }

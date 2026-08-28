@@ -186,4 +186,21 @@ public class SubscriptionService {
     public BillingStats getStats() {
         return subscriptionRepo.getStats();
     }
+
+    /** Get devices without subscriptions (Super Admin). */
+    public List<SubscriptionRepository.DeviceWithoutSub> findDevicesWithoutSubscription(int limit) {
+        return subscriptionRepo.findDevicesWithoutSubscription(limit);
+    }
+
+    /** Count devices without subscriptions (Super Admin). */
+    public int countDevicesWithoutSubscription() {
+        return subscriptionRepo.countDevicesWithoutSubscription();
+    }
+
+    /** Create subscription for existing device (Super Admin). */
+    public UUID createSubscriptionForDevice(UUID orgId, String imei, String planTier, int monthlyPriceBdt, int days) {
+        log.info("Creating subscription for existing device IMEI={} in org={}: plan={}, days={}",
+                imei, orgId, planTier, days);
+        return subscriptionRepo.createSubscriptionForDevice(orgId, imei, planTier, monthlyPriceBdt, days);
+    }
 }

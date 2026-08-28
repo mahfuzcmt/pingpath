@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
-import type { BillingStats, ExtendRequest, SubscriptionView } from "@/types/domain";
+import type { BillingStats, CreateSubscriptionRequest, DevicesWithoutSubResponse, ExtendRequest, SubscriptionView } from "@/types/domain";
 
 /** Auto-refresh interval in milliseconds (30 seconds). */
 const AUTO_REFRESH_INTERVAL_MS = 30_000;
@@ -141,6 +141,19 @@ export function useAdminSubscriptions(initialParams?: SubscriptionSearchParams) 
     }
   }, []);
 
+  const findDevicesWithoutSubscription = useCallback(async (limit: number = 100): Promise<DevicesWithoutSubResponse> => {
+    const r = await api.get<DevicesWithoutSubResponse>("/admin/subscriptions/devices-without-subscription", {
+      params: { limit }
+    });
+    return r.data;
+  }, []);
+
+  const createSubscription = useCallback(async (request: CreateSubscriptionRequest): Promise<SubscriptionView> => {
+    const r = await api.post<SubscriptionView>("/admin/subscriptions/create", request);
+    await search();
+    return r.data;
+  }, [search]);
+
   return {
     subscriptions,
     loading,
@@ -150,6 +163,8 @@ export function useAdminSubscriptions(initialParams?: SubscriptionSearchParams) 
     extendSubscription,
     updateStatus,
     findExpired,
-    findDueSoon
+    findDueSoon,
+    findDevicesWithoutSubscription,
+    createSubscription
   };
 }

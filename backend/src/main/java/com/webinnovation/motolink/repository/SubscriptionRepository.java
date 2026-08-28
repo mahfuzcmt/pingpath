@@ -275,6 +275,68 @@ public class SubscriptionRepository {
         return jdbc.query(sql.toString(), params, this::mapRow);
     }
 
+    /** Find devices that have no subscription at all. */
+    public record DeviceWithoutSub(String imei, UUID orgId, String orgName, String deviceName) {}
+
+    public List<DeviceWithoutSub> findDevicesWithoutSubscription(int limit) {
+        return jdbc.query("""
+                SELECT d.imei, d.org_id, o.name as org_name, d.name as device_name
+                FROM devices d
+                JOIN organizations o ON d.org_id = o.id
+                WHERE NOT EXISTS (
+                    SELECT 1 FROM subscriptions s WHERE s.device_imei = d.imei
+                )
+                ORDER BY d.created_at DESC
+                LIMIT :limit
+                """,
+                new MapSqlParameterSource("limit", limit),
+                (rs, rn) -> new DeviceWithoutSub(
+                        rs.getString("imei"),
+                        rs.getObject("org_id", UUID.class),
+                        rs.getString("org_name"),
+                        rs.getString("device_name")
+                )
+        );
+    }
+
+    /** Count devices without subscriptions. */
+    public int countDevicesWithoutSubscription() {
+        Integer count = jdbc.queryForObject("""
+                SELECT COUNT(*)
+                FROM devices d
+                WHERE NOT EXISTS (
+                    SELECT 1 FROM subscriptions s WHERE s.device_imei = d.imei
+                )
+                """,
+                new MapSqlParameterSource(),
+                Integer.class
+        );
+        return count != null ? count : 0;
+    }
+
+    /** Create subscription for existing device (admin action). */
+    public UUID createSubscriptionForDevice(UUID orgId, String imei, String planTier, int monthlyPriceBdt, int days) {
+        LocalDate now = LocalDate.now();
+        LocalDate dueAt = now.plusDays(days);
+        UUID id = UUID.randomUUID();
+
+        jdbc.update("""
+                INSERT INTO subscriptions (id, org_id, device_imei, plan_tier, monthly_price_bdt,
+                                          started_at, next_due_at, status, auto_renew)
+                VALUES (:id, :orgId, :imei, :planTier, :monthlyPriceBdt, :startedAt, :nextDueAt, 'ACTIVE', true)
+                """,
+                new MapSqlParameterSource()
+                        .addValue("id", id)
+                        .addValue("orgId", orgId)
+                        .addValue("imei", imei)
+                        .addValue("planTier", planTier)
+                        .addValue("monthlyPriceBdt", monthlyPriceBdt)
+                        .addValue("startedAt", now)
+                        .addValue("nextDueAt", dueAt)
+        );
+        return id;
+    }
+
     /** Get billing statistics (admin stats). */
     public record BillingStats(
             int total,

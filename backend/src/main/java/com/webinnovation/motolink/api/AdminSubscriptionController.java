@@ -1,6 +1,8 @@
 package com.webinnovation.motolink.api;
 
 import com.webinnovation.motolink.dto.SubscriptionDtos.BillingStatsView;
+import com.webinnovation.motolink.dto.SubscriptionDtos.CreateSubscriptionRequest;
+import com.webinnovation.motolink.dto.SubscriptionDtos.DeviceWithoutSubView;
 import com.webinnovation.motolink.dto.SubscriptionDtos.ExtendRequest;
 import com.webinnovation.motolink.dto.SubscriptionDtos.SubscriptionView;
 import com.webinnovation.motolink.exception.DomainException;
@@ -16,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -186,6 +189,71 @@ public class AdminSubscriptionController {
 
         Subscription after = subscriptionService.getById(id).orElseThrow();
         return SubscriptionView.of(after, normalizedStatus);
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // Devices without subscriptions
+    // ─────────────────────────────────────────────────────────────
+
+    /**
+     * Get devices that don't have any subscription.
+     * These are devices registered before the subscription system was implemented.
+     */
+    @GetMapping("/devices-without-subscription")
+    public Map<String, Object> getDevicesWithoutSubscription(
+            @RequestParam(defaultValue = "100") int limit) {
+        requireSuperAdmin();
+
+        var devices = subscriptionService.findDevicesWithoutSubscription(limit);
+        int total = subscriptionService.countDevicesWithoutSubscription();
+
+        return Map.of(
+                "total", total,
+                "devices", devices.stream()
+                        .map(d -> new DeviceWithoutSubView(d.imei(), d.orgId(), d.orgName(), d.deviceName()))
+                        .toList()
+        );
+    }
+
+    /**
+     * Create subscription for an existing device that doesn't have one.
+     */
+    @PostMapping("/create")
+    public SubscriptionView createSubscription(@Valid @RequestBody CreateSubscriptionRequest body) {
+        requireSuperAdmin();
+
+        if (body.imei() == null || body.imei().isBlank()) {
+            throw new DomainException("INVALID_IMEI", "IMEI is required");
+        }
+        if (body.orgId() == null) {
+            throw new DomainException("INVALID_ORG", "Organization ID is required");
+        }
+
+        // Check if device already has a subscription
+        var existing = subscriptionService.getSubscriptionInfo(body.imei());
+        if (existing.isPresent()) {
+            throw new DomainException("SUBSCRIPTION_EXISTS",
+                    "Device already has a subscription. Use extend instead.");
+        }
+
+        UUID subId = subscriptionService.createSubscriptionForDevice(
+                body.orgId(),
+                body.imei(),
+                body.getPlanTierOrDefault(),
+                body.getMonthlyPriceBdtOrDefault(),
+                body.getDaysOrDefault()
+        );
+
+        audit.record("ADMIN_SUBSCRIPTION_CREATE", "subscription", subId.toString(),
+                Map.of("deviceImei", body.imei(),
+                       "orgId", body.orgId().toString(),
+                       "planTier", body.getPlanTierOrDefault(),
+                       "days", body.getDaysOrDefault()));
+
+        log.info("Super admin created subscription {} for existing device IMEI={}", subId, body.imei());
+
+        Subscription sub = subscriptionService.getById(subId).orElseThrow();
+        return SubscriptionView.of(sub, subscriptionService.getEffectiveStatus(sub.deviceImei()));
     }
 
     // ─────────────────────────────────────────────────────────────

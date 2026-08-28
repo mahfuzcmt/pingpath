@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useLocale } from "@/lib/i18n";
 import { useAdminStats, useAdminOrgs, useAdminDevices } from "@/hooks/useAdminData";
 import { useAdminBillingStats, useAdminSubscriptions } from "@/hooks/useAdminSubscriptions";
-import type { OrgAdminView, OrgCreate, DeviceAdminView, SubscriptionView, ExtendRequest } from "@/types/domain";
+import type { OrgAdminView, OrgCreate, DeviceAdminView, SubscriptionView, ExtendRequest, DeviceWithoutSub, CreateSubscriptionRequest } from "@/types/domain";
 import { formatRelative } from "@/lib/format";
 
 type Tab = "orgs" | "devices" | "subscriptions";
@@ -520,6 +520,8 @@ function SubscriptionsTab() {
     extendSubscription,
     findExpired,
     findDueSoon,
+    findDevicesWithoutSubscription,
+    createSubscription,
   } = useAdminSubscriptions();
 
   const [imeiFilter, setImeiFilter] = useState("");
@@ -529,6 +531,16 @@ function SubscriptionsTab() {
   const [extendDays, setExtendDays] = useState("30");
   const [extendDate, setExtendDate] = useState("");
   const [extending, setExtending] = useState(false);
+
+  // Devices without subscription state
+  const [devicesWithoutSub, setDevicesWithoutSub] = useState<DeviceWithoutSub[]>([]);
+  const [devicesWithoutSubTotal, setDevicesWithoutSubTotal] = useState(0);
+  const [loadingNoSub, setLoadingNoSub] = useState(false);
+  const [showNoSubDevices, setShowNoSubDevices] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState<DeviceWithoutSub | null>(null);
+  const [createDays, setCreateDays] = useState("30");
+  const [createPlan, setCreatePlan] = useState("BASIC");
+  const [creating, setCreating] = useState(false);
 
   const handleSearch = () => {
     search({
@@ -558,6 +570,46 @@ function SubscriptionsTab() {
       alert(err instanceof Error ? err.message : "Failed to extend subscription");
     } finally {
       setExtending(false);
+    }
+  };
+
+  const handleLoadDevicesWithoutSub = async () => {
+    setLoadingNoSub(true);
+    try {
+      const result = await findDevicesWithoutSubscription(100);
+      setDevicesWithoutSub(result.devices);
+      setDevicesWithoutSubTotal(result.total);
+      setShowNoSubDevices(true);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to load devices");
+    } finally {
+      setLoadingNoSub(false);
+    }
+  };
+
+  const handleCreateSubscription = async () => {
+    if (!showCreateModal) return;
+
+    setCreating(true);
+    try {
+      const request: CreateSubscriptionRequest = {
+        imei: showCreateModal.imei,
+        orgId: showCreateModal.orgId,
+        planTier: createPlan,
+        days: parseInt(createDays, 10),
+      };
+      await createSubscription(request);
+      setShowCreateModal(null);
+      setCreateDays("30");
+      setCreatePlan("BASIC");
+      // Refresh the devices without subscription list
+      const result = await findDevicesWithoutSubscription(100);
+      setDevicesWithoutSub(result.devices);
+      setDevicesWithoutSubTotal(result.total);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to create subscription");
+    } finally {
+      setCreating(false);
     }
   };
 
@@ -675,7 +727,67 @@ function SubscriptionsTab() {
         >
           Due Soon
         </button>
+        <button
+          type="button"
+          onClick={handleLoadDevicesWithoutSub}
+          disabled={loadingNoSub}
+          className="rounded-lg border border-status-stopped px-4 py-1.5 text-sm font-medium text-status-stopped hover:bg-status-stopped/10"
+        >
+          {loadingNoSub ? "Loading..." : "Devices Without Subscription"}
+        </button>
       </div>
+
+      {/* Devices Without Subscription */}
+      {showNoSubDevices && (
+        <div className="rounded-lg border border-status-stopped/30 bg-status-stopped/5 p-4">
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-ink-900">
+              Devices Without Subscription ({devicesWithoutSubTotal})
+            </h3>
+            <button
+              type="button"
+              onClick={() => setShowNoSubDevices(false)}
+              className="text-xs text-ink-500 hover:text-ink-700"
+            >
+              Hide
+            </button>
+          </div>
+          {devicesWithoutSub.length === 0 ? (
+            <p className="text-sm text-ink-500">All devices have subscriptions.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="border-b border-surface-200 bg-surface-50">
+                  <tr>
+                    <th className="px-3 py-2 font-medium text-ink-700">IMEI</th>
+                    <th className="px-3 py-2 font-medium text-ink-700">Device Name</th>
+                    <th className="px-3 py-2 font-medium text-ink-700">Organization</th>
+                    <th className="px-3 py-2 font-medium text-ink-700">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {devicesWithoutSub.map((d) => (
+                    <tr key={d.imei} className="border-b border-surface-100">
+                      <td className="px-3 py-2 font-mono text-xs text-ink-700">{d.imei}</td>
+                      <td className="px-3 py-2 text-ink-700">{d.deviceName || "—"}</td>
+                      <td className="px-3 py-2 text-ink-700">{d.orgName}</td>
+                      <td className="px-3 py-2">
+                        <button
+                          type="button"
+                          onClick={() => setShowCreateModal(d)}
+                          className="rounded bg-brand-500 px-2 py-1 text-xs font-medium text-white hover:bg-brand-600"
+                        >
+                          Create Subscription
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Subscriptions Table */}
       <div className="overflow-x-auto rounded-lg border border-surface-300 bg-white">
@@ -813,6 +925,71 @@ function SubscriptionsTab() {
                 className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white hover:bg-brand-600 disabled:opacity-50"
               >
                 {extending ? "Extending..." : "Extend"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create Subscription Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+            <h3 className="mb-4 text-lg font-semibold text-ink-900">
+              Create Subscription
+            </h3>
+            <p className="mb-2 text-sm text-ink-600">
+              Device: <span className="font-mono">{showCreateModal.imei}</span>
+            </p>
+            <p className="mb-4 text-sm text-ink-600">
+              Organization: {showCreateModal.orgName}
+            </p>
+
+            <div className="mb-4 space-y-4">
+              <div>
+                <label className="mb-1 block text-sm font-medium text-ink-700">
+                  Plan Tier
+                </label>
+                <select
+                  value={createPlan}
+                  onChange={(e) => setCreatePlan(e.target.value)}
+                  className="w-full rounded-md border border-surface-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
+                >
+                  <option value="TRIAL">Trial</option>
+                  <option value="BASIC">Basic</option>
+                  <option value="PRO">Pro</option>
+                  <option value="ENTERPRISE">Enterprise</option>
+                </select>
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-ink-700">
+                  Duration (days)
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  value={createDays}
+                  onChange={(e) => setCreateDays(e.target.value)}
+                  className="w-full rounded-md border border-surface-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setShowCreateModal(null)}
+                className="rounded-lg border border-surface-300 px-4 py-2 text-sm font-medium text-ink-700 hover:bg-surface-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleCreateSubscription}
+                disabled={creating || !createDays}
+                className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white hover:bg-brand-600 disabled:opacity-50"
+              >
+                {creating ? "Creating..." : "Create Subscription"}
               </button>
             </div>
           </div>
