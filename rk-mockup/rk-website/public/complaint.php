@@ -151,7 +151,7 @@ $upazilas = ['ঝিনাইদহ সদর', 'শৈলকূপা', 'হর
                     <p id="ticket-number" class="text-2xl font-mono font-bold text-primary-600 mb-6"></p>
                     <p class="text-sm text-gray-500 mb-6">এই নম্বরটি সংরক্ষণ করুন। এটি দিয়ে আপনার অভিযোগের অবস্থা জানতে পারবেন।</p>
                     <div class="flex gap-4">
-                        <a href="<?= SITE_URL ?>/track.php" class="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition">
+                        <a href="<?= SITE_URL ?>/track" class="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition">
                             অভিযোগ ট্র্যাক করুন
                         </a>
                         <a href="<?= SITE_URL ?>" class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
@@ -166,7 +166,7 @@ $upazilas = ['ঝিনাইদহ সদর', 'শৈলকূপা', 'হর
         <div class="text-center mt-8">
             <p class="text-gray-600">
                 আগে অভিযোগ করেছেন?
-                <a href="<?= SITE_URL ?>/track.php" class="text-primary-600 hover:text-primary-700 font-medium">অভিযোগ ট্র্যাক করুন</a>
+                <a href="<?= SITE_URL ?>/track" class="text-primary-600 hover:text-primary-700 font-medium">অভিযোগ ট্র্যাক করুন</a>
             </p>
         </div>
     </div>

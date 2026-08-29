@@ -41,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['mark_read'])) {
     if (validateCsrfToken($_POST[CSRF_TOKEN_NAME] ?? '')) {
         $msgId = (int)$_POST['mark_read'];
         Database::update('contact_messages', ['status' => 'পড়া'], 'id = :id AND status = :old', ['id' => $msgId, 'old' => 'নতুন']);
-        header('Location: index.php' . ($status ? '?status=' . urlencode($status) : ''));
+        header('Location: ' . ADMIN_URL . '/messages' . ($status ? '?status=' . urlencode($status) : ''));
         exit;
     }
 }
@@ -52,7 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete'])) {
         $msgId = (int)$_POST['delete'];
         Database::delete('contact_messages', 'id = :id', ['id' => $msgId]);
         setFlashMessage('বার্তা মুছে ফেলা হয়েছে।', 'success');
-        header('Location: index.php');
+        header('Location: ' . ADMIN_URL . '/messages');
         exit;
     }
 }
@@ -174,7 +174,7 @@ require_once dirname(dirname(__DIR__)) . '/admin/includes/header.php';
 
         <!-- Pagination -->
         <div class="mt-6">
-            <?= paginationHtml($pagination, 'index.php' . ($status ? '?status=' . urlencode($status) : '') . ($search ? ($status ? '&' : '?') . 'q=' . urlencode($search) : '')) ?>
+            <?= paginationHtml($pagination, '' . ($status ? '?status=' . urlencode($status) : '') . ($search ? ($status ? '&' : '?') . 'q=' . urlencode($search) : '')) ?>
         </div>
         <?php endif; ?>
     </div>
@@ -266,7 +266,7 @@ function viewMessage(id) {
 
     // Mark as read via AJAX
     if (msg.status === 'নতুন') {
-        fetch('index.php', {
+        fetch('', {
             method: 'POST',
             headers: {'Content-Type': 'application/x-www-form-urlencoded'},
             body: 'mark_read=' + id + '&<?= CSRF_TOKEN_NAME ?>=<?= e($_SESSION[CSRF_TOKEN_NAME]) ?>'

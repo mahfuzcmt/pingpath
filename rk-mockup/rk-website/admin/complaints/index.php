@@ -82,7 +82,7 @@ foreach ($statsResults as $row) {
             ফিল্টার
         </button>
         <?php if ($search || $status || $category): ?>
-        <a href="<?= ADMIN_URL ?>/complaints/index.php" class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition text-center">
+        <a href="<?= ADMIN_URL ?>/complaints" class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition text-center">
             রিসেট
         </a>
         <?php endif; ?>
@@ -140,7 +140,7 @@ foreach ($statsResults as $row) {
                         <?= timeAgo($complaint['submitted_at']) ?>
                     </td>
                     <td class="px-6 py-4 text-right">
-                        <a href="<?= ADMIN_URL ?>/complaints/view.php?id=<?= $complaint['id'] ?>" class="inline-flex items-center px-3 py-1 bg-primary-600 text-white text-sm rounded-lg hover:bg-primary-700 transition">
+                        <a href="<?= ADMIN_URL ?>/complaints/view?id=<?= $complaint['id'] ?>" class="inline-flex items-center px-3 py-1 bg-primary-600 text-white text-sm rounded-lg hover:bg-primary-700 transition">
                             দেখুন
                         </a>
                     </td>
@@ -153,6 +153,6 @@ foreach ($statsResults as $row) {
 </div>
 
 <!-- Pagination -->
-<?= paginationHtml($pagination, ADMIN_URL . '/complaints/index.php?' . http_build_query(array_filter(['status' => $status, 'category' => $category, 'search' => $search]))) ?>
+<?= paginationHtml($pagination, ADMIN_URL . '/complaints?' . http_build_query(array_filter(['status' => $status, 'category' => $category, 'search' => $search]))) ?>
 
 <?php require_once dirname(__DIR__) . '/includes/footer.php'; ?>

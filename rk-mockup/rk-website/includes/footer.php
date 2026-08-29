@@ -51,11 +51,11 @@
                 <div>
                     <h4 class="text-lg font-semibold text-white mb-4">দ্রুত লিংক</h4>
                     <ul class="space-y-2">
-                        <li><a href="<?= SITE_URL ?>/about.php" class="hover:text-white transition">পরিচিতি</a></li>
-                        <li><a href="<?= SITE_URL ?>/news.php" class="hover:text-white transition">সংবাদ</a></li>
-                        <li><a href="<?= SITE_URL ?>/projects.php" class="hover:text-white transition">উন্নয়ন প্রকল্প</a></li>
-                        <li><a href="<?= SITE_URL ?>/services.php" class="hover:text-white transition">সেবাসমূহ</a></li>
-                        <li><a href="<?= SITE_URL ?>/media.php" class="hover:text-white transition">মিডিয়া</a></li>
+                        <li><a href="<?= SITE_URL ?>/about" class="hover:text-white transition">পরিচিতি</a></li>
+                        <li><a href="<?= SITE_URL ?>/news" class="hover:text-white transition">সংবাদ</a></li>
+                        <li><a href="<?= SITE_URL ?>/projects" class="hover:text-white transition">উন্নয়ন প্রকল্প</a></li>
+                        <li><a href="<?= SITE_URL ?>/services" class="hover:text-white transition">সেবাসমূহ</a></li>
+                        <li><a href="<?= SITE_URL ?>/media" class="hover:text-white transition">মিডিয়া</a></li>
                     </ul>
                 </div>
 
@@ -96,9 +96,9 @@
                     &copy; <?= toBengaliDigits(date('Y')) ?> <?= e(getSetting('site_title', SITE_NAME)) ?>। সর্বস্বত্ব সংরক্ষিত।
                 </p>
                 <div class="flex space-x-4 mt-4 md:mt-0">
-                    <a href="<?= SITE_URL ?>/complaint.php" class="text-sm text-gray-400 hover:text-white transition">অভিযোগ দাখিল</a>
-                    <a href="<?= SITE_URL ?>/track.php" class="text-sm text-gray-400 hover:text-white transition">অভিযোগ ট্র্যাক</a>
-                    <a href="<?= SITE_URL ?>/appointment.php" class="text-sm text-gray-400 hover:text-white transition">সাক্ষাৎকার</a>
+                    <a href="<?= SITE_URL ?>/complaint" class="text-sm text-gray-400 hover:text-white transition">অভিযোগ দাখিল</a>
+                    <a href="<?= SITE_URL ?>/track" class="text-sm text-gray-400 hover:text-white transition">অভিযোগ ট্র্যাক</a>
+                    <a href="<?= SITE_URL ?>/appointment" class="text-sm text-gray-400 hover:text-white transition">সাক্ষাৎকার</a>
                 </div>
             </div>
         </div>

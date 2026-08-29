@@ -64,7 +64,7 @@ require_once dirname(dirname(__DIR__)) . '/admin/includes/header.php';
                 <a href="?month=<?= date('n') ?>&year=<?= date('Y') ?>" class="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition">
                     আজ
                 </a>
-                <a href="index.php" class="px-4 py-2 text-sm bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition">
+                <a href="<?= ADMIN_URL ?>/appointments" class="px-4 py-2 text-sm bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition">
                     তালিকা ভিউ
                 </a>
             </div>
@@ -123,7 +123,7 @@ require_once dirname(dirname(__DIR__)) . '/admin/includes/header.php';
                 </div>
 
                 <?php if ($hasAppointments): ?>
-                <a href="index.php?date=<?= $date ?>" class="block">
+                <a href="<?= ADMIN_URL ?>/appointments?date=<?= $date ?>" class="block">
                     <div class="space-y-1">
                         <?php if ($apt['booked'] > 0): ?>
                         <div class="flex items-center gap-1 text-xs text-yellow-700">

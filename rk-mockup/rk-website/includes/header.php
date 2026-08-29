@@ -130,25 +130,25 @@ $currentPage = basename($_SERVER['PHP_SELF'], '.php');
                     <a href="<?= SITE_URL ?>" class="px-3 py-2 rounded-lg text-gray-700 hover:bg-primary-50 hover:text-primary-700 <?= $currentPage === 'index' ? 'bg-primary-50 text-primary-700 font-medium' : '' ?>">
                         হোম
                     </a>
-                    <a href="<?= SITE_URL ?>/about.php" class="px-3 py-2 rounded-lg text-gray-700 hover:bg-primary-50 hover:text-primary-700 <?= $currentPage === 'about' ? 'bg-primary-50 text-primary-700 font-medium' : '' ?>">
+                    <a href="<?= SITE_URL ?>/about" class="px-3 py-2 rounded-lg text-gray-700 hover:bg-primary-50 hover:text-primary-700 <?= $currentPage === 'about' ? 'bg-primary-50 text-primary-700 font-medium' : '' ?>">
                         পরিচিতি
                     </a>
-                    <a href="<?= SITE_URL ?>/news.php" class="px-3 py-2 rounded-lg text-gray-700 hover:bg-primary-50 hover:text-primary-700 <?= $currentPage === 'news' ? 'bg-primary-50 text-primary-700 font-medium' : '' ?>">
+                    <a href="<?= SITE_URL ?>/news" class="px-3 py-2 rounded-lg text-gray-700 hover:bg-primary-50 hover:text-primary-700 <?= $currentPage === 'news' ? 'bg-primary-50 text-primary-700 font-medium' : '' ?>">
                         সংবাদ
                     </a>
-                    <a href="<?= SITE_URL ?>/projects.php" class="px-3 py-2 rounded-lg text-gray-700 hover:bg-primary-50 hover:text-primary-700 <?= $currentPage === 'projects' ? 'bg-primary-50 text-primary-700 font-medium' : '' ?>">
+                    <a href="<?= SITE_URL ?>/projects" class="px-3 py-2 rounded-lg text-gray-700 hover:bg-primary-50 hover:text-primary-700 <?= $currentPage === 'projects' ? 'bg-primary-50 text-primary-700 font-medium' : '' ?>">
                         উন্নয়ন প্রকল্প
                     </a>
-                    <a href="<?= SITE_URL ?>/services.php" class="px-3 py-2 rounded-lg text-gray-700 hover:bg-primary-50 hover:text-primary-700 <?= $currentPage === 'services' ? 'bg-primary-50 text-primary-700 font-medium' : '' ?>">
+                    <a href="<?= SITE_URL ?>/services" class="px-3 py-2 rounded-lg text-gray-700 hover:bg-primary-50 hover:text-primary-700 <?= $currentPage === 'services' ? 'bg-primary-50 text-primary-700 font-medium' : '' ?>">
                         সেবাসমূহ
                     </a>
-                    <a href="<?= SITE_URL ?>/media.php" class="px-3 py-2 rounded-lg text-gray-700 hover:bg-primary-50 hover:text-primary-700 <?= $currentPage === 'media' ? 'bg-primary-50 text-primary-700 font-medium' : '' ?>">
+                    <a href="<?= SITE_URL ?>/media" class="px-3 py-2 rounded-lg text-gray-700 hover:bg-primary-50 hover:text-primary-700 <?= $currentPage === 'media' ? 'bg-primary-50 text-primary-700 font-medium' : '' ?>">
                         মিডিয়া
                     </a>
-                    <a href="<?= SITE_URL ?>/contact.php" class="px-3 py-2 rounded-lg text-gray-700 hover:bg-primary-50 hover:text-primary-700 <?= $currentPage === 'contact' ? 'bg-primary-50 text-primary-700 font-medium' : '' ?>">
+                    <a href="<?= SITE_URL ?>/contact" class="px-3 py-2 rounded-lg text-gray-700 hover:bg-primary-50 hover:text-primary-700 <?= $currentPage === 'contact' ? 'bg-primary-50 text-primary-700 font-medium' : '' ?>">
                         যোগাযোগ
                     </a>
-                    <a href="<?= SITE_URL ?>/complaint.php" class="ml-2 px-4 py-2 bg-accent-500 text-white rounded-lg hover:bg-accent-600 transition">
+                    <a href="<?= SITE_URL ?>/complaint" class="ml-2 px-4 py-2 bg-accent-500 text-white rounded-lg hover:bg-accent-600 transition">
                         অভিযোগ দাখিল
                     </a>
                 </nav>
@@ -160,25 +160,25 @@ $currentPage = basename($_SERVER['PHP_SELF'], '.php');
                     <a href="<?= SITE_URL ?>" class="px-3 py-2 rounded-lg text-gray-700 hover:bg-primary-50 hover:text-primary-700 <?= $currentPage === 'index' ? 'bg-primary-50 text-primary-700 font-medium' : '' ?>">
                         হোম
                     </a>
-                    <a href="<?= SITE_URL ?>/about.php" class="px-3 py-2 rounded-lg text-gray-700 hover:bg-primary-50 hover:text-primary-700 <?= $currentPage === 'about' ? 'bg-primary-50 text-primary-700 font-medium' : '' ?>">
+                    <a href="<?= SITE_URL ?>/about" class="px-3 py-2 rounded-lg text-gray-700 hover:bg-primary-50 hover:text-primary-700 <?= $currentPage === 'about' ? 'bg-primary-50 text-primary-700 font-medium' : '' ?>">
                         পরিচিতি
                     </a>
-                    <a href="<?= SITE_URL ?>/news.php" class="px-3 py-2 rounded-lg text-gray-700 hover:bg-primary-50 hover:text-primary-700 <?= $currentPage === 'news' ? 'bg-primary-50 text-primary-700 font-medium' : '' ?>">
+                    <a href="<?= SITE_URL ?>/news" class="px-3 py-2 rounded-lg text-gray-700 hover:bg-primary-50 hover:text-primary-700 <?= $currentPage === 'news' ? 'bg-primary-50 text-primary-700 font-medium' : '' ?>">
                         সংবাদ
                     </a>
-                    <a href="<?= SITE_URL ?>/projects.php" class="px-3 py-2 rounded-lg text-gray-700 hover:bg-primary-50 hover:text-primary-700 <?= $currentPage === 'projects' ? 'bg-primary-50 text-primary-700 font-medium' : '' ?>">
+                    <a href="<?= SITE_URL ?>/projects" class="px-3 py-2 rounded-lg text-gray-700 hover:bg-primary-50 hover:text-primary-700 <?= $currentPage === 'projects' ? 'bg-primary-50 text-primary-700 font-medium' : '' ?>">
                         উন্নয়ন প্রকল্প
                     </a>
-                    <a href="<?= SITE_URL ?>/services.php" class="px-3 py-2 rounded-lg text-gray-700 hover:bg-primary-50 hover:text-primary-700 <?= $currentPage === 'services' ? 'bg-primary-50 text-primary-700 font-medium' : '' ?>">
+                    <a href="<?= SITE_URL ?>/services" class="px-3 py-2 rounded-lg text-gray-700 hover:bg-primary-50 hover:text-primary-700 <?= $currentPage === 'services' ? 'bg-primary-50 text-primary-700 font-medium' : '' ?>">
                         সেবাসমূহ
                     </a>
-                    <a href="<?= SITE_URL ?>/media.php" class="px-3 py-2 rounded-lg text-gray-700 hover:bg-primary-50 hover:text-primary-700 <?= $currentPage === 'media' ? 'bg-primary-50 text-primary-700 font-medium' : '' ?>">
+                    <a href="<?= SITE_URL ?>/media" class="px-3 py-2 rounded-lg text-gray-700 hover:bg-primary-50 hover:text-primary-700 <?= $currentPage === 'media' ? 'bg-primary-50 text-primary-700 font-medium' : '' ?>">
                         মিডিয়া
                     </a>
-                    <a href="<?= SITE_URL ?>/contact.php" class="px-3 py-2 rounded-lg text-gray-700 hover:bg-primary-50 hover:text-primary-700 <?= $currentPage === 'contact' ? 'bg-primary-50 text-primary-700 font-medium' : '' ?>">
+                    <a href="<?= SITE_URL ?>/contact" class="px-3 py-2 rounded-lg text-gray-700 hover:bg-primary-50 hover:text-primary-700 <?= $currentPage === 'contact' ? 'bg-primary-50 text-primary-700 font-medium' : '' ?>">
                         যোগাযোগ
                     </a>
-                    <a href="<?= SITE_URL ?>/complaint.php" class="px-4 py-2 bg-accent-500 text-white text-center rounded-lg hover:bg-accent-600 transition">
+                    <a href="<?= SITE_URL ?>/complaint" class="px-4 py-2 bg-accent-500 text-white text-center rounded-lg hover:bg-accent-600 transition">
                         অভিযোগ দাখিল
                     </a>
                 </div>

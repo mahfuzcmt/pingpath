@@ -71,7 +71,7 @@ require_once dirname(dirname(__DIR__)) . '/admin/includes/header.php';
     <div class="bg-white rounded-lg shadow-sm p-6">
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
             <h2 class="text-xl font-semibold text-gray-800">প্রকল্প তালিকা</h2>
-            <a href="create.php" class="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition">
+            <a href="create" class="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                 </svg>
@@ -168,7 +168,7 @@ require_once dirname(dirname(__DIR__)) . '/admin/includes/header.php';
                         </td>
                         <td class="px-4 py-4 text-right">
                             <div class="flex items-center justify-end gap-2">
-                                <a href="edit.php?id=<?= $project['id'] ?>" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg" title="সম্পাদনা">
+                                <a href="edit?id=<?= $project['id'] ?>" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg" title="সম্পাদনা">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                     </svg>
@@ -187,7 +187,7 @@ require_once dirname(dirname(__DIR__)) . '/admin/includes/header.php';
         </div>
 
         <!-- Pagination -->
-        <?= paginationHtml($pagination, 'index.php' . ($status ? '?status=' . urlencode($status) : '') . ($category ? ($status ? '&' : '?') . 'category=' . urlencode($category) : '') . ($search ? (($status || $category) ? '&' : '?') . 'q=' . urlencode($search) : '')) ?>
+        <?= paginationHtml($pagination, '' . ($status ? '?status=' . urlencode($status) : '') . ($category ? ($status ? '&' : '?') . 'category=' . urlencode($category) : '') . ($search ? (($status || $category) ? '&' : '?') . 'q=' . urlencode($search) : '')) ?>
         <?php endif; ?>
     </div>
 </div>

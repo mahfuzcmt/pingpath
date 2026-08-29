@@ -144,7 +144,7 @@ if (!empty($_GET['ticket']) || !empty($_POST['ticket'])) {
         <div class="mt-8 text-center">
             <p class="text-gray-600">
                 নতুন অভিযোগ করতে চান?
-                <a href="<?= SITE_URL ?>/complaint.php" class="text-primary-600 hover:text-primary-700 font-medium">অভিযোগ দাখিল করুন</a>
+                <a href="<?= SITE_URL ?>/complaint" class="text-primary-600 hover:text-primary-700 font-medium">অভিযোগ দাখিল করুন</a>
             </p>
         </div>
     </div>

@@ -44,7 +44,7 @@ require_once dirname(__DIR__) . '/includes/header.php';
                         বেনামে অভিযোগের সুবিধা
                     </li>
                 </ul>
-                <a href="<?= SITE_URL ?>/complaint.php" class="inline-block w-full px-6 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition">
+                <a href="<?= SITE_URL ?>/complaint" class="inline-block w-full px-6 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition">
                     অভিযোগ দাখিল করুন
                 </a>
             </div>
@@ -78,7 +78,7 @@ require_once dirname(__DIR__) . '/includes/header.php';
                         সমাধান নোট
                     </li>
                 </ul>
-                <a href="<?= SITE_URL ?>/track.php" class="inline-block w-full px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition">
+                <a href="<?= SITE_URL ?>/track" class="inline-block w-full px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition">
                     ট্র্যাক করুন
                 </a>
             </div>
@@ -112,7 +112,7 @@ require_once dirname(__DIR__) . '/includes/header.php';
                         সময় সুবিধানুযায়ী
                     </li>
                 </ul>
-                <a href="<?= SITE_URL ?>/appointment.php" class="inline-block w-full px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition">
+                <a href="<?= SITE_URL ?>/appointment" class="inline-block w-full px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition">
                     সময় নির্ধারণ করুন
                 </a>
             </div>

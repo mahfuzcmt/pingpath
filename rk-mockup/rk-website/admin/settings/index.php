@@ -65,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if (empty($errors)) {
                 setFlashMessage('সেটিংস সফলভাবে সংরক্ষণ করা হয়েছে।', 'success');
-                header('Location: index.php');
+                header('Location: ' . ADMIN_URL . '/settings');
                 exit;
             }
         } catch (Exception $e) {

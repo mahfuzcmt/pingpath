@@ -5,7 +5,7 @@ require_once dirname(__DIR__) . '/includes/auth.php';
 
 // Redirect if already logged in
 if (isLoggedIn()) {
-    redirect(ADMIN_URL . '/index.php');
+    redirect(ADMIN_URL . '');
 }
 
 $error = '';
@@ -21,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $result = attemptLogin($username, $password);
 
         if ($result['success']) {
-            $redirect = $_GET['redirect'] ?? ADMIN_URL . '/index.php';
+            $redirect = $_GET['redirect'] ?? ADMIN_URL . '';
             redirect($redirect);
         } else {
             $error = $result['message'];

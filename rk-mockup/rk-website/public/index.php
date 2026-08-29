@@ -45,13 +45,13 @@ $stats = [
                     <?= e(truncate(getSetting('about_text', ''), 200)) ?>
                 </p>
                 <div class="flex flex-wrap gap-4">
-                    <a href="<?= SITE_URL ?>/complaint.php" class="inline-flex items-center px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium">
+                    <a href="<?= SITE_URL ?>/complaint" class="inline-flex items-center px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                         </svg>
                         অভিযোগ দাখিল করুন
                     </a>
-                    <a href="<?= SITE_URL ?>/appointment.php" class="inline-flex items-center px-6 py-3 bg-white text-primary-700 rounded-lg hover:bg-primary-50 transition font-medium">
+                    <a href="<?= SITE_URL ?>/appointment" class="inline-flex items-center px-6 py-3 bg-white text-primary-700 rounded-lg hover:bg-primary-50 transition font-medium">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                         </svg>
@@ -104,7 +104,7 @@ $stats = [
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <!-- Complaint -->
-            <a href="<?= SITE_URL ?>/complaint.php" class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-lg hover:border-primary-500 transition group">
+            <a href="<?= SITE_URL ?>/complaint" class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-lg hover:border-primary-500 transition group">
                 <div class="w-14 h-14 bg-red-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-red-200 transition">
                     <svg class="w-7 h-7 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
@@ -115,7 +115,7 @@ $stats = [
             </a>
 
             <!-- Track Complaint -->
-            <a href="<?= SITE_URL ?>/track.php" class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-lg hover:border-primary-500 transition group">
+            <a href="<?= SITE_URL ?>/track" class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-lg hover:border-primary-500 transition group">
                 <div class="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-blue-200 transition">
                     <svg class="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
@@ -126,7 +126,7 @@ $stats = [
             </a>
 
             <!-- Appointment -->
-            <a href="<?= SITE_URL ?>/appointment.php" class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-lg hover:border-primary-500 transition group">
+            <a href="<?= SITE_URL ?>/appointment" class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-lg hover:border-primary-500 transition group">
                 <div class="w-14 h-14 bg-green-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-green-200 transition">
                     <svg class="w-7 h-7 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
@@ -145,14 +145,14 @@ $stats = [
     <div class="container mx-auto px-4">
         <div class="flex justify-between items-center mb-12">
             <h2 class="text-3xl font-bold text-gray-800">সাম্প্রতিক সংবাদ</h2>
-            <a href="<?= SITE_URL ?>/news.php" class="text-primary-600 hover:text-primary-700 font-medium">
+            <a href="<?= SITE_URL ?>/news" class="text-primary-600 hover:text-primary-700 font-medium">
                 সব সংবাদ দেখুন →
             </a>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <?php foreach (array_slice($recentNews, 0, 6) as $news): ?>
-            <a href="<?= SITE_URL ?>/news-detail.php?slug=<?= e($news['slug']) ?>" class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition group">
+            <a href="<?= SITE_URL ?>/news/<?= e($news['slug']) ?>" class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition group">
                 <?php if ($news['featured_image']): ?>
                 <img src="<?= UPLOADS_URL ?>/<?= e($news['featured_image']) ?>" alt="" class="w-full h-48 object-cover">
                 <?php else: ?>
@@ -183,7 +183,7 @@ $stats = [
     <div class="container mx-auto px-4">
         <div class="flex justify-between items-center mb-12">
             <h2 class="text-3xl font-bold text-gray-800">উন্নয়ন প্রকল্প</h2>
-            <a href="<?= SITE_URL ?>/projects.php" class="text-primary-600 hover:text-primary-700 font-medium">
+            <a href="<?= SITE_URL ?>/projects" class="text-primary-600 hover:text-primary-700 font-medium">
                 সব প্রকল্প দেখুন →
             </a>
         </div>
@@ -243,7 +243,7 @@ $stats = [
         </div>
 
         <div class="text-center mt-8">
-            <a href="<?= SITE_URL ?>/media.php" class="inline-flex items-center px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition">
+            <a href="<?= SITE_URL ?>/media" class="inline-flex items-center px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition">
                 সব ভিডিও দেখুন
             </a>
         </div>
@@ -258,7 +258,7 @@ $stats = [
         <p class="text-xl text-primary-100 mb-8 max-w-2xl mx-auto">
             আপনার যেকোনো সমস্যা বা অভিযোগ সরাসরি জানান। আমরা দ্রুত সমাধানের ব্যবস্থা নেব।
         </p>
-        <a href="<?= SITE_URL ?>/complaint.php" class="inline-flex items-center px-8 py-4 bg-white text-primary-700 rounded-lg hover:bg-primary-50 transition font-semibold text-lg">
+        <a href="<?= SITE_URL ?>/complaint" class="inline-flex items-center px-8 py-4 bg-white text-primary-700 rounded-lg hover:bg-primary-50 transition font-semibold text-lg">
             অভিযোগ দাখিল করুন
         </a>
     </div>

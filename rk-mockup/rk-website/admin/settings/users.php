@@ -56,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     try {
                         createAdminUser($username, $email, $password, $role, $fullName);
                         setFlashMessage('ব্যবহারকারী সফলভাবে তৈরি হয়েছে।', 'success');
-                        header('Location: users.php');
+                        header('Location: ' . ADMIN_URL . '/settings/users');
                         exit;
                     } catch (Exception $e) {
                         $errors[] = 'তৈরি করতে সমস্যা হয়েছে।';
@@ -74,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     setFlashMessage('ব্যবহারকারীর অবস্থা পরিবর্তন হয়েছে।', 'success');
                 }
             }
-            header('Location: users.php');
+            header('Location: ' . ADMIN_URL . '/settings/users');
             exit;
         }
 
@@ -84,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 Database::delete('admin_users', 'id = :id', ['id' => $userId]);
                 setFlashMessage('ব্যবহারকারী মুছে ফেলা হয়েছে।', 'success');
             }
-            header('Location: users.php');
+            header('Location: ' . ADMIN_URL . '/settings/users');
             exit;
         }
 
@@ -99,7 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'password_hash' => password_hash($newPassword, PASSWORD_DEFAULT)
                 ], 'id = :id', ['id' => $userId]);
                 setFlashMessage('পাসওয়ার্ড পরিবর্তন হয়েছে।', 'success');
-                header('Location: users.php');
+                header('Location: ' . ADMIN_URL . '/settings/users');
                 exit;
             }
         }
@@ -112,7 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 Database::update('admin_users', ['role' => $newRole], 'id = :id', ['id' => $userId]);
                 setFlashMessage('ভূমিকা পরিবর্তন হয়েছে।', 'success');
             }
-            header('Location: users.php');
+            header('Location: ' . ADMIN_URL . '/settings/users');
             exit;
         }
     }
@@ -298,7 +298,7 @@ require_once dirname(dirname(__DIR__)) . '/admin/includes/header.php';
 
         <!-- Pagination -->
         <div class="mt-6">
-            <?= paginationHtml($pagination, 'users.php' . ($search ? '?q=' . urlencode($search) : '')) ?>
+            <?= paginationHtml($pagination, '' . ($search ? '?q=' . urlencode($search) : '')) ?>
         </div>
         <?php endif; ?>
     </div>

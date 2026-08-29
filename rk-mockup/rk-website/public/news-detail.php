@@ -3,7 +3,7 @@ require_once dirname(__DIR__) . '/includes/functions.php';
 
 $slug = $_GET['slug'] ?? '';
 if (empty($slug)) {
-    redirect(SITE_URL . '/news.php');
+    redirect(SITE_URL . '/news');
 }
 
 $news = Database::fetchOne(
@@ -14,7 +14,7 @@ $news = Database::fetchOne(
 );
 
 if (!$news) {
-    redirect(SITE_URL . '/news.php');
+    redirect(SITE_URL . '/news');
 }
 
 // Increment view count
@@ -38,7 +38,7 @@ require_once dirname(__DIR__) . '/includes/header.php';
                 <ol class="flex items-center space-x-2 text-sm">
                     <li><a href="<?= SITE_URL ?>" class="text-gray-500 hover:text-primary-600">হোম</a></li>
                     <li><span class="text-gray-400">/</span></li>
-                    <li><a href="<?= SITE_URL ?>/news.php" class="text-gray-500 hover:text-primary-600">সংবাদ</a></li>
+                    <li><a href="<?= SITE_URL ?>/news" class="text-gray-500 hover:text-primary-600">সংবাদ</a></li>
                     <li><span class="text-gray-400">/</span></li>
                     <li class="text-gray-700"><?= e(truncate($news['title'], 30)) ?></li>
                 </ol>
@@ -47,7 +47,7 @@ require_once dirname(__DIR__) . '/includes/header.php';
             <!-- Header -->
             <header class="mb-8">
                 <div class="flex items-center gap-3 mb-4">
-                    <a href="<?= SITE_URL ?>/news.php?category=<?= urlencode($news['category']) ?>" class="px-3 py-1 bg-primary-100 text-primary-700 text-sm rounded-full hover:bg-primary-200 transition">
+                    <a href="<?= SITE_URL ?>/news?category=<?= urlencode($news['category']) ?>" class="px-3 py-1 bg-primary-100 text-primary-700 text-sm rounded-full hover:bg-primary-200 transition">
                         <?= e(str_replace('_', ' ', $news['category'])) ?>
                     </a>
                     <?php if ($news['is_featured']): ?>
@@ -132,7 +132,7 @@ require_once dirname(__DIR__) . '/includes/header.php';
             <h2 class="text-2xl font-bold text-gray-800 mb-6">সম্পর্কিত সংবাদ</h2>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <?php foreach ($relatedNews as $related): ?>
-                <a href="<?= SITE_URL ?>/news-detail.php?slug=<?= e($related['slug']) ?>" class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition group">
+                <a href="<?= SITE_URL ?>/news/<?= e($related['slug']) ?>" class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition group">
                     <?php if ($related['featured_image']): ?>
                     <img src="<?= UPLOADS_URL ?>/<?= e($related['featured_image']) ?>" alt="" class="w-full h-40 object-cover">
                     <?php else: ?>

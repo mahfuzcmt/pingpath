@@ -67,11 +67,11 @@ $stats = [
 
         <!-- Filters -->
         <div class="flex flex-wrap gap-2 justify-center mb-10">
-            <a href="<?= SITE_URL ?>/projects.php" class="px-4 py-2 rounded-full text-sm font-medium transition <?= !$status && !$category ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' ?>">
+            <a href="<?= SITE_URL ?>/projects" class="px-4 py-2 rounded-full text-sm font-medium transition <?= !$status && !$category ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' ?>">
                 সব
             </a>
             <?php foreach ($statuses as $s): ?>
-            <a href="<?= SITE_URL ?>/projects.php?status=<?= urlencode($s) ?>" class="px-4 py-2 rounded-full text-sm font-medium transition <?= $status === $s ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' ?>">
+            <a href="<?= SITE_URL ?>/projects?status=<?= urlencode($s) ?>" class="px-4 py-2 rounded-full text-sm font-medium transition <?= $status === $s ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' ?>">
                 <?= e($s) ?>
             </a>
             <?php endforeach; ?>
@@ -157,7 +157,7 @@ $stats = [
         </div>
 
         <!-- Pagination -->
-        <?= paginationHtml($pagination, SITE_URL . '/projects.php' . ($status ? '?status=' . urlencode($status) : '') . ($category ? ($status ? '&' : '?') . 'category=' . urlencode($category) : '')) ?>
+        <?= paginationHtml($pagination, SITE_URL . '/projects' . ($status ? '?status=' . urlencode($status) : '') . ($category ? ($status ? '&' : '?') . 'category=' . urlencode($category) : '')) ?>
         <?php endif; ?>
     </div>
 </section>

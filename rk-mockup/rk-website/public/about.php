@@ -89,13 +89,13 @@ require_once dirname(__DIR__) . '/includes/header.php';
                 <h3 class="text-2xl font-bold mb-4">সরাসরি যোগাযোগ করুন</h3>
                 <p class="text-primary-100 mb-6">আপনার যেকোনো সমস্যা বা পরামর্শ জানাতে দ্বিধা করবেন না।</p>
                 <div class="flex flex-wrap justify-center gap-4">
-                    <a href="<?= SITE_URL ?>/complaint.php" class="px-6 py-3 bg-white text-primary-700 rounded-lg font-medium hover:bg-primary-50 transition">
+                    <a href="<?= SITE_URL ?>/complaint" class="px-6 py-3 bg-white text-primary-700 rounded-lg font-medium hover:bg-primary-50 transition">
                         অভিযোগ দাখিল
                     </a>
-                    <a href="<?= SITE_URL ?>/appointment.php" class="px-6 py-3 bg-primary-800 text-white rounded-lg font-medium hover:bg-primary-900 transition">
+                    <a href="<?= SITE_URL ?>/appointment" class="px-6 py-3 bg-primary-800 text-white rounded-lg font-medium hover:bg-primary-900 transition">
                         সাক্ষাৎকারের সময় নিন
                     </a>
-                    <a href="<?= SITE_URL ?>/contact.php" class="px-6 py-3 border-2 border-white text-white rounded-lg font-medium hover:bg-white hover:text-primary-700 transition">
+                    <a href="<?= SITE_URL ?>/contact" class="px-6 py-3 border-2 border-white text-white rounded-lg font-medium hover:bg-white hover:text-primary-700 transition">
                         যোগাযোগ
                     </a>
                 </div>

@@ -105,7 +105,7 @@ $recentNews = Database::fetchAll(
     <div class="bg-white rounded-xl shadow-sm border border-gray-100">
         <div class="flex items-center justify-between p-6 border-b border-gray-100">
             <h2 class="text-lg font-semibold text-gray-800">সাম্প্রতিক অভিযোগ</h2>
-            <a href="<?= ADMIN_URL ?>/complaints/index.php" class="text-sm text-primary-600 hover:text-primary-700">
+            <a href="<?= ADMIN_URL ?>/complaints" class="text-sm text-primary-600 hover:text-primary-700">
                 সব দেখুন →
             </a>
         </div>
@@ -130,7 +130,7 @@ $recentNews = Database::fetchAll(
                             <?= e($complaint['full_name']) ?> • <?= timeAgo($complaint['submitted_at']) ?>
                         </p>
                     </div>
-                    <a href="<?= ADMIN_URL ?>/complaints/view.php?id=<?= $complaint['id'] ?>" class="text-primary-600 hover:text-primary-700">
+                    <a href="<?= ADMIN_URL ?>/complaints/view?id=<?= $complaint['id'] ?>" class="text-primary-600 hover:text-primary-700">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                         </svg>
@@ -146,7 +146,7 @@ $recentNews = Database::fetchAll(
     <div class="bg-white rounded-xl shadow-sm border border-gray-100">
         <div class="flex items-center justify-between p-6 border-b border-gray-100">
             <h2 class="text-lg font-semibold text-gray-800">আজকের সাক্ষাৎকার</h2>
-            <a href="<?= ADMIN_URL ?>/appointments/index.php" class="text-sm text-primary-600 hover:text-primary-700">
+            <a href="<?= ADMIN_URL ?>/appointments" class="text-sm text-primary-600 hover:text-primary-700">
                 সব দেখুন →
             </a>
         </div>
@@ -171,7 +171,7 @@ $recentNews = Database::fetchAll(
                         <p class="text-sm font-medium text-gray-800 mt-1"><?= e($appointment['visitor_name']) ?></p>
                         <p class="text-xs text-gray-500 mt-1"><?= e(truncate($appointment['purpose'] ?? '', 50)) ?></p>
                     </div>
-                    <a href="<?= ADMIN_URL ?>/appointments/view.php?id=<?= $appointment['id'] ?>" class="text-primary-600 hover:text-primary-700">
+                    <a href="<?= ADMIN_URL ?>/appointments/view?id=<?= $appointment['id'] ?>" class="text-primary-600 hover:text-primary-700">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                         </svg>
@@ -188,7 +188,7 @@ $recentNews = Database::fetchAll(
 <div class="mt-8">
     <h2 class="text-lg font-semibold text-gray-800 mb-4">দ্রুত কার্যক্রম</h2>
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <a href="<?= ADMIN_URL ?>/news/create.php" class="bg-white rounded-xl border border-gray-200 p-4 hover:border-primary-500 hover:shadow-md transition group">
+        <a href="<?= ADMIN_URL ?>/news/create" class="bg-white rounded-xl border border-gray-200 p-4 hover:border-primary-500 hover:shadow-md transition group">
             <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mb-3 group-hover:bg-blue-200 transition">
                 <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
@@ -197,7 +197,7 @@ $recentNews = Database::fetchAll(
             <p class="text-sm font-medium text-gray-800">নতুন সংবাদ</p>
         </a>
 
-        <a href="<?= ADMIN_URL ?>/projects/create.php" class="bg-white rounded-xl border border-gray-200 p-4 hover:border-primary-500 hover:shadow-md transition group">
+        <a href="<?= ADMIN_URL ?>/projects/create" class="bg-white rounded-xl border border-gray-200 p-4 hover:border-primary-500 hover:shadow-md transition group">
             <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mb-3 group-hover:bg-green-200 transition">
                 <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
@@ -206,7 +206,7 @@ $recentNews = Database::fetchAll(
             <p class="text-sm font-medium text-gray-800">নতুন প্রকল্প</p>
         </a>
 
-        <a href="<?= ADMIN_URL ?>/media/upload.php" class="bg-white rounded-xl border border-gray-200 p-4 hover:border-primary-500 hover:shadow-md transition group">
+        <a href="<?= ADMIN_URL ?>/media/upload" class="bg-white rounded-xl border border-gray-200 p-4 hover:border-primary-500 hover:shadow-md transition group">
             <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mb-3 group-hover:bg-purple-200 transition">
                 <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
@@ -215,7 +215,7 @@ $recentNews = Database::fetchAll(
             <p class="text-sm font-medium text-gray-800">মিডিয়া আপলোড</p>
         </a>
 
-        <a href="<?= ADMIN_URL ?>/appointments/calendar.php" class="bg-white rounded-xl border border-gray-200 p-4 hover:border-primary-500 hover:shadow-md transition group">
+        <a href="<?= ADMIN_URL ?>/appointments/calendar" class="bg-white rounded-xl border border-gray-200 p-4 hover:border-primary-500 hover:shadow-md transition group">
             <div class="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center mb-3 group-hover:bg-yellow-200 transition">
                 <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>

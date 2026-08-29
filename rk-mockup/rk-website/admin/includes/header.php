@@ -97,14 +97,14 @@ if ($currentPage === 'admin') {
                         </button>
 
                         <div id="user-menu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
-                            <a href="<?= ADMIN_URL ?>/settings/index.php" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                            <a href="<?= ADMIN_URL ?>/settings" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                 সেটিংস
                             </a>
                             <a href="<?= SITE_URL ?>" target="_blank" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                 সাইট দেখুন
                             </a>
                             <hr class="my-1">
-                            <a href="<?= ADMIN_URL ?>/logout.php" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+                            <a href="<?= ADMIN_URL ?>/logout" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50">
                                 লগআউট
                             </a>
                         </div>

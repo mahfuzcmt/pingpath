@@ -1,18 +1,21 @@
 <?php
-$pageTitle = 'অভিযোগ বিস্তারিত';
-require_once dirname(__DIR__) . '/includes/header.php';
+// Include functions first for database and redirect
+require_once dirname(__DIR__, 2) . '/includes/functions.php';
+require_once dirname(__DIR__, 2) . '/includes/auth.php';
+requireAuth();
 
+// Validate complaint ID BEFORE including header (which outputs HTML)
 $id = (int)($_GET['id'] ?? 0);
 if (!$id) {
-    redirect(ADMIN_URL . '/complaints/index.php', 'error', 'অভিযোগ পাওয়া যায়নি।');
+    redirect(ADMIN_URL . '/complaints', 'error', 'অভিযোগ পাওয়া যায়নি।');
 }
 
 $complaint = Database::fetchOne("SELECT * FROM complaints WHERE id = :id", ['id' => $id]);
 if (!$complaint) {
-    redirect(ADMIN_URL . '/complaints/index.php', 'error', 'অভিযোগ পাওয়া যায়নি।');
+    redirect(ADMIN_URL . '/complaints', 'error', 'অভিযোগ পাওয়া যায়নি।');
 }
 
-// Handle status update
+// Handle status update (before any output)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && canEdit()) {
     if (validateCsrfToken($_POST[CSRF_TOKEN_NAME] ?? '')) {
         $newStatus = $_POST['status'] ?? '';
@@ -44,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && canEdit()) {
                 'updated_by' => currentUserId()
             ]);
 
-            redirect(ADMIN_URL . '/complaints/view.php?id=' . $id, 'success', 'অভিযোগের স্ট্যাটাস আপডেট করা হয়েছে।');
+            redirect(ADMIN_URL . '/complaints/view?id=' . $id, 'success', 'অভিযোগের স্ট্যাটাস আপডেট করা হয়েছে।');
         }
     }
 }
@@ -59,10 +62,14 @@ $logs = Database::fetchAll(
 );
 
 $statuses = ['দাখিল', 'পর্যালোচনাধীন', 'কার্যক্রম', 'সমাধান'];
+
+// Now include header (after all validation and redirects)
+$pageTitle = 'অভিযোগ বিস্তারিত';
+require_once dirname(__DIR__) . '/includes/header.php';
 ?>
 
 <div class="mb-6">
-    <a href="<?= ADMIN_URL ?>/complaints/index.php" class="text-gray-500 hover:text-gray-700 text-sm">
+    <a href="<?= ADMIN_URL ?>/complaints" class="text-gray-500 hover:text-gray-700 text-sm">
         ← অভিযোগ তালিকায় ফিরে যান
     </a>
 </div>

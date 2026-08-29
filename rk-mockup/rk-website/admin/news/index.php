@@ -1,8 +1,10 @@
 <?php
-$pageTitle = 'সংবাদ ব্যবস্থাপনা';
-require_once dirname(__DIR__) . '/includes/header.php';
+// Include functions first for redirects before any output
+require_once dirname(__DIR__, 2) . '/includes/functions.php';
+require_once dirname(__DIR__, 2) . '/includes/auth.php';
+requireAuth();
 
-// Handle delete
+// Handle delete BEFORE including header
 if (isset($_GET['delete']) && canEdit()) {
     $id = (int)$_GET['delete'];
     if (validateCsrfToken($_GET['token'] ?? '')) {
@@ -12,7 +14,7 @@ if (isset($_GET['delete']) && canEdit()) {
             deleteFile($news['featured_image']);
         }
         Database::delete('news', 'id = :id', ['id' => $id]);
-        redirect(ADMIN_URL . '/news/index.php', 'success', 'সংবাদ সফলভাবে মুছে ফেলা হয়েছে।');
+        redirect(ADMIN_URL . '/news', 'success', 'সংবাদ সফলভাবে মুছে ফেলা হয়েছে।');
     }
 }
 
@@ -52,6 +54,10 @@ $pagination = Database::paginate($sql, $params, $page, ADMIN_ITEMS_PER_PAGE);
 $news = $pagination['items'];
 
 $categories = ['সরকারি_কার্যক্রম', 'উন্নয়ন', 'জনসভা', 'স্বাস্থ্য', 'শিক্ষা', 'যুব_কার্যক্রম', 'অন্যান্য'];
+
+// Include header after all redirects
+$pageTitle = 'সংবাদ ব্যবস্থাপনা';
+require_once dirname(__DIR__) . '/includes/header.php';
 ?>
 
 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
@@ -59,7 +65,7 @@ $categories = ['সরকারি_কার্যক্রম', 'উন্ন�
         <p class="text-gray-500">মোট <?= toBengaliDigits($pagination['total']) ?> টি সংবাদ</p>
     </div>
     <?php if (canEdit()): ?>
-    <a href="<?= ADMIN_URL ?>/news/create.php" class="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition">
+    <a href="<?= ADMIN_URL ?>/news/create" class="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition">
         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
         </svg>
@@ -93,7 +99,7 @@ $categories = ['সরকারি_কার্যক্রম', 'উন্ন�
             ফিল্টার
         </button>
         <?php if ($search || $status || $category): ?>
-        <a href="<?= ADMIN_URL ?>/news/index.php" class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition text-center">
+        <a href="<?= ADMIN_URL ?>/news" class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition text-center">
             রিসেট
         </a>
         <?php endif; ?>
@@ -162,19 +168,19 @@ $categories = ['সরকারি_কার্যক্রম', 'উন্ন�
                     </td>
                     <td class="px-6 py-4 text-right">
                         <div class="flex items-center justify-end space-x-2">
-                            <a href="<?= SITE_URL ?>/news-detail.php?slug=<?= e($item['slug']) ?>" target="_blank" class="p-2 text-gray-400 hover:text-gray-600" title="প্রিভিউ">
+                            <a href="<?= SITE_URL ?>/news/<?= e($item['slug']) ?>" target="_blank" class="p-2 text-gray-400 hover:text-gray-600" title="প্রিভিউ">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                                 </svg>
                             </a>
                             <?php if (canEdit()): ?>
-                            <a href="<?= ADMIN_URL ?>/news/edit.php?id=<?= $item['id'] ?>" class="p-2 text-blue-500 hover:text-blue-700" title="এডিট">
+                            <a href="<?= ADMIN_URL ?>/news/edit?id=<?= $item['id'] ?>" class="p-2 text-blue-500 hover:text-blue-700" title="এডিট">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                 </svg>
                             </a>
-                            <a href="<?= ADMIN_URL ?>/news/index.php?delete=<?= $item['id'] ?>&token=<?= generateCsrfToken() ?>" onclick="return confirm('আপনি কি নিশ্চিত?')" class="p-2 text-red-500 hover:text-red-700" title="মুছুন">
+                            <a href="<?= ADMIN_URL ?>/news?delete=<?= $item['id'] ?>&token=<?= generateCsrfToken() ?>" onclick="return confirm('আপনি কি নিশ্চিত?')" class="p-2 text-red-500 hover:text-red-700" title="মুছুন">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                 </svg>
@@ -191,6 +197,6 @@ $categories = ['সরকারি_কার্যক্রম', 'উন্ন�
 </div>
 
 <!-- Pagination -->
-<?= paginationHtml($pagination, ADMIN_URL . '/news/index.php?' . http_build_query(array_filter(['status' => $status, 'category' => $category, 'search' => $search]))) ?>
+<?= paginationHtml($pagination, ADMIN_URL . '/news?' . http_build_query(array_filter(['status' => $status, 'category' => $category, 'search' => $search]))) ?>
 
 <?php require_once dirname(__DIR__) . '/includes/footer.php'; ?>

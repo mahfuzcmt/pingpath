@@ -38,13 +38,13 @@ $categories = ['সাক্ষাৎকার', 'আন্দোলন', 'স�
 
         <!-- Filters -->
         <div class="flex flex-wrap justify-center gap-2 mb-10">
-            <a href="<?= SITE_URL ?>/media.php" class="px-4 py-2 rounded-full text-sm font-medium transition <?= !$type && !$category ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' ?>">
+            <a href="<?= SITE_URL ?>/media" class="px-4 py-2 rounded-full text-sm font-medium transition <?= !$type && !$category ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' ?>">
                 সব
             </a>
-            <a href="<?= SITE_URL ?>/media.php?type=youtube" class="px-4 py-2 rounded-full text-sm font-medium transition <?= $type === 'youtube' ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' ?>">
+            <a href="<?= SITE_URL ?>/media?type=youtube" class="px-4 py-2 rounded-full text-sm font-medium transition <?= $type === 'youtube' ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' ?>">
                 ভিডিও
             </a>
-            <a href="<?= SITE_URL ?>/media.php?type=photo" class="px-4 py-2 rounded-full text-sm font-medium transition <?= $type === 'photo' ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' ?>">
+            <a href="<?= SITE_URL ?>/media?type=photo" class="px-4 py-2 rounded-full text-sm font-medium transition <?= $type === 'photo' ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' ?>">
                 ছবি
             </a>
         </div>
@@ -52,7 +52,7 @@ $categories = ['সাক্ষাৎকার', 'আন্দোলন', 'স�
         <!-- Category Filter -->
         <div class="flex flex-wrap justify-center gap-2 mb-10">
             <?php foreach ($categories as $cat): ?>
-            <a href="<?= SITE_URL ?>/media.php?category=<?= urlencode($cat) ?>" class="px-3 py-1 rounded-full text-xs font-medium transition <?= $category === $cat ? 'bg-primary-100 text-primary-700' : 'bg-gray-50 text-gray-600 hover:bg-gray-100' ?>">
+            <a href="<?= SITE_URL ?>/media?category=<?= urlencode($cat) ?>" class="px-3 py-1 rounded-full text-xs font-medium transition <?= $category === $cat ? 'bg-primary-100 text-primary-700' : 'bg-gray-50 text-gray-600 hover:bg-gray-100' ?>">
                 <?= e(str_replace('_', ' ', $cat)) ?>
             </a>
             <?php endforeach; ?>
@@ -106,7 +106,7 @@ $categories = ['সাক্ষাৎকার', 'আন্দোলন', 'স�
         </div>
 
         <!-- Pagination -->
-        <?= paginationHtml($pagination, SITE_URL . '/media.php' . ($type ? '?type=' . urlencode($type) : '') . ($category ? ($type ? '&' : '?') . 'category=' . urlencode($category) : '')) ?>
+        <?= paginationHtml($pagination, SITE_URL . '/media' . ($type ? '?type=' . urlencode($type) : '') . ($category ? ($type ? '&' : '?') . 'category=' . urlencode($category) : '')) ?>
         <?php endif; ?>
     </div>
 </section>

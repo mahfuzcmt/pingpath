@@ -9,7 +9,7 @@ $media = Database::fetchOne("SELECT * FROM media WHERE id = :id", ['id' => $id])
 
 if (!$media) {
     setFlashMessage('মিডিয়া পাওয়া যায়নি।', 'error');
-    header('Location: index.php');
+    header('Location: ' . ADMIN_URL . '/media');
     exit;
 }
 
@@ -72,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ], 'id = :id', ['id' => $id]);
 
                 setFlashMessage('মিডিয়া সফলভাবে আপডেট হয়েছে।', 'success');
-                header('Location: index.php');
+                header('Location: ' . ADMIN_URL . '/media');
                 exit;
 
             } catch (Exception $e) {
@@ -105,7 +105,7 @@ require_once dirname(dirname(__DIR__)) . '/admin/includes/header.php';
 
 <div class="max-w-2xl mx-auto">
     <div class="mb-6">
-        <a href="index.php" class="text-primary-600 hover:text-primary-700 flex items-center">
+        <a href="<?= ADMIN_URL ?>/media" class="text-primary-600 hover:text-primary-700 flex items-center">
             <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
             </svg>
@@ -198,7 +198,7 @@ require_once dirname(dirname(__DIR__)) . '/admin/includes/header.php';
 
             <!-- Submit -->
             <div class="flex items-center justify-end gap-4 pt-6 border-t">
-                <a href="index.php" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition">
+                <a href="<?= ADMIN_URL ?>/media" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition">
                     বাতিল
                 </a>
                 <button type="submit" class="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition">

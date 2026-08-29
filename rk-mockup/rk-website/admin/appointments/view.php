@@ -8,7 +8,7 @@ $appointment = Database::fetchOne("SELECT * FROM appointments WHERE id = :id", [
 
 if (!$appointment) {
     setFlashMessage('অ্যাপয়েন্টমেন্ট পাওয়া যায়নি।', 'error');
-    header('Location: index.php');
+    header('Location: ' . ADMIN_URL . '/appointments');
     exit;
 }
 
@@ -27,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
             ], 'id = :id', ['id' => $id]);
 
             setFlashMessage('অ্যাপয়েন্টমেন্ট আপডেট হয়েছে।', 'success');
-            header('Location: view.php?id=' . $id);
+            header('Location: ' . ADMIN_URL . '/appointments/view?id=' . $id);
             exit;
         }
     }
@@ -38,7 +38,7 @@ require_once dirname(dirname(__DIR__)) . '/admin/includes/header.php';
 
 <div class="max-w-4xl mx-auto">
     <div class="mb-6">
-        <a href="index.php" class="text-primary-600 hover:text-primary-700 flex items-center">
+        <a href="<?= ADMIN_URL ?>/appointments" class="text-primary-600 hover:text-primary-700 flex items-center">
             <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
             </svg>

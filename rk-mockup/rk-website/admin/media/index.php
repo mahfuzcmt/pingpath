@@ -55,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete'])) {
             Database::delete('media', 'id = :id', ['id' => $deleteId]);
             setFlashMessage('মিডিয়া মুছে ফেলা হয়েছে।', 'success');
         }
-        header('Location: index.php');
+        header('Location: ' . ADMIN_URL . '/media');
         exit;
     }
 }
@@ -88,7 +88,7 @@ require_once dirname(dirname(__DIR__)) . '/admin/includes/header.php';
     <div class="bg-white rounded-lg shadow-sm p-6">
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
             <h2 class="text-xl font-semibold text-gray-800">মিডিয়া তালিকা</h2>
-            <a href="upload.php" class="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition">
+            <a href="upload" class="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                 </svg>
@@ -157,7 +157,7 @@ require_once dirname(dirname(__DIR__)) . '/admin/includes/header.php';
 
                 <!-- Overlay Actions -->
                 <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-2">
-                    <a href="edit.php?id=<?= $item['id'] ?>" class="p-2 bg-white rounded-lg text-blue-600 hover:bg-blue-50">
+                    <a href="edit?id=<?= $item['id'] ?>" class="p-2 bg-white rounded-lg text-blue-600 hover:bg-blue-50">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                         </svg>
@@ -177,7 +177,7 @@ require_once dirname(dirname(__DIR__)) . '/admin/includes/header.php';
 
         <!-- Pagination -->
         <div class="mt-6">
-            <?= paginationHtml($pagination, 'index.php' . ($type ? '?type=' . urlencode($type) : '') . ($category ? ($type ? '&' : '?') . 'category=' . urlencode($category) : '') . ($search ? (($type || $category) ? '&' : '?') . 'q=' . urlencode($search) : '')) ?>
+            <?= paginationHtml($pagination, '' . ($type ? '?type=' . urlencode($type) : '') . ($category ? ($type ? '&' : '?') . 'category=' . urlencode($category) : '') . ($search ? (($type || $category) ? '&' : '?') . 'q=' . urlencode($search) : '')) ?>
         </div>
         <?php endif; ?>
     </div>

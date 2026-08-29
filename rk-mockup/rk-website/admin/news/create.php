@@ -56,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ];
 
                 $id = Database::insert('news', $insertData);
-                redirect(ADMIN_URL . '/news/index.php', 'success', 'সংবাদ সফলভাবে তৈরি হয়েছে।');
+                redirect(ADMIN_URL . '/news', 'success', 'সংবাদ সফলভাবে তৈরি হয়েছে।');
             }
         }
     }
@@ -67,7 +67,7 @@ $categories = ['সরকারি_কার্যক্রম', 'উন্ন�
 
 <div class="max-w-4xl">
     <div class="mb-6">
-        <a href="<?= ADMIN_URL ?>/news/index.php" class="text-gray-500 hover:text-gray-700 text-sm">
+        <a href="<?= ADMIN_URL ?>/news" class="text-gray-500 hover:text-gray-700 text-sm">
             ← সংবাদ তালিকায় ফিরে যান
         </a>
     </div>
@@ -144,7 +144,7 @@ $categories = ['সরকারি_কার্যক্রম', 'উন্ন�
 
         <!-- Submit Buttons -->
         <div class="flex items-center justify-end space-x-4">
-            <a href="<?= ADMIN_URL ?>/news/index.php" class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
+            <a href="<?= ADMIN_URL ?>/news" class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
                 বাতিল
             </a>
             <button type="submit" class="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition">

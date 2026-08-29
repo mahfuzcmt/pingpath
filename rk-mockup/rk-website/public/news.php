@@ -32,11 +32,11 @@ $categories = ['সরকারি_কার্যক্রম', 'উন্ন�
 
         <!-- Category Filter -->
         <div class="flex flex-wrap justify-center gap-2 mb-10">
-            <a href="<?= SITE_URL ?>/news.php" class="px-4 py-2 rounded-full text-sm font-medium transition <?= !$category ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' ?>">
+            <a href="<?= SITE_URL ?>/news" class="px-4 py-2 rounded-full text-sm font-medium transition <?= !$category ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' ?>">
                 সব
             </a>
             <?php foreach ($categories as $cat): ?>
-            <a href="<?= SITE_URL ?>/news.php?category=<?= urlencode($cat) ?>" class="px-4 py-2 rounded-full text-sm font-medium transition <?= $category === $cat ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' ?>">
+            <a href="<?= SITE_URL ?>/news?category=<?= urlencode($cat) ?>" class="px-4 py-2 rounded-full text-sm font-medium transition <?= $category === $cat ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' ?>">
                 <?= e(str_replace('_', ' ', $cat)) ?>
             </a>
             <?php endforeach; ?>
@@ -55,7 +55,7 @@ $categories = ['সরকারি_কার্যক্রম', 'উন্ন�
         <?php else: ?>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <?php foreach ($news as $item): ?>
-            <a href="<?= SITE_URL ?>/news-detail.php?slug=<?= e($item['slug']) ?>" class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition group">
+            <a href="<?= SITE_URL ?>/news/<?= e($item['slug']) ?>" class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition group">
                 <?php if ($item['featured_image']): ?>
                 <img src="<?= UPLOADS_URL ?>/<?= e($item['featured_image']) ?>" alt="" class="w-full h-48 object-cover group-hover:scale-105 transition duration-300">
                 <?php else: ?>
@@ -85,7 +85,7 @@ $categories = ['সরকারি_কার্যক্রম', 'উন্ন�
         </div>
 
         <!-- Pagination -->
-        <?= paginationHtml($pagination, SITE_URL . '/news.php' . ($category ? '?category=' . urlencode($category) : '')) ?>
+        <?= paginationHtml($pagination, SITE_URL . '/news' . ($category ? '?category=' . urlencode($category) : '')) ?>
         <?php endif; ?>
     </div>
 </section>

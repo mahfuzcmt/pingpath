@@ -149,7 +149,7 @@ function requireAuth(): void
 {
     if (!isLoggedIn()) {
         $redirectUrl = $_SERVER['REQUEST_URI'];
-        redirect(ADMIN_URL . '/login.php?redirect=' . urlencode($redirectUrl));
+        redirect(ADMIN_URL . '/login?redirect=' . urlencode($redirectUrl));
     }
 }
 
@@ -166,7 +166,7 @@ function requireRole(string|array $roles): void
 
     if (!in_array($userRole, $allowedRoles)) {
         setFlash('error', 'আপনার এই কাজ করার অনুমতি নেই।');
-        redirect(ADMIN_URL . '/index.php');
+        redirect(ADMIN_URL);
     }
 }
 
