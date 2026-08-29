@@ -23,7 +23,7 @@
 <body class="bg-gray-50 text-gray-900">
 
     <!-- Header -->
-    <header class="bg-white shadow-sm">
+    <header class="bg-white shadow-sm sticky top-0 z-50">
         <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
                 <a href="index.html" class="flex items-center space-x-2">
@@ -36,10 +36,27 @@
                     <span class="font-semibold text-lg text-gray-900 hidden sm:block">রাশেদ খান</span>
                 </a>
                 <div class="hidden md:flex items-center space-x-6">
-                    <a href="index.html" class="text-gray-600 hover:text-primary-600">হোম</a>
-                    <a href="about.html" class="text-gray-600 hover:text-primary-600">পরিচিতি</a>
+                    <a href="index.html" class="text-gray-600 hover:text-primary-600 transition">হোম</a>
+                    <a href="about.html" class="text-gray-600 hover:text-primary-600 transition">পরিচিতি</a>
+                    <a href="news.html" class="text-gray-600 hover:text-primary-600 transition">সংবাদ</a>
+                    <a href="services.html" class="text-gray-600 hover:text-primary-600 transition">সেবা</a>
                     <a href="projects.html" class="text-primary-600 font-medium">উন্নয়ন</a>
-                    <a href="contact.html" class="text-gray-600 hover:text-primary-600">যোগাযোগ</a>
+                    <a href="contact.html" class="text-gray-600 hover:text-primary-600 transition">যোগাযোগ</a>
+                </div>
+                <button class="md:hidden p-2 text-gray-500" onclick="toggleMobileMenu()">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+            </div>
+            <div id="mobile-menu" class="hidden md:hidden pb-4">
+                <div class="flex flex-col space-y-2">
+                    <a href="index.html" class="px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-md">হোম</a>
+                    <a href="about.html" class="px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-md">পরিচিতি</a>
+                    <a href="news.html" class="px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-md">সংবাদ</a>
+                    <a href="services.html" class="px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-md">সেবা</a>
+                    <a href="projects.html" class="px-3 py-2 text-primary-600 font-medium bg-primary-50 rounded-md">উন্নয়ন</a>
+                    <a href="contact.html" class="px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-md">যোগাযোগ</a>
                 </div>
             </div>
         </nav>
@@ -364,10 +381,27 @@
 
     <!-- Footer -->
     <footer class="bg-gray-900 text-white py-8 mt-12">
-        <div class="max-w-7xl mx-auto px-4 text-center">
-            <p class="text-gray-400">&copy; ২০২৬ মো. রাশেদ খান। সর্বস্বত্ব সংরক্ষিত।</p>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="flex items-center space-x-3 mb-4 md:mb-0">
+                    <div class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary-500">
+                        <img src="https://www.thedailystar.net/sites/default/files/styles/big_1/public/2026-07/rashed_khan.jpg?h=d1cb525d"
+                             alt="রাশেদ খান"
+                             class="w-full h-full object-cover"
+                             onerror="this.parentElement.innerHTML='<div class=\'w-full h-full bg-primary-600 flex items-center justify-center\'><span class=\'text-white font-bold text-sm\'>রখ</span></div>';">
+                    </div>
+                    <span class="font-semibold">মো. রাশেদ খান</span>
+                </div>
+                <p class="text-gray-400 text-sm">&copy; ২০২৬ সর্বস্বত্ব সংরক্ষিত</p>
+            </div>
         </div>
     </footer>
 
+    <script>
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        }
+    </script>
 </body>
 </html>

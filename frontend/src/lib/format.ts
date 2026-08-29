@@ -61,7 +61,7 @@ export function vehicleState(d: DeviceView, live?: LocationView | null): Vehicle
 export const VEHICLE_STATE_COLOR: Record<VehicleState, string> = {
   moving: "#16A34A",   // Green - vehicle in motion
   idle: "#8B5CF6",     // Purple - engine on but stationary (traffic, waiting)
-  stopped: "#EF4444",  // Red - parked, engine off (matches status.stopped)
+  stopped: "#3B82F6",  // Blue - parked, engine off (red reserved for overspeed)
   offline: "#64748B",  // Slate gray - no connection
   expired: "#6B7280",  // Dark gray - subscription expired
   nodata: "#F59E0B",   // Amber - never connected
