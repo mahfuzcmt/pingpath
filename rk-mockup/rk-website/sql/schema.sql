@@ -209,7 +209,7 @@ INSERT INTO settings (setting_key, setting_value, setting_type) VALUES
 ('twitter_url', '', 'text'),
 ('about_text', 'মো. রাশেদ খান মাননীয় প্রধানমন্ত্রীর রাজনৈতিক উপদেষ্টা (সচিব পদমর্যাদা)। তিনি ২০২৬ সালের ২০ জুলাই এই পদে নিযুক্ত হন। ঝিনাইদহ জেলার সার্বিক উন্নয়নে তিনি নিরলস কাজ করে যাচ্ছেন।', 'textarea'),
 ('hero_image', '', 'image'),
-('logo_image', '', 'image');
+('logo_image', 'rashed_khan_logo.jpg', 'image');
 
 -- Initial statistics
 INSERT INTO statistics (stat_key, stat_value) VALUES
