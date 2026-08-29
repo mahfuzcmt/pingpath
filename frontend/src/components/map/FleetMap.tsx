@@ -53,79 +53,110 @@ function addressCacheKey(lat: number, lng: number): string {
 /** Global address cache (persists across re-renders) */
 const addressCache = new Map<string, string>();
 
+/** Pending address requests to avoid duplicate API calls */
+const pendingRequests = new Map<string, Promise<string>>();
+
+/** Rate limiter: minimum time between API calls (1 second for Nominatim's policy) */
+let lastRequestTime = 0;
+const MIN_REQUEST_INTERVAL = 1000;
+
 /** Reverse geocode coordinates to address using Nominatim */
 async function reverseGeocode(lat: number, lng: number): Promise<string> {
   const key = addressCacheKey(lat, lng);
+
+  // Return cached result immediately
   if (addressCache.has(key)) {
     return addressCache.get(key)!;
   }
 
-  try {
-    // Use zoom=19 for maximum detail (building level)
-    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=19&addressdetails=1`;
-    const res = await fetch(url, {
-      headers: {
-        Accept: "application/json",
-        "User-Agent": "MotoLink GPS Tracker"
-      }
-    });
-    if (!res.ok) throw new Error("Geocoding failed");
-
-    const data = await res.json();
-
-    // Build detailed address from the response
-    let address = "";
-    if (data.address) {
-      const parts: string[] = [];
-      const addr = data.address;
-
-      // Most specific first: house number + road
-      if (addr.house_number) {
-        parts.push(`House ${addr.house_number}`);
-      }
-      if (addr.road) {
-        parts.push(addr.road);
-      }
-      // Add area/neighborhood
-      if (addr.neighbourhood) {
-        parts.push(addr.neighbourhood);
-      } else if (addr.suburb) {
-        parts.push(addr.suburb);
-      } else if (addr.residential) {
-        parts.push(addr.residential);
-      }
-      // Add city/town/village
-      if (addr.city) {
-        parts.push(addr.city);
-      } else if (addr.town) {
-        parts.push(addr.town);
-      } else if (addr.village) {
-        parts.push(addr.village);
-      } else if (addr.county) {
-        parts.push(addr.county);
-      }
-      // Add district if different from city
-      if (addr.state_district && addr.state_district !== addr.city) {
-        parts.push(addr.state_district);
-      }
-
-      // Join up to 4 parts for a detailed address
-      address = parts.slice(0, 4).join(", ");
-
-      // Fallback to display_name if no parts found
-      if (!address && data.display_name) {
-        address = data.display_name.split(",").slice(0, 4).join(",").trim();
-      }
-      if (!address) address = "Unknown location";
-    } else {
-      address = data.display_name?.split(",").slice(0, 4).join(",").trim() || "Unknown location";
-    }
-
-    addressCache.set(key, address);
-    return address;
-  } catch {
-    return `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+  // Return pending request if one exists for this location
+  if (pendingRequests.has(key)) {
+    return pendingRequests.get(key)!;
   }
+
+  // Rate limiting: wait if we made a request too recently
+  const now = Date.now();
+  const timeSinceLastRequest = now - lastRequestTime;
+  if (timeSinceLastRequest < MIN_REQUEST_INTERVAL) {
+    await new Promise(resolve => setTimeout(resolve, MIN_REQUEST_INTERVAL - timeSinceLastRequest));
+  }
+
+  const requestPromise = (async () => {
+    try {
+      lastRequestTime = Date.now();
+      // Use zoom=19 for maximum detail (building level)
+      const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=19&addressdetails=1`;
+      const res = await fetch(url, {
+        headers: {
+          Accept: "application/json",
+          "User-Agent": "MotoLink GPS Tracker"
+        }
+      });
+      if (!res.ok) throw new Error("Geocoding failed");
+
+      const data = await res.json();
+
+      // Build detailed address from the response
+      let address = "";
+      if (data.address) {
+        const parts: string[] = [];
+        const addr = data.address;
+
+        // Most specific first: house number + road
+        if (addr.house_number) {
+          parts.push(`House ${addr.house_number}`);
+        }
+        if (addr.road) {
+          parts.push(addr.road);
+        }
+        // Add area/neighborhood
+        if (addr.neighbourhood) {
+          parts.push(addr.neighbourhood);
+        } else if (addr.suburb) {
+          parts.push(addr.suburb);
+        } else if (addr.residential) {
+          parts.push(addr.residential);
+        }
+        // Add city/town/village
+        if (addr.city) {
+          parts.push(addr.city);
+        } else if (addr.town) {
+          parts.push(addr.town);
+        } else if (addr.village) {
+          parts.push(addr.village);
+        } else if (addr.county) {
+          parts.push(addr.county);
+        }
+        // Add district if different from city
+        if (addr.state_district && addr.state_district !== addr.city) {
+          parts.push(addr.state_district);
+        }
+
+        // Join up to 4 parts for a detailed address
+        address = parts.slice(0, 4).join(", ");
+
+        // Fallback to display_name if no parts found
+        if (!address && data.display_name) {
+          address = data.display_name.split(",").slice(0, 4).join(",").trim();
+        }
+        if (!address) address = "Unknown location";
+      } else {
+        address = data.display_name?.split(",").slice(0, 4).join(",").trim() || "Unknown location";
+      }
+
+      addressCache.set(key, address);
+      return address;
+    } catch {
+      return `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+    } finally {
+      // Clean up pending request after completion
+      pendingRequests.delete(key);
+    }
+  })();
+
+  // Store the pending request
+  pendingRequests.set(key, requestPromise);
+  return requestPromise;
 }
 
 // Default to google-street if Google API key is available, otherwise OSM
@@ -523,6 +554,12 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
     const accStatus = location?.accOn == null ? "—" : location.accOn ? "ON" : "OFF";
     const gpsInfo = gpsQualityInfo(location, device);
 
+    // Check if we have a cached address for this location
+    const latNum = location?.latitude || 0;
+    const lngNum = location?.longitude || 0;
+    const cacheKey = addressCacheKey(latNum, lngNum);
+    const cachedAddress = addressCache.get(cacheKey);
+
     // Only show parking duration if parkedSince is recent and reliable
     // (within 1 hour of last update, meaning device was seen after parking)
     let stopDuration = "";
@@ -604,7 +641,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           </div>
           <div class="pp-popup-item pp-popup-item-full">
             <span class="pp-popup-label">Address</span>
-            <span class="pp-popup-value pp-popup-address" data-lat="${lat}" data-lng="${lng}">Loading...</span>
+            <span class="pp-popup-value pp-popup-address" data-lat="${lat}" data-lng="${lng}" data-imei="${device?.imei || ''}">${cachedAddress || "Loading..."}</span>
           </div>
         </div>
 
@@ -800,7 +837,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
 
         // Fetch address when popup opens (lazy loading, cached)
         const currentMarker = marker; // Capture for closure
-        currentMarker.on('popupopen', () => {
+        const fetchPopupAddress = () => {
           const popup = currentMarker.getPopup();
           if (!popup) return;
           const container = popup.getElement();
@@ -819,13 +856,18 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           const key = addressCacheKey(popupLat, popupLng);
           if (addressCache.has(key)) {
             addressEl.textContent = addressCache.get(key)!;
-          } else {
-            // Fetch async (free Nominatim API)
+          } else if (addressEl.textContent === "Loading...") {
+            // Only fetch if not already showing an address
             reverseGeocode(popupLat, popupLng).then(address => {
-              addressEl.textContent = address;
+              // Re-check the element still exists and needs update
+              const currentEl = container.querySelector('.pp-popup-address') as HTMLElement;
+              if (currentEl && currentEl.textContent === "Loading...") {
+                currentEl.textContent = address;
+              }
             });
           }
-        });
+        };
+        currentMarker.on('popupopen', fetchPopupAddress);
 
         markersRef.current.set(imei, marker);
         iconStateRef.current.set(imei, iconStateKey);
@@ -839,6 +881,34 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
         }
         marker.setPopupContent(createPopupContent(device, loc));
         marker.setTooltipContent(plateLabelHtml(device, loc, color));
+
+        // If popup is open, trigger address fetch for the updated content
+        if (marker.isPopupOpen()) {
+          const popup = marker.getPopup();
+          if (popup) {
+            const container = popup.getElement();
+            if (container) {
+              const addressEl = container.querySelector('.pp-popup-address') as HTMLElement;
+              if (addressEl && addressEl.textContent === "Loading...") {
+                const popupLat = parseFloat(addressEl.dataset.lat || "0");
+                const popupLng = parseFloat(addressEl.dataset.lng || "0");
+                if (popupLat !== 0 || popupLng !== 0) {
+                  const key = addressCacheKey(popupLat, popupLng);
+                  if (addressCache.has(key)) {
+                    addressEl.textContent = addressCache.get(key)!;
+                  } else {
+                    reverseGeocode(popupLat, popupLng).then(address => {
+                      const currentEl = container.querySelector('.pp-popup-address') as HTMLElement;
+                      if (currentEl && currentEl.textContent === "Loading...") {
+                        currentEl.textContent = address;
+                      }
+                    });
+                  }
+                }
+              }
+            }
+          }
+        }
 
         // Update position - CSS transition will animate smoothly
         const currentLatLng = marker.getLatLng();
