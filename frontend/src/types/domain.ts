@@ -74,6 +74,8 @@ export interface AuditLogEntry {
  */
 export interface DeviceView {
   id: string;
+  groupId: string | null;
+  driverId: string | null;
   imei: string;
   name: string | null;
   simMsisdn: string | null;
@@ -100,6 +102,104 @@ export interface DeviceView {
   subscriptionExpiresAt: string | null;
   /** End of the latest completed trip (ISO) — null while driving or if unknown. */
   parkedSince: string | null;
+}
+
+// ─────────────────────────────────────────────────────────────
+// Device Group types
+// ─────────────────────────────────────────────────────────────
+
+export interface DeviceGroupView {
+  id: string;
+  name: string;
+  description: string | null;
+  color: string;
+  icon: string;
+  sortOrder: number;
+  isDefault: boolean;
+  deviceCount: number;
+  createdAt: string;
+}
+
+export interface DeviceGroupCreate {
+  name: string;
+  description?: string;
+  color?: string;
+  icon?: string;
+}
+
+export interface DeviceGroupUpdate {
+  name?: string;
+  description?: string;
+  color?: string;
+  icon?: string;
+  sortOrder?: number;
+}
+
+// ─────────────────────────────────────────────────────────────
+// Driver types
+// ─────────────────────────────────────────────────────────────
+
+export type DriverStatus = "ACTIVE" | "INACTIVE" | "SUSPENDED";
+
+export interface DriverView {
+  id: string;
+  name: string;
+  phone: string | null;
+  email: string | null;
+  licenseNo: string | null;
+  licenseType: string | null;
+  licenseExpiry: string | null;
+  nid: string | null;
+  photoUrl: string | null;
+  rfidCard: string | null;
+  emergencyContact: string | null;
+  emergencyPhone: string | null;
+  address: string | null;
+  dateOfBirth: string | null;
+  hireDate: string | null;
+  status: DriverStatus;
+  notes: string | null;
+  assignedDeviceCount: number;
+  licenseExpired: boolean;
+  licenseExpiringSoon: boolean;
+  createdAt: string;
+}
+
+export interface DriverCreate {
+  name: string;
+  phone?: string;
+  email?: string;
+  licenseNo?: string;
+  licenseType?: string;
+  licenseExpiry?: string;
+  nid?: string;
+  photoUrl?: string;
+  rfidCard?: string;
+  emergencyContact?: string;
+  emergencyPhone?: string;
+  address?: string;
+  dateOfBirth?: string;
+  hireDate?: string;
+  notes?: string;
+}
+
+export interface DriverUpdate {
+  name?: string;
+  phone?: string;
+  email?: string;
+  licenseNo?: string;
+  licenseType?: string;
+  licenseExpiry?: string;
+  nid?: string;
+  photoUrl?: string;
+  rfidCard?: string;
+  emergencyContact?: string;
+  emergencyPhone?: string;
+  address?: string;
+  dateOfBirth?: string;
+  hireDate?: string;
+  status?: DriverStatus;
+  notes?: string;
 }
 
 /**
@@ -472,4 +572,51 @@ export interface CreateSubscriptionRequest {
   planTier?: string;
   monthlyPriceBdt?: number;
   days?: number;
+}
+
+// ─────────────────────────────────────────────────────────────
+// Share Location Link types
+// ─────────────────────────────────────────────────────────────
+
+export interface ShareLinkView {
+  id: string;
+  deviceImei: string;
+  token: string;
+  label: string | null;
+  expiresAt: string;
+  showHistory: boolean;
+  allowRealtime: boolean;
+  shareUrl: string;
+  accessCount: number;
+  lastAccessedAt: string | null;
+  createdAt: string;
+}
+
+export interface CreateShareLinkRequest {
+  deviceImei: string;
+  label?: string;
+  expiresInHours: number;
+  showHistory: boolean;
+  allowRealtime: boolean;
+}
+
+export interface SharedLocationView {
+  deviceName: string | null;
+  vehiclePlate: string | null;
+  vehicleType: string | null;
+  latitude: number;
+  longitude: number;
+  speed: number;
+  course: number;
+  lastSeenAt: string | null;
+  isOnline: boolean;
+  showHistory: boolean;
+  allowRealtime: boolean;
+}
+
+export interface SharedHistoryPoint {
+  ts: string;
+  latitude: number;
+  longitude: number;
+  speed: number;
 }

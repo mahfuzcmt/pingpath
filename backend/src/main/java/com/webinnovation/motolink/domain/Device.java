@@ -6,6 +6,8 @@ import java.util.UUID;
 public record Device(
         UUID id,
         UUID orgId,
+        UUID groupId,
+        UUID driverId,
         String imei,
         String name,
         String simMsisdn,

@@ -5,6 +5,7 @@ import { api } from "@/lib/api";
 import { useLocale } from "@/lib/i18n";
 import { useDevices } from "@/hooks/useDevices";
 import { formatDurationS, formatNumber } from "@/lib/format";
+import { ExportModal } from "@/components/export";
 import type { MonthlySummary } from "@/types/domain";
 
 function currentMonthIso(): string {
@@ -43,6 +44,7 @@ export default function Page() {
   const [to, setTo] = useState(todayIso());
   const [busy, setBusy] = useState<"trips" | "alarms" | "monthly" | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showExportModal, setShowExportModal] = useState(false);
 
   const [monthlyImei, setMonthlyImei] = useState("");
   const [month, setMonth] = useState(currentMonthIso());
@@ -248,8 +250,35 @@ export default function Page() {
           )}
         </div>
 
+        {/* Excel Export Section */}
+        <div className="panel p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="font-display text-sm font-semibold">{t("reports.excelExport")}</div>
+              <p className="text-xs text-ink-400 mt-1">{t("reports.excelExportDesc")}</p>
+            </div>
+            <button
+              type="button"
+              className="btn-primary flex items-center gap-2"
+              onClick={() => setShowExportModal(true)}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              {t("reports.exportExcel")}
+            </button>
+          </div>
+        </div>
+
         {error && <div className="text-sm text-alarm-red">{error}</div>}
       </div>
+
+      {showExportModal && (
+        <ExportModal
+          onClose={() => setShowExportModal(false)}
+          devices={devices}
+        />
+      )}
     </div>
   );
 }

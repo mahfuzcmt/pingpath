@@ -526,6 +526,52 @@ const translations: Record<string, { en: string; bn: string }> = {
   "footer.address": { en: "House 12, Road 5, Dhanmondi, Dhaka 1205", bn: "বাড়ি ১২, রোড ৫, ধানমন্ডি, ঢাকা ১২০৫" },
   "footer.certifications": { en: "Certifications", bn: "সার্টিফিকেশন" },
   "footer.rights": { en: "All rights reserved.", bn: "সর্বস্বত্ব সংরক্ষিত।" },
+  "footer.payment": { en: "We Accept", bn: "আমরা গ্রহণ করি" },
+  "footer.securePayment": { en: "Secure & Trusted Payment Methods", bn: "নিরাপদ ও বিশ্বস্ত পেমেন্ট পদ্ধতি" },
+
+  // Top Contact Bar
+  "topBar.tagline": { en: "Bangladesh's #1 GPS Tracking Service", bn: "বাংলাদেশের #১ জিপিএস ট্র্যাকিং সেবা" },
+  "topBar.btrc": { en: "BTRC Certified", bn: "বিটিআরসি সার্টিফাইড" },
+  "topBar.callNow": { en: "Call Now", bn: "এখনই কল করুন" },
+
+  // WhatsApp Floating Button
+  "whatsapp.tooltip": { en: "Need help? Chat with us!", bn: "সাহায্য দরকার? আমাদের সাথে চ্যাট করুন!" },
+  "whatsapp.message": { en: "Hi! I'm interested in MotoLink GPS tracking. Can you help?", bn: "হাই! আমি মোটোলিংক জিপিএস ট্র্যাকিংয়ে আগ্রহী। আপনি কি সাহায্য করতে পারবেন?" },
+
+  // Why Choose Section
+  "why.badge": { en: "Why MotoLink?", bn: "কেন মোটোলিংক?" },
+  "why.title": { en: "Why Choose MotoLink?", bn: "কেন মোটোলিংক বেছে নেবেন?" },
+  "why.desc": { en: "We're not just another GPS service. Here's what makes us different.", bn: "আমরা শুধু আরেকটি জিপিএস সেবা নই। এখানে আমাদের পার্থক্য।" },
+  "why.btrc.title": { en: "BTRC Certified", bn: "বিটিআরসি সার্টিফাইড" },
+  "why.btrc.desc": { en: "Government approved and certified tracking devices", bn: "সরকার অনুমোদিত এবং সার্টিফাইড ট্র্যাকিং ডিভাইস" },
+  "why.price.title": { en: "Best Price Deal", bn: "সেরা মূল্য" },
+  "why.price.desc": { en: "Competitive pricing starting from ৳200/month", bn: "৳২০০/মাস থেকে শুরু প্রতিযোগিতামূলক মূল্য" },
+  "why.owned.title": { en: "Own Technology", bn: "নিজস্ব প্রযুক্তি" },
+  "why.owned.desc": { en: "We built our platform - not a reseller", bn: "আমরা প্ল্যাটফর্ম তৈরি করেছি - রিসেলার নই" },
+  "why.support.title": { en: "24/7 Support", bn: "২৪/৭ সাপোর্ট" },
+  "why.support.desc": { en: "Expert support team available round the clock", bn: "বিশেষজ্ঞ সাপোর্ট টিম সারাক্ষণ উপলব্ধ" },
+  "why.local.title": { en: "Made in Bangladesh", bn: "বাংলাদেশে তৈরি" },
+  "why.local.desc": { en: "Local team, Bengali support, bKash/Nagad payment", bn: "স্থানীয় টিম, বাংলা সাপোর্ট, বিকাশ/নগদ পেমেন্ট" },
+
+  // Testimonials Section
+  "testimonials.badge": { en: "Customer Reviews", bn: "গ্রাহক রিভিউ" },
+  "testimonials.title": { en: "What Our Customers Say", bn: "আমাদের গ্রাহকরা কী বলেন" },
+  "testimonials.desc": { en: "Join 150+ satisfied customers across Bangladesh", bn: "বাংলাদেশ জুড়ে ১৫০+ সন্তুষ্ট গ্রাহকের সাথে যোগ দিন" },
+  "testimonial.1.quote": { en: "MotoLink helped us reduce fuel theft by 40%. The Bengali interface made it easy for our drivers to adopt.", bn: "মোটোলিংক আমাদের জ্বালানি চুরি ৪০% কমাতে সাহায্য করেছে। বাংলা ইন্টারফেস আমাদের ড্রাইভারদের জন্য সহজ করেছে।" },
+  "testimonial.1.name": { en: "Kamal Hossain", bn: "কামাল হোসেন" },
+  "testimonial.1.role": { en: "Fleet Manager, ABC Logistics", bn: "ফ্লিট ম্যানেজার, ABC লজিস্টিক" },
+  "testimonial.2.quote": { en: "After my bike was stolen, I got MotoLink installed. Now I have peace of mind knowing I can track it anytime.", bn: "আমার বাইক চুরি হওয়ার পর, আমি মোটোলিংক ইনস্টল করিয়েছি। এখন আমি জানি যেকোনো সময় ট্র্যাক করতে পারি।" },
+  "testimonial.2.name": { en: "Rafiq Ahmed", bn: "রফিক আহমেদ" },
+  "testimonial.2.role": { en: "Bike Owner, Mirpur", bn: "বাইক মালিক, মিরপুর" },
+  "testimonial.3.quote": { en: "The school bus tracking feature gives parents real-time updates. It's been a game-changer for our school.", bn: "স্কুল বাস ট্র্যাকিং ফিচার অভিভাবকদের রিয়েল-টাইম আপডেট দেয়। এটি আমাদের স্কুলের জন্য গেম-চেঞ্জার।" },
+  "testimonial.3.name": { en: "Fatima Begum", bn: "ফাতিমা বেগম" },
+  "testimonial.3.role": { en: "Principal, Green Valley School", bn: "অধ্যক্ষ, গ্রিন ভ্যালি স্কুল" },
+
+  // FAQ Section (additional)
+  "faq.badge": { en: "FAQ", bn: "জিজ্ঞাসা" },
+  "faq.desc": { en: "Find answers to common questions about our GPS tracking service.", bn: "আমাদের জিপিএস ট্র্যাকিং সেবা সম্পর্কে সাধারণ প্রশ্নের উত্তর পান।" },
+  "faq.moreQuestions": { en: "Have more questions? We're here to help.", bn: "আরও প্রশ্ন আছে? আমরা সাহায্য করতে এখানে আছি।" },
+  "faq.callUs": { en: "Call Us: +880 1999-036999", bn: "কল করুন: +৮৮০ ১৯৯৯-০৩৬৯৯৯" },
 };
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);

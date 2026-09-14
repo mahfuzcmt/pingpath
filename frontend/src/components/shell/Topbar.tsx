@@ -22,6 +22,7 @@ const NAV: NavItem[] = [
   { href: "/dashboard/home", label: "nav.home", icon: <HomeIcon /> },
   { href: "/dashboard", label: "nav.map", icon: <DashboardIcon /> },
   { href: "/dashboard/devices", label: "nav.vehicles", icon: <DeviceIcon /> },
+  { href: "/dashboard/drivers", label: "nav.drivers", icon: <DriverIcon /> },
   { href: "/dashboard/geofences", label: "nav.geofences", icon: <GeofenceIcon /> },
   { href: "/dashboard/trips", label: "nav.trips", icon: <TripsIcon /> },
   { href: "/dashboard/alarms", label: "nav.alarms", icon: <AlarmIcon /> },
@@ -279,6 +280,15 @@ function AdminIcon() {
       <path d="M12 2L3 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5z" />
       <circle cx="12" cy="10" r="2" />
       <path d="M12 14v3" />
+    </svg>
+  );
+}
+function DriverIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
     </svg>
   );
 }

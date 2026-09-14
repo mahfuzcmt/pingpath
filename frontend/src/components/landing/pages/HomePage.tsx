@@ -5,6 +5,9 @@ import Image from "next/image";
 import { useRef } from "react";
 import { motion, useInView } from "framer-motion";
 import { useLanguage } from "../LanguageContext";
+import { WhyChooseSection } from "../WhyChooseSection";
+import { TestimonialsSection } from "../TestimonialsSection";
+import { FAQSection } from "../FAQSection";
 
 /* ── Animation Variants ─────────────────────────────────────────── */
 const fadeInUp = {
@@ -593,13 +596,16 @@ export function HomePage() {
     <>
       <Hero />
       <TrustBadges />
+      <WhyChooseSection />
       <TrustedClientsSection />
       <FeaturesSection />
       <ProductsSection />
       <IndustrySection />
       <StatsSection />
+      <TestimonialsSection />
       <CertificationsSection />
       <PartnersSection />
+      <FAQSection />
       <CTASection />
     </>
   );

@@ -25,6 +25,8 @@ public final class DeviceDtos {
 
     public record DeviceView(
             UUID id,
+            UUID groupId,
+            UUID driverId,
             String imei,
             String name,
             String simMsisdn,
@@ -60,6 +62,8 @@ public final class DeviceDtos {
         public static DeviceView of(Device d, SubInfo sub, Instant parkedSince) {
             return new DeviceView(
                     d.id(),
+                    d.groupId(),
+                    d.driverId(),
                     d.imei(),
                     d.name(),
                     d.simMsisdn(),

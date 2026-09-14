@@ -122,7 +122,44 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-gray-800 pt-8 sm:flex-row">
+        {/* Payment Methods */}
+        <div className="mt-12 border-t border-gray-800 pt-8">
+          <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">{t("footer.payment")}</span>
+              <div className="flex items-center gap-2">
+                {/* bKash */}
+                <div className="flex h-8 w-14 items-center justify-center rounded bg-[#E2136E] px-2">
+                  <span className="text-[10px] font-bold text-white">bKash</span>
+                </div>
+                {/* Nagad */}
+                <div className="flex h-8 w-14 items-center justify-center rounded bg-[#F6931D] px-2">
+                  <span className="text-[10px] font-bold text-white">Nagad</span>
+                </div>
+                {/* Visa */}
+                <div className="flex h-8 w-12 items-center justify-center rounded bg-white px-2">
+                  <span className="text-[10px] font-bold text-[#1A1F71]">VISA</span>
+                </div>
+                {/* MasterCard */}
+                <div className="flex h-8 w-12 items-center justify-center rounded bg-gray-800 px-1">
+                  <div className="flex">
+                    <div className="h-4 w-4 rounded-full bg-[#EB001B] opacity-80" />
+                    <div className="-ml-1.5 h-4 w-4 rounded-full bg-[#F79E1B] opacity-80" />
+                  </div>
+                </div>
+                {/* Cash */}
+                <div className="flex h-8 w-14 items-center justify-center rounded bg-emerald-600 px-2">
+                  <span className="text-[10px] font-bold text-white">Cash</span>
+                </div>
+              </div>
+            </div>
+            <div className="text-center text-xs text-gray-500 sm:text-right">
+              {t("footer.securePayment")}
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-8 flex flex-col items-center justify-between gap-4 border-t border-gray-800 pt-8 sm:flex-row">
           <span className="text-sm text-gray-500">© {new Date().getFullYear()} MotoLink GPS. {t("footer.rights")}</span>
           <div className="flex items-center gap-6 text-sm text-gray-500">
             <Link href="/privacy" className="hover:text-brand-400">Privacy Policy</Link>

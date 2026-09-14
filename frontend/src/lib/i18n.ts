@@ -20,6 +20,7 @@ const STRINGS = {
   "nav.map": { en: "Map", bn: "মানচিত্র" },
   "nav.devices": { en: "Devices", bn: "ডিভাইস" },
   "nav.vehicles": { en: "Vehicles", bn: "যানবাহন" },
+  "nav.drivers": { en: "Drivers", bn: "ড্রাইভার" },
   "nav.geofences": { en: "Geofences", bn: "জিও-ফেন্স" },
   "nav.trips": { en: "Trips", bn: "ট্রিপ" },
   "nav.alarms": { en: "Alarms", bn: "অ্যালার্ম" },
@@ -152,6 +153,7 @@ const STRINGS = {
   "common.acknowledge": { en: "Acknowledge", bn: "নিশ্চিত করুন" },
   "common.acknowledged": { en: "Acknowledged", bn: "নিশ্চিত করা হয়েছে" },
   "common.ack": { en: "Ack", bn: "নিশ্চিত" },
+  "common.share": { en: "Share", bn: "শেয়ার করুন" },
 
   // ── Alarms ────────────────────────────────────────────────────────
   "alarms.title": { en: "Alarms", bn: "অ্যালার্ম" },
@@ -207,6 +209,9 @@ const STRINGS = {
   "reports.idle": { en: "Idle", bn: "নিষ্ক্রিয়" },
   "reports.stopped": { en: "Stopped", bn: "থেমে" },
   "reports.none": { en: "No data for this month", bn: "এই মাসের জন্য কোনো ডেটা নেই" },
+  "reports.excelExport": { en: "Excel Export", bn: "এক্সেল এক্সপোর্ট" },
+  "reports.excelExportDesc": { en: "Export data to Excel with professional formatting", bn: "পেশাদার ফরম্যাটে এক্সেলে ডেটা এক্সপোর্ট করুন" },
+  "reports.exportExcel": { en: "Export to Excel", bn: "এক্সেলে এক্সপোর্ট" },
 
   "lang.toggle": { en: "বাংলা", bn: "English" },
 
