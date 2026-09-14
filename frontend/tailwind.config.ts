@@ -14,43 +14,44 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // ADL Moto Viewer inspired color scheme
         brand: {
-          50: "#E6F4FF",
-          100: "#BAE0FF",
-          200: "#7CC4FA",
-          300: "#4FAFEF",
-          400: "#29A3EE", // Light cyan (logo top)
-          500: "#0284C7", // Primary blue
-          600: "#0369A1", // Primary hover
-          700: "#075985",
-          800: "#1B3A5F", // Navy blue (logo text)
-          900: "#0C2340", // Darkest navy
+          50: "#E8EBFF",
+          100: "#C5CBFF",
+          200: "#9EA8FF",
+          300: "#7785FF",
+          400: "#5062FF",
+          500: "#0421bc", // Primary blue (ADL --BG-C)
+          600: "#031A96", // Hover state
+          700: "#021470",
+          800: "#010D4A",
+          900: "#000724", // Darkest
         },
-        // Accent colors for modern gradients
+        // Accent colors
         accent: {
-          cyan: "#22D3EE",   // Bright cyan
-          sky: "#38BDF8",    // Sky blue
-          blue: "#3B82F6",   // Blue
-          navy: "#1B3A5F",   // Navy (logo)
+          cyan: "#22D3EE",
+          sky: "#38BDF8",
+          blue: "#0421bc", // ADL primary
+          navy: "#010D4A",
         },
         surface: {
           0: "#FFFFFF", // page / panel
-          50: "#FAFAFA", // hover row
-          100: "#F5F5F5", // divider, alt row, input bg
-          200: "#EEEEEE", // disabled, hovered divider
-          300: "#E5E5E5", // panel header, tertiary bg
-          400: "#D9D9D9",
+          50: "#FAFBFC", // hover row
+          100: "#EAEEF2", // ADL --S-BG-C secondary background
+          200: "#E5E9ED", // alt row
+          300: "#DDDDDD", // ADL --BR-C border color
+          400: "#D1D5DB",
         },
         ink: {
           50: "#FFFFFF",
           100: "#F5F5F5",
           200: "#E5E5E5",
           300: "#CCCCCC",
-          400: "#999999", // placeholder
-          500: "#808080", // secondary text
-          600: "#676767",
-          700: "#555555",
-          900: "#1F2937", // primary text (darker for contrast)
+          400: "#7E8792", // ADL --A-F-C secondary text
+          500: "#6B7280",
+          600: "#4B5563",
+          700: "#3D4353", // ADL --P-F-C primary text
+          900: "#1F2937",
           950: "#111827",
         },
         status: {
