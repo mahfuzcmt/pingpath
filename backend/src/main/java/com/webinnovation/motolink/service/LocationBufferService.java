@@ -14,9 +14,9 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Buffers location updates in memory and publishes batched updates every 10 seconds.
+ * Buffers location updates in memory and publishes batched updates every 3 seconds.
  *
- * This aligns with the device's 10-second reporting interval (TIMER,10,300#).
+ * This provides smooth real-time updates on the dashboard while the device reports every 10 seconds (TIMER,10,300#).
  * Each organization gets a single batch message containing all location points
  * received in the window, sorted by timestamp for sequential playback.
  *
@@ -91,12 +91,12 @@ public class LocationBufferService {
     }
 
     /**
-     * Flush the buffer and publish batch updates to Redis every 10 seconds.
-     * Aligned with device TIMER setting (10 seconds when moving).
+     * Flush the buffer and publish batch updates to Redis every 3 seconds.
+     * More frequent than the device TIMER (10s) for smoother dashboard animation.
      * Each organization gets a single message containing ALL location points
      * for all its devices, sorted by timestamp for sequential playback.
      */
-    @Scheduled(fixedRate = 10_000)
+    @Scheduled(fixedRate = 3_000)
     public void flushAndBroadcast() {
         int bufferSize = getBufferSize();
         if (bufferSize > 0) {

@@ -23,7 +23,7 @@ import java.nio.charset.StandardCharsets;
  * Bridges Redis batch location pub/sub to Spring's STOMP broker.
  *
  * <p>Producer side: LocationBufferService publishes batch JSON on Redis "batch-location-events"
- * every 10 seconds.
+ * every 3 seconds.
  *
  * <p>Consumer side: This listener routes each batch message to /topic/org/{orgId}/locations/batch
  * so only subscribers in that tenant receive it.
