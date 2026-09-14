@@ -89,7 +89,7 @@ export function Header({ transparent = false }: { transparent?: boolean }) {
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className={`fixed left-0 right-0 top-0 z-50 transition-all duration-300 ${showDark ? "bg-white/95 shadow-lg shadow-gray-200/50 backdrop-blur-lg" : "bg-transparent"}`}
+      className={`fixed left-0 right-0 top-10 z-50 transition-all duration-300 ${showDark ? "bg-white/95 shadow-lg shadow-gray-200/50 backdrop-blur-lg" : "bg-transparent"}`}
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:h-20">
         {/* Logo */}
