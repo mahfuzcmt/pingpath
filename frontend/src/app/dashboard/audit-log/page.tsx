@@ -62,7 +62,7 @@ export default function Page() {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex flex-wrap items-center gap-3 border-b border-ink-400/15 px-4 py-3">
+      <div className="flex flex-wrap items-center gap-3 border-b border-surface-300 px-4 py-3">
         <h1 className="font-display text-lg font-semibold">{t("audit.title")}</h1>
         <div className="ml-auto flex flex-wrap items-center gap-2 text-xs">
           <label className="flex items-center gap-1">
@@ -109,7 +109,7 @@ export default function Page() {
 
         {entries.length > 0 && (
           <table className="w-full min-w-[760px] text-sm">
-            <thead className="sticky top-0 z-10 bg-ink-950 text-left text-xs uppercase text-ink-400">
+            <thead className="sticky top-0 z-10 bg-white text-left text-xs uppercase text-ink-400">
               <tr>
                 <th className="px-4 py-2">{t("audit.when")}</th>
                 <th className="px-4 py-2">{t("audit.action")}</th>
@@ -121,16 +121,16 @@ export default function Page() {
             </thead>
             <tbody>
               {entries.map((e) => (
-                <tr key={e.id} className="border-b border-ink-400/10 hover:bg-ink-900/30 align-top">
-                  <td className="whitespace-nowrap px-4 py-2 text-ink-100">
+                <tr key={e.id} className="border-b border-surface-200 hover:bg-surface-50 align-top">
+                  <td className="whitespace-nowrap px-4 py-2 text-ink-800">
                     {formatDateTime(e.ts, locale)}
                   </td>
                   <td className="px-4 py-2">
-                    <span className="rounded bg-ink-900/60 px-2 py-0.5 font-mono text-xs">
+                    <span className="rounded bg-surface-100 px-2 py-0.5 font-mono text-xs">
                       {e.action}
                     </span>
                   </td>
-                  <td className="px-4 py-2 text-ink-100">
+                  <td className="px-4 py-2 text-ink-800">
                     {e.resourceType && (
                       <>
                         <div className="text-xs text-ink-400">{e.resourceType}</div>
@@ -138,15 +138,15 @@ export default function Page() {
                       </>
                     )}
                   </td>
-                  <td className="px-4 py-2 font-mono text-xs text-ink-100">
+                  <td className="px-4 py-2 font-mono text-xs text-ink-800">
                     {e.userId ? e.userId.slice(0, 8) : "—"}
                   </td>
-                  <td className="px-4 py-2 font-mono text-xs text-ink-100">
+                  <td className="px-4 py-2 font-mono text-xs text-ink-800">
                     {e.ipAddress ?? "—"}
                   </td>
                   <td className="px-4 py-2 max-w-md">
                     {e.metadata && (
-                      <pre className="overflow-x-auto rounded bg-ink-900/40 p-2 font-mono text-[11px] text-ink-100">
+                      <pre className="overflow-x-auto rounded bg-surface-100 p-2 font-mono text-[11px] text-ink-800">
                         {prettyJson(e.metadata)}
                       </pre>
                     )}

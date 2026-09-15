@@ -25,7 +25,7 @@ export function Topbar({ user }: { user: UserView; orgId: string }) {
   }
 
   return (
-    <header className="z-[2100] flex h-[52px] shrink-0 items-center border-b border-gray-200 bg-white px-4">
+    <header className="z-[2100] flex h-[52px] shrink-0 items-center border-b border-surface-300 bg-white px-4">
       {/* Left: global vehicle search */}
       <div className="flex flex-1 items-center">
         <VehicleSearch />
@@ -34,15 +34,15 @@ export function Topbar({ user }: { user: UserView; orgId: string }) {
       {/* Center: brand + live status */}
       <div className="flex items-center gap-3">
         <Link href="/dashboard" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[#22c55e] to-[#16a34a]">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-500">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
               <path d="M12 2L2 7l10 5 10-5-10-5z" fill="white" opacity="0.9" />
               <path d="M2 17l10 5 10-5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               <path d="M2 12l10 5 10-5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </div>
-          <span className="hidden text-lg font-bold text-ink-800 md:block">
-            <span className="text-[#22c55e]">Moto</span>Link
+          <span className="hidden text-lg font-bold text-ink-900 md:block">
+            <span className="text-brand-500">Moto</span>Link
           </span>
         </Link>
         <div className="hidden items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs text-emerald-700 sm:flex">
@@ -62,7 +62,7 @@ export function Topbar({ user }: { user: UserView; orgId: string }) {
         <div className="mx-1 h-5 w-px bg-gray-200" />
 
         <div className="flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-teal-500 to-teal-700 text-xs font-semibold text-white">
+          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-brand-700 text-xs font-semibold text-white">
             {(user.fullName ?? user.email).charAt(0).toUpperCase()}
           </div>
           <span className="hidden text-sm font-medium text-ink-700 lg:block">
@@ -197,7 +197,7 @@ function VehicleSearch() {
           else if (e.key === "Enter" && results[active]) { e.preventDefault(); pick(results[active]); }
           else if (e.key === "Escape") setOpen(false);
         }}
-        className="h-8 w-full rounded-md border border-gray-200 bg-gray-50 pl-8 pr-3 text-sm text-ink-700 placeholder:text-ink-400 focus:border-teal-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-teal-500/40"
+        className="h-8 w-full rounded-md border border-gray-200 bg-gray-50 pl-8 pr-3 text-sm text-ink-700 placeholder:text-ink-400 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-500/40"
         role="combobox"
         aria-expanded={open && q.trim() !== ""}
         aria-controls="topbar-vehicle-results"

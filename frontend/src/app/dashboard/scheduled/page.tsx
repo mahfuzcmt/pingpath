@@ -49,7 +49,7 @@ export default function ScheduledPage() {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center gap-3 border-b border-ink-400/15 px-4 py-3">
+      <div className="flex items-center gap-3 border-b border-surface-300 px-4 py-3">
         <h1 className="font-display text-lg font-semibold">{t("sched.title")}</h1>
         <button type="button" className="btn-primary ml-auto px-3 py-1.5 text-xs"
                 onClick={() => setFormOpen(true)}>
@@ -66,7 +66,7 @@ export default function ScheduledPage() {
 
         {items.length > 0 && (
           <table className="w-full min-w-[760px] text-sm">
-            <thead className="sticky top-0 z-10 bg-white text-left text-xs uppercase text-ink-500">
+            <thead className="sticky top-0 z-10 bg-white text-left text-xs uppercase text-ink-9000">
               <tr>
                 <th className="px-4 py-2">{t("sched.device")}</th>
                 <th className="px-4 py-2">{t("sched.command")}</th>
@@ -83,14 +83,14 @@ export default function ScheduledPage() {
                   <td className="px-4 py-2 font-mono text-xs">{item.deviceImei}</td>
                   <td className="px-4 py-2">
                     <div>{t(`sched.type.${item.commandType}` as StringKey)}</div>
-                    <div className="font-mono text-[10px] text-ink-500">{item.commandText}</div>
+                    <div className="font-mono text-[10px] text-ink-9000">{item.commandText}</div>
                   </td>
                   <td className="px-4 py-2">{summarizeSchedule(item, locale, t)}</td>
                   <td className="px-4 py-2">{formatDateTime(item.nextRunAt, locale)}</td>
                   <td className="px-4 py-2">
                     <span className={statusClass(item.status)}>{item.status}</span>
                   </td>
-                  <td className="px-4 py-2 text-xs text-ink-500">
+                  <td className="px-4 py-2 text-xs text-ink-9000">
                     {item.lastAttemptAt ? formatDateTime(item.lastAttemptAt, locale) : "—"}
                     {item.lastError && <div className="text-alarm-red text-[10px]">{item.lastError}</div>}
                     {item.lastReply && <div className="text-ink-400 text-[10px]">{item.lastReply}</div>}
@@ -180,7 +180,7 @@ function ScheduleForm({ onClose, onSubmit }: FormProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-30 flex items-center justify-center bg-ink-900/60 p-4">
+    <div className="fixed inset-0 z-30 flex items-center justify-center bg-surface-100 p-4">
       <form onSubmit={submit} className="w-full max-w-md space-y-3 rounded-lg bg-white p-4 shadow-menu">
         <div className="flex items-center justify-between">
           <h2 className="font-display text-base font-semibold">{t("sched.new")}</h2>
@@ -188,7 +188,7 @@ function ScheduleForm({ onClose, onSubmit }: FormProps) {
         </div>
 
         <label className="block">
-          <span className="mb-0.5 block text-xs text-ink-500">{t("sched.device")}</span>
+          <span className="mb-0.5 block text-xs text-ink-9000">{t("sched.device")}</span>
           <select className="input w-full py-1.5" value={imei} onChange={(e) => setImei(e.target.value)} required>
             <option value="">—</option>
             {devices.map((d) => (
@@ -200,7 +200,7 @@ function ScheduleForm({ onClose, onSubmit }: FormProps) {
         </label>
 
         <label className="block">
-          <span className="mb-0.5 block text-xs text-ink-500">{t("sched.command")}</span>
+          <span className="mb-0.5 block text-xs text-ink-9000">{t("sched.command")}</span>
           <select className="input w-full py-1.5" value={commandType} onChange={(e) => setCommandType(e.target.value as ScheduledCommandType)}>
             {COMMAND_TYPES.map((c) => (
               <option key={c} value={c}>{t(`sched.type.${c}` as StringKey)}</option>
@@ -210,14 +210,14 @@ function ScheduleForm({ onClose, onSubmit }: FormProps) {
 
         {commandType === "RAW" ? (
           <label className="block">
-            <span className="mb-0.5 block text-xs text-ink-500">{t("sched.rawCommand")}</span>
+            <span className="mb-0.5 block text-xs text-ink-9000">{t("sched.rawCommand")}</span>
             <input className="input w-full py-1.5 font-mono" value={rawCommand}
                    onChange={(e) => setRawCommand(e.target.value)}
                    placeholder="e.g. WHERE,123456#" required />
           </label>
         ) : (
           <label className="block">
-            <span className="mb-0.5 block text-xs text-ink-500">{t("sched.devicePassword")}</span>
+            <span className="mb-0.5 block text-xs text-ink-9000">{t("sched.devicePassword")}</span>
             <input className="input w-full py-1.5 font-mono" value={devicePassword}
                    onChange={(e) => setDevicePassword(e.target.value)} required />
           </label>
@@ -235,19 +235,19 @@ function ScheduleForm({ onClose, onSubmit }: FormProps) {
 
         {scheduleKind === "ONE_TIME" ? (
           <label className="block">
-            <span className="mb-0.5 block text-xs text-ink-500">{t("sched.runAt")}</span>
+            <span className="mb-0.5 block text-xs text-ink-9000">{t("sched.runAt")}</span>
             <input type="datetime-local" className="input w-full py-1.5"
                    value={runAt} onChange={(e) => setRunAt(e.target.value)} required />
           </label>
         ) : (
           <>
             <label className="block">
-              <span className="mb-0.5 block text-xs text-ink-500">{t("sched.timeOfDay")}</span>
+              <span className="mb-0.5 block text-xs text-ink-9000">{t("sched.timeOfDay")}</span>
               <input type="time" className="input w-full py-1.5"
                      value={timeOfDay} onChange={(e) => setTimeOfDay(e.target.value)} required />
             </label>
             <div>
-              <span className="mb-0.5 block text-xs text-ink-500">{t("sched.daysOfWeek")}</span>
+              <span className="mb-0.5 block text-xs text-ink-9000">{t("sched.daysOfWeek")}</span>
               <div className="flex flex-wrap gap-1">
                 {[0, 1, 2, 3, 4, 5, 6].map((d) => {
                   const on = days.has(d);
@@ -259,7 +259,7 @@ function ScheduleForm({ onClose, onSubmit }: FormProps) {
                   );
                 })}
               </div>
-              <div className="mt-1 text-[10px] text-ink-500">
+              <div className="mt-1 text-[10px] text-ink-9000">
                 {days.size === 0 ? t("sched.everyDay") : ""}
               </div>
             </div>

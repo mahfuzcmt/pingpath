@@ -192,11 +192,11 @@ export function GeofenceEditor({ onSubmit, onCancel }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 z-40 flex flex-col bg-ink-950 md:flex-row">
-      <div className="flex max-h-[45vh] w-full shrink-0 flex-col gap-3 overflow-y-auto border-b border-ink-400/15 p-4 md:max-h-none md:w-80 md:border-b-0 md:border-r">
+    <div className="fixed inset-0 z-40 flex flex-col bg-white md:flex-row">
+      <div className="flex max-h-[45vh] w-full shrink-0 flex-col gap-3 overflow-y-auto border-b border-surface-300 p-4 md:max-h-none md:w-80 md:border-b-0 md:border-r">
         <div className="flex items-center justify-between">
           <div className="font-display text-sm font-semibold">{t("geo.new")}</div>
-          <button type="button" className="text-ink-400 hover:text-ink-50" onClick={onCancel}>
+          <button type="button" className="text-ink-400 hover:text-ink-900" onClick={onCancel}>
             ×
           </button>
         </div>
@@ -260,13 +260,13 @@ export function GeofenceEditor({ onSubmit, onCancel }: Props) {
           <span className="mb-1 block text-xs text-ink-400">Color</span>
           <input
             type="color"
-            className="h-8 w-full cursor-pointer rounded border border-ink-400/30 bg-ink-900/40"
+            className="h-8 w-full cursor-pointer rounded border border-surface-300/30 bg-surface-100"
             value={color}
             onChange={(e) => setColor(e.target.value)}
           />
         </label>
 
-        <div className="rounded border border-dashed border-ink-400/30 p-2 text-xs text-ink-400">
+        <div className="rounded border border-dashed border-surface-300/30 p-2 text-xs text-ink-400">
           {type === "CIRCLE" ? t("geo.clickToSetCenter") : t("geo.clickToAddVertex")}
         </div>
 
@@ -297,7 +297,7 @@ export function GeofenceEditor({ onSubmit, onCancel }: Props) {
         </div>
       </div>
 
-      <div className="relative min-h-[240px] flex-1 bg-ink-900 md:min-h-[400px]">
+      <div className="relative min-h-[240px] flex-1 bg-white md:min-h-[400px]">
         <div ref={containerRef} className="absolute inset-0" style={{ width: "100%", height: "100%" }} />
       </div>
     </div>

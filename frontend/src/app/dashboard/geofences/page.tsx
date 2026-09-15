@@ -117,7 +117,7 @@ export default function Page() {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center justify-between border-b border-ink-400/15 px-4 py-3">
+      <div className="flex items-center justify-between border-b border-surface-300 px-4 py-3">
         <h1 className="font-display text-lg font-semibold">{t("geo.title")}</h1>
         <button type="button" className="btn-primary text-sm" onClick={() => setEditing(true)}>
           {t("geo.new")}
@@ -133,7 +133,7 @@ export default function Page() {
 
         {geofences.length > 0 && (
           <table className="w-full min-w-[640px] text-sm">
-            <thead className="sticky top-0 z-10 bg-ink-950 text-left text-xs uppercase text-ink-400">
+            <thead className="sticky top-0 z-10 bg-white text-left text-xs uppercase text-ink-400">
               <tr>
                 <th className="px-4 py-2">{t("geo.name")}</th>
                 <th className="px-4 py-2">{t("geo.shape")}</th>
@@ -146,27 +146,27 @@ export default function Page() {
             </thead>
             <tbody>
               {geofences.map((g) => (
-                <tr key={g.id} className="border-b border-ink-400/10 hover:bg-ink-900/30">
+                <tr key={g.id} className="border-b border-surface-200 hover:bg-surface-50">
                   <td className="px-4 py-2">
                     <span className="inline-flex items-center gap-2">
                       <span
                         className="h-3 w-3 rounded-sm"
                         style={{ backgroundColor: g.color }}
                       />
-                      <span className="font-medium text-ink-50">{g.name}</span>
+                      <span className="font-medium text-ink-900">{g.name}</span>
                     </span>
                   </td>
-                  <td className="px-4 py-2 text-ink-100">
+                  <td className="px-4 py-2 text-ink-800">
                     {g.type === "CIRCLE" ? t("geo.circle") : t("geo.polygon")}
                   </td>
-                  <td className="px-4 py-2 text-ink-100">{g.notifyOn}</td>
-                  <td className="px-4 py-2 text-ink-100">
+                  <td className="px-4 py-2 text-ink-800">{g.notifyOn}</td>
+                  <td className="px-4 py-2 text-ink-800">
                     {g.radiusM ? `${g.radiusM} m` : `${g.polygon.length} pts`}
                   </td>
                   <td className="px-4 py-2">
                     <button
                       type="button"
-                      className="inline-flex items-center gap-1.5 rounded bg-ink-900 px-2 py-1 text-xs text-ink-100 hover:bg-ink-800"
+                      className="inline-flex items-center gap-1.5 rounded bg-white px-2 py-1 text-xs text-ink-800 hover:bg-surface-200"
                       onClick={() => openAssignDialog({ id: g.id, name: g.name })}
                     >
                       <span>{deviceCounts[g.id] ?? 0} vehicles</span>
@@ -175,7 +175,7 @@ export default function Page() {
                       </svg>
                     </button>
                   </td>
-                  <td className="px-4 py-2 text-ink-100">{formatDateTime(g.createdAt, locale)}</td>
+                  <td className="px-4 py-2 text-ink-800">{formatDateTime(g.createdAt, locale)}</td>
                   <td className="px-4 py-2 text-right">
                     <button
                       type="button"
@@ -205,9 +205,9 @@ export default function Page() {
 
       {/* Device Assignment Dialog */}
       {assigningGeofence && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-          <div className="w-full max-w-md rounded-lg bg-ink-950 p-6 shadow-xl">
-            <h2 className="mb-1 text-lg font-semibold text-ink-50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink-950/40">
+          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+            <h2 className="mb-1 text-lg font-semibold text-ink-900">
               {t("geo.assignVehicles") || "Assign Vehicles"}
             </h2>
             <p className="mb-4 text-sm text-ink-400">
@@ -240,7 +240,7 @@ export default function Page() {
                   </div>
                 )}
 
-                <div className="max-h-80 overflow-y-auto rounded border border-ink-400/20 bg-ink-900/50">
+                <div className="max-h-80 overflow-y-auto rounded border border-surface-300 bg-surface-50">
                   {devices.length === 0 ? (
                     <div className="py-6 text-center text-sm text-ink-400">
                       {t("common.empty")}
@@ -250,21 +250,21 @@ export default function Page() {
                       No devices match your search
                     </div>
                   ) : (
-                    <ul className="divide-y divide-ink-400/10">
+                    <ul className="divide-y divide-surface-200">
                       {filteredDevices.map((d) => (
                         <li
                           key={d.imei}
-                          className="flex cursor-pointer items-center gap-3 px-3 py-2 hover:bg-ink-800/50"
+                          className="flex cursor-pointer items-center gap-3 px-3 py-2 hover:bg-surface-100"
                           onClick={() => toggleDevice(d.imei)}
                         >
                           <input
                             type="checkbox"
                             checked={selectedImeis.has(d.imei)}
                             onChange={() => toggleDevice(d.imei)}
-                            className="h-4 w-4 rounded border-ink-400 bg-ink-900 text-brand-500 focus:ring-brand-500"
+                            className="h-4 w-4 rounded border-surface-300 bg-white text-brand-500 focus:ring-brand-500"
                           />
                           <div className="flex-1 min-w-0">
-                            <div className="truncate font-medium text-ink-50">
+                            <div className="truncate font-medium text-ink-900">
                               {d.name || d.vehiclePlate || d.imei}
                             </div>
                             <div className="truncate text-xs text-ink-400">

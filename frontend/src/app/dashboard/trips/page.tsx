@@ -39,7 +39,7 @@ export default function Page() {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex flex-wrap items-center gap-3 border-b border-ink-400/15 px-4 py-3">
+      <div className="flex flex-wrap items-center gap-3 border-b border-surface-300 px-4 py-3">
         <h1 className="font-display text-lg font-semibold">{t("trips.title")}</h1>
         <div className="ml-auto flex flex-wrap items-center gap-2 text-xs">
           <label className="flex items-center gap-1">
@@ -74,7 +74,7 @@ export default function Page() {
 
         {trips.length > 0 && (
           <table className="w-full min-w-[760px] text-sm">
-            <thead className="sticky top-0 z-10 bg-ink-950 text-left text-xs uppercase text-ink-400">
+            <thead className="sticky top-0 z-10 bg-white text-left text-xs uppercase text-ink-400">
               <tr>
                 <th className="px-4 py-2">IMEI</th>
                 <th className="px-4 py-2">{t("trips.startedAt")}</th>
@@ -88,10 +88,10 @@ export default function Page() {
             </thead>
             <tbody>
               {trips.map((tr) => (
-                <tr key={tr.id} className="border-b border-ink-400/10 hover:bg-ink-900/30">
+                <tr key={tr.id} className="border-b border-surface-200 hover:bg-surface-50">
                   <td className="px-4 py-2 font-mono text-xs">{tr.deviceImei}</td>
-                  <td className="px-4 py-2 text-ink-100">{formatDateTime(tr.startedAt, locale)}</td>
-                  <td className="px-4 py-2 text-ink-100">
+                  <td className="px-4 py-2 text-ink-800">{formatDateTime(tr.startedAt, locale)}</td>
+                  <td className="px-4 py-2 text-ink-800">
                     {tr.endedAt ? (
                       formatDateTime(tr.endedAt, locale)
                     ) : (

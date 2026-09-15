@@ -171,7 +171,7 @@ export default function Page() {
             <div className="flex items-end gap-2">
               <button
                 type="button"
-                className="btn-primary"
+                className="btn-secondary"
                 disabled={!monthlyImei || !month || monthlyLoading}
                 onClick={() => void loadMonthly()}
               >
@@ -179,7 +179,7 @@ export default function Page() {
               </button>
               <button
                 type="button"
-                className="btn-secondary"
+                className="btn-primary"
                 disabled={!monthlyImei || !month || busy !== null}
                 onClick={async () => {
                   setBusy("monthly");

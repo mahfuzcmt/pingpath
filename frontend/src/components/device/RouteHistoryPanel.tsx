@@ -216,18 +216,18 @@ export function RouteHistoryPanel({ device, onClose }: Props) {
   } : null;
 
   return (
-    <div className="fixed inset-0 z-[2500] flex flex-col bg-ink-950">
+    <div className="fixed inset-0 z-[2500] flex flex-col bg-white">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-ink-400/15 px-4 py-3 bg-ink-900">
+      <div className="flex items-center justify-between border-b border-surface-300 px-4 py-3 bg-white">
         <div>
-          <div className="font-semibold text-base text-white">
+          <div className="font-semibold text-base text-ink-900">
             {t("fleet.routeHistory")} - {device.name || device.imei}
           </div>
           <div className="font-mono text-xs text-ink-400">{device.imei}</div>
         </div>
         <button
           type="button"
-          className="px-4 py-2 text-sm font-semibold rounded-lg bg-ink-700 hover:bg-ink-600 text-white border border-ink-500 transition-colors"
+          className="px-4 py-2 text-sm font-semibold rounded border border-surface-300 bg-white hover:bg-surface-100 text-ink-700 transition-colors"
           onClick={onClose}
         >
           {t("common.close")}
@@ -235,7 +235,7 @@ export function RouteHistoryPanel({ device, onClose }: Props) {
       </div>
 
       {/* Period selector */}
-      <div className="flex items-center gap-2 border-b border-ink-400/15 px-4 py-2">
+      <div className="flex items-center gap-2 border-b border-surface-300 px-4 py-2">
         <span className="text-sm text-ink-400">{t("fleet.period")}:</span>
         {(["1h", "6h", "24h", "7d"] as Period[]).map((p) => (
           <button
@@ -244,8 +244,8 @@ export function RouteHistoryPanel({ device, onClose }: Props) {
             onClick={() => setPeriod(p)}
             className={`px-3 py-1 text-sm rounded ${
               period === p
-                ? "bg-brand-500 text-ink-950"
-                : "bg-ink-900 text-ink-100 hover:bg-ink-800"
+                ? "bg-brand-500 text-white"
+                : "bg-white text-ink-800 hover:bg-surface-200"
             }`}
           >
             {p === "1h" ? "1 Hour" : p === "6h" ? "6 Hours" : p === "24h" ? "24 Hours" : "7 Days"}
@@ -265,42 +265,42 @@ export function RouteHistoryPanel({ device, onClose }: Props) {
         )}
 
         {history.length === 0 && !loading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-ink-950/50 text-ink-400">
+          <div className="absolute inset-0 flex items-center justify-center bg-white/70 text-ink-400">
             No location history for this period
           </div>
         )}
 
         {/* Stats panel */}
         {stats && (
-          <div className="absolute left-3 top-3 rounded-lg bg-ink-900/90 backdrop-blur p-3 text-sm">
+          <div className="absolute left-3 top-3 rounded-lg bg-white/95 backdrop-blur p-3 text-sm">
             <div className="grid grid-cols-2 gap-x-6 gap-y-1">
               <div className="text-ink-400">Points:</div>
-              <div className="text-ink-50 font-mono">{stats.totalPoints}</div>
+              <div className="text-ink-900 font-mono">{stats.totalPoints}</div>
               <div className="text-ink-400">Max Speed:</div>
-              <div className="text-ink-50 font-mono">{stats.maxSpeed} km/h</div>
+              <div className="text-ink-900 font-mono">{stats.maxSpeed} km/h</div>
               <div className="text-ink-400">Avg Speed:</div>
-              <div className="text-ink-50 font-mono">{stats.avgSpeed} km/h</div>
+              <div className="text-ink-900 font-mono">{stats.avgSpeed} km/h</div>
             </div>
           </div>
         )}
 
         {/* Selected point info */}
         {selectedPoint && (
-          <div className="absolute right-3 top-3 rounded-lg bg-ink-900/90 backdrop-blur p-3 text-sm min-w-[200px]">
+          <div className="absolute right-3 top-3 rounded-lg bg-white/95 backdrop-blur p-3 text-sm min-w-[200px]">
             <div className="font-semibold mb-2">{t("fleet.pointDetails")}</div>
             <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
               <div className="text-ink-400">Time:</div>
-              <div className="text-ink-50 font-mono">{formatDateTime(selectedPoint.ts, locale)}</div>
+              <div className="text-ink-900 font-mono">{formatDateTime(selectedPoint.ts, locale)}</div>
               <div className="text-ink-400">Speed:</div>
-              <div className="text-ink-50 font-mono">{selectedPoint.speed} km/h</div>
+              <div className="text-ink-900 font-mono">{selectedPoint.speed} km/h</div>
               <div className="text-ink-400">Position:</div>
-              <div className="text-ink-50 font-mono text-[10px]">
+              <div className="text-ink-900 font-mono text-[10px]">
                 {selectedPoint.latitude.toFixed(5)}, {selectedPoint.longitude.toFixed(5)}
               </div>
               {selectedPoint.voltageMv && (
                 <>
                   <div className="text-ink-400">Voltage:</div>
-                  <div className="text-ink-50 font-mono">{(selectedPoint.voltageMv / 1000).toFixed(1)}V</div>
+                  <div className="text-ink-900 font-mono">{(selectedPoint.voltageMv / 1000).toFixed(1)}V</div>
                 </>
               )}
               <div className="text-ink-400">ACC:</div>
@@ -312,7 +312,7 @@ export function RouteHistoryPanel({ device, onClose }: Props) {
         )}
 
         {/* Legend */}
-        <div className="absolute left-3 bottom-16 rounded-lg bg-ink-900/90 backdrop-blur p-2 text-xs">
+        <div className="absolute left-3 bottom-16 rounded-lg bg-white/95 backdrop-blur p-2 text-xs">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-1">
               <div className="w-3 h-3 rounded-full bg-[#16A34A]"></div>
@@ -331,7 +331,7 @@ export function RouteHistoryPanel({ device, onClose }: Props) {
       </div>
 
       {/* Playback controls */}
-      <div className="flex items-center gap-3 border-t border-ink-400/15 px-4 py-3">
+      <div className="flex items-center gap-3 border-t border-surface-300 px-4 py-3">
         <button
           type="button"
           className="btn-primary px-3 py-1 text-sm"
@@ -363,7 +363,7 @@ export function RouteHistoryPanel({ device, onClose }: Props) {
           className="flex-1 accent-brand-500"
           disabled={history.length === 0}
         />
-        <span className="w-14 text-right font-mono text-xs text-ink-100">
+        <span className="w-14 text-right font-mono text-xs text-ink-800">
           {Math.round(progress * 100)}%
         </span>
       </div>

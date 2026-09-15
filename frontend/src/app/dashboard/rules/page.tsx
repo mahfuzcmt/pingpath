@@ -33,7 +33,7 @@ export default function RulesPage() {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center gap-3 border-b border-ink-400/15 px-4 py-3">
+      <div className="flex items-center gap-3 border-b border-surface-300 px-4 py-3">
         <h1 className="font-display text-lg font-semibold">{t("rules.title")}</h1>
         <button type="button" className="btn-primary ml-auto px-3 py-1.5 text-xs"
                 onClick={() => setEditing("new")}>
@@ -50,7 +50,7 @@ export default function RulesPage() {
 
         {rules.length > 0 && (
           <table className="w-full min-w-[760px] text-sm">
-            <thead className="sticky top-0 z-10 bg-white text-left text-xs uppercase text-ink-500">
+            <thead className="sticky top-0 z-10 bg-white text-left text-xs uppercase text-ink-9000">
               <tr>
                 <th className="px-4 py-2">{t("rules.name")}</th>
                 <th className="px-4 py-2">{t("rules.type")}</th>
@@ -172,7 +172,7 @@ function RuleForm({ existing, onClose, onSubmit }: FormProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-30 flex items-center justify-center bg-ink-900/60 p-4">
+    <div className="fixed inset-0 z-30 flex items-center justify-center bg-surface-100 p-4">
       <form onSubmit={submit} className="w-full max-w-md space-y-3 rounded-lg bg-white p-4 shadow-menu">
         <div className="flex items-center justify-between">
           <h2 className="font-display text-base font-semibold">
@@ -182,12 +182,12 @@ function RuleForm({ existing, onClose, onSubmit }: FormProps) {
         </div>
 
         <label className="block">
-          <span className="mb-0.5 block text-xs text-ink-500">{t("rules.name")}</span>
+          <span className="mb-0.5 block text-xs text-ink-9000">{t("rules.name")}</span>
           <input className="input w-full py-1.5" value={name} onChange={(e) => setName(e.target.value)} required />
         </label>
 
         <label className="block">
-          <span className="mb-0.5 block text-xs text-ink-500">{t("rules.type")}</span>
+          <span className="mb-0.5 block text-xs text-ink-9000">{t("rules.type")}</span>
           <select className="input w-full py-1.5" value={ruleType}
                   onChange={(e) => setRuleType(e.target.value as AlarmRuleType)}>
             {RULE_TYPES.map((rt) => (
@@ -199,19 +199,19 @@ function RuleForm({ existing, onClose, onSubmit }: FormProps) {
         {ruleType === "ACC_ON_DURING_WINDOW" ? (
           <div className="grid grid-cols-2 gap-2">
             <label className="block">
-              <span className="mb-0.5 block text-xs text-ink-500">{t("common.from")}</span>
+              <span className="mb-0.5 block text-xs text-ink-9000">{t("common.from")}</span>
               <input type="time" className="input w-full py-1.5" value={windowStart}
                      onChange={(e) => setWindowStart(e.target.value)} required />
             </label>
             <label className="block">
-              <span className="mb-0.5 block text-xs text-ink-500">{t("common.to")}</span>
+              <span className="mb-0.5 block text-xs text-ink-9000">{t("common.to")}</span>
               <input type="time" className="input w-full py-1.5" value={windowEnd}
                      onChange={(e) => setWindowEnd(e.target.value)} required />
             </label>
           </div>
         ) : (
           <label className="block">
-            <span className="mb-0.5 block text-xs text-ink-500">
+            <span className="mb-0.5 block text-xs text-ink-9000">
               {t("rules.threshold")} ({ruleType === "SPEED_OVER" ? t("rules.unit.kph") : t("rules.unit.mv")})
             </span>
             <input type="number" className="input w-full py-1.5" value={threshold}
@@ -221,14 +221,14 @@ function RuleForm({ existing, onClose, onSubmit }: FormProps) {
 
         <div className="grid grid-cols-2 gap-2">
           <label className="block">
-            <span className="mb-0.5 block text-xs text-ink-500">{t("rules.severity")}</span>
+            <span className="mb-0.5 block text-xs text-ink-9000">{t("rules.severity")}</span>
             <select className="input w-full py-1.5" value={severity}
                     onChange={(e) => setSeverity(e.target.value as AlarmSeverity)}>
               {SEVERITIES.map((s) => <option key={s} value={s}>{s}</option>)}
             </select>
           </label>
           <label className="block">
-            <span className="mb-0.5 block text-xs text-ink-500">
+            <span className="mb-0.5 block text-xs text-ink-9000">
               {t("rules.cooldown")} ({t("rules.unit.seconds")})
             </span>
             <input type="number" className="input w-full py-1.5" value={cooldown}
@@ -237,7 +237,7 @@ function RuleForm({ existing, onClose, onSubmit }: FormProps) {
         </div>
 
         <div>
-          <span className="mb-1 block text-xs text-ink-500">{t("rules.appliesTo")}</span>
+          <span className="mb-1 block text-xs text-ink-9000">{t("rules.appliesTo")}</span>
           <div className="flex gap-2 text-xs">
             <button type="button"
                     className={appliesToAll ? "btn-primary px-3 py-1" : "btn-ghost px-3 py-1"}

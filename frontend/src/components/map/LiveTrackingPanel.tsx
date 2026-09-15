@@ -78,13 +78,13 @@ export function LiveTrackingPanel({ device, location, onClose }: Props) {
   const isMoving = currentSpeed > 0;
 
   return (
-    <div className="absolute inset-0 z-[1100] flex flex-col bg-ink-950/95 backdrop-blur-sm">
+    <div className="absolute inset-0 z-[1100] flex flex-col bg-white/95 backdrop-blur-sm">
       {/* Header with address */}
-      <header className="flex items-center gap-3 border-b border-ink-800 bg-ink-900/80 px-4 py-3">
+      <header className="flex items-center gap-3 border-b border-surface-300 bg-white px-4 py-3">
         <button
           type="button"
           onClick={onClose}
-          className="flex h-8 w-8 items-center justify-center rounded-full bg-ink-800 text-ink-300 transition hover:bg-ink-700 hover:text-white"
+          className="flex h-8 w-8 items-center justify-center rounded-full bg-surface-100 text-ink-600 transition hover:bg-surface-200 hover:text-ink-900"
           aria-label="Close"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
@@ -92,10 +92,10 @@ export function LiveTrackingPanel({ device, location, onClose }: Props) {
           </svg>
         </button>
         <div className="min-w-0 flex-1">
-          <h2 className="truncate text-sm font-semibold text-white">
+          <h2 className="truncate text-sm font-semibold text-ink-900">
             {device.name || device.vehiclePlate || device.imei}
           </h2>
-          <p className={`truncate text-xs ${addressLoading ? "text-ink-500" : "text-ink-300"}`}>
+          <p className={`truncate text-xs ${addressLoading ? "text-ink-9000" : "text-ink-600"}`}>
             📍 {address}
           </p>
         </div>
@@ -117,8 +117,8 @@ export function LiveTrackingPanel({ device, location, onClose }: Props) {
         </div>
 
         {/* Today's Summary Stats */}
-        <div className="w-full max-w-xs rounded-xl border border-ink-700 bg-ink-900/50 p-4">
-          <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-white">
+        <div className="w-full max-w-xs rounded-xl border border-surface-300 bg-surface-50 p-4">
+          <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-ink-900">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
               <line x1="16" y1="2" x2="16" y2="6" />
@@ -138,9 +138,9 @@ export function LiveTrackingPanel({ device, location, onClose }: Props) {
                     <polyline points="12 6 12 12 16 14" />
                   </svg>
                 </div>
-                <span className="text-xs text-ink-300">{t("panel.totalHours")}</span>
+                <span className="text-xs text-ink-600">{t("panel.totalHours")}</span>
               </div>
-              <span className="font-mono text-sm font-semibold text-white">
+              <span className="font-mono text-sm font-semibold text-ink-900">
                 {formatDurationS(todayStats.totalHoursS, locale)}
               </span>
             </div>
@@ -155,9 +155,9 @@ export function LiveTrackingPanel({ device, location, onClose }: Props) {
                     <path d="M7 17L12 22L17 17" />
                   </svg>
                 </div>
-                <span className="text-xs text-ink-300">{t("panel.totalKm")}</span>
+                <span className="text-xs text-ink-600">{t("panel.totalKm")}</span>
               </div>
-              <span className="font-mono text-sm font-semibold text-white">
+              <span className="font-mono text-sm font-semibold text-ink-900">
                 {formatNumber(todayStats.totalDistanceM / 1000, locale, { maximumFractionDigits: 1 })} km
               </span>
             </div>
@@ -172,7 +172,7 @@ export function LiveTrackingPanel({ device, location, onClose }: Props) {
                     <line x1="12" y1="17" x2="12.01" y2="17" />
                   </svg>
                 </div>
-                <span className="text-xs text-ink-300">{t("panel.overspeedKm")}</span>
+                <span className="text-xs text-ink-600">{t("panel.overspeedKm")}</span>
               </div>
               <span className="font-mono text-sm font-semibold text-alarm-red">
                 {formatNumber(todayStats.overspeedDistanceM / 1000, locale, { maximumFractionDigits: 1 })} km
@@ -187,9 +187,9 @@ export function LiveTrackingPanel({ device, location, onClose }: Props) {
                     <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
                   </svg>
                 </div>
-                <span className="text-xs text-ink-300">{t("panel.maxSpeedToday")}</span>
+                <span className="text-xs text-ink-600">{t("panel.maxSpeedToday")}</span>
               </div>
-              <span className="font-mono text-sm font-semibold text-white">
+              <span className="font-mono text-sm font-semibold text-ink-900">
                 {todayStats.maxSpeed} {t("fleet.kmh")}
               </span>
             </div>
@@ -198,14 +198,14 @@ export function LiveTrackingPanel({ device, location, onClose }: Props) {
       </div>
 
       {/* Mobile-friendly bottom info */}
-      <footer className="border-t border-ink-800 bg-ink-900/80 px-4 py-3 md:hidden">
+      <footer className="border-t border-surface-300 bg-white px-4 py-3 md:hidden">
         <div className="grid grid-cols-2 gap-3 text-center">
           <div>
-            <div className="text-lg font-bold text-white">{formatDurationS(todayStats.totalHoursS, locale)}</div>
+            <div className="text-lg font-bold text-ink-900">{formatDurationS(todayStats.totalHoursS, locale)}</div>
             <div className="text-[10px] text-ink-400">{t("panel.totalHours")}</div>
           </div>
           <div>
-            <div className="text-lg font-bold text-white">
+            <div className="text-lg font-bold text-ink-900">
               {formatNumber(todayStats.totalDistanceM / 1000, locale, { maximumFractionDigits: 1 })} km
             </div>
             <div className="text-[10px] text-ink-400">{t("panel.totalKm")}</div>

@@ -74,17 +74,11 @@ const config: Config = {
         accent: {
           teal: "#14b8a6",
         },
-        // Dashboard accent (ADL teal) and text-link colour — use these instead of raw hex.
-        teal: {
-          50: "#e6f7fa",
-          100: "#c9eef4",
-          500: "#17a2b8",
-          600: "#138496",
-          700: "#117a8b",
-        },
+        // Text-link colour = ADL primary. The single accent across the app is
+        // `brand` (#0421bc); no secondary accent scale exists on purpose.
         link: {
-          DEFAULT: "#1d6fd6",
-          hover: "#0f5fc0",
+          DEFAULT: "#0421bc",
+          hover: "#031a96",
         },
       },
       fontFamily: {

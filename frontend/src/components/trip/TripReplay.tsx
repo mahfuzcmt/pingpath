@@ -208,8 +208,8 @@ export function TripReplay({ trip, onClose }: Props) {
   }, [playing]);
 
   return (
-    <div className="fixed inset-0 z-40 flex flex-col bg-ink-950">
-      <div className="flex items-center justify-between border-b border-ink-400/15 px-4 py-3">
+    <div className="fixed inset-0 z-40 flex flex-col bg-white">
+      <div className="flex items-center justify-between border-b border-surface-300 px-4 py-3">
         <div>
           <div className="font-display text-sm font-semibold">{t("trips.replay")}</div>
           <div className="font-mono text-xs text-ink-400">{trip.deviceImei}</div>
@@ -228,7 +228,7 @@ export function TripReplay({ trip, onClose }: Props) {
         )}
       </div>
 
-      <div className="flex items-center gap-3 border-t border-ink-400/15 px-4 py-3">
+      <div className="flex items-center gap-3 border-t border-surface-300 px-4 py-3">
         <button
           type="button"
           className="btn-primary px-3 py-1 text-sm"
@@ -259,7 +259,7 @@ export function TripReplay({ trip, onClose }: Props) {
           }}
           className="flex-1 accent-brand-500"
         />
-        <span className="w-12 text-right font-mono text-xs text-ink-100">
+        <span className="w-12 text-right font-mono text-xs text-ink-800">
           {Math.round(progress * 100)}%
         </span>
       </div>

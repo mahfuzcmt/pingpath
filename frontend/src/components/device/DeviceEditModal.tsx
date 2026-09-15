@@ -59,7 +59,7 @@ export function DeviceEditModal({ device, onClose, onSaved }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 z-[1300] flex items-center justify-center bg-ink-950/50 p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-[1300] flex items-center justify-center bg-white/70 p-4" onClick={onClose}>
       <div
         className="panel w-full max-w-sm max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
@@ -73,12 +73,12 @@ export function DeviceEditModal({ device, onClose, onSaved }: Props) {
 
         <div className="panel-body flex flex-col gap-3">
           <label className="text-xs">
-            <span className="mb-1 block text-ink-500">{t("veh.name")}</span>
+            <span className="mb-1 block text-ink-9000">{t("veh.name")}</span>
             <input type="text" className="input" value={name} onChange={(e) => setName(e.target.value)} />
           </label>
 
           <label className="text-xs">
-            <span className="mb-1 block text-ink-500">{t("fleet.sim")}</span>
+            <span className="mb-1 block text-ink-9000">{t("fleet.sim")}</span>
             <input
               type="tel"
               className="input font-mono"
@@ -89,7 +89,7 @@ export function DeviceEditModal({ device, onClose, onSaved }: Props) {
           </label>
 
           <label className="text-xs">
-            <span className="mb-1 block text-ink-500">{t("veh.plate")}</span>
+            <span className="mb-1 block text-ink-9000">{t("veh.plate")}</span>
             <input
               type="text"
               className="input font-mono"
@@ -100,7 +100,7 @@ export function DeviceEditModal({ device, onClose, onSaved }: Props) {
           </label>
 
           <div className="text-xs">
-            <span className="mb-1 block text-ink-500">{t("veh.icon")}</span>
+            <span className="mb-1 block text-ink-9000">{t("veh.icon")}</span>
             <div className="grid grid-cols-5 gap-1.5">
               {VEHICLE_TYPES.map((ty) => (
                 <button
@@ -124,7 +124,7 @@ export function DeviceEditModal({ device, onClose, onSaved }: Props) {
           </div>
 
           <div className="text-xs">
-            <span className="mb-1 block text-ink-500">{t("veh.iconColor")}</span>
+            <span className="mb-1 block text-ink-9000">{t("veh.iconColor")}</span>
             <div className="flex flex-wrap items-center gap-1.5">
               {COLOR_SWATCHES.map((c) => (
                 <button

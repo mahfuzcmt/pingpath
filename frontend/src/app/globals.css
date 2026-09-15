@@ -19,7 +19,7 @@
   }
 
   body {
-    @apply bg-surface-0 text-ink-700 antialiased;
+    @apply bg-surface-0 text-ink-800 antialiased;
     font-family: var(--font-inter), "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     font-size: 14px;
     line-height: 20px;
@@ -105,7 +105,46 @@
   .t-label   { @apply text-[10px] leading-[14px] font-medium uppercase tracking-[0.06em] text-ink-500; }
   .t-link    { @apply text-[13px] leading-[18px] font-medium text-link hover:text-link-hover; }
 
+  /* ── Surfaces (ADL palette: white cards on #EAEEF2, #dddddd borders) ── */
+  .modal-overlay {
+    @apply fixed inset-0 z-[1300] flex items-center justify-center bg-ink-950/40 p-4;
+  }
+  .modal {
+    @apply w-full overflow-hidden border border-surface-300 bg-white shadow-xl;
+    border-radius: 4px;
+  }
+  .modal-header {
+    @apply flex items-center justify-between border-b border-surface-300 px-4 py-3;
+  }
+  .modal-footer {
+    @apply flex items-center justify-end gap-2 border-t border-surface-300 bg-surface-50 px-4 py-3;
+  }
+
+  /* Data tables: white header row with muted 13px labels, #262626 cells (ADL grid). */
+  .table {
+    @apply w-full text-[13px] text-ink-800;
+  }
+  .table thead th {
+    @apply sticky top-0 z-10 border-b border-surface-300 bg-white px-4 py-2.5 text-left text-[12px] font-semibold text-ink-500;
+  }
+  .table tbody td {
+    @apply border-b border-surface-200 px-4 py-2 align-top;
+  }
+  .table tbody tr:hover {
+    @apply bg-surface-50;
+  }
+
   /* ── Buttons (ADL Moto Viewer Style) ─────────────────────────────── */
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-1 px-3 text-[13px] font-semibold text-white transition focus:outline-none disabled:cursor-not-allowed disabled:opacity-50;
+    background-color: #dc2626;
+    border-radius: 2px;
+    height: 28px;
+  }
+  .btn-danger:hover {
+    background-color: #b91c1c;
+  }
+
   .btn-primary {
     @apply inline-flex items-center justify-center gap-1 px-3 py-[5px] text-[13px] font-semibold text-white transition focus:outline-none disabled:cursor-not-allowed disabled:opacity-50;
     background-color: #0421bc;

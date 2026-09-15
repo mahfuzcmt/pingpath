@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useExport, ExportType } from "@/hooks/useExport";
-import { useLanguage } from "@/components/landing/LanguageContext";
+import { useLocale } from "@/lib/i18n";
 import type { DeviceView } from "@/types/domain";
 
 interface ExportModalProps {
@@ -41,7 +41,7 @@ const EXPORT_TYPES: { value: ExportType; label: { en: string; bn: string }; desc
 ];
 
 export function ExportModal({ onClose, devices = [], defaultType, defaultDevice }: ExportModalProps) {
-  const { lang } = useLanguage();
+  const { locale: lang } = useLocale();
   const { loading, error, exportData } = useExport();
 
   const [exportType, setExportType] = useState<ExportType>(defaultType || "devices");
@@ -84,18 +84,18 @@ export function ExportModal({ onClose, devices = [], defaultType, defaultDevice 
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-      <div className="bg-ink-900 rounded-lg w-full max-w-md overflow-hidden">
+    <div className="fixed inset-0 z-[1300] flex items-center justify-center bg-ink-950/40 p-4">
+      <div className="bg-white rounded-lg w-full max-w-md overflow-hidden">
         {/* Header */}
-        <div className="p-4 border-b border-ink-800 flex items-center justify-between">
+        <div className="p-4 border-b border-surface-300 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-green-600/20 rounded-lg flex items-center justify-center">
-              <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-10 h-10 bg-brand-50 rounded-lg flex items-center justify-center">
+              <svg className="w-5 h-5 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
               </svg>
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-white">
+              <h2 className="text-lg font-semibold text-ink-900">
                 {lang === "bn" ? "এক্সেল এক্সপোর্ট" : "Export to Excel"}
               </h2>
               <p className="text-xs text-ink-400">
@@ -103,7 +103,7 @@ export function ExportModal({ onClose, devices = [], defaultType, defaultDevice 
               </p>
             </div>
           </div>
-          <button onClick={onClose} className="text-ink-400 hover:text-white p-1">
+          <button onClick={onClose} className="text-ink-400 hover:text-ink-900 p-1">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -114,7 +114,7 @@ export function ExportModal({ onClose, devices = [], defaultType, defaultDevice 
         <div className="p-4 space-y-4">
           {/* Export type selection */}
           <div>
-            <label className="block text-sm text-ink-300 mb-2">
+            <label className="block text-sm text-ink-600 mb-2">
               {lang === "bn" ? "রিপোর্টের ধরন" : "Report Type"}
             </label>
             <div className="space-y-2">
@@ -124,7 +124,7 @@ export function ExportModal({ onClose, devices = [], defaultType, defaultDevice 
                   className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
                     exportType === type.value
                       ? "border-brand-500 bg-brand-500/10"
-                      : "border-ink-700 hover:border-ink-600"
+                      : "border-surface-300 hover:border-surface-400"
                   }`}
                 >
                   <input
@@ -136,7 +136,7 @@ export function ExportModal({ onClose, devices = [], defaultType, defaultDevice 
                     className="mt-1"
                   />
                   <div>
-                    <p className="text-sm font-medium text-white">
+                    <p className="text-sm font-medium text-ink-900">
                       {lang === "bn" ? type.label.bn : type.label.en}
                     </p>
                     <p className="text-xs text-ink-400">
@@ -151,13 +151,13 @@ export function ExportModal({ onClose, devices = [], defaultType, defaultDevice 
           {/* Device selection (if needed) */}
           {needsDevice && (
             <div>
-              <label className="block text-sm text-ink-300 mb-1">
+              <label className="block text-sm text-ink-600 mb-1">
                 {lang === "bn" ? "ডিভাইস নির্বাচন করুন" : "Select Device"}
               </label>
               <select
                 value={selectedDevice}
                 onChange={(e) => setSelectedDevice(e.target.value)}
-                className="w-full bg-ink-800 text-white text-sm px-3 py-2 rounded border border-ink-700 focus:border-brand-500 focus:outline-none"
+                className="w-full bg-surface-100 text-ink-900 text-sm px-3 py-2 rounded border border-surface-300 focus:border-brand-500 focus:outline-none"
               >
                 <option value="">{lang === "bn" ? "ডিভাইস নির্বাচন করুন" : "Select a device"}</option>
                 {devices.map((device) => (
@@ -173,25 +173,25 @@ export function ExportModal({ onClose, devices = [], defaultType, defaultDevice 
           {needsDateRange && (
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm text-ink-300 mb-1">
+                <label className="block text-sm text-ink-600 mb-1">
                   {lang === "bn" ? "থেকে" : "From"}
                 </label>
                 <input
                   type="date"
                   value={fromDate}
                   onChange={(e) => setFromDate(e.target.value)}
-                  className="w-full bg-ink-800 text-white text-sm px-3 py-2 rounded border border-ink-700 focus:border-brand-500 focus:outline-none"
+                  className="w-full bg-surface-100 text-ink-900 text-sm px-3 py-2 rounded border border-surface-300 focus:border-brand-500 focus:outline-none"
                 />
               </div>
               <div>
-                <label className="block text-sm text-ink-300 mb-1">
+                <label className="block text-sm text-ink-600 mb-1">
                   {lang === "bn" ? "পর্যন্ত" : "To"}
                 </label>
                 <input
                   type="date"
                   value={toDate}
                   onChange={(e) => setToDate(e.target.value)}
-                  className="w-full bg-ink-800 text-white text-sm px-3 py-2 rounded border border-ink-700 focus:border-brand-500 focus:outline-none"
+                  className="w-full bg-surface-100 text-ink-900 text-sm px-3 py-2 rounded border border-surface-300 focus:border-brand-500 focus:outline-none"
                 />
               </div>
             </div>
@@ -200,38 +200,38 @@ export function ExportModal({ onClose, devices = [], defaultType, defaultDevice 
           {/* Month selection (if needed) */}
           {needsMonth && (
             <div>
-              <label className="block text-sm text-ink-300 mb-1">
+              <label className="block text-sm text-ink-600 mb-1">
                 {lang === "bn" ? "মাস নির্বাচন করুন" : "Select Month"}
               </label>
               <input
                 type="month"
                 value={month}
                 onChange={(e) => setMonth(e.target.value)}
-                className="w-full bg-ink-800 text-white text-sm px-3 py-2 rounded border border-ink-700 focus:border-brand-500 focus:outline-none"
+                className="w-full bg-surface-100 text-ink-900 text-sm px-3 py-2 rounded border border-surface-300 focus:border-brand-500 focus:outline-none"
               />
             </div>
           )}
 
           {/* Error message */}
           {error && (
-            <div className="p-3 bg-red-600/20 border border-red-600/40 rounded text-sm text-red-400">
+            <div className="p-3 bg-red-50 border border-red-200 rounded text-sm text-red-700">
               {error}
             </div>
           )}
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-ink-800 flex gap-3">
+        <div className="p-4 border-t border-surface-300 flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-2 text-sm bg-ink-700 text-white rounded hover:bg-ink-600 transition-colors"
+            className="flex-1 px-4 py-2 text-sm border border-surface-300 bg-white text-ink-700 rounded hover:bg-surface-100 transition-colors"
           >
             {lang === "bn" ? "বাতিল" : "Cancel"}
           </button>
           <button
             onClick={handleExport}
             disabled={!canExport || loading}
-            className="flex-1 px-4 py-2 text-sm bg-green-600 text-white rounded hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="flex-1 px-4 py-2 text-sm bg-brand-500 text-white rounded hover:bg-brand-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {loading ? (
               <>

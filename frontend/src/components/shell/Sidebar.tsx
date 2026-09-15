@@ -38,15 +38,15 @@ const NAV_SECTIONS: NavSection[] = [
     label: "nav.monitor",
     icon: <MonitorIcon />,
     href: "/dashboard",
-    color: "#17a2b8",      // ADL teal - consistent across all
-    activeColor: "#138496",
+    color: "#0421bc",      // ADL teal - consistent across all
+    activeColor: "#031a96",
   },
   {
     id: "statistics",
     label: "nav.statistics",
     icon: <StatisticsIcon />,
-    color: "#17a2b8",      // ADL teal - consistent across all
-    activeColor: "#138496",
+    color: "#0421bc",      // ADL teal - consistent across all
+    activeColor: "#031a96",
     children: [
       { href: "/dashboard/home", label: "nav.home", icon: <HomeIcon /> },
       { href: "/dashboard/reports", label: "nav.reports", icon: <ReportIcon /> },
@@ -57,8 +57,8 @@ const NAV_SECTIONS: NavSection[] = [
     id: "manage",
     label: "nav.manage",
     icon: <ManageIcon />,
-    color: "#17a2b8",      // ADL teal - consistent across all
-    activeColor: "#138496",
+    color: "#0421bc",      // ADL teal - consistent across all
+    activeColor: "#031a96",
     children: [
       { href: "/dashboard/devices", label: "nav.vehicles", icon: <DeviceIcon /> },
       { href: "/dashboard/drivers", label: "nav.drivers", icon: <DriverIcon /> },
@@ -75,8 +75,8 @@ const NAV_SECTIONS: NavSection[] = [
     label: "nav.customer",
     icon: <CustomerIcon />,
     href: "/dashboard/admin",
-    color: "#17a2b8",      // ADL teal - consistent across all
-    activeColor: "#138496",
+    color: "#0421bc",      // ADL teal - consistent across all
+    activeColor: "#031a96",
     superAdminOnly: true,
   },
 ];
@@ -149,16 +149,16 @@ export function Sidebar() {
 
   return (
     <div className="relative z-[2000] flex h-full">
-      {/* Left Icon Strip - ADL style colored icons */}
-      <div className="flex w-[52px] flex-col bg-white border-r border-gray-200 shadow-sm">
+      {/* Left icon rail — ADL: solid primary blue with white glyphs */}
+      <div className="flex w-[52px] flex-col bg-brand-500">
         {/* Logo */}
-        <div className="flex h-[56px] items-center justify-center border-b border-gray-100">
-          <Link href="/dashboard">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-[#22c55e] to-[#16a34a]">
+        <div className="flex h-[56px] items-center justify-center border-b border-white/15">
+          <Link href="/dashboard" aria-label="MotoLink">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <path d="M12 2L2 7l10 5 10-5-10-5z" fill="white" opacity="0.9"/>
-                <path d="M2 17l10 5 10-5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M2 12l10 5 10-5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M12 2L2 7l10 5 10-5-10-5z" fill="#0421bc" />
+                <path d="M2 17l10 5 10-5" stroke="#0421bc" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M2 12l10 5 10-5" stroke="#0421bc" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
           </Link>
@@ -180,21 +180,16 @@ export function Sidebar() {
                   setActiveSection(section.id);
                   if (section.href) router.push(section.href);
                 }}
-                className={`group relative flex h-10 w-10 items-center justify-center rounded-lg transition-all ${
+                className={`group relative flex h-10 w-10 items-center justify-center rounded-md transition-colors ${
                   isCurrentSection || hasActiveRoute
-                    ? "text-white shadow-md"
-                    : "text-teal-500 hover:bg-teal-500/10"
+                    ? "bg-white/20 text-white"
+                    : "text-white/70 hover:bg-white/10 hover:text-white"
                 }`}
-                style={{
-                  backgroundColor: isCurrentSection || hasActiveRoute ? section.color : undefined,
-                }}
                 title={t(section.label)}
               >
-                <span className={isCurrentSection || hasActiveRoute ? "text-white" : ""}>
-                  {section.icon}
-                </span>
+                {section.icon}
                 {/* Tooltip */}
-                <span className="absolute left-full ml-2 hidden whitespace-nowrap rounded bg-gray-800 px-2 py-1 text-xs text-white group-hover:block">
+                <span className="pointer-events-none absolute left-full z-10 ml-2 hidden whitespace-nowrap rounded bg-ink-900 px-2 py-1 text-xs text-white group-hover:block">
                   {t(section.label)}
                 </span>
               </button>
@@ -203,11 +198,11 @@ export function Sidebar() {
         </nav>
 
         {/* Collapse Toggle */}
-        <div className="border-t border-gray-100 p-2">
+        <div className="border-t border-white/15 p-2">
           <button
             type="button"
             onClick={() => setCollapsed(!collapsed)}
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-teal-500 hover:bg-teal-500/10 hover:text-teal-600 mx-auto"
+            className="mx-auto flex h-8 w-8 items-center justify-center rounded-md text-white/70 hover:bg-white/10 hover:text-white"
             title={collapsed ? "Expand" : "Collapse"}
           >
             <svg
@@ -230,18 +225,10 @@ export function Sidebar() {
       {/* Right Content Panel - only for sections with sub-pages. Direct sections
           (Monitor, Customer) go straight to their page so the map keeps its width. */}
       {!collapsed && !currentSection?.href && (
-        <div className="w-[180px] flex flex-col bg-white border-r border-gray-200 shadow-sm">
-          {/* Section Header */}
-          <div
-            className="flex h-[56px] items-center px-4 border-b border-gray-100"
-            style={{
-              background: `linear-gradient(135deg, ${currentSection?.color}15 0%, ${currentSection?.color}05 100%)`,
-            }}
-          >
-            <span
-              className="text-[14px] font-semibold"
-              style={{ color: currentSection?.color }}
-            >
+        <div className="flex w-[180px] flex-col border-r border-surface-300 bg-white">
+          {/* Section header — ADL: section name in primary blue */}
+          <div className="flex h-[56px] items-center border-b border-surface-300 px-4">
+            <span className="text-[14px] font-semibold text-brand-500">
               {currentSection ? t(currentSection.label) : ""}
             </span>
           </div>
@@ -252,14 +239,11 @@ export function Sidebar() {
               // Direct link section
               <Link
                 href={currentSection.href}
-                className={`flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-[13px] font-medium transition-all ${
+                className={`flex items-center gap-2.5 rounded px-3 py-2.5 text-[13px] font-medium transition-colors ${
                   isActive(currentSection.href)
-                    ? "text-white shadow-sm"
-                    : "text-ink-700 hover:bg-gray-100"
+                    ? "bg-brand-500/10 text-ink-900"
+                    : "text-ink-700 hover:bg-surface-100"
                 }`}
-                style={{
-                  backgroundColor: isActive(currentSection.href) ? currentSection.color : undefined,
-                }}
               >
                 <span>{currentSection.icon}</span>
                 <span>{t(currentSection.label)}</span>
@@ -271,16 +255,13 @@ export function Sidebar() {
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] transition-all ${
+                    className={`flex items-center gap-2.5 rounded px-3 py-2 text-[13px] transition-colors ${
                       isActive(item.href)
-                        ? "font-medium text-white shadow-sm"
-                        : "text-teal-500 hover:bg-teal-500/10 hover:text-teal-600"
+                        ? "bg-brand-500/10 font-medium text-ink-900"
+                        : "text-ink-700 hover:bg-surface-100"
                     }`}
-                    style={{
-                      backgroundColor: isActive(item.href) ? currentSection?.color : undefined,
-                    }}
                   >
-                    <span className={isActive(item.href) ? "text-white" : "text-teal-500/70"}>
+                    <span className={isActive(item.href) ? "text-brand-500" : "text-ink-400"}>
                       {item.icon}
                     </span>
                     <span>{t(item.label)}</span>
@@ -291,9 +272,9 @@ export function Sidebar() {
           </nav>
 
           {/* Brand Footer */}
-          <div className="border-t border-gray-100 p-3">
+          <div className="border-t border-surface-300 p-3">
             <div className="flex items-center gap-2">
-              <div className="flex h-6 w-6 items-center justify-center rounded bg-gradient-to-br from-[#22c55e] to-[#16a34a]">
+              <div className="flex h-6 w-6 items-center justify-center rounded bg-brand-500">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
                   <path d="M12 2L2 7l10 5 10-5-10-5z" fill="white"/>
                 </svg>
