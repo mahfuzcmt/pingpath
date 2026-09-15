@@ -96,13 +96,13 @@ export function CommandSheet({ device, onClose }: Props) {
             onChange={(e) => setRaw(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") void run("raw"); }}
             placeholder={t("cmd.customHint")}
-            className="h-8 min-w-0 flex-1 rounded-md border border-surface-300 px-2 font-mono text-[12px] text-ink-800 placeholder:text-ink-400 focus:border-[#17a2b8] focus:outline-none"
+            className="h-8 min-w-0 flex-1 rounded-md border border-surface-300 px-2 font-mono text-[12px] text-ink-800 placeholder:text-ink-400 focus:border-teal-500 focus:outline-none"
           />
           <button
             type="button"
             disabled={busy !== null || !raw.trim()}
             onClick={() => void run("raw")}
-            className="h-8 rounded-md bg-[#17a2b8] px-3 text-[12px] font-semibold text-white transition hover:bg-[#138496] disabled:opacity-50"
+            className="h-8 rounded-md bg-teal-500 px-3 text-[12px] font-semibold text-white transition hover:bg-teal-600 disabled:opacity-50"
           >
             {t("cmd.send")}
           </button>

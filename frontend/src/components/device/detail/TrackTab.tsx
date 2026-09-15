@@ -84,7 +84,7 @@ export default function TrackTab({ device, orgId }: { device: DeviceView; orgId:
 function Cell({ label, value }: { label: string; value: string }) {
   return (
     <div className="bg-white px-2 py-1.5 text-center">
-      <div className="text-[9px] uppercase tracking-wide text-ink-400">{label}</div>
+      <div className="text-[10px] uppercase tracking-wide text-ink-400">{label}</div>
       <div className="text-xs font-semibold text-ink-900">{value}</div>
     </div>
   );

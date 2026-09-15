@@ -41,7 +41,7 @@ export function Topbar({ user }: { user: UserView; orgId: string }) {
               <path d="M2 12l10 5 10-5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </div>
-          <span className="hidden text-lg font-bold text-gray-800 md:block">
+          <span className="hidden text-lg font-bold text-ink-800 md:block">
             <span className="text-[#22c55e]">Moto</span>Link
           </span>
         </Link>
@@ -62,10 +62,10 @@ export function Topbar({ user }: { user: UserView; orgId: string }) {
         <div className="mx-1 h-5 w-px bg-gray-200" />
 
         <div className="flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-[#17a2b8] to-[#117a8b] text-xs font-semibold text-white">
+          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-teal-500 to-teal-700 text-xs font-semibold text-white">
             {(user.fullName ?? user.email).charAt(0).toUpperCase()}
           </div>
-          <span className="hidden text-sm font-medium text-gray-700 lg:block">
+          <span className="hidden text-sm font-medium text-ink-700 lg:block">
             {user.fullName ?? user.email.split("@")[0]}
           </span>
         </div>
@@ -74,7 +74,7 @@ export function Topbar({ user }: { user: UserView; orgId: string }) {
           <button
             type="button"
             onClick={() => setShowSettingsMenu(!showSettingsMenu)}
-            className="flex h-8 w-8 items-center justify-center rounded-md text-gray-500 hover:bg-gray-100"
+            className="flex h-8 w-8 items-center justify-center rounded-md text-ink-500 hover:bg-gray-100"
             aria-label="Account menu"
             aria-expanded={showSettingsMenu}
           >
@@ -90,7 +90,7 @@ export function Topbar({ user }: { user: UserView; orgId: string }) {
               <div className="absolute right-0 top-full z-50 mt-1 w-52 rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
                 <Link
                   href="/dashboard/settings"
-                  className="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                  className="flex items-center gap-2.5 px-4 py-2 text-sm text-ink-700 hover:bg-gray-50"
                   onClick={() => setShowSettingsMenu(false)}
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -197,14 +197,14 @@ function VehicleSearch() {
           else if (e.key === "Enter" && results[active]) { e.preventDefault(); pick(results[active]); }
           else if (e.key === "Escape") setOpen(false);
         }}
-        className="h-8 w-full rounded-md border border-gray-200 bg-gray-50 pl-8 pr-3 text-sm text-gray-700 placeholder:text-gray-400 focus:border-[#17a2b8] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#17a2b8]/40"
+        className="h-8 w-full rounded-md border border-gray-200 bg-gray-50 pl-8 pr-3 text-sm text-ink-700 placeholder:text-ink-400 focus:border-teal-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-teal-500/40"
         role="combobox"
         aria-expanded={open && q.trim() !== ""}
         aria-controls="topbar-vehicle-results"
         aria-autocomplete="list"
       />
       <svg
-        className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
+        className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400"
         fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"
       >
         <circle cx="11" cy="11" r="8" />
@@ -218,7 +218,7 @@ function VehicleSearch() {
           className="absolute left-0 right-0 top-full z-50 mt-1 max-h-80 overflow-y-auto rounded-md border border-gray-200 bg-white py-1 shadow-lg"
         >
           {results.length === 0 && (
-            <li className="px-3 py-2 text-sm text-gray-500">{t("topbar.noResults")}</li>
+            <li className="px-3 py-2 text-sm text-ink-500">{t("topbar.noResults")}</li>
           )}
           {results.map((d, i) => {
             const color = VEHICLE_STATE_COLOR[vehicleState(d)];
@@ -232,10 +232,10 @@ function VehicleSearch() {
                 >
                   <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: color }} />
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-medium text-gray-800">
+                    <span className="block truncate text-sm font-medium text-ink-800">
                       {d.name || d.vehiclePlate || d.imei}
                     </span>
-                    <span className="block truncate font-mono text-[11px] text-gray-500">
+                    <span className="block truncate font-mono text-[11px] text-ink-500">
                       {d.vehiclePlate ? `${d.vehiclePlate} · ` : ""}{d.imei}
                     </span>
                   </span>

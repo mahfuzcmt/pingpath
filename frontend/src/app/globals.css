@@ -20,14 +20,40 @@
 
   body {
     @apply bg-surface-0 text-ink-700 antialiased;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+    font-family: var(--font-inter), "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     font-size: 14px;
     line-height: 20px;
+    /* Fleet data is mostly numbers: keep digits the same width so columns
+       and live speed/duration values don't jitter as they update. */
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1, "cv11" 1;
+    text-rendering: optimizeLegibility;
   }
 
-  /* Bengali script — applied via [lang="bn"] on <html> when locale=bn */
+  /* Bengali script — applied via [lang="bn"] on <html> when locale=bn.
+     Hind Siliguri sets visually smaller than Inter at the same px size, so
+     nudge the base size up a notch to keep the two locales equally readable. */
   html[lang="bn"] body {
-    font-family: var(--font-hind-siliguri), var(--font-open-sans), sans-serif;
+    font-family: var(--font-hind-siliguri), var(--font-inter), sans-serif;
+    font-size: 15px;
+    line-height: 22px;
+    font-feature-settings: normal;
+  }
+
+  /* Machine-readable data: IMEI, plates, coordinates, raw commands. */
+  code, kbd, pre, .font-mono {
+    font-family: var(--font-jetbrains), "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-feature-settings: "tnum" 1;
+  }
+
+  /* Headline text gets slightly tighter tracking; Inter is set loose by default. */
+  .font-display {
+    letter-spacing: -0.012em;
+  }
+
+  h1, h2, h3, h4 {
+    @apply text-ink-900;
+    letter-spacing: -0.012em;
   }
 
   ::selection {
@@ -60,6 +86,25 @@
 }
 
 @layer components {
+  /* ── Type scale helpers ───────────────────────────────────────────
+     Use these instead of ad-hoc text-[Npx] + colour pairs so every screen
+     shares the same hierarchy:
+       t-title    16/22 semibold ink-900   page + panel titles
+       t-heading  14/20 semibold ink-900   section headings, card names
+       t-body     13/18 regular  ink-700   default UI copy
+       t-value    13/18 semibold ink-900   data values (tabular digits)
+       t-caption  12/16 regular  ink-500   secondary / helper text
+       t-label    10/14 medium   ink-500   uppercase field labels
+       t-link     13/18 medium   link      in-app links (vehicle names)
+     10px is the floor — nothing in the app renders smaller. */
+  .t-title   { @apply text-[16px] leading-[22px] font-semibold text-ink-900; }
+  .t-heading { @apply text-[14px] leading-5 font-semibold text-ink-900; }
+  .t-body    { @apply text-[13px] leading-[18px] text-ink-700; }
+  .t-value   { @apply text-[13px] leading-[18px] font-semibold text-ink-900 tabular-nums; }
+  .t-caption { @apply text-[12px] leading-4 text-ink-500; }
+  .t-label   { @apply text-[10px] leading-[14px] font-medium uppercase tracking-[0.06em] text-ink-500; }
+  .t-link    { @apply text-[13px] leading-[18px] font-medium text-link hover:text-link-hover; }
+
   /* ── Buttons (ADL Moto Viewer Style) ─────────────────────────────── */
   .btn-primary {
     @apply inline-flex items-center justify-center gap-1 px-3 py-[5px] text-[13px] font-semibold text-white transition focus:outline-none disabled:cursor-not-allowed disabled:opacity-50;

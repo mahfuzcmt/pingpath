@@ -114,7 +114,7 @@ export default function CalendarTab({ imei, onApply }: { imei: string; onApply: 
                 >
                   <span className={isToday ? "font-bold text-brand-600" : "text-ink-900"}>{c.d}</span>
                   {km != null && (
-                    <span className="text-[8px] leading-none text-status-moving">
+                    <span className="text-[10px] leading-none text-status-moving">
                       {formatNumber(km / 1000, locale, { maximumFractionDigits: 0 })}k
                     </span>
                   )}

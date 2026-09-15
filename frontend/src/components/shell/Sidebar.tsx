@@ -183,7 +183,7 @@ export function Sidebar() {
                 className={`group relative flex h-10 w-10 items-center justify-center rounded-lg transition-all ${
                   isCurrentSection || hasActiveRoute
                     ? "text-white shadow-md"
-                    : "text-[#17a2b8] hover:bg-[#17a2b8]/10"
+                    : "text-teal-500 hover:bg-teal-500/10"
                 }`}
                 style={{
                   backgroundColor: isCurrentSection || hasActiveRoute ? section.color : undefined,
@@ -207,7 +207,7 @@ export function Sidebar() {
           <button
             type="button"
             onClick={() => setCollapsed(!collapsed)}
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-[#17a2b8] hover:bg-[#17a2b8]/10 hover:text-[#138496] mx-auto"
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-teal-500 hover:bg-teal-500/10 hover:text-teal-600 mx-auto"
             title={collapsed ? "Expand" : "Collapse"}
           >
             <svg
@@ -255,7 +255,7 @@ export function Sidebar() {
                 className={`flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-[13px] font-medium transition-all ${
                   isActive(currentSection.href)
                     ? "text-white shadow-sm"
-                    : "text-gray-700 hover:bg-gray-100"
+                    : "text-ink-700 hover:bg-gray-100"
                 }`}
                 style={{
                   backgroundColor: isActive(currentSection.href) ? currentSection.color : undefined,
@@ -274,13 +274,13 @@ export function Sidebar() {
                     className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] transition-all ${
                       isActive(item.href)
                         ? "font-medium text-white shadow-sm"
-                        : "text-[#17a2b8] hover:bg-[#17a2b8]/10 hover:text-[#138496]"
+                        : "text-teal-500 hover:bg-teal-500/10 hover:text-teal-600"
                     }`}
                     style={{
                       backgroundColor: isActive(item.href) ? currentSection?.color : undefined,
                     }}
                   >
-                    <span className={isActive(item.href) ? "text-white" : "text-[#17a2b8]/70"}>
+                    <span className={isActive(item.href) ? "text-white" : "text-teal-500/70"}>
                       {item.icon}
                     </span>
                     <span>{t(item.label)}</span>
@@ -299,8 +299,8 @@ export function Sidebar() {
                 </svg>
               </div>
               <div className="flex flex-col">
-                <span className="text-[11px] font-semibold text-gray-800">MotoLink</span>
-                <span className="text-[9px] text-gray-400">GPS Tracking</span>
+                <span className="text-[11px] font-semibold text-ink-800">MotoLink</span>
+                <span className="text-[10px] text-ink-400">GPS Tracking</span>
               </div>
             </div>
           </div>

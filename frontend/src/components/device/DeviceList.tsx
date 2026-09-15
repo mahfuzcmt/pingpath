@@ -278,7 +278,7 @@ export function DeviceList({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t("list.searchPlaceholder")}
-            className="h-8 w-full rounded-md border border-surface-300 bg-white pl-8 pr-3 text-[13px] text-ink-700 placeholder:text-ink-400 focus:border-[#17a2b8] focus:outline-none focus:ring-1 focus:ring-[#17a2b8]/40"
+            className="h-8 w-full rounded-md border border-surface-300 bg-white pl-8 pr-3 text-[13px] text-ink-700 placeholder:text-ink-400 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/40"
           />
         </div>
       </div>
@@ -290,9 +290,9 @@ export function DeviceList({
             key={id}
             type="button"
             onClick={() => setTab(id)}
-            className={`px-2.5 py-1.5 text-[12.5px] font-medium transition border-b-2 -mb-px ${
+            className={`px-2.5 py-1.5 text-[13px] font-medium transition border-b-2 -mb-px ${
               tab === id
-                ? "border-[#17a2b8] text-[#17a2b8]"
+                ? "border-teal-500 text-teal-500"
                 : "border-transparent text-ink-500 hover:text-ink-700"
             }`}
           >
@@ -307,7 +307,7 @@ export function DeviceList({
         <select
           value={sortKey}
           onChange={(e) => setSortKey(e.target.value as SortKey)}
-          className="h-7 rounded border border-surface-300 bg-white px-2 text-[12px] text-ink-700 focus:border-[#17a2b8] focus:outline-none"
+          className="h-7 rounded border border-surface-300 bg-white px-2 text-[12px] text-ink-700 focus:border-teal-500 focus:outline-none"
           aria-label="Sort vehicles"
         >
           {(Object.keys(SORT_LABEL) as SortKey[]).map((k) => (
@@ -320,7 +320,7 @@ export function DeviceList({
             type="checkbox"
             checked={allVisible}
             onChange={toggleAllVisible}
-            className="h-3.5 w-3.5 cursor-pointer accent-[#17a2b8]"
+            className="h-3.5 w-3.5 cursor-pointer accent-teal-500"
           />
           {t("list.showAll")}
         </label>
@@ -402,7 +402,7 @@ function VehicleRow({ row, selected, visible, onSelect, onToggleVisible, onActio
         }
       }}
       className={`group flex h-9 cursor-pointer items-center gap-2 border-b border-surface-200 border-l-[3px] pl-2 pr-1 transition-colors ${
-        selected ? "border-l-[#17a2b8] bg-[#17a2b8]/10" : "border-l-transparent hover:bg-surface-50"
+        selected ? "border-l-teal-500 bg-teal-500/10" : "border-l-transparent hover:bg-surface-50"
       } ${visible ? "" : "opacity-60"}`}
     >
       <input
@@ -411,11 +411,11 @@ function VehicleRow({ row, selected, visible, onSelect, onToggleVisible, onActio
         onChange={onToggleVisible}
         onClick={(e) => e.stopPropagation()}
         title={t("list.showOnMap")}
-        className="h-3.5 w-3.5 shrink-0 cursor-pointer accent-[#17a2b8]"
+        className="h-3.5 w-3.5 shrink-0 cursor-pointer accent-teal-500"
       />
       <span className="inline-flex shrink-0" dangerouslySetInnerHTML={{ __html: icon }} />
       <span
-        className={`min-w-0 flex-1 truncate text-[13px] ${selected ? "font-semibold text-[#0f6ecd]" : "font-medium text-[#1d6fd6]"}`}
+        className={`min-w-0 flex-1 truncate text-[13px] ${selected ? "font-semibold text-link-hover" : "font-medium text-link"}`}
         title={device.vehiclePlate ?? device.imei}
       >
         {deviceLabel(device)}

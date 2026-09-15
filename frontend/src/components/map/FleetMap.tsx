@@ -1575,8 +1575,8 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
         }
         .pp-label-name {
           color: #1f2937;
-          font-family: 'Inter', -apple-system, sans-serif;
-          font-size: 10px;
+          font-family: var(--font-inter), 'Inter', -apple-system, sans-serif;
+          font-size: 11px;
           font-weight: 600;
           line-height: 1;
           padding: 4px 6px;
@@ -1584,8 +1584,9 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
         .pp-label-speed {
           color: #fff;
           background: var(--state-color);
-          font-family: 'JetBrains Mono', monospace;
-          font-size: 9px;
+          font-family: var(--font-jetbrains), 'JetBrains Mono', monospace;
+          font-variant-numeric: tabular-nums;
+          font-size: 10px;
           font-weight: 600;
           line-height: 1;
           padding: 4px 5px;
@@ -1669,7 +1670,8 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
         }
         .pp-card {
           width: 352px;
-          font-family: 'Inter', -apple-system, sans-serif;
+          font-family: var(--font-inter), 'Inter', -apple-system, sans-serif;
+          font-variant-numeric: tabular-nums;
           color: #1f2937;
         }
         .pp-card-head {
@@ -1706,14 +1708,14 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           border-bottom: 1px solid #f1f5f9;
         }
         .pp-card-imei {
-          font-family: 'JetBrains Mono', monospace;
+          font-family: var(--font-jetbrains), 'JetBrains Mono', monospace;
           font-size: 11px;
           font-weight: 600;
           color: #374151;
         }
         .pp-card-state {
           margin-left: auto;
-          font-size: 11.5px;
+          font-size: 12px;
           font-weight: 600;
           white-space: nowrap;
           overflow: hidden;
@@ -1746,11 +1748,12 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           min-width: 0;
         }
         .pp-card-cell-label {
-          font-size: 9.5px;
+          font-size: 10px;
+          font-weight: 500;
           text-transform: uppercase;
-          letter-spacing: 0.03em;
-          color: #9ca3af;
-          line-height: 1.1;
+          letter-spacing: 0.06em;
+          color: #7e8792;
+          line-height: 1.2;
         }
         .pp-card-cell-value {
           font-size: 12px;
@@ -1775,7 +1778,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           margin-top: 1px;
         }
         .pp-card-coords {
-          font-family: 'JetBrains Mono', monospace;
+          font-family: var(--font-jetbrains), 'JetBrains Mono', monospace;
           font-size: 11px;
         }
         .pp-card-addr {
@@ -1798,8 +1801,8 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           background: none;
           color: #475569;
           cursor: pointer;
-          font-family: 'Inter', -apple-system, sans-serif;
-          font-size: 9px;
+          font-family: var(--font-inter), 'Inter', -apple-system, sans-serif;
+          font-size: 10px;
           font-weight: 500;
           transition: background 0.15s, color 0.15s;
         }

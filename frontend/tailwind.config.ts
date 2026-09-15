@@ -74,20 +74,35 @@ const config: Config = {
         accent: {
           teal: "#14b8a6",
         },
+        // Dashboard accent (ADL teal) and text-link colour — use these instead of raw hex.
+        teal: {
+          50: "#e6f7fa",
+          100: "#c9eef4",
+          500: "#17a2b8",
+          600: "#138496",
+          700: "#117a8b",
+        },
+        link: {
+          DEFAULT: "#1d6fd6",
+          hover: "#0f5fc0",
+        },
       },
       fontFamily: {
-        // ADL Moto Viewer uses system fonts
+        // Self-hosted via @fontsource (see app/layout.tsx). Inter for all UI text —
+        // crisp at 12–14px with true tabular figures; JetBrains Mono for machine
+        // data (IMEI, plates, coordinates); Hind Siliguri for Bengali script.
         sans: [
+          '"Inter Variable"',
+          "Inter",
           "-apple-system",
           "BlinkMacSystemFont",
           '"Segoe UI"',
           "Roboto",
-          '"Helvetica Neue"',
-          "Arial",
-          '"Noto Sans"',
           "sans-serif",
         ],
-        mono: ["ui-monospace", "SFMono-Regular", "monospace"],
+        display: ['"Inter Variable"', "Inter", "-apple-system", "BlinkMacSystemFont", '"Segoe UI"', "sans-serif"],
+        mono: ['"JetBrains Mono Variable"', '"JetBrains Mono"', "ui-monospace", "SFMono-Regular", "Menlo", "monospace"],
+        bengali: ['"Hind Siliguri"', '"Inter Variable"', "sans-serif"],
       },
       fontSize: {
         // ADL Moto Viewer font sizes
