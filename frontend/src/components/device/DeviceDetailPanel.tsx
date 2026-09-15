@@ -125,12 +125,6 @@ export function DeviceDetailPanel({ device, location, onClose }: Props) {
             )}
           </>
         )}
-        {(location?.gsmSignal ?? device.lastGsmSignal) != null && (
-          <div className="data-row">
-            <dt>{t("fleet.gsm")}</dt>
-            <dd>{formatGsmSignal(location?.gsmSignal ?? device.lastGsmSignal, locale)}</dd>
-          </div>
-        )}
         {(location?.engineHoursSeconds ?? device.lastEngineHoursSeconds) != null && (
           <div className="data-row">
             <dt>{t("fleet.engineHours")}</dt>

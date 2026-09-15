@@ -38,15 +38,15 @@ const NAV_SECTIONS: NavSection[] = [
     label: "nav.monitor",
     icon: <MonitorIcon />,
     href: "/dashboard",
-    color: "#ef4444",      // Red like ADL
-    activeColor: "#dc2626",
+    color: "#17a2b8",      // ADL teal - consistent across all
+    activeColor: "#138496",
   },
   {
     id: "statistics",
     label: "nav.statistics",
     icon: <StatisticsIcon />,
-    color: "#3b82f6",      // Blue like ADL
-    activeColor: "#2563eb",
+    color: "#17a2b8",      // ADL teal - consistent across all
+    activeColor: "#138496",
     children: [
       { href: "/dashboard/home", label: "nav.home", icon: <HomeIcon /> },
       { href: "/dashboard/reports", label: "nav.reports", icon: <ReportIcon /> },
@@ -57,8 +57,8 @@ const NAV_SECTIONS: NavSection[] = [
     id: "manage",
     label: "nav.manage",
     icon: <ManageIcon />,
-    color: "#3b82f6",      // Blue like ADL
-    activeColor: "#2563eb",
+    color: "#17a2b8",      // ADL teal - consistent across all
+    activeColor: "#138496",
     children: [
       { href: "/dashboard/devices", label: "nav.vehicles", icon: <DeviceIcon /> },
       { href: "/dashboard/drivers", label: "nav.drivers", icon: <DriverIcon /> },
@@ -75,8 +75,8 @@ const NAV_SECTIONS: NavSection[] = [
     label: "nav.customer",
     icon: <CustomerIcon />,
     href: "/dashboard/admin",
-    color: "#ec4899",      // Pink like ADL
-    activeColor: "#db2777",
+    color: "#17a2b8",      // ADL teal - consistent across all
+    activeColor: "#138496",
     superAdminOnly: true,
   },
 ];
@@ -184,7 +184,7 @@ export function Sidebar() {
                 className={`group relative flex h-10 w-10 items-center justify-center rounded-lg transition-all ${
                   isCurrentSection || hasActiveRoute
                     ? "text-white shadow-md"
-                    : "text-gray-500 hover:bg-gray-100"
+                    : "text-[#17a2b8] hover:bg-[#17a2b8]/10"
                 }`}
                 style={{
                   backgroundColor: isCurrentSection || hasActiveRoute ? section.color : undefined,
@@ -208,7 +208,7 @@ export function Sidebar() {
           <button
             type="button"
             onClick={() => setCollapsed(!collapsed)}
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 mx-auto"
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-[#17a2b8] hover:bg-[#17a2b8]/10 hover:text-[#138496] mx-auto"
             title={collapsed ? "Expand" : "Collapse"}
           >
             <svg
@@ -274,13 +274,13 @@ export function Sidebar() {
                     className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] transition-all ${
                       isActive(item.href)
                         ? "font-medium text-white shadow-sm"
-                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                        : "text-[#17a2b8] hover:bg-[#17a2b8]/10 hover:text-[#138496]"
                     }`}
                     style={{
                       backgroundColor: isActive(item.href) ? currentSection?.color : undefined,
                     }}
                   >
-                    <span className={isActive(item.href) ? "text-white" : "text-gray-400"}>
+                    <span className={isActive(item.href) ? "text-white" : "text-[#17a2b8]/70"}>
                       {item.icon}
                     </span>
                     <span>{t(item.label)}</span>

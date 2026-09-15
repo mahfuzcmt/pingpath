@@ -61,7 +61,6 @@ export default function StatisticsTab({ device, orgId }: { device: DeviceView; o
 
         <Section title="Health">
           <M label={t("fleet.voltage")} value={formatVoltage(live?.voltageMv ?? device.lastVoltageMv, locale)} />
-          <M label={t("fleet.gsm")} value={device.lastGsmSignal != null ? String(device.lastGsmSignal) : "—"} />
           <M label="GPS sats" value={live?.satellites != null ? String(live.satellites) : "—"} />
           <M label={t("veh.locked")} value={device.engineLocked ? "Yes" : "No"} />
         </Section>

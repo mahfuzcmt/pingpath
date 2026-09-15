@@ -3,6 +3,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import "leaflet.markercluster/dist/MarkerCluster.css";
+import "leaflet.markercluster/dist/MarkerCluster.Default.css";
+import "leaflet.markercluster";
 import {
   DEFAULT_ZOOM,
   DHAKA_CENTER,
@@ -498,6 +501,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
+  const clusterGroupRef = useRef<L.MarkerClusterGroup | null>(null);
   // Track previous icon state to avoid unnecessary setIcon calls that break CSS transitions
   const iconStateRef = useRef<Map<string, string>>(new Map());
   const initialFitDoneRef = useRef(false);
@@ -632,10 +636,6 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
             <span class="pp-popup-value" style="color: ${externalPower === 'Connected' ? '#16A34A' : '#6b7280'};">${externalPower}</span>
           </div>
           <div class="pp-popup-item">
-            <span class="pp-popup-label">GSM Level</span>
-            <span class="pp-popup-value">${gsmLevel} %</span>
-          </div>
-          <div class="pp-popup-item">
             <span class="pp-popup-label">Last Update</span>
             <span class="pp-popup-value">${dateTime}</span>
           </div>
@@ -669,6 +669,34 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
 
     mapRef.current = map;
 
+    // Initialize marker cluster group (ADL-style grouping)
+    const clusterGroup = L.markerClusterGroup({
+      maxClusterRadius: 50, // Cluster markers within 50px
+      spiderfyOnMaxZoom: true,
+      showCoverageOnHover: false,
+      zoomToBoundsOnClick: true,
+      disableClusteringAtZoom: 16, // Show individual markers at zoom 16+
+      iconCreateFunction: (cluster) => {
+        const count = cluster.getChildCount();
+        let size = 'small';
+        let dimension = 36;
+        if (count >= 100) {
+          size = 'large';
+          dimension = 50;
+        } else if (count >= 10) {
+          size = 'medium';
+          dimension = 42;
+        }
+        return L.divIcon({
+          html: `<div class="pp-cluster pp-cluster-${size}"><span>${count}</span></div>`,
+          className: 'pp-cluster-icon',
+          iconSize: L.point(dimension, dimension),
+        });
+      },
+    });
+    clusterGroup.addTo(map);
+    clusterGroupRef.current = clusterGroup;
+
     // Force map to recalculate size after a brief delay (container may not have final dimensions yet)
     const timer = setTimeout(() => {
       map.invalidateSize();
@@ -683,6 +711,8 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
     return () => {
       clearTimeout(timer);
       resizeObserver.disconnect();
+      clusterGroup.clearLayers();
+      clusterGroupRef.current = null;
       for (const marker of markersRef.current.values()) marker.remove();
       markersRef.current.clear();
       map.remove();
@@ -792,7 +822,11 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
         // Remove any existing marker for this device
         const existingMarker = markersRef.current.get(imei);
         if (existingMarker) {
-          existingMarker.remove();
+          if (clusterGroupRef.current) {
+            clusterGroupRef.current.removeLayer(existingMarker);
+          } else {
+            existingMarker.remove();
+          }
           markersRef.current.delete(imei);
         }
         continue;
@@ -817,7 +851,6 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
         // Create new marker
         const icon = createVehicleIcon(device?.vehicleType, bodyColor, course, isSelected, isOverspeed, noFix, isMoving, isStale, justUpdated, filterSpeed(loc.speed, loc.valid));
         marker = L.marker([loc.latitude, loc.longitude], { icon })
-          .addTo(map)
           .bindPopup(createPopupContent(device, loc), {
             maxWidth: 320,
             className: 'pp-popup-container',
@@ -830,6 +863,13 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
             offset: [0, -20],  // Position label above the vehicle icon
             className: 'pp-plate-tooltip',
           });
+
+        // Add to cluster group instead of directly to map (ADL-style grouping)
+        if (clusterGroupRef.current) {
+          clusterGroupRef.current.addLayer(marker);
+        } else {
+          marker.addTo(map);
+        }
 
         marker.on('click', () => {
           onSelect(imei);
@@ -932,7 +972,11 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
     // Remove markers whose device disappeared from snapshot
     for (const [imei, marker] of markersRef.current.entries()) {
       if (!seen.has(imei)) {
-        marker.remove();
+        if (clusterGroupRef.current) {
+          clusterGroupRef.current.removeLayer(marker);
+        } else {
+          marker.remove();
+        }
         markersRef.current.delete(imei);
         iconStateRef.current.delete(imei);
         // Also clean up trails and predictive markers
