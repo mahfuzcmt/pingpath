@@ -9,6 +9,7 @@ import { useLocale } from "@/lib/i18n";
 import { DeviceList } from "@/components/device/DeviceList";
 import { DeviceBottomPanel } from "@/components/device/DeviceBottomPanel";
 import { KpiStrip } from "@/components/dashboard/KpiStrip";
+// Inline SVG icons for collapse/expand (no external dependencies)
 
 // Dynamic import for route history to avoid SSR issues
 const RouteHistoryPanel = dynamic(
@@ -36,6 +37,7 @@ export default function DashboardPage() {
   const [selectedImei, setSelectedImei] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState(false);
   const [showLiveTracking, setShowLiveTracking] = useState(false);
+  const [listCollapsed, setListCollapsed] = useState(false);
 
   // Deep-link from the Vehicles screen: /dashboard?focus={imei} preselects it.
   useEffect(() => {
@@ -72,15 +74,46 @@ export default function DashboardPage() {
   return (
     <div className="relative flex h-full w-full">
       {/* Desktop sidebar */}
-      <aside className="hidden h-full w-[320px] shrink-0 md:block">
-        <DeviceList
-          devices={devices}
-          locations={locations}
-          selectedImei={selectedImei}
-          onSelect={setSelectedImei}
-          onViewHistory={() => setShowHistory(true)}
-        />
+      <aside
+        className={`hidden h-full shrink-0 md:block transition-all duration-300 ease-in-out ${
+          listCollapsed ? "w-0" : "w-[320px]"
+        }`}
+      >
+        {!listCollapsed && (
+          <DeviceList
+            devices={devices}
+            locations={locations}
+            selectedImei={selectedImei}
+            onSelect={setSelectedImei}
+            onViewHistory={() => setShowHistory(true)}
+          />
+        )}
       </aside>
+
+      {/* Collapse/Expand toggle button */}
+      <button
+        onClick={() => setListCollapsed(!listCollapsed)}
+        className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 z-30 h-12 w-6 items-center justify-center rounded-r-lg bg-ink-900/90 hover:bg-ink-800 text-ink-100 shadow-lg border border-l-0 border-ink-700/50 transition-all duration-300"
+        style={{ left: listCollapsed ? 0 : 320 }}
+        title={listCollapsed ? "Expand vehicle list" : "Collapse vehicle list"}
+      >
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          {listCollapsed ? (
+            <polyline points="9 18 15 12 9 6" />
+          ) : (
+            <polyline points="15 18 9 12 15 6" />
+          )}
+        </svg>
+      </button>
 
       <div className="relative flex-1 min-w-0 h-full">
         <FleetMap
