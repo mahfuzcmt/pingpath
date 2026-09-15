@@ -26,10 +26,11 @@ import {
   compassLabel,
   vehicleState,
   VEHICLE_STATE_COLOR,
+  MARKER_BODY_COLOR,
   type VehicleState,
   formatBatteryPercent,
 } from "@/lib/format";
-import { buildVehicleSvg, getIconDimensions } from "@/lib/vehicleIcons";
+import { buildVehicleSvg, getIconDimensions, noseOffset } from "@/lib/vehicleIcons";
 import { useSpeedLimits } from "@/hooks/useSpeedLimits";
 import { useLocale } from "@/lib/i18n";
 import type { DeviceView, LocationView } from "@/types/domain";
@@ -332,7 +333,7 @@ function gpsQualityInfo(location: LocationView | undefined, device: DeviceView |
   return { status: "Live", color: "#16A34A", icon: "●" };
 }
 
-// Vehicle marker: top-down realistic vehicle icon, centered on position.
+// Vehicle marker: ADL-style top-down vehicle rotated to heading, centred on position.
 function createVehicleIcon(
   vehicleType: string | null | undefined,
   bodyColor: string,
@@ -345,9 +346,8 @@ function createVehicleIcon(
   justUpdated = false,
   speed = 0,
 ): L.DivIcon {
-  // GoMax-style: smaller icons to fit on roads (24/20 for road-fitting)
-  const baseSize = isSelected ? 24 : 20;
-  // Get proper dimensions for taller icons (aspect ratio 1.4)
+  // ADL renders its 40×60 marker at roughly 24×36; selected gets a little larger.
+  const baseSize = isSelected ? 28 : 24;
   const { width, height } = getIconDimensions(baseSize);
   const classes = [
     'pp-vehicle-icon',
@@ -388,6 +388,7 @@ function createVehicleIcon(
     className: classes,
     iconSize: [width, height],
     iconAnchor: [width / 2, height / 2], // Center anchor for top-down view
+    tooltipAnchor: [0, -noseOffset(baseSize)], // Plate label sits just above the nose
   });
 }
 
@@ -893,7 +894,9 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
       let marker = markersRef.current.get(imei);
 
       const course = loc.course ?? 0;
-      const bodyColor = device?.iconColor || "#E8900A";
+      // ADL-style: the marker body is tinted by state (green / blue / grey),
+      // not by a per-device colour, so the map reads at a glance.
+      const bodyColor = MARKER_BODY_COLOR[vehicleState(device, loc)];
       const noFix = hasNoFix(loc);
       const isStale = isStaleData(loc, device);
       const isMoving = filterSpeed(loc.speed, loc.valid) > 0; // Moving if speed above noise threshold
@@ -915,7 +918,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           .bindTooltip(plateLabelHtml(device, loc, color), {
             permanent: true,
             direction: 'top',
-            offset: [0, -14],
+            offset: [0, -4],
             className: 'pp-plate-tooltip',
           });
 
@@ -1482,18 +1485,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
             opacity: 0.25;
           }
         }
-        /* Moving vehicle: subtle pulse glow effect */
-        .pp-vehicle-icon.pp-moving {
-          animation: pp-pulse 2s ease-in-out infinite;
-        }
-        @keyframes pp-pulse {
-          0%, 100% {
-            filter: drop-shadow(0 0 4px rgba(22, 163, 74, 0.6));
-          }
-          50% {
-            filter: drop-shadow(0 0 8px rgba(22, 163, 74, 0.9));
-          }
-        }
+        /* Moving vehicles carry no glow (ADL look): the green body says it all. */
 
         /* Motion trail effect - fading polyline behind moving vehicles */
         .pp-motion-trail {
@@ -1517,22 +1509,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           }
         }
 
-        /* Speed-based intensity effect (applied via inline style based on speed) */
-        .pp-high-speed {
-          filter: drop-shadow(0 0 8px rgba(232, 144, 10, 0.9)) brightness(1.1);
-        }
-        .pp-very-high-speed {
-          filter: drop-shadow(0 0 12px rgba(220, 38, 38, 0.9)) brightness(1.15);
-          animation: pp-speed-pulse 0.5s ease-in-out infinite;
-        }
-        @keyframes pp-speed-pulse {
-          0%, 100% {
-            filter: drop-shadow(0 0 12px rgba(220, 38, 38, 0.9)) brightness(1.15);
-          }
-          50% {
-            filter: drop-shadow(0 0 18px rgba(220, 38, 38, 1)) brightness(1.25);
-          }
-        }
+        /* Speed no longer changes the marker treatment; overspeed (rule-based) still blinks red. */
         /* No GPS fix: the marker sits on the last confirmed position, so mute it
            and ring it to distinguish "stale coordinates" from a live vehicle. */
         .pp-vehicle-icon.pp-nofix {

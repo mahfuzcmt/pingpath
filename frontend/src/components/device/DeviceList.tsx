@@ -388,7 +388,7 @@ function VehicleRow({ row, selected, visible, onSelect, onToggleVisible, onActio
   const status = rowStatus(row, t);
   const iconColor = overspeed ? OVERSPEED_COLOR : VEHICLE_STATE_COLOR[state];
   const online = ONLINE_STATES.has(state);
-  const icon = useMemo(() => buildVehicleSvg(device.vehicleType, iconColor, 0, 18), [device.vehicleType, iconColor]);
+  const icon = useMemo(() => buildVehicleSvg(device.vehicleType, iconColor, 0, 14), [device.vehicleType, iconColor]);
 
   return (
     <div

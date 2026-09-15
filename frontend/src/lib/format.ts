@@ -57,14 +57,31 @@ export function vehicleState(d: DeviceView, live?: LocationView | null): Vehicle
   return live?.accOn === true ? "idle" : "stopped";
 }
 
-/** Hex color per state — ADL exact colors for map/SVG fills. */
+/**
+ * Hex color per state for text, dots and list rows. Follows ADL's semantics:
+ * green = moving, blue = static, grey = offline. Idle keeps amber so the list
+ * can still distinguish "engine on but not moving".
+ */
 export const VEHICLE_STATE_COLOR: Record<VehicleState, string> = {
-  moving: "#17a2b8",   // Teal/cyan - vehicle in motion (ADL primary)
-  idle: "#ffc107",     // Yellow/amber - engine on but stationary
-  stopped: "#28a745",  // Green - parked, engine off
-  offline: "#6c757d",  // Gray - no connection
-  expired: "#dc3545",  // Red - subscription expired
-  nodata: "#fd7e14",   // Orange - never connected
+  moving: "#16a34a",   // Green - vehicle in motion
+  idle: "#d97706",     // Amber - engine on but stationary
+  stopped: "#1d6fd6",  // Blue - parked, engine off (ADL "static")
+  offline: "#6b7280",  // Gray - no connection
+  expired: "#dc2626",  // Red - subscription expired
+  nodata: "#f97316",   // Orange - never connected
+};
+
+/**
+ * Body tint for the top-down map markers — the exact ADL marker set: bright
+ * green (moving), blue (static), light grey (offline / expired / never seen).
+ */
+export const MARKER_BODY_COLOR: Record<VehicleState, string> = {
+  moving: "#30c85a",
+  idle: "#f5b301",
+  stopped: "#1e7ff5",
+  offline: "#c9cdd2",
+  expired: "#c9cdd2",
+  nodata: "#c9cdd2",
 };
 
 /** Compact elapsed time "0h 18m" / "18m 2s" since a timestamp (AutoNemo "since"). */

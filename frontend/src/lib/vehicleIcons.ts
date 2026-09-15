@@ -1,30 +1,58 @@
-// ADL Moto Viewer exact style vehicle markers
-// Minimal circles with ultra-simple side-view vehicle silhouettes
-// Reference: ADL GPSBot interface - clean, recognizable icons at all zoom levels
+// ADL Moto Viewer style vehicle markers: top-down silhouettes (40×60 canvas,
+// nose pointing up) rotated to the GPS heading and tinted by state. Drawn as
+// inline SVG so they stay crisp at any zoom and recolour without new assets.
 
 export const VEHICLE_TYPES = ["CAR", "MOTORBIKE", "TRUCK", "BUS", "CNG", "MICROBUS"] as const;
 export type VehicleTypeId = (typeof VEHICLE_TYPES)[number];
 
-export const DEFAULT_ICON_COLOR = "#17a2b8"; // Teal for online/moving (ADL exact)
+/** ADL "static" blue — default body colour when no state is known. */
+export const DEFAULT_ICON_COLOR = "#1e7ff5";
 
-// Status-based colors (ADL exact colors from screenshot)
+/** Body colours per state, matching ADL's green / blue / grey marker set. */
 export const STATUS_COLORS = {
-  moving: "#17a2b8",    // Teal/cyan - moving (ADL primary color)
-  stopped: "#28a745",   // Green - stopped/parked
-  idle: "#ffc107",      // Yellow/amber - idle
-  offline: "#6c757d",   // Gray - offline
+  moving: "#30c85a",
+  stopped: "#1e7ff5",
+  idle: "#f5b301",
+  offline: "#c9cdd2",
 };
 
 /**
- * Get icon dimensions
+ * The vehicle is drawn on a 40×60 canvas like ADL's PNGs, but rendered inside
+ * a square 72-unit viewport (the 40×60 diagonal) so any rotation fits without
+ * clipping. `size` is the vehicle's width; the returned box is the square.
  */
+const VEHICLE_W = 40;
+const CANVAS = 72;
+export const CANVAS_SCALE = CANVAS / VEHICLE_W;
+
 export function getIconDimensions(size: number): { width: number; height: number } {
-  return { width: size, height: size };
+  const box = Math.round(size * CANVAS_SCALE);
+  return { width: box, height: box };
+}
+
+/** Distance (px) from the marker centre to the vehicle's nose, for label placement. */
+export function noseOffset(size: number): number {
+  return Math.round(size * 0.75);
+}
+
+const GLASS = "#1f2937";
+const GLASS_EDGE = "rgba(255,255,255,0.35)";
+const CARGO = "#f3f4f6";
+const TYRE = "#111827";
+
+interface Palette {
+  body: string;
+  edge: string;
+  roof: string;
+}
+
+function palette(color: string): Palette {
+  return { body: color, edge: darkenColor(color, 28), roof: lightenColor(color, 14) };
 }
 
 /**
- * Main function to build vehicle marker SVG.
- * ADL exact style - small circle with ultra-simple side-view vehicle icon.
+ * Build the marker SVG for a vehicle type. Rotation is applied around the
+ * canvas centre so Leaflet's centre anchor keeps the vehicle on its position.
  */
 export function buildVehicleSvg(
   vehicleType: string | null | undefined,
@@ -32,162 +60,119 @@ export function buildVehicleSvg(
   rotation = 0,
   size = 24,
 ): string {
-  const color = bodyColor || DEFAULT_ICON_COLOR;
-  const type = (vehicleType?.toUpperCase() || "TRUCK") as VehicleTypeId;
+  const p = palette(bodyColor || DEFAULT_ICON_COLOR);
+  const type = (vehicleType?.toUpperCase() || "CAR") as VehicleTypeId;
+  const { width, height } = getIconDimensions(size);
+  const rot = Math.round(((rotation % 360) + 360) % 360);
 
+  let shape: string;
   switch (type) {
-    case "MOTORBIKE":
-      return buildMotorbikeIcon(color, size);
+    case "MOTORBIKE": shape = motorbike(p); break;
+    case "TRUCK": shape = truck(p); break;
+    case "BUS": shape = bus(p); break;
+    case "CNG": shape = cng(p); break;
+    case "MICROBUS": shape = van(p); break;
     case "CAR":
-      return buildCarIcon(color, size);
-    case "BUS":
-      return buildBusIcon(color, size);
-    case "CNG":
-      return buildCngIcon(color, size);
-    case "MICROBUS":
-      return buildMicrobusIcon(color, size);
-    case "TRUCK":
-    default:
-      return buildTruckIcon(color, size);
+    default: shape = car(p); break;
   }
-}
 
-/**
- * Shared drop shadow filter for all icons (ADL style)
- */
-function getShadowFilter(): string {
-  return `<defs>
-    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="1" stdDeviation="1.5" flood-color="#000" flood-opacity="0.3"/>
-    </filter>
-  </defs>`;
-}
-
-/**
- * ADL exact style truck icon - minimal green circle with simple truck silhouette
- * Ultra-clean: just cab + cargo box outline, no complex details
- */
-function buildTruckIcon(color: string, size: number): string {
-  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-    ${getShadowFilter()}
-    <circle cx="12" cy="12" r="10.5" fill="${color}" stroke="#fff" stroke-width="1.5" filter="url(#shadow)"/>
-    <g fill="#fff" transform="translate(5, 8)">
-      <!-- Simple truck: cab + cargo box -->
-      <rect x="0" y="0" width="8" height="6" rx="0.5"/>
-      <path d="M8 2 L12 2 L14 5 L14 6 L8 6 Z"/>
-      <!-- Simple wheels -->
-      <circle cx="2.5" cy="6" r="1.5"/>
-      <circle cx="11.5" cy="6" r="1.5"/>
-    </g>
+  return `<svg width="${width}" height="${height}" viewBox="-16 -6 72 72" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <filter id="pp-veh-shadow" x="-30%" y="-20%" width="160%" height="140%">
+        <feDropShadow dx="0" dy="1.5" stdDeviation="1.6" flood-color="#000" flood-opacity="0.35"/>
+      </filter>
+    </defs>
+    <g transform="rotate(${rot} 20 30)" filter="url(#pp-veh-shadow)">${shape}</g>
   </svg>`;
 }
 
-/**
- * ADL exact style car icon - minimal sedan silhouette
- */
-function buildCarIcon(color: string, size: number): string {
-  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-    ${getShadowFilter()}
-    <circle cx="12" cy="12" r="10.5" fill="${color}" stroke="#fff" stroke-width="1.5" filter="url(#shadow)"/>
-    <g fill="#fff" transform="translate(4, 9)">
-      <!-- Simple car body -->
-      <path d="M1 3 L3 0 L13 0 L15 3 L15 5 L1 5 Z"/>
-      <!-- Simple wheels -->
-      <circle cx="4" cy="5" r="1.5"/>
-      <circle cx="12" cy="5" r="1.5"/>
-    </g>
-  </svg>`;
+/* ── Shapes (nose at top) ──────────────────────────────────────────── */
+
+function mirrors(p: Palette, y: number): string {
+  return `<rect x="4" y="${y}" width="5" height="3" rx="1" fill="${p.edge}"/>
+    <rect x="31" y="${y}" width="5" height="3" rx="1" fill="${p.edge}"/>`;
 }
 
-/**
- * ADL exact style motorbike icon - minimal bike silhouette
- */
-function buildMotorbikeIcon(color: string, size: number): string {
-  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-    ${getShadowFilter()}
-    <circle cx="12" cy="12" r="10.5" fill="${color}" stroke="#fff" stroke-width="1.5" filter="url(#shadow)"/>
-    <g fill="#fff" transform="translate(4, 8)">
-      <!-- Two wheels connected by frame -->
-      <circle cx="2.5" cy="5" r="2.5" fill="none" stroke="#fff" stroke-width="1.5"/>
-      <circle cx="13.5" cy="5" r="2.5" fill="none" stroke="#fff" stroke-width="1.5"/>
-      <!-- Simple frame + rider silhouette -->
-      <path d="M5 5 L8 1 L11 1 L13 3 L11 5 Z"/>
-      <circle cx="9" cy="0" r="1.5"/>
-    </g>
-  </svg>`;
+/** Sedan — ADL's car marker: rounded body, windscreen, roof, rear window. */
+function car(p: Palette): string {
+  return `
+    ${mirrors(p, 17)}
+    <path d="M20 3 C29 3 32 8 32 14 L32 50 C32 55 28 57 20 57 C12 57 8 55 8 50 L8 14 C8 8 11 3 20 3 Z" fill="${p.body}" stroke="${p.edge}" stroke-width="1.2"/>
+    <path d="M11.5 15 Q20 12 28.5 15 L27.5 24 Q20 22 12.5 24 Z" fill="${GLASS}"/>
+    <path d="M12.5 15.5 Q20 13.5 27.5 15.5 L27 18 Q20 16.5 13 18 Z" fill="${GLASS_EDGE}"/>
+    <rect x="11" y="25.5" width="18" height="15" rx="3" fill="${p.roof}"/>
+    <path d="M12 42 Q20 44 28 42 L29 49.5 Q20 51.5 11 49.5 Z" fill="${GLASS}"/>`;
 }
 
-/**
- * ADL exact style bus icon - minimal long vehicle
- */
-function buildBusIcon(color: string, size: number): string {
-  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-    ${getShadowFilter()}
-    <circle cx="12" cy="12" r="10.5" fill="${color}" stroke="#fff" stroke-width="1.5" filter="url(#shadow)"/>
-    <g fill="#fff" transform="translate(4, 8)">
-      <!-- Simple bus body -->
-      <rect x="0" y="0" width="16" height="6" rx="1"/>
-      <!-- Window strip (negative space) -->
-      <rect x="1" y="1" width="14" height="2.5" rx="0.5" fill="${color}"/>
-      <!-- Simple wheels -->
-      <circle cx="3" cy="6" r="1.5"/>
-      <circle cx="13" cy="6" r="1.5"/>
-    </g>
-  </svg>`;
+/** Van / microbus — ADL's van marker: flat long roof, tall windscreen. */
+function van(p: Palette): string {
+  return `
+    ${mirrors(p, 13)}
+    <path d="M20 3 C30 3 33 7 33 12 L33 52 C33 56 30 57 20 57 C10 57 7 56 7 52 L7 12 C7 7 10 3 20 3 Z" fill="${p.body}" stroke="${p.edge}" stroke-width="1.2"/>
+    <path d="M10 12 Q20 9 30 12 L30 20.5 Q20 18.5 10 20.5 Z" fill="${GLASS}"/>
+    <path d="M11 12.5 Q20 10.5 29 12.5 L28.7 15 Q20 13.5 11.3 15 Z" fill="${GLASS_EDGE}"/>
+    <rect x="10" y="23" width="20" height="30" rx="2.5" fill="${p.roof}"/>
+    <path d="M13 33 H27 M13 43 H27" stroke="${p.edge}" stroke-opacity="0.35" stroke-width="1"/>`;
 }
 
-/**
- * ADL exact style CNG/auto-rickshaw icon - minimal three-wheeler
- */
-function buildCngIcon(color: string, size: number): string {
-  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-    ${getShadowFilter()}
-    <circle cx="12" cy="12" r="10.5" fill="${color}" stroke="#fff" stroke-width="1.5" filter="url(#shadow)"/>
-    <g fill="#fff" transform="translate(5, 8)">
-      <!-- Simple auto body -->
-      <path d="M0 2 L2 0 L12 0 L14 2 L14 6 L0 6 Z"/>
-      <!-- Window (negative space) -->
-      <rect x="2" y="1" width="6" height="2.5" rx="0.5" fill="${color}"/>
-      <!-- Simple wheels -->
-      <circle cx="3" cy="6" r="1.5"/>
-      <circle cx="11" cy="6" r="1.5"/>
-    </g>
-  </svg>`;
+/** Truck — coloured cab with a light cargo box (ADL's lorry marker). */
+function truck(p: Palette): string {
+  return `
+    ${mirrors(p, 12)}
+    <path d="M20 3 C29 3 32 7 32 12 L32 22 L8 22 L8 12 C8 7 11 3 20 3 Z" fill="${p.body}" stroke="${p.edge}" stroke-width="1.2"/>
+    <path d="M10.5 11 Q20 8 29.5 11 L29.5 18.5 Q20 16.5 10.5 18.5 Z" fill="${GLASS}"/>
+    <rect x="6" y="23.5" width="28" height="33.5" rx="2" fill="${CARGO}" stroke="${p.edge}" stroke-width="1.2"/>
+    <path d="M9 27 H31 M20 27 V54" stroke="${p.edge}" stroke-opacity="0.35" stroke-width="1"/>`;
 }
 
-/**
- * ADL exact style microbus/van icon - minimal van silhouette
- */
-function buildMicrobusIcon(color: string, size: number): string {
-  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-    ${getShadowFilter()}
-    <circle cx="12" cy="12" r="10.5" fill="${color}" stroke="#fff" stroke-width="1.5" filter="url(#shadow)"/>
-    <g fill="#fff" transform="translate(4, 8)">
-      <!-- Simple van body with angled front -->
-      <path d="M0 1 C0 0.5 0.5 0 1 0 L12 0 L16 3 L16 6 L0 6 Z"/>
-      <!-- Window strip (negative space) -->
-      <rect x="1" y="1" width="11" height="2.5" rx="0.5" fill="${color}"/>
-      <!-- Simple wheels -->
-      <circle cx="3" cy="6" r="1.5"/>
-      <circle cx="13" cy="6" r="1.5"/>
-    </g>
-  </svg>`;
+/** Bus — long body with roof panel and window strips. */
+function bus(p: Palette): string {
+  return `
+    ${mirrors(p, 9)}
+    <rect x="7" y="3" width="26" height="54" rx="5" fill="${p.body}" stroke="${p.edge}" stroke-width="1.2"/>
+    <path d="M9 6 Q20 3.5 31 6 L31 13.5 Q20 11.5 9 13.5 Z" fill="${GLASS}"/>
+    <rect x="10" y="16" width="20" height="36" rx="2" fill="${p.roof}"/>
+    <path d="M13 26 H27 M13 36 H27 M13 46 H27" stroke="${p.edge}" stroke-opacity="0.35" stroke-width="1"/>
+    <path d="M9 52 Q20 54.5 31 52 L31 55 Q20 57 9 55 Z" fill="${GLASS}"/>`;
 }
 
-/**
- * Simple circle marker (for compatibility)
- */
+/** Motorbike — two tyres, tank/body, handlebar and rider helmet. */
+function motorbike(p: Palette): string {
+  return `
+    <rect x="16.5" y="2" width="7" height="13" rx="3.5" fill="${TYRE}"/>
+    <rect x="16.5" y="45" width="7" height="13" rx="3.5" fill="${TYRE}"/>
+    <path d="M20 12 C26 12 27.5 18 27.5 24 L27.5 40 C27.5 46 24 49 20 49 C16 49 12.5 46 12.5 40 L12.5 24 C12.5 18 14 12 20 12 Z" fill="${p.body}" stroke="${p.edge}" stroke-width="1.2"/>
+    <rect x="7" y="16" width="26" height="3.5" rx="1.75" fill="${TYRE}"/>
+    <path d="M20 21 C24 21 25 24 25 27 L15 27 C15 24 16 21 20 21 Z" fill="${p.roof}"/>
+    <circle cx="20" cy="33" r="6" fill="${GLASS}"/>
+    <path d="M15.5 31 Q20 28 24.5 31" stroke="${GLASS_EDGE}" stroke-width="1.5" fill="none"/>
+    <rect x="15" y="40" width="10" height="6" rx="2" fill="${p.edge}"/>`;
+}
+
+/** CNG auto-rickshaw — narrow nose, one front wheel, canopy, two rear wheels. */
+function cng(p: Palette): string {
+  return `
+    <rect x="18" y="1" width="4" height="7" rx="2" fill="${TYRE}"/>
+    <rect x="4.5" y="43" width="3.5" height="9" rx="1.5" fill="${TYRE}"/>
+    <rect x="32" y="43" width="3.5" height="9" rx="1.5" fill="${TYRE}"/>
+    <path d="M20 5 C28 5 31 10 31 16 L32 50 C32 55 28 57 20 57 C12 57 8 55 8 50 L9 16 C9 10 12 5 20 5 Z" fill="${p.body}" stroke="${p.edge}" stroke-width="1.2"/>
+    <path d="M12 12.5 Q20 9.5 28 12.5 L28 19.5 Q20 17.5 12 19.5 Z" fill="${GLASS}"/>
+    <rect x="11" y="22" width="18" height="30" rx="3" fill="${p.roof}"/>
+    <path d="M14 22 V52 M20 22 V52 M26 22 V52" stroke="${p.edge}" stroke-opacity="0.3" stroke-width="1"/>`;
+}
+
+/* ── Other markers ─────────────────────────────────────────────────── */
+
+/** Kept for callers that want a generic vehicle without a type. */
 export function buildSimpleArrow(
   bodyColor: string | null | undefined,
   rotation = 0,
   size = 24,
 ): string {
-  return buildTruckIcon(bodyColor || DEFAULT_ICON_COLOR, size);
+  return buildVehicleSvg("CAR", bodyColor, rotation, size);
 }
 
-/**
- * Simple pin marker for static locations
- */
+/** Simple pin marker for static locations (ADL's blue location pin). */
 export function buildSimplePin(
   bodyColor: string | null | undefined,
   size = 24,
@@ -199,9 +184,7 @@ export function buildSimplePin(
   </svg>`;
 }
 
-/**
- * Cluster marker for grouped vehicles
- */
+/** Cluster marker for grouped vehicles. */
 export function buildClusterMarker(
   count: number,
   color: string = "#1890ff",
