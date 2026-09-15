@@ -56,6 +56,9 @@ management:
       show-details: when-authorized
 
 motolink:
+  share:
+    # Public host used to build share-location links (/share/{token}).
+    base-url: ${MOTOLINK_SHARE_BASE_URL:https://motolinkgps.com}
   jwt:
     secret: ${JWT_SECRET:change-me-in-production-this-is-only-for-local-dev-32bytes}
     access-ttl-minutes: ${JWT_ACCESS_TTL_MINUTES:60}

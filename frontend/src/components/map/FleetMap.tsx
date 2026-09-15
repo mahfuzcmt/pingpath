@@ -1298,9 +1298,11 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
   // Track previous selection to avoid re-opening popup on refresh
   const prevSelectedImeiRef = useRef<string | null>(null);
 
-  // Selection (list row, marker click, top-bar search): bring the vehicle into
-  // view and open its card — like ADL. Only runs when the selection changes,
-  // never on the periodic position refresh.
+  // Selection (list row, top-bar search, deep link): bring the vehicle into
+  // view and highlight it. The info card is NOT opened here — it only opens
+  // when the marker itself is clicked (Leaflet's default), so picking a row
+  // in the list stays a quiet "show me where it is". Only runs when the
+  // selection changes, never on the periodic position refresh.
   useEffect(() => {
     if (!selectedImei) {
       prevSelectedImeiRef.current = null;
@@ -1318,10 +1320,9 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
       } else if (!map.getBounds().pad(-0.15).contains(point)) {
         map.panTo(point, { animate: true });
       }
-      if (marker) {
-        const cluster = clusterGroupRef.current;
-        if (cluster) cluster.zoomToShowLayer(marker, () => marker.openPopup());
-        else marker.openPopup();
+      // If the vehicle is hidden inside a cluster, expand it so the marker is visible.
+      if (marker && clusterGroupRef.current) {
+        clusterGroupRef.current.zoomToShowLayer(marker, () => applyLabelVisibility());
       }
     }
     applyLabelVisibility();

@@ -192,9 +192,10 @@ public class ShareLocationService {
 
     private String getBaseUrl() {
         if (shareBaseUrl != null && !shareBaseUrl.isBlank()) {
-            return shareBaseUrl;
+            return shareBaseUrl.replaceAll("/+$", "");
         }
-        // Fallback to frontend URL
-        return "https://app.pingpath.com";
+        // Fallback: the public dashboard domain. Override per environment with
+        // MOTOLINK_SHARE_BASE_URL (→ motolink.share.base-url).
+        return "https://motolinkgps.com";
     }
 }
