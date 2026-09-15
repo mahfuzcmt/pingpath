@@ -1,21 +1,22 @@
-// Professional GPS tracking vehicle markers
-// Realistic top-down vehicle views with direction indicators
+// ADL Moto Viewer exact style vehicle markers
+// Minimal circles with ultra-simple side-view vehicle silhouettes
+// Reference: ADL GPSBot interface - clean, recognizable icons at all zoom levels
 
 export const VEHICLE_TYPES = ["CAR", "MOTORBIKE", "TRUCK", "BUS", "CNG", "MICROBUS"] as const;
 export type VehicleTypeId = (typeof VEHICLE_TYPES)[number];
 
-export const DEFAULT_ICON_COLOR = "#22c55e"; // Green for online/moving
+export const DEFAULT_ICON_COLOR = "#52c41a"; // Green for online/moving
 
-// Status-based colors (matching ADL Moto Viewer style)
+// Status-based colors (ADL Moto Viewer style)
 export const STATUS_COLORS = {
-  moving: "#22c55e",    // Green - moving
-  stopped: "#3b82f6",   // Blue - stopped/parked
-  idle: "#f59e0b",      // Orange/amber - idle
-  offline: "#6b7280",   // Gray - offline
+  moving: "#52c41a",    // Green - moving
+  stopped: "#1890ff",   // Blue - stopped/parked
+  idle: "#faad14",      // Orange/amber - idle
+  offline: "#8c8c8c",   // Gray - offline
 };
 
 /**
- * Get icon dimensions based on vehicle type
+ * Get icon dimensions
  */
 export function getIconDimensions(size: number): { width: number; height: number } {
   return { width: size, height: size };
@@ -23,354 +24,197 @@ export function getIconDimensions(size: number): { width: number; height: number
 
 /**
  * Main function to build vehicle marker SVG.
- * Creates realistic top-down vehicle views.
+ * ADL exact style - small circle with ultra-simple side-view vehicle icon.
  */
 export function buildVehicleSvg(
   vehicleType: string | null | undefined,
   bodyColor: string | null | undefined,
   rotation = 0,
-  size = 40,
+  size = 24,
 ): string {
   const color = bodyColor || DEFAULT_ICON_COLOR;
-  const type = ((vehicleType ?? "CAR").toUpperCase()) as VehicleTypeId;
+  const type = (vehicleType?.toUpperCase() || "TRUCK") as VehicleTypeId;
 
   switch (type) {
     case "MOTORBIKE":
-      return buildMotorbike(color, rotation, size);
-    case "TRUCK":
-      return buildTruck(color, rotation, size);
-    case "BUS":
-    case "MICROBUS":
-      return buildBus(color, rotation, size);
-    case "CNG":
-      return buildCng(color, rotation, size);
+      return buildMotorbikeIcon(color, size);
     case "CAR":
+      return buildCarIcon(color, size);
+    case "BUS":
+      return buildBusIcon(color, size);
+    case "CNG":
+      return buildCngIcon(color, size);
+    case "MICROBUS":
+      return buildMicrobusIcon(color, size);
+    case "TRUCK":
     default:
-      return buildCar(color, rotation, size);
+      return buildTruckIcon(color, size);
   }
 }
 
 /**
- * Realistic car - top-down sedan view
+ * Shared drop shadow filter for all icons (ADL style)
  */
-function buildCar(color: string, rotation: number, size: number): string {
-  const darker = darkenColor(color, 15);
-  const lighter = lightenColor(color, 20);
-
-  return `
-    <svg width="${size}" height="${size}" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <filter id="carShadow" x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="rgba(0,0,0,0.35)"/>
-        </filter>
-        <linearGradient id="carBody" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" style="stop-color:${darker}"/>
-          <stop offset="50%" style="stop-color:${color}"/>
-          <stop offset="100%" style="stop-color:${darker}"/>
-        </linearGradient>
-        <linearGradient id="windshield" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" style="stop-color:#87CEEB"/>
-          <stop offset="100%" style="stop-color:#4A90D9"/>
-        </linearGradient>
-      </defs>
-      <g transform="rotate(${rotation}, 24, 24)" filter="url(#carShadow)">
-        <!-- Car body -->
-        <path d="M18 8 L30 8 L32 14 L32 38 L30 42 L18 42 L16 38 L16 14 Z"
-              fill="url(#carBody)" stroke="${darker}" stroke-width="1"/>
-
-        <!-- Roof/cabin -->
-        <rect x="19" y="18" width="10" height="14" rx="2" fill="${lighter}"/>
-
-        <!-- Front windshield -->
-        <path d="M19 14 L29 14 L29 19 L19 19 Z" fill="url(#windshield)" rx="1"/>
-
-        <!-- Rear windshield -->
-        <path d="M19 31 L29 31 L29 36 L19 36 Z" fill="url(#windshield)" rx="1"/>
-
-        <!-- Headlights -->
-        <rect x="18" y="9" width="4" height="2" rx="0.5" fill="#FFFDE7"/>
-        <rect x="26" y="9" width="4" height="2" rx="0.5" fill="#FFFDE7"/>
-
-        <!-- Taillights -->
-        <rect x="18" y="40" width="4" height="2" rx="0.5" fill="#EF4444"/>
-        <rect x="26" y="40" width="4" height="2" rx="0.5" fill="#EF4444"/>
-
-        <!-- Side mirrors -->
-        <ellipse cx="15" cy="20" rx="2" ry="1.5" fill="${darker}"/>
-        <ellipse cx="33" cy="20" rx="2" ry="1.5" fill="${darker}"/>
-
-        <!-- Direction indicator arrow -->
-        <polygon points="24,3 21,8 27,8" fill="#ffffff" stroke="${darker}" stroke-width="0.5"/>
-      </g>
-    </svg>`;
+function getShadowFilter(): string {
+  return `<defs>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1" stdDeviation="1.5" flood-color="#000" flood-opacity="0.3"/>
+    </filter>
+  </defs>`;
 }
 
 /**
- * Realistic motorbike - top-down view
+ * ADL exact style truck icon - minimal green circle with simple truck silhouette
+ * Ultra-clean: just cab + cargo box outline, no complex details
  */
-function buildMotorbike(color: string, rotation: number, size: number): string {
-  const darker = darkenColor(color, 20);
-
-  return `
-    <svg width="${size}" height="${size}" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <filter id="bikeShadow" x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="rgba(0,0,0,0.35)"/>
-        </filter>
-      </defs>
-      <g transform="rotate(${rotation}, 24, 24)" filter="url(#bikeShadow)">
-        <!-- Front wheel -->
-        <ellipse cx="24" cy="10" rx="6" ry="3" fill="#333" stroke="#222" stroke-width="1"/>
-        <ellipse cx="24" cy="10" rx="4" ry="2" fill="#555"/>
-
-        <!-- Rear wheel -->
-        <ellipse cx="24" cy="38" rx="6" ry="3" fill="#333" stroke="#222" stroke-width="1"/>
-        <ellipse cx="24" cy="38" rx="4" ry="2" fill="#555"/>
-
-        <!-- Frame/body -->
-        <path d="M22 12 L22 36 L26 36 L26 12 Z" fill="${color}" stroke="${darker}" stroke-width="1"/>
-
-        <!-- Fuel tank -->
-        <ellipse cx="24" cy="22" rx="5" ry="4" fill="${color}" stroke="${darker}" stroke-width="1"/>
-
-        <!-- Seat -->
-        <ellipse cx="24" cy="30" rx="4" ry="3" fill="#1a1a1a"/>
-
-        <!-- Handlebars -->
-        <rect x="16" y="13" width="16" height="2" rx="1" fill="#333"/>
-        <circle cx="16" cy="14" r="2" fill="#222"/>
-        <circle cx="32" cy="14" r="2" fill="#222"/>
-
-        <!-- Headlight -->
-        <circle cx="24" cy="8" r="2" fill="#FFFDE7" stroke="#ddd" stroke-width="0.5"/>
-
-        <!-- Taillight -->
-        <rect x="22" y="40" width="4" height="2" rx="1" fill="#EF4444"/>
-
-        <!-- Direction indicator -->
-        <polygon points="24,2 21,7 27,7" fill="#ffffff" stroke="${darker}" stroke-width="0.5"/>
-      </g>
-    </svg>`;
+function buildTruckIcon(color: string, size: number): string {
+  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    ${getShadowFilter()}
+    <circle cx="12" cy="12" r="10.5" fill="${color}" stroke="#fff" stroke-width="1.5" filter="url(#shadow)"/>
+    <g fill="#fff" transform="translate(5, 8)">
+      <!-- Simple truck: cab + cargo box -->
+      <rect x="0" y="0" width="8" height="6" rx="0.5"/>
+      <path d="M8 2 L12 2 L14 5 L14 6 L8 6 Z"/>
+      <!-- Simple wheels -->
+      <circle cx="2.5" cy="6" r="1.5"/>
+      <circle cx="11.5" cy="6" r="1.5"/>
+    </g>
+  </svg>`;
 }
 
 /**
- * Realistic truck - top-down view
+ * ADL exact style car icon - minimal sedan silhouette
  */
-function buildTruck(color: string, rotation: number, size: number): string {
-  const darker = darkenColor(color, 15);
-  const cabColor = darkenColor(color, 5);
-
-  return `
-    <svg width="${size}" height="${size}" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <filter id="truckShadow" x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="rgba(0,0,0,0.35)"/>
-        </filter>
-        <linearGradient id="truckWindshield" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" style="stop-color:#87CEEB"/>
-          <stop offset="100%" style="stop-color:#4A90D9"/>
-        </linearGradient>
-      </defs>
-      <g transform="rotate(${rotation}, 24, 24)" filter="url(#truckShadow)">
-        <!-- Cargo container -->
-        <rect x="14" y="16" width="20" height="26" rx="1" fill="#E5E7EB" stroke="#9CA3AF" stroke-width="1"/>
-        <line x1="14" y1="22" x2="34" y2="22" stroke="#9CA3AF" stroke-width="0.5"/>
-        <line x1="14" y1="28" x2="34" y2="28" stroke="#9CA3AF" stroke-width="0.5"/>
-        <line x1="14" y1="34" x2="34" y2="34" stroke="#9CA3AF" stroke-width="0.5"/>
-
-        <!-- Cab -->
-        <rect x="16" y="6" width="16" height="12" rx="2" fill="${cabColor}" stroke="${darker}" stroke-width="1"/>
-
-        <!-- Windshield -->
-        <rect x="18" y="7" width="12" height="5" rx="1" fill="url(#truckWindshield)"/>
-
-        <!-- Front wheels -->
-        <rect x="12" y="10" width="4" height="6" rx="1" fill="#333"/>
-        <rect x="32" y="10" width="4" height="6" rx="1" fill="#333"/>
-
-        <!-- Rear wheels (dual) -->
-        <rect x="12" y="34" width="4" height="6" rx="1" fill="#333"/>
-        <rect x="32" y="34" width="4" height="6" rx="1" fill="#333"/>
-        <rect x="12" y="38" width="4" height="6" rx="1" fill="#333"/>
-        <rect x="32" y="38" width="4" height="6" rx="1" fill="#333"/>
-
-        <!-- Headlights -->
-        <rect x="17" y="6" width="3" height="1.5" rx="0.5" fill="#FFFDE7"/>
-        <rect x="28" y="6" width="3" height="1.5" rx="0.5" fill="#FFFDE7"/>
-
-        <!-- Direction indicator -->
-        <polygon points="24,1 21,5 27,5" fill="#ffffff" stroke="${darker}" stroke-width="0.5"/>
-      </g>
-    </svg>`;
+function buildCarIcon(color: string, size: number): string {
+  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    ${getShadowFilter()}
+    <circle cx="12" cy="12" r="10.5" fill="${color}" stroke="#fff" stroke-width="1.5" filter="url(#shadow)"/>
+    <g fill="#fff" transform="translate(4, 9)">
+      <!-- Simple car body -->
+      <path d="M1 3 L3 0 L13 0 L15 3 L15 5 L1 5 Z"/>
+      <!-- Simple wheels -->
+      <circle cx="4" cy="5" r="1.5"/>
+      <circle cx="12" cy="5" r="1.5"/>
+    </g>
+  </svg>`;
 }
 
 /**
- * Realistic bus - top-down view
+ * ADL exact style motorbike icon - minimal bike silhouette
  */
-function buildBus(color: string, rotation: number, size: number): string {
-  const darker = darkenColor(color, 15);
-
-  return `
-    <svg width="${size}" height="${size}" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <filter id="busShadow" x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="rgba(0,0,0,0.35)"/>
-        </filter>
-        <linearGradient id="busWindshield" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" style="stop-color:#87CEEB"/>
-          <stop offset="100%" style="stop-color:#4A90D9"/>
-        </linearGradient>
-      </defs>
-      <g transform="rotate(${rotation}, 24, 24)" filter="url(#busShadow)">
-        <!-- Bus body -->
-        <rect x="14" y="4" width="20" height="40" rx="3" fill="${color}" stroke="${darker}" stroke-width="1"/>
-
-        <!-- Windows row -->
-        <rect x="16" y="8" width="16" height="4" rx="1" fill="url(#busWindshield)"/>
-        <rect x="16" y="14" width="4" height="4" rx="0.5" fill="#87CEEB"/>
-        <rect x="22" y="14" width="4" height="4" rx="0.5" fill="#87CEEB"/>
-        <rect x="28" y="14" width="4" height="4" rx="0.5" fill="#87CEEB"/>
-        <rect x="16" y="20" width="4" height="4" rx="0.5" fill="#87CEEB"/>
-        <rect x="22" y="20" width="4" height="4" rx="0.5" fill="#87CEEB"/>
-        <rect x="28" y="20" width="4" height="4" rx="0.5" fill="#87CEEB"/>
-        <rect x="16" y="26" width="4" height="4" rx="0.5" fill="#87CEEB"/>
-        <rect x="22" y="26" width="4" height="4" rx="0.5" fill="#87CEEB"/>
-        <rect x="28" y="26" width="4" height="4" rx="0.5" fill="#87CEEB"/>
-
-        <!-- Rear window -->
-        <rect x="16" y="36" width="16" height="4" rx="1" fill="url(#busWindshield)"/>
-
-        <!-- Wheels -->
-        <rect x="11" y="10" width="4" height="6" rx="1" fill="#333"/>
-        <rect x="33" y="10" width="4" height="6" rx="1" fill="#333"/>
-        <rect x="11" y="32" width="4" height="6" rx="1" fill="#333"/>
-        <rect x="33" y="32" width="4" height="6" rx="1" fill="#333"/>
-
-        <!-- Headlights -->
-        <rect x="15" y="4" width="4" height="2" rx="0.5" fill="#FFFDE7"/>
-        <rect x="29" y="4" width="4" height="2" rx="0.5" fill="#FFFDE7"/>
-
-        <!-- Taillights -->
-        <rect x="15" y="42" width="4" height="2" rx="0.5" fill="#EF4444"/>
-        <rect x="29" y="42" width="4" height="2" rx="0.5" fill="#EF4444"/>
-
-        <!-- Direction indicator -->
-        <polygon points="24,0 21,4 27,4" fill="#ffffff" stroke="${darker}" stroke-width="0.5"/>
-      </g>
-    </svg>`;
+function buildMotorbikeIcon(color: string, size: number): string {
+  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    ${getShadowFilter()}
+    <circle cx="12" cy="12" r="10.5" fill="${color}" stroke="#fff" stroke-width="1.5" filter="url(#shadow)"/>
+    <g fill="#fff" transform="translate(4, 8)">
+      <!-- Two wheels connected by frame -->
+      <circle cx="2.5" cy="5" r="2.5" fill="none" stroke="#fff" stroke-width="1.5"/>
+      <circle cx="13.5" cy="5" r="2.5" fill="none" stroke="#fff" stroke-width="1.5"/>
+      <!-- Simple frame + rider silhouette -->
+      <path d="M5 5 L8 1 L11 1 L13 3 L11 5 Z"/>
+      <circle cx="9" cy="0" r="1.5"/>
+    </g>
+  </svg>`;
 }
 
 /**
- * Realistic CNG/Auto-rickshaw - top-down view
+ * ADL exact style bus icon - minimal long vehicle
  */
-function buildCng(color: string, rotation: number, size: number): string {
-  const darker = darkenColor(color, 15);
-  // CNG in Bangladesh is typically green and yellow
-  const canopyColor = "#22c55e"; // Green canopy
-
-  return `
-    <svg width="${size}" height="${size}" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <filter id="cngShadow" x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="rgba(0,0,0,0.35)"/>
-        </filter>
-      </defs>
-      <g transform="rotate(${rotation}, 24, 24)" filter="url(#cngShadow)">
-        <!-- Rear body/passenger area -->
-        <path d="M14 18 L34 18 L36 40 L12 40 Z" fill="${color}" stroke="${darker}" stroke-width="1"/>
-
-        <!-- Canopy/roof -->
-        <rect x="15" y="19" width="18" height="18" rx="2" fill="${canopyColor}" opacity="0.8"/>
-
-        <!-- Front section -->
-        <ellipse cx="24" cy="12" rx="8" ry="6" fill="${color}" stroke="${darker}" stroke-width="1"/>
-
-        <!-- Windshield -->
-        <ellipse cx="24" cy="10" rx="5" ry="3" fill="#87CEEB"/>
-
-        <!-- Front wheel (single) -->
-        <ellipse cx="24" cy="8" rx="3" ry="2" fill="#333"/>
-
-        <!-- Rear wheels -->
-        <ellipse cx="14" cy="38" rx="4" ry="2.5" fill="#333"/>
-        <ellipse cx="34" cy="38" rx="4" ry="2.5" fill="#333"/>
-
-        <!-- Handlebars -->
-        <rect x="18" y="6" width="12" height="2" rx="1" fill="#333"/>
-
-        <!-- Headlight -->
-        <circle cx="24" cy="6" r="2" fill="#FFFDE7"/>
-
-        <!-- Direction indicator -->
-        <polygon points="24,1 21,5 27,5" fill="#ffffff" stroke="${darker}" stroke-width="0.5"/>
-      </g>
-    </svg>`;
+function buildBusIcon(color: string, size: number): string {
+  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    ${getShadowFilter()}
+    <circle cx="12" cy="12" r="10.5" fill="${color}" stroke="#fff" stroke-width="1.5" filter="url(#shadow)"/>
+    <g fill="#fff" transform="translate(4, 8)">
+      <!-- Simple bus body -->
+      <rect x="0" y="0" width="16" height="6" rx="1"/>
+      <!-- Window strip (negative space) -->
+      <rect x="1" y="1" width="14" height="2.5" rx="0.5" fill="${color}"/>
+      <!-- Simple wheels -->
+      <circle cx="3" cy="6" r="1.5"/>
+      <circle cx="13" cy="6" r="1.5"/>
+    </g>
+  </svg>`;
 }
 
 /**
- * Simple directional arrow for minimal markers
+ * ADL exact style CNG/auto-rickshaw icon - minimal three-wheeler
+ */
+function buildCngIcon(color: string, size: number): string {
+  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    ${getShadowFilter()}
+    <circle cx="12" cy="12" r="10.5" fill="${color}" stroke="#fff" stroke-width="1.5" filter="url(#shadow)"/>
+    <g fill="#fff" transform="translate(5, 8)">
+      <!-- Simple auto body -->
+      <path d="M0 2 L2 0 L12 0 L14 2 L14 6 L0 6 Z"/>
+      <!-- Window (negative space) -->
+      <rect x="2" y="1" width="6" height="2.5" rx="0.5" fill="${color}"/>
+      <!-- Simple wheels -->
+      <circle cx="3" cy="6" r="1.5"/>
+      <circle cx="11" cy="6" r="1.5"/>
+    </g>
+  </svg>`;
+}
+
+/**
+ * ADL exact style microbus/van icon - minimal van silhouette
+ */
+function buildMicrobusIcon(color: string, size: number): string {
+  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    ${getShadowFilter()}
+    <circle cx="12" cy="12" r="10.5" fill="${color}" stroke="#fff" stroke-width="1.5" filter="url(#shadow)"/>
+    <g fill="#fff" transform="translate(4, 8)">
+      <!-- Simple van body with angled front -->
+      <path d="M0 1 C0 0.5 0.5 0 1 0 L12 0 L16 3 L16 6 L0 6 Z"/>
+      <!-- Window strip (negative space) -->
+      <rect x="1" y="1" width="11" height="2.5" rx="0.5" fill="${color}"/>
+      <!-- Simple wheels -->
+      <circle cx="3" cy="6" r="1.5"/>
+      <circle cx="13" cy="6" r="1.5"/>
+    </g>
+  </svg>`;
+}
+
+/**
+ * Simple circle marker (for compatibility)
  */
 export function buildSimpleArrow(
   bodyColor: string | null | undefined,
   rotation = 0,
-  size = 32,
+  size = 24,
 ): string {
-  const color = bodyColor || DEFAULT_ICON_COLOR;
-  const darker = darkenColor(color, 20);
-
-  return `
-    <svg width="${size}" height="${size}" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <filter id="arrowShadow" x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="1" stdDeviation="1.5" flood-color="rgba(0,0,0,0.3)"/>
-        </filter>
-      </defs>
-      <g transform="rotate(${rotation}, 16, 16)" filter="url(#arrowShadow)">
-        <!-- Arrow body pointing up -->
-        <path d="M16 4 L24 16 L20 16 L20 26 L12 26 L12 16 L8 16 Z"
-              fill="${color}" stroke="${darker}" stroke-width="1"/>
-        <!-- Inner highlight -->
-        <path d="M16 6 L22 15 L19 15 L19 24 L13 24 L13 15 L10 15 Z"
-              fill="${lightenColor(color, 10)}" opacity="0.5"/>
-      </g>
-    </svg>`;
+  return buildTruckIcon(bodyColor || DEFAULT_ICON_COLOR, size);
 }
 
 /**
- * Simplified pin marker
+ * Simple pin marker for static locations
  */
 export function buildSimplePin(
   bodyColor: string | null | undefined,
-  size = 32,
+  size = 24,
 ): string {
   const color = bodyColor || DEFAULT_ICON_COLOR;
-  const darker = darkenColor(color, 15);
-
-  return `
-    <svg width="${size}" height="${Math.round(size * 1.25)}" viewBox="0 0 32 40" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <filter id="pin_shadow" x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="rgba(0,0,0,0.3)"/>
-        </filter>
-        <radialGradient id="pinGradient" cx="30%" cy="30%" r="70%">
-          <stop offset="0%" style="stop-color:${lightenColor(color, 20)}"/>
-          <stop offset="100%" style="stop-color:${color}"/>
-        </radialGradient>
-      </defs>
-      <ellipse cx="16" cy="38" rx="6" ry="2" fill="rgba(0,0,0,0.15)"/>
-      <path
-        d="M16 1 C9 1 3 7 3 14 C3 22.5 16 37 16 37 C16 37 29 22.5 29 14 C29 7 23 1 16 1 Z"
-        fill="url(#pinGradient)"
-        stroke="${darker}"
-        stroke-width="1"
-        filter="url(#pin_shadow)"
-      />
-      <circle cx="16" cy="13" r="5" fill="rgba(255,255,255,0.9)"/>
-    </svg>`;
+  return `<svg width="${size}" height="${Math.round(size * 1.3)}" viewBox="0 0 24 32" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 0 C6 0 1 5 1 11 C1 18 12 30 12 30 C12 30 23 18 23 11 C23 5 18 0 12 0 Z" fill="${color}" stroke="#fff" stroke-width="1.5"/>
+    <circle cx="12" cy="10" r="4" fill="#fff"/>
+  </svg>`;
 }
 
-// Helper functions for color manipulation
-function lightenColor(hex: string, percent: number): string {
+/**
+ * Cluster marker for grouped vehicles
+ */
+export function buildClusterMarker(
+  count: number,
+  color: string = "#1890ff",
+  size = 28,
+): string {
+  return `<svg width="${size}" height="${size}" viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="14" cy="14" r="13" fill="${color}" stroke="#fff" stroke-width="2"/>
+    <text x="14" y="18" text-anchor="middle" fill="#fff" font-size="12" font-weight="600" font-family="Arial">${count}</text>
+  </svg>`;
+}
+
+// Helper functions
+export function lightenColor(hex: string, percent: number): string {
   const num = parseInt(hex.replace("#", ""), 16);
   const amt = Math.round(2.55 * percent);
   const R = Math.min(255, (num >> 16) + amt);
@@ -379,7 +223,7 @@ function lightenColor(hex: string, percent: number): string {
   return `#${(0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1)}`;
 }
 
-function darkenColor(hex: string, percent: number): string {
+export function darkenColor(hex: string, percent: number): string {
   const num = parseInt(hex.replace("#", ""), 16);
   const amt = Math.round(2.55 * percent);
   const R = Math.max(0, (num >> 16) - amt);
@@ -387,5 +231,3 @@ function darkenColor(hex: string, percent: number): string {
   const B = Math.max(0, (num & 0x0000ff) - amt);
   return `#${(0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1)}`;
 }
-
-export { lightenColor, darkenColor };

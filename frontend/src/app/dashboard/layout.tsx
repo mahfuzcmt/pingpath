@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { readSession } from "@/lib/session";
 import { backendBase } from "@/lib/session";
+import { Sidebar } from "@/components/shell/Sidebar";
 import { Topbar } from "@/components/shell/Topbar";
 import { SessionProvider } from "@/lib/session-context";
 import type { AuthMeResponse } from "@/types/domain";
@@ -53,9 +54,19 @@ export default async function DashboardLayout({ children }: { children: React.Re
         role: me.user.role,
       }}
     >
-      <div className="flex h-screen w-screen flex-col overflow-hidden bg-surface-100 text-ink-900">
-        <Topbar user={me.user} orgId={me.org.id} />
-        <main className="min-h-0 flex-1 overflow-hidden">{children}</main>
+      {/* ADL-style layout: Left sidebar + Right content area */}
+      <div className="flex h-screen w-screen overflow-hidden bg-[#EAEEF2] text-[#3D4353]">
+        {/* Left Sidebar */}
+        <Sidebar />
+
+        {/* Main content area */}
+        <div className="flex min-w-0 flex-1 flex-col">
+          {/* Top bar */}
+          <Topbar user={me.user} orgId={me.org.id} />
+
+          {/* Page content */}
+          <main className="min-h-0 flex-1 overflow-hidden">{children}</main>
+        </div>
       </div>
     </SessionProvider>
   );

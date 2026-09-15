@@ -18,6 +18,10 @@ const STRINGS = {
   "nav.dashboard": { en: "Dashboard", bn: "ড্যাশবোর্ড" },
   "nav.home": { en: "Home", bn: "হোম" },
   "nav.map": { en: "Map", bn: "মানচিত্র" },
+  "nav.monitor": { en: "Monitor", bn: "মনিটর" },
+  "nav.statistics": { en: "Statistics", bn: "পরিসংখ্যান" },
+  "nav.manage": { en: "Manage", bn: "ম্যানেজ" },
+  "nav.customer": { en: "Customer", bn: "কাস্টমার" },
   "nav.devices": { en: "Devices", bn: "ডিভাইস" },
   "nav.vehicles": { en: "Vehicles", bn: "যানবাহন" },
   "nav.drivers": { en: "Drivers", bn: "ড্রাইভার" },
@@ -140,6 +144,7 @@ const STRINGS = {
 
   // ── Common ────────────────────────────────────────────────────────
   "common.loading": { en: "Loading…", bn: "লোড হচ্ছে…" },
+  "common.searchPlaceholder": { en: "IMEI/Device Name/SIM CardNo.", bn: "IMEI/ডিভাইসের নাম/সিম কার্ড নম্বর" },
   "common.close": { en: "Close", bn: "বন্ধ করুন" },
   "common.retry": { en: "Retry", bn: "আবার চেষ্টা" },
   "common.save": { en: "Save", bn: "সংরক্ষণ" },
