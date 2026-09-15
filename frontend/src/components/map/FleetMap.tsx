@@ -1472,7 +1472,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           will-change: transform;
         }
         .pp-vehicle-icon.pp-selected {
-          filter: drop-shadow(0 0 6px #17a2b8);
+          filter: drop-shadow(0 0 6px #0421bc);
           z-index: 1000 !important;
         }
         /* Overspeed: red marker that blinks until speed drops below the rule threshold */
@@ -1697,8 +1697,8 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           border-radius: 4px;
         }
         .pp-card-edit:hover {
-          color: #17a2b8;
-          background: #e6f7fa;
+          color: #0421bc;
+          background: #e8ebff;
         }
         .pp-card-status {
           display: flex;
@@ -1811,8 +1811,8 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           height: 16px;
         }
         .pp-card-action:hover {
-          background: #e6f7fa;
-          color: #0f7e91;
+          background: #e8ebff;
+          color: #0421bc;
         }
         .pp-card-action + .pp-card-action {
           border-left: 1px solid #eef2f7;
