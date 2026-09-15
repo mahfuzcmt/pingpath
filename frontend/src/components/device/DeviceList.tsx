@@ -414,8 +414,10 @@ function VehicleRow({ row, selected, visible, onSelect, onToggleVisible, onActio
         className="h-3.5 w-3.5 shrink-0 cursor-pointer accent-brand-500"
       />
       <span className="inline-flex shrink-0" dangerouslySetInnerHTML={{ __html: icon }} />
+      {/* ADL: the whole row reads in the state colour — name, status text, icon and dot. */}
       <span
-        className={`min-w-0 flex-1 truncate text-[13px] ${selected ? "font-semibold text-link-hover" : "font-medium text-link"}`}
+        className={`min-w-0 flex-1 truncate text-[13px] ${selected ? "font-semibold" : "font-medium"}`}
+        style={{ color: status.color }}
         title={device.vehiclePlate ?? device.imei}
       >
         {deviceLabel(device)}
@@ -425,7 +427,7 @@ function VehicleRow({ row, selected, visible, onSelect, onToggleVisible, onActio
       </span>
       <span
         className="h-2 w-2 shrink-0 rounded-full"
-        style={{ background: online ? "#22c55e" : "#94a3b8" }}
+        style={{ background: status.color }}
         title={online ? t("fleet.online") : t("fleet.offline")}
       />
       <RowMenu onAction={onAction} t={t} />
