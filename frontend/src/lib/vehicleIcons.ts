@@ -5,14 +5,14 @@
 export const VEHICLE_TYPES = ["CAR", "MOTORBIKE", "TRUCK", "BUS", "CNG", "MICROBUS"] as const;
 export type VehicleTypeId = (typeof VEHICLE_TYPES)[number];
 
-export const DEFAULT_ICON_COLOR = "#52c41a"; // Green for online/moving
+export const DEFAULT_ICON_COLOR = "#17a2b8"; // Teal for online/moving (ADL exact)
 
-// Status-based colors (ADL Moto Viewer style)
+// Status-based colors (ADL exact colors from screenshot)
 export const STATUS_COLORS = {
-  moving: "#52c41a",    // Green - moving
-  stopped: "#1890ff",   // Blue - stopped/parked
-  idle: "#faad14",      // Orange/amber - idle
-  offline: "#8c8c8c",   // Gray - offline
+  moving: "#17a2b8",    // Teal/cyan - moving (ADL primary color)
+  stopped: "#28a745",   // Green - stopped/parked
+  idle: "#ffc107",      // Yellow/amber - idle
+  offline: "#6c757d",   // Gray - offline
 };
 
 /**

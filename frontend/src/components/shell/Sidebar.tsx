@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useLocale, type StringKey } from "@/lib/i18n";
 import { useSession } from "@/lib/session-context";
 
@@ -83,6 +83,7 @@ const NAV_SECTIONS: NavSection[] = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { t } = useLocale();
   const { role } = useSession();
   const isAdmin = role === "ORG_ADMIN" || role === "SUPER_ADMIN";
@@ -177,9 +178,7 @@ export function Sidebar() {
                 type="button"
                 onClick={() => {
                   setActiveSection(section.id);
-                  if (section.href) {
-                    window.location.href = section.href;
-                  }
+                  if (section.href) router.push(section.href);
                 }}
                 className={`group relative flex h-10 w-10 items-center justify-center rounded-lg transition-all ${
                   isCurrentSection || hasActiveRoute
@@ -228,8 +227,9 @@ export function Sidebar() {
         </div>
       </div>
 
-      {/* Right Content Panel - White with navigation items */}
-      {!collapsed && (
+      {/* Right Content Panel - only for sections with sub-pages. Direct sections
+          (Monitor, Customer) go straight to their page so the map keeps its width. */}
+      {!collapsed && !currentSection?.href && (
         <div className="w-[180px] flex flex-col bg-white border-r border-gray-200 shadow-sm">
           {/* Section Header */}
           <div

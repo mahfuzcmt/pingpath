@@ -57,14 +57,14 @@ export function vehicleState(d: DeviceView, live?: LocationView | null): Vehicle
   return live?.accOn === true ? "idle" : "stopped";
 }
 
-/** Hex color per state — for map/SVG fills that can't use CSS classes. */
+/** Hex color per state — ADL exact colors for map/SVG fills. */
 export const VEHICLE_STATE_COLOR: Record<VehicleState, string> = {
-  moving: "#16A34A",   // Green - vehicle in motion
-  idle: "#8B5CF6",     // Purple - engine on but stationary (traffic, waiting)
-  stopped: "#3B82F6",  // Blue - parked, engine off (red reserved for overspeed)
-  offline: "#64748B",  // Slate gray - no connection
-  expired: "#6B7280",  // Dark gray - subscription expired
-  nodata: "#F59E0B",   // Amber - never connected
+  moving: "#17a2b8",   // Teal/cyan - vehicle in motion (ADL primary)
+  idle: "#ffc107",     // Yellow/amber - engine on but stationary
+  stopped: "#28a745",  // Green - parked, engine off
+  offline: "#6c757d",  // Gray - no connection
+  expired: "#dc3545",  // Red - subscription expired
+  nodata: "#fd7e14",   // Orange - never connected
 };
 
 /** Compact elapsed time "0h 18m" / "18m 2s" since a timestamp (AutoNemo "since"). */
@@ -77,6 +77,36 @@ export function formatSince(ts: string | null | undefined): string {
   if (h > 0) return `${h}h ${m}m`;
   if (m > 0) return `${m}m ${s}s`;
   return `${s}s`;
+}
+
+/**
+ * Short elapsed duration for dense list rows: "45 s", "5 min", "1 h 12 min", "2 d 3 h".
+ * Returns "" when the timestamp is missing so callers can fall back to a label.
+ */
+export function formatCompactDuration(ts: string | null | undefined): string {
+  if (!ts) return "";
+  const secs = Math.max(0, Math.floor((Date.now() - new Date(ts).getTime()) / 1000));
+  const d = Math.floor(secs / 86400);
+  const h = Math.floor((secs % 86400) / 3600);
+  const m = Math.floor((secs % 3600) / 60);
+  if (d > 0) return h > 0 ? `${d} d ${h} h` : `${d} d`;
+  if (h > 0) return m > 0 ? `${h} h ${m} min` : `${h} h`;
+  if (m > 0) return `${m} min`;
+  return `${secs} s`;
+}
+
+const COMPASS_16 = [
+  "North", "North-northeast", "Northeast", "East-northeast",
+  "East", "East-southeast", "Southeast", "South-southeast",
+  "South", "South-southwest", "Southwest", "West-southwest",
+  "West", "West-northwest", "Northwest", "North-northwest",
+];
+
+/** Human heading for a GPS course in degrees (16-point compass). */
+export function compassLabel(course: number | null | undefined): string {
+  if (course == null || Number.isNaN(course)) return "—";
+  const idx = Math.round((((course % 360) + 360) % 360) / 22.5) % 16;
+  return COMPASS_16[idx];
 }
 
 /** Start of the current Asia/Dhaka day as a UTC ISO string (for "today" queries). */

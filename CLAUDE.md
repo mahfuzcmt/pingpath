@@ -1231,14 +1231,16 @@ colors: {
 
 ### 10.3 `/dashboard` (default landing)
 
-- Full-screen Mapbox map (dark style: `mapbox://styles/mapbox/dark-v11`)
-- Left sidebar (collapsible): vehicle list with online/offline status dots, search filter
-- Top bar: org name, alerts badge, language toggle, user menu
-- Bottom-right: legend + map controls
-- Vehicle markers: custom SVG arrow rotated by course, color = device.icon_color
-- Click marker → side panel slides in showing device details, last 5 locations, "Send command" buttons
-- Real-time updates via WebSocket; new positions animate over 800ms
-- Initial load: REST `/devices/locations/last`, then subscribe WS
+Reworked 2026-09-15 to match (and tidy up) the ADL Moto Viewer live-monitoring screen, our main competitor reference (`docs/COMPETITIVE_ANALYSIS.md`). Light theme, Leaflet with Google/OSM base layer.
+
+- Full-bleed map; the 52px icon rail is the only fixed chrome on Monitor (the secondary nav panel only appears for sections with sub-pages)
+- **Floating vehicle panel** (340px card over the map, collapsible via edge handle): search → `All / Online / Offline / Inactive` tabs with counts → sort (`Speed / Name / Last update / Status`) + "Show all on map" → **group accordion** (Ungrouped first, then org groups; collapse state in localStorage). Row = visibility checkbox, small vehicle icon, name, status text (`58 km/h` moving · `Idle 4 h 55 min` · stop duration for parked · `Offline 1 d 14 h` · `Expired` · `No Data`), online dot, `⋮` menu. **Unticking a row hides that vehicle from the map** (ADL behaviour).
+- **Popup card** opens on row click / marker click / top-bar search (`FleetMap.createPopupContent`): name + edit pencil, IMEI, `speed (heading, state)` line, 2-column grid (driver, ignition, GPS time, positioning, power, battery, mileage, satellites), coordinates, reverse-geocoded address, and an action bar: Playback · Live · Navigate (Google Maps directions) · Geofence · Street view · Command · Share · Details. Buttons dispatch a `vehicleAction` window event handled by `dashboard/page.tsx`; auto-pan runs only on open, not on the periodic content refresh.
+- Plate labels are hidden below zoom 13 except for the selected vehicle (`LABEL_MIN_ZOOM`); markers cluster below zoom 16.
+- Top bar: global vehicle search (name / plate / IMEI / SIM → focuses the vehicle, or deep-links `/dashboard?focus={imei}` from other pages), brand + Live pill, notifications, language, user menu. No fake refresh counter — the real countdown sits bottom-right beside the freshness indicator.
+- KPI strip floats top-centre of the map area (z ≥ 1000, above Leaflet panes).
+- Real-time updates via WebSocket batches; marker moves animate with CSS transitions.
+- Initial load: REST `/devices/locations/last`, then subscribe WS; the map fits the whole fleet once per map instance (flag reset on unmount so StrictMode/remount refits).
 
 ### 10.4 `/dashboard/devices`
 
@@ -2893,4 +2895,4 @@ Full teardown lives in [`docs/COMPETITIVE_ANALYSIS.md`](docs/COMPETITIVE_ANALYSI
 
 ---
 
-*Last updated: 2026-08-09. Update the date when you change anything substantive.*
+*Last updated: 2026-09-15. Update the date when you change anything substantive.*

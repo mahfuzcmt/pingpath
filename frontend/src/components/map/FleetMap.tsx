@@ -19,9 +19,19 @@ import {
 } from "@/lib/leaflet";
 import { MapLayerDropdown } from "./MapLayerDropdown";
 import { MapToolbar } from "./MapToolbar";
-import { filterSpeed, formatSince, vehicleState, VEHICLE_STATE_COLOR, type VehicleState, formatBatteryPercent, getBatteryColor, gsmToPercent, gsmBars } from "@/lib/format";
+import {
+  filterSpeed,
+  formatSince,
+  formatCompactDuration,
+  compassLabel,
+  vehicleState,
+  VEHICLE_STATE_COLOR,
+  type VehicleState,
+  formatBatteryPercent,
+} from "@/lib/format";
 import { buildVehicleSvg, getIconDimensions } from "@/lib/vehicleIcons";
 import { useSpeedLimits } from "@/hooks/useSpeedLimits";
+import { useLocale } from "@/lib/i18n";
 import type { DeviceView, LocationView } from "@/types/domain";
 import { type LiveLocationView, getInterpolatedPosition, isAnimating } from "@/hooks/useLiveLocations";
 
@@ -38,9 +48,45 @@ interface FleetMapProps {
   showSearch?: boolean;
   /** Callback to advance waypoint animations. Called from the animation loop. */
   onAdvanceAnimations?: () => boolean;
+  /** Pixels covered on the left by the floating vehicle panel (for auto-pan / fit padding). */
+  leftInset?: number;
 }
 
 const OVERSPEED_COLOR = "#DC2626";
+/** Below this zoom the plate labels are hidden (except the selected vehicle). */
+const LABEL_MIN_ZOOM = 13;
+
+function esc(s: string): string {
+  return s.replace(/[&<>"']/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] as string,
+  );
+}
+
+const svgIcon = (d: string) =>
+  `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+
+/** Inline icons for the popup card (rendered as raw HTML inside Leaflet). */
+const ICON = {
+  pencil: svgIcon('<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>'),
+  user: svgIcon('<path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="8" r="4"/>'),
+  key: svgIcon('<circle cx="8" cy="15" r="4"/><path d="m10.9 12.1 9.1-9.1M15 6l3 3M12 9l3 3"/>'),
+  clock: svgIcon('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'),
+  signal: svgIcon('<path d="M2 20h.01M7 20v-4M12 20v-8M17 20V8M22 4v16"/>'),
+  plug: svgIcon('<path d="M9 2v6M15 2v6M6 8h12v4a6 6 0 0 1-12 0Z"/><path d="M12 18v4"/>'),
+  battery: svgIcon('<rect x="2" y="7" width="18" height="10" rx="2"/><path d="M22 11v2M6 11v2M10 11v2"/>'),
+  road: svgIcon('<path d="M4 20 8 4M20 20 16 4M12 4v3M12 11v3M12 18v2"/>'),
+  sat: svgIcon('<path d="M13 7 17 3l4 4-4 4M3 21l6-6M9 9l6 6M11 13l-4 4"/>'),
+  globe: svgIcon('<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>'),
+  pin: svgIcon('<path d="M12 22s7-6.5 7-12a7 7 0 0 0-14 0c0 5.5 7 12 7 12Z"/><circle cx="12" cy="10" r="2.5"/>'),
+  history: svgIcon('<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/>'),
+  live: svgIcon('<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="8" stroke-dasharray="3 3"/>'),
+  navigate: svgIcon('<path d="m3 11 18-8-8 18-2-8Z"/>'),
+  fence: svgIcon('<path d="M4 8 12 4l8 4v8l-8 4-8-4Z"/><circle cx="12" cy="12" r="2"/>'),
+  street: svgIcon('<circle cx="12" cy="5" r="2.5"/><path d="M9 22v-7l-2-5 5 1 5-1-2 5v7"/>'),
+  terminal: svgIcon('<path d="m5 8 4 4-4 4M11 16h8"/><rect x="2" y="3" width="20" height="18" rx="2"/>'),
+  share: svgIcon('<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/>'),
+  doc: svgIcon('<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9Z"/><path d="M14 3v6h6M8 13h8M8 17h6"/>'),
+};
 
 interface GeocodeResult {
   label: string;
@@ -177,28 +223,25 @@ const STATE_TEXT: Record<VehicleState, string> = {
 function formatDateTime(ts: string | null | undefined): string {
   if (!ts) return "—";
   const date = new Date(ts);
-  return date.toLocaleString("en-BD", {
-    timeZone: "Asia/Dhaka",
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: true,
-  });
+  return date
+    .toLocaleString("en-GB", {
+      timeZone: "Asia/Dhaka",
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    })
+    .replace(",", "");
 }
 
-// Marker color + status text now follow the shared 6-state model, so the map
-// matches the Vehicles screen (green=moving, purple=idle, red=stopped, …).
+// Marker color follows the shared 6-state model, so the map matches the
+// Vehicles screen and the live list.
 function markerColor(device: DeviceView | undefined, location: LocationView | undefined): string {
   if (!device) return VEHICLE_STATE_COLOR.offline;
   return VEHICLE_STATE_COLOR[vehicleState(device, location)];
-}
-
-function statusText(device: DeviceView | undefined, location: LocationView | undefined): string {
-  if (!device) return "Offline";
-  return STATE_TEXT[vehicleState(device, location)];
 }
 
 /**
@@ -244,16 +287,6 @@ function getFreshnessStatus(location: LocationView | LiveLocationView | undefine
   if (age < FRESHNESS_LIVE_MS) return "live";
   if (age < FRESHNESS_STALE_MS) return "stale";
   return "no-signal";
-}
-
-/**
- * Returns the seconds since the GPS timestamp, for "X sec ago" display.
- * This shows the real age of the data, not when frontend received it.
- */
-function getSecondsSinceUpdate(location: LocationView | LiveLocationView | undefined): number {
-  if (!location) return 999;
-  const gpsTime = new Date(location.ts).getTime();
-  return Math.floor((Date.now() - gpsTime) / 1000);
 }
 
 /**
@@ -358,31 +391,16 @@ function createVehicleIcon(
   });
 }
 
-// Compact plate-number pill with speed inline (professional style).
+// Compact plate label: name, speed chip when moving, GPS warning when not live.
 function plateLabelHtml(device: DeviceView | undefined, location: LocationView | LiveLocationView | undefined, stateColor: string): string {
-  const text = device?.vehiclePlate || device?.name || device?.imei.slice(-8) || "—";
+  const text = esc(device?.vehiclePlate || device?.name || device?.imei.slice(-8) || "—");
   const speed = filterSpeed(location?.speed, location?.valid);
   const gpsInfo = gpsQualityInfo(location, device);
-  const showWarning = gpsInfo.status !== "Live";
-
-  // Freshness status for real-time feedback
-  const freshness = getFreshnessStatus(location);
-  const freshnessConfig = FRESHNESS_CONFIG[freshness];
-  const justUpdated = isJustUpdated(location);
-
-  const warningIndicator = showWarning
-    ? `<span class="pp-label-gps" style="background: ${gpsInfo.color};" title="${gpsInfo.status}">${gpsInfo.icon}</span>`
-    : '';
-
-  // Freshness indicator (icon only, no seconds count)
-  const freshnessIndicator = `<span class="pp-label-freshness ${justUpdated ? 'pp-label-pulse' : ''}" style="background: ${freshnessConfig.bgColor}; color: ${freshnessConfig.color};" title="${freshnessConfig.label}">${freshnessConfig.icon}</span>`;
-
-  return `<div class="pp-label${showWarning ? ' pp-label-warning' : ''}" style="--state-color:${stateColor}">
-    ${warningIndicator}
-    <span class="pp-label-name">${text}</span>
-    <span class="pp-label-speed">${speed} kph</span>
-    ${freshnessIndicator}
-  </div>`;
+  const warning = gpsInfo.status !== "Live"
+    ? `<span class="pp-label-gps" style="color:${gpsInfo.color}" title="${esc(gpsInfo.status)}">${gpsInfo.icon}</span>`
+    : "";
+  const speedChip = speed > 0 ? `<span class="pp-label-speed">${speed}</span>` : "";
+  return `<div class="pp-label" style="--state-color:${stateColor}"><span class="pp-label-name">${text}</span>${speedChip}${warning}</div>`;
 }
 
 /**
@@ -431,7 +449,7 @@ function GlobalFreshnessIndicator({
   if (totalDevices === 0) return null;
 
   return (
-    <div className="absolute bottom-6 left-3 z-[1000] flex items-center gap-2">
+    <div className="flex items-center gap-2">
       {/* Overall system status */}
       <div
         className={`glass-btn flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold ${
@@ -497,7 +515,7 @@ function BatchCountdown({ lastRefreshAt }: { lastRefreshAt: Date | null }) {
   );
 }
 
-export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh, lastRefreshAt, showSearch = false, onAdvanceAnimations }: FleetMapProps) {
+export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh, lastRefreshAt, showSearch = false, onAdvanceAnimations, leftInset = 0 }: FleetMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
@@ -530,6 +548,66 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
   const [, setTick] = useState(0); // Force re-render every second for freshness timer
 
   const speedLimits = useSpeedLimits();
+  const { t } = useLocale();
+
+  // The floating vehicle panel covers the left edge; popups and fit-to-bounds
+  // must pad past it. Kept in a ref so marker callbacks see the latest value.
+  const leftInsetRef = useRef(leftInset);
+  useEffect(() => {
+    leftInsetRef.current = leftInset;
+    for (const marker of markersRef.current.values()) {
+      const popup = marker.getPopup();
+      if (popup) popup.options.autoPanPaddingTopLeft = L.point(leftInset + 20, 70);
+    }
+  }, [leftInset]);
+
+  const selectedImeiRef = useRef(selectedImei);
+  useEffect(() => {
+    selectedImeiRef.current = selectedImei;
+  }, [selectedImei]);
+
+  /** Plate labels clutter a fleet-wide view: show them zoomed in, or for the selected vehicle. */
+  const applyLabelVisibility = useCallback(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const show = map.getZoom() >= LABEL_MIN_ZOOM;
+    for (const [imei, marker] of markersRef.current) {
+      const el = marker.getTooltip()?.getElement();
+      if (el) el.style.display = show || imei === selectedImeiRef.current ? "" : "none";
+    }
+  }, []);
+
+  /** After Leaflet (re)renders popup HTML: fill in the address and wire the action bar. */
+  const refreshPopupDom = useCallback((marker: L.Marker, imei: string) => {
+    const container = marker.getPopup()?.getElement();
+    if (!container) return;
+
+    const addressEl = container.querySelector<HTMLElement>(".pp-card-address-text");
+    if (addressEl) {
+      const latStr = addressEl.dataset.lat ?? "";
+      const lat = parseFloat(latStr);
+      const lng = parseFloat(addressEl.dataset.lng ?? "");
+      if (Number.isFinite(lat) && Number.isFinite(lng) && (lat !== 0 || lng !== 0)) {
+        const cached = addressCache.get(addressCacheKey(lat, lng));
+        if (cached) {
+          addressEl.textContent = cached;
+        } else {
+          void reverseGeocode(lat, lng).then((address) => {
+            const el = container.querySelector<HTMLElement>(".pp-card-address-text");
+            if (el && el.dataset.lat === latStr) el.textContent = address;
+          });
+        }
+      }
+    }
+
+    container.querySelectorAll<HTMLElement>("[data-action]").forEach((btn) => {
+      btn.onclick = (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        window.dispatchEvent(new CustomEvent("vehicleAction", { detail: { action: btn.dataset.action, imei } }));
+      };
+    });
+  }, []);
 
   // Tick every second to update the "X sec ago" freshness display
   useEffect(() => {
@@ -545,113 +623,78 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
     return m;
   }, [devices]);
 
-  // Function to create popup content
+  // Popup card (ADL-style): header + status line, 2-column data grid,
+  // coordinates + address rows, and an action bar. Rendered as raw HTML for
+  // Leaflet; refreshPopupDom() wires the buttons after each render.
   const createPopupContent = useCallback((device: DeviceView | undefined, location: LocationView | LiveLocationView | undefined): string => {
-    const name = device?.name || device?.vehiclePlate || device?.imei.slice(-8) || "Unknown";
-    const lat = location?.latitude?.toFixed(6) || "—";
-    const lng = location?.longitude?.toFixed(6) || "—";
+    const name = esc(device?.name || device?.vehiclePlate || device?.imei.slice(-8) || "Unknown");
+    const imei = device?.imei ?? "";
     const speed = filterSpeed(location?.speed, location?.valid);
-    const dateTime = formatDateTime(location?.ts || device?.lastSeenAt);
+    const state: VehicleState = device ? vehicleState(device, location) : "offline";
     const overspeed = device != null && speedLimits.isOverspeed(device.imei, location?.speed);
-    const status = overspeed ? "Overspeed" : statusText(device, location);
-    const statusColor = overspeed ? OVERSPEED_COLOR : markerColor(device, location);
-    const accStatus = location?.accOn == null ? "—" : location.accOn ? "ON" : "OFF";
-    const gpsInfo = gpsQualityInfo(location, device);
+    const stateColor = overspeed ? OVERSPEED_COLOR : VEHICLE_STATE_COLOR[state];
+    const stateLabel = overspeed ? t("popup.overspeed") : STATE_TEXT[state];
 
-    // Check if we have a cached address for this location
-    const latNum = location?.latitude || 0;
-    const lngNum = location?.longitude || 0;
-    const cacheKey = addressCacheKey(latNum, lngNum);
-    const cachedAddress = addressCache.get(cacheKey);
+    let statusLine: string;
+    if (speed > 0) statusLine = `${speed} km/h (${compassLabel(location?.course)}, ${stateLabel})`;
+    else if ((state === "stopped" || state === "idle") && device?.parkedSince) statusLine = `${stateLabel} · ${formatCompactDuration(device.parkedSince)}`;
+    else if (state === "offline" && device?.lastSeenAt) statusLine = `${stateLabel} · ${formatCompactDuration(device.lastSeenAt)}`;
+    else statusLine = stateLabel;
 
-    // Only show parking duration if parkedSince is recent and reliable
-    // (within 1 hour of last update, meaning device was seen after parking)
-    let stopDuration = "";
-    if (device?.parkedSince && speed === 0 && device.lastSeenAt) {
-      const parkedTime = new Date(device.parkedSince).getTime();
-      const lastSeenTime = new Date(device.lastSeenAt).getTime();
-      // Only show if parkedSince is within 1 hour of lastSeenAt (reliable)
-      if (lastSeenTime - parkedTime <= 3600000) {
-        stopDuration = formatSince(device.parkedSince);
-      }
-    }
-    const statusWithDuration = stopDuration ? `${status} ${stopDuration}` : status;
-
-    // Freshness status for real-time feedback
-    const freshness = getFreshnessStatus(location);
-    const freshnessConfig = FRESHNESS_CONFIG[freshness];
-    const secondsAgo = getSecondsSinceUpdate(location);
-    const freshnessText = secondsAgo < 60
-      ? `${secondsAgo}s ago`
-      : secondsAgo < 3600
-        ? `${Math.floor(secondsAgo / 60)}m ago`
-        : `${Math.floor(secondsAgo / 3600)}h ago`;
-
-    // GPS status banner - only show for offline/never connected (no technical messages)
-    const gpsWarningBanner = gpsInfo.status === "Never Connected"
-      ? `<div class="pp-popup-gps-warning">
-           <span class="pp-popup-gps-icon">${gpsInfo.icon}</span>
-           <span class="pp-popup-gps-text">No position data</span>
-         </div>`
-      : "";
-
-    // External power detection (voltage > 13V means charging/connected)
+    const acc = location?.accOn == null ? "—" : location.accOn ? "ON" : "OFF";
+    const accColor = location?.accOn ? "#16a34a" : "#6b7280";
+    const fix = !location ? "—" : location.valid ? "GPS" : t("fleet.cellFallback");
     const voltage = location?.voltageMv ?? device?.lastVoltageMv;
-    const externalPower = voltage && voltage > 13000 ? "Connected" : "Disconnected";
-    const gsmLevel = gsmToPercent(location?.gsmSignal ?? device?.lastGsmSignal) ?? 0;
+    const power = voltage != null ? `${(voltage / 1000).toFixed(1)} V` : "—";
+    const battery = formatBatteryPercent(voltage);
+    const mileage = location?.mileageMeters != null ? `${Math.round(location.mileageMeters / 1000).toLocaleString("en-US")} km` : "—";
+    const sats = location?.satellites != null ? String(location.satellites) : "—";
+    const lat = location?.latitude;
+    const lng = location?.longitude;
+    const hasPos = lat != null && lng != null;
+    const coords = hasPos ? `${lat.toFixed(6)}, ${lng.toFixed(6)}` : "—";
+    const address = hasPos ? addressCache.get(addressCacheKey(lat, lng)) ?? t("popup.loadingAddress") : "—";
+
+    const cell = (icon: string, label: string, value: string, color?: string) =>
+      `<div class="pp-card-cell">${icon}<div class="pp-card-cell-body"><div class="pp-card-cell-label">${label}</div><div class="pp-card-cell-value"${color ? ` style="color:${color}"` : ""}>${value}</div></div></div>`;
+    const action = (id: string, icon: string, label: string) =>
+      `<button type="button" class="pp-card-action" data-action="${id}" title="${label}">${icon}<span>${label}</span></button>`;
 
     return `
-      <div class="pp-popup">
-        <!-- GoMax-style header -->
-        <div class="pp-popup-header">
-          <div class="pp-popup-title">
-            <span class="pp-popup-dot" style="background: ${statusColor};"></span>
-            <span class="pp-popup-name">${name}</span>
-            <span class="pp-popup-badge" style="background: ${statusColor}; color: white;">${status}</span>
-          </div>
+      <div class="pp-card">
+        <div class="pp-card-head">
+          <span class="pp-card-name" title="${name}">${name}</span>
+          <button type="button" class="pp-card-edit" data-action="edit" title="${t("act.edit")}">${ICON.pencil}</button>
         </div>
-
-        ${gpsWarningBanner}
-
-        <!-- GoMax-style simple rows -->
-        <div class="pp-popup-rows">
-          <div class="pp-popup-item">
-            <span class="pp-popup-label">Speed</span>
-            <span class="pp-popup-value">${speed} km/h</span>
-          </div>
-          <div class="pp-popup-item">
-            <span class="pp-popup-label">Status</span>
-            <span class="pp-popup-value" style="color: ${statusColor};">${statusWithDuration}</span>
-          </div>
-          <div class="pp-popup-item">
-            <span class="pp-popup-label">ACC</span>
-            <span class="pp-popup-value" style="color: ${accStatus === 'ON' ? '#16A34A' : accStatus === 'OFF' ? '#EF4444' : '#6b7280'};">${accStatus === 'ON' ? 'On' : accStatus === 'OFF' ? 'Off' : '—'}</span>
-          </div>
-          <div class="pp-popup-item">
-            <span class="pp-popup-label">Battery</span>
-            <span class="pp-popup-value">${formatBatteryPercent(voltage)}</span>
-          </div>
-          <div class="pp-popup-item">
-            <span class="pp-popup-label">External Power</span>
-            <span class="pp-popup-value" style="color: ${externalPower === 'Connected' ? '#16A34A' : '#6b7280'};">${externalPower}</span>
-          </div>
-          <div class="pp-popup-item">
-            <span class="pp-popup-label">Last Update</span>
-            <span class="pp-popup-value">${dateTime}</span>
-          </div>
-          <div class="pp-popup-item pp-popup-item-full">
-            <span class="pp-popup-label">Address</span>
-            <span class="pp-popup-value pp-popup-address" data-lat="${lat}" data-lng="${lng}" data-imei="${device?.imei || ''}">${cachedAddress || "Loading..."}</span>
-          </div>
+        <div class="pp-card-status">
+          <span class="pp-card-imei">${imei}</span>
+          <span class="pp-card-state" style="color:${stateColor}">${esc(statusLine)}</span>
+          <span class="pp-card-dot" style="background:${stateColor}"></span>
         </div>
-
-        <!-- Action button -->
-        <button class="pp-popup-live-btn" data-imei="${device?.imei || ''}" onclick="window.dispatchEvent(new CustomEvent('openLiveTracking', {detail: '${device?.imei || ''}'}))">
-          Live Tracking
-        </button>
-      </div>
-    `;
-  }, [speedLimits]);
+        <div class="pp-card-grid">
+          ${cell(ICON.user, t("popup.driver"), "—")}
+          ${cell(ICON.key, t("popup.acc"), acc, accColor)}
+          ${cell(ICON.clock, t("popup.gpsTime"), formatDateTime(location?.ts))}
+          ${cell(ICON.signal, t("popup.fix"), fix)}
+          ${cell(ICON.plug, t("popup.power"), power)}
+          ${cell(ICON.battery, t("popup.battery"), battery)}
+          ${cell(ICON.road, t("popup.mileage"), mileage)}
+          ${cell(ICON.sat, t("popup.satellites"), sats)}
+        </div>
+        <div class="pp-card-row">${ICON.globe}<span class="pp-card-coords">${coords}</span></div>
+        <div class="pp-card-row pp-card-addr">${ICON.pin}<span class="pp-card-address-text" data-lat="${hasPos ? lat : ""}" data-lng="${hasPos ? lng : ""}">${esc(address)}</span></div>
+        <div class="pp-card-actions">
+          ${action("playback", ICON.history, t("act.playback"))}
+          ${action("live", ICON.live, t("act.live"))}
+          ${action("navigate", ICON.navigate, t("act.navigate"))}
+          ${action("geofence", ICON.fence, t("act.geofence"))}
+          ${action("streetview", ICON.street, t("act.streetView"))}
+          ${action("command", ICON.terminal, t("act.command"))}
+          ${action("share", ICON.share, t("act.share"))}
+          ${action("details", ICON.doc, t("act.details"))}
+        </div>
+      </div>`;
+  }, [speedLimits, t]);
 
   // Init map once
   useEffect(() => {
@@ -668,6 +711,9 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
     });
 
     mapRef.current = map;
+    // markercluster (re)attaches markers on moveend, after zoomend — run the
+    // label pass on both so freshly attached tooltips honour the zoom rule.
+    map.on("zoomend moveend", applyLabelVisibility);
 
     // Initialize marker cluster group (ADL-style grouping)
     const clusterGroup = L.markerClusterGroup({
@@ -695,6 +741,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
       },
     });
     clusterGroup.addTo(map);
+    clusterGroup.on("animationend", applyLabelVisibility);
     clusterGroupRef.current = clusterGroup;
 
     // Force map to recalculate size after a brief delay (container may not have final dimensions yet)
@@ -715,10 +762,13 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
       clusterGroupRef.current = null;
       for (const marker of markersRef.current.values()) marker.remove();
       markersRef.current.clear();
+      iconStateRef.current.clear();
+      // A new map instance (StrictMode double-mount, remount) must fit the fleet again.
+      initialFitDoneRef.current = false;
       map.remove();
       mapRef.current = null;
     };
-  }, []);
+  }, [applyLabelVisibility]);
 
   // Base layer (all 5 types). Owns the tile layer so the dropdown can swap it;
   // runs on mount to create the initial layer too.
@@ -803,7 +853,12 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
     } else {
       const bounds = expandBounds(pts, 0.005);
       if (bounds) {
-        map.fitBounds(bounds, { padding: [60, 60], maxZoom: optimalZoom, animate: true });
+        map.fitBounds(bounds, {
+          paddingTopLeft: [leftInsetRef.current + 40, 70],
+          paddingBottomRight: [40, 60],
+          maxZoom: optimalZoom,
+          animate: true,
+        });
       }
     }
   }, [locations]);
@@ -852,15 +907,15 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
         const icon = createVehicleIcon(device?.vehicleType, bodyColor, course, isSelected, isOverspeed, noFix, isMoving, isStale, justUpdated, filterSpeed(loc.speed, loc.valid));
         marker = L.marker([loc.latitude, loc.longitude], { icon })
           .bindPopup(createPopupContent(device, loc), {
-            maxWidth: 320,
+            maxWidth: 380,
             className: 'pp-popup-container',
-            autoPanPaddingTopLeft: L.point(60, 60), // Account for left toolbar
-            autoPanPaddingBottomRight: L.point(20, 100), // Account for bottom controls
+            autoPanPaddingTopLeft: L.point(leftInsetRef.current + 20, 70),
+            autoPanPaddingBottomRight: L.point(20, 40),
           })
           .bindTooltip(plateLabelHtml(device, loc, color), {
-            permanent: true,  // Always show vehicle name/speed label
+            permanent: true,
             direction: 'top',
-            offset: [0, -20],  // Position label above the vehicle icon
+            offset: [0, -14],
             className: 'pp-plate-tooltip',
           });
 
@@ -875,39 +930,20 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           onSelect(imei);
         });
 
-        // Fetch address when popup opens (lazy loading, cached)
         const currentMarker = marker; // Capture for closure
-        const fetchPopupAddress = () => {
+        currentMarker.on('popupopen', () => {
           const popup = currentMarker.getPopup();
-          if (!popup) return;
-          const container = popup.getElement();
-          if (!container) return;
-          const addressEl = container.querySelector('.pp-popup-address') as HTMLElement;
-          if (!addressEl) return;
-
-          const popupLat = parseFloat(addressEl.dataset.lat || "0");
-          const popupLng = parseFloat(addressEl.dataset.lng || "0");
-          if (popupLat === 0 && popupLng === 0) {
-            addressEl.textContent = "Unknown";
-            return;
+          if (popup) {
+            // Pan into view once on open; content refreshes every few seconds
+            // must not yank the map around while the user reads the card.
+            window.setTimeout(() => { popup.options.autoPan = false; }, 400);
           }
-
-          // Check cache first for instant display
-          const key = addressCacheKey(popupLat, popupLng);
-          if (addressCache.has(key)) {
-            addressEl.textContent = addressCache.get(key)!;
-          } else if (addressEl.textContent === "Loading...") {
-            // Only fetch if not already showing an address
-            reverseGeocode(popupLat, popupLng).then(address => {
-              // Re-check the element still exists and needs update
-              const currentEl = container.querySelector('.pp-popup-address') as HTMLElement;
-              if (currentEl && currentEl.textContent === "Loading...") {
-                currentEl.textContent = address;
-              }
-            });
-          }
-        };
-        currentMarker.on('popupopen', fetchPopupAddress);
+          refreshPopupDom(currentMarker, imei);
+        });
+        currentMarker.on('popupclose', () => {
+          const popup = currentMarker.getPopup();
+          if (popup) popup.options.autoPan = true;
+        });
 
         markersRef.current.set(imei, marker);
         iconStateRef.current.set(imei, iconStateKey);
@@ -921,34 +957,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
         }
         marker.setPopupContent(createPopupContent(device, loc));
         marker.setTooltipContent(plateLabelHtml(device, loc, color));
-
-        // If popup is open, trigger address fetch for the updated content
-        if (marker.isPopupOpen()) {
-          const popup = marker.getPopup();
-          if (popup) {
-            const container = popup.getElement();
-            if (container) {
-              const addressEl = container.querySelector('.pp-popup-address') as HTMLElement;
-              if (addressEl && addressEl.textContent === "Loading...") {
-                const popupLat = parseFloat(addressEl.dataset.lat || "0");
-                const popupLng = parseFloat(addressEl.dataset.lng || "0");
-                if (popupLat !== 0 || popupLng !== 0) {
-                  const key = addressCacheKey(popupLat, popupLng);
-                  if (addressCache.has(key)) {
-                    addressEl.textContent = addressCache.get(key)!;
-                  } else {
-                    reverseGeocode(popupLat, popupLng).then(address => {
-                      const currentEl = container.querySelector('.pp-popup-address') as HTMLElement;
-                      if (currentEl && currentEl.textContent === "Loading...") {
-                        currentEl.textContent = address;
-                      }
-                    });
-                  }
-                }
-              }
-            }
-          }
-        }
+        if (marker.isPopupOpen()) refreshPopupDom(marker, imei);
 
         // Update position - CSS transition will animate smoothly
         const currentLatLng = marker.getLatLng();
@@ -994,6 +1003,8 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
       }
     }
 
+    applyLabelVisibility();
+
     // First-load fit-to-bounds — dynamically zoom based on vehicle spread
     if (!initialFitDoneRef.current && locations.size > 0) {
       const pts: Array<[number, number]> = [];
@@ -1009,12 +1020,16 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
         // Multiple vehicles: fit bounds with dynamic maxZoom
         const bounds = expandBounds(pts, 0.005); // smaller padding for tighter fit
         if (bounds) {
-          map.fitBounds(bounds, { padding: [60, 60], maxZoom: optimalZoom });
+          map.fitBounds(bounds, {
+            paddingTopLeft: [leftInsetRef.current + 40, 70],
+            paddingBottomRight: [40, 60],
+            maxZoom: optimalZoom,
+          });
         }
       }
       initialFitDoneRef.current = true;
     }
-  }, [locations, deviceByImei, selectedImei, onSelect, createPopupContent, speedLimits, autoFollow]);
+  }, [locations, deviceByImei, selectedImei, onSelect, createPopupContent, speedLimits, autoFollow, applyLabelVisibility, refreshPopupDom]);
 
   // Keep locationsRef in sync with state (doesn't trigger animation restart)
   useEffect(() => {
@@ -1280,43 +1295,47 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
   // Track previous selection to avoid re-opening popup on refresh
   const prevSelectedImeiRef = useRef<string | null>(null);
 
-  // Pan to selection (just pan to marker, no popup - user can click marker to see popup)
+  // Selection (list row, marker click, top-bar search): bring the vehicle into
+  // view and open its card — like ADL. Only runs when the selection changes,
+  // never on the periodic position refresh.
   useEffect(() => {
     if (!selectedImei) {
       prevSelectedImeiRef.current = null;
+      applyLabelVisibility();
       return;
     }
     const map = mapRef.current;
     const loc = locations.get(selectedImei);
-    if (map && loc) {
-      // Only pan if selection changed (not on every refresh)
-      const selectionChanged = prevSelectedImeiRef.current !== selectedImei;
-      if (selectionChanged) {
-        map.setView([loc.latitude, loc.longitude], Math.max(map.getZoom(), 14), { animate: true });
-        prevSelectedImeiRef.current = selectedImei;
+    const marker = markersRef.current.get(selectedImei);
+    if (map && loc && prevSelectedImeiRef.current !== selectedImei) {
+      prevSelectedImeiRef.current = selectedImei;
+      const point = L.latLng(loc.latitude, loc.longitude);
+      if (map.getZoom() < LABEL_MIN_ZOOM) {
+        map.setView(point, 15, { animate: true });
+      } else if (!map.getBounds().pad(-0.15).contains(point)) {
+        map.panTo(point, { animate: true });
+      }
+      if (marker) {
+        const cluster = clusterGroupRef.current;
+        if (cluster) cluster.zoomToShowLayer(marker, () => marker.openPopup());
+        else marker.openPopup();
       }
     }
-  }, [selectedImei, locations]);
+    applyLabelVisibility();
+  }, [selectedImei, locations, applyLabelVisibility]);
 
   return (
     <div className="relative h-full w-full" style={{ minHeight: "400px" }}>
       <div ref={containerRef} className="absolute inset-0" style={{ width: "100%", height: "100%" }} />
 
-      {/* Batch update countdown (top-left, above toolbar) */}
-      {lastRefreshAt && (
-        <div className="absolute left-3 top-3 z-[1000]">
-          <BatchCountdown lastRefreshAt={lastRefreshAt} />
-        </div>
-      )}
-
-      {/* Map toolbar (top-left) — zoom, measure, fit all, locate */}
+      {/* Map toolbar (right edge, below the layer controls) — zoom, measure, fit all, locate */}
       <MapToolbar
         map={mapRef.current}
         onFitAll={handleFitAll}
         onLocate={handleLocate}
         locating={locating}
         disabled={locations.size === 0}
-        className={lastRefreshAt ? "top-10" : "top-3"}
+        className="right-3 top-14"
       />
 
       {/* Address search (top-left, beside toolbar when enabled) - Glassy */}
@@ -1369,7 +1388,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
         </div>
       )}
 
-      {/* Map controls (top-right) — Layer dropdown + Show Traffic + Auto-follow - Glassy */}
+      {/* Map controls (top-right) — Auto-follow + Traffic + Layer dropdown */}
       <div className="absolute right-3 top-3 z-[1000] flex items-center gap-2">
         {/* Auto-follow toggle - only show when a vehicle is selected */}
         {selectedImei && (
@@ -1412,8 +1431,11 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
         />
       </div>
 
-      {/* Global data freshness indicator (bottom-left) */}
-      <GlobalFreshnessIndicator locations={locations} deviceByImei={deviceByImei} lastRefreshAt={lastRefreshAt} />
+      {/* Bottom-right status row: refresh countdown + global data freshness */}
+      <div className="absolute bottom-6 right-16 z-[1000] flex items-center gap-2">
+        {lastRefreshAt && <BatchCountdown lastRefreshAt={lastRefreshAt} />}
+        <GlobalFreshnessIndicator locations={locations} deviceByImei={deviceByImei} lastRefreshAt={lastRefreshAt} />
+      </div>
 
       {/* Refresh button (bottom-right) - Glassy */}
       <div className="absolute bottom-6 right-3 z-[1000]">
@@ -1447,7 +1469,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           will-change: transform;
         }
         .pp-vehicle-icon.pp-selected {
-          filter: drop-shadow(0 0 6px #e8900a);
+          filter: drop-shadow(0 0 6px #17a2b8);
           z-index: 1000 !important;
         }
         /* Overspeed: red marker that blinks until speed drops below the rule threshold */
@@ -1553,7 +1575,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           border: 3px solid #fff;
           box-shadow: 0 0 0 2px rgba(232, 144, 10, 0.45);
         }
-        /* Compact plate + speed label - Glassy style */
+        /* Compact plate label: light pill with a state-colored edge */
         .pp-plate-tooltip {
           background: transparent !important;
           border: none !important;
@@ -1566,72 +1588,41 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
         .pp-label {
           display: inline-flex;
           align-items: center;
-          gap: 0;
-          background: rgba(15, 39, 66, 0.85);
-          backdrop-filter: blur(8px);
-          -webkit-backdrop-filter: blur(8px);
-          border: 1px solid rgba(100, 116, 139, 0.2);
-          border-radius: 8px;
+          background: rgba(255, 255, 255, 0.96);
+          border: 1px solid rgba(15, 23, 42, 0.12);
+          border-left: 3px solid var(--state-color);
+          border-radius: 5px;
+          box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
           overflow: hidden;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
           white-space: nowrap;
         }
         .pp-label-name {
-          color: #fff;
+          color: #1f2937;
           font-family: 'Inter', -apple-system, sans-serif;
           font-size: 10px;
           font-weight: 600;
-          padding: 4px 8px;
-          background: var(--state-color);
-          border-right: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .pp-label-speed {
-          color: #e2e8f0;
-          font-family: 'JetBrains Mono', monospace;
-          font-size: 9px;
-          font-weight: 500;
+          line-height: 1;
           padding: 4px 6px;
         }
-        /* GPS warning indicator in plate label */
+        .pp-label-speed {
+          color: #fff;
+          background: var(--state-color);
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 9px;
+          font-weight: 600;
+          line-height: 1;
+          padding: 4px 5px;
+        }
+        .pp-label-speed::after {
+          content: ' km/h';
+          font-weight: 500;
+          opacity: 0.85;
+        }
         .pp-label-gps {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 18px;
-          height: 100%;
-          min-height: 22px;
-          font-size: 10px;
-          color: white;
-          border-right: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .pp-label-warning {
-          border: 1px solid rgba(245, 158, 11, 0.5);
-        }
-        /* Freshness indicator in label */
-        .pp-label-freshness {
           display: inline-flex;
           align-items: center;
-          gap: 2px;
-          font-size: 8px;
-          font-weight: 600;
-          padding: 2px 4px;
-          border-radius: 4px;
-          white-space: nowrap;
-          transition: background 0.3s ease;
-        }
-        /* Pulse animation when data just arrived */
-        .pp-label-pulse {
-          animation: pp-freshness-pulse 0.8s ease-out;
-        }
-        @keyframes pp-freshness-pulse {
-          0% {
-            transform: scale(1.2);
-            box-shadow: 0 0 8px currentColor;
-          }
-          100% {
-            transform: scale(1);
-            box-shadow: none;
-          }
+          padding: 0 5px;
+          font-size: 10px;
         }
         /* Just updated vehicle marker - bright glow pulse */
         .pp-vehicle-icon.pp-just-updated {
@@ -1668,27 +1659,26 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           }
         }
 
-        /* Popup styles - GoMax-style clean white/light theme */
+        /* Popup card (ADL-style) */
         .pp-popup-container .leaflet-popup-content-wrapper {
           background: #ffffff;
           border: 1px solid #e5e7eb;
-          border-radius: 8px;
+          border-radius: 10px;
           padding: 0;
-          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15),
-                      0 2px 4px rgba(0, 0, 0, 0.08);
-          max-width: 320px;
+          box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18), 0 2px 6px rgba(0, 0, 0, 0.08);
           overflow: hidden;
         }
         .pp-popup-container .leaflet-popup-content {
           margin: 0;
-          width: 100% !important;
+          width: auto !important;
         }
         .pp-popup-container .leaflet-popup-close-button {
           color: #6b7280 !important;
           font-size: 18px;
-          padding: 6px 10px;
-          right: 4px;
-          top: 4px;
+          width: 26px;
+          height: 26px;
+          right: 6px;
+          top: 6px;
           border-radius: 6px;
           transition: all 0.2s ease;
         }
@@ -1698,152 +1688,163 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
         }
         .pp-popup-container .leaflet-popup-tip {
           background: #ffffff;
-          border: 1px solid #e5e7eb;
           box-shadow: none;
         }
-        /* GoMax-style popup */
-        .pp-popup {
+        .pp-card {
+          width: 352px;
           font-family: 'Inter', -apple-system, sans-serif;
-          min-width: 260px;
-          max-width: 300px;
+          color: #1f2937;
         }
-        .pp-popup-header {
-          padding: 10px 12px;
-          background: #f8fafc;
-          border-bottom: 1px solid #e5e7eb;
-        }
-        .pp-popup-title {
+        .pp-card-head {
           display: flex;
           align-items: center;
-          gap: 8px;
+          gap: 6px;
+          padding: 10px 36px 0 14px;
         }
-        .pp-popup-dot {
-          width: 10px;
-          height: 10px;
-          border-radius: 50%;
-          flex-shrink: 0;
-        }
-        .pp-popup-name {
+        .pp-card-name {
           font-size: 14px;
-          font-weight: 600;
-          color: #1f2937;
-          flex: 1;
+          font-weight: 700;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
         }
-        .pp-popup-badge {
-          font-size: 10px;
-          font-weight: 600;
-          padding: 2px 8px;
-          border-radius: 10px;
-          text-transform: capitalize;
-        }
-        /* GPS warning banner */
-        .pp-popup-gps-warning {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          padding: 6px 12px;
-          font-size: 11px;
-          background: #fef3c7;
-          color: #92400e;
-        }
-        .pp-popup-gps-icon {
-          font-size: 12px;
-        }
-        .pp-popup-gps-text {
-          flex: 1;
-        }
-        /* GoMax-style simple rows */
-        .pp-popup-rows {
-          padding: 8px 0;
-          background: #ffffff;
-        }
-        .pp-popup-item {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 5px 12px;
-          border-bottom: 1px solid #f3f4f6;
-        }
-        .pp-popup-item:last-child {
-          border-bottom: none;
-        }
-        .pp-popup-item-full {
-          flex-direction: column;
-          align-items: flex-start;
-          gap: 2px;
-        }
-        .pp-popup-label {
-          font-size: 12px;
-          color: #6b7280;
-        }
-        .pp-popup-value {
-          font-size: 12px;
-          color: #1f2937;
-          font-weight: 500;
-          text-align: right;
-        }
-        .pp-popup-item-full .pp-popup-value {
-          text-align: left;
-          width: 100%;
-        }
-        .pp-popup-address {
-          font-size: 11px;
-          color: #6b7280;
-          line-height: 1.3;
-          word-wrap: break-word;
-        }
-        /* Live Tracking Button */
-        .pp-popup-live-btn {
-          display: block;
-          width: calc(100% - 24px);
-          margin: 8px 12px 12px;
-          padding: 8px 16px;
-          background: #16a34a;
-          border: none;
-          border-radius: 6px;
-          color: #fff;
-          font-size: 12px;
-          font-weight: 600;
-          text-align: center;
+        .pp-card-edit {
+          display: inline-flex;
+          border: 0;
+          background: none;
+          color: #9ca3af;
           cursor: pointer;
-          transition: background 0.2s;
+          padding: 2px;
+          border-radius: 4px;
         }
-        .pp-popup-live-btn:hover {
-          background: #15803d;
+        .pp-card-edit:hover {
+          color: #17a2b8;
+          background: #e6f7fa;
+        }
+        .pp-card-status {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 4px 14px 8px;
+          border-bottom: 1px solid #f1f5f9;
+        }
+        .pp-card-imei {
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 11px;
+          font-weight: 600;
+          color: #374151;
+        }
+        .pp-card-state {
+          margin-left: auto;
+          font-size: 11.5px;
+          font-weight: 600;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .pp-card-dot {
+          width: 9px;
+          height: 9px;
+          border-radius: 50%;
+          flex-shrink: 0;
+          box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9);
+        }
+        .pp-card-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 6px 10px;
+          padding: 10px 14px 6px;
+        }
+        .pp-card-cell {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          min-width: 0;
+        }
+        .pp-card-cell > svg {
+          flex-shrink: 0;
+          color: #94a3b8;
+        }
+        .pp-card-cell-body {
+          min-width: 0;
+        }
+        .pp-card-cell-label {
+          font-size: 9.5px;
+          text-transform: uppercase;
+          letter-spacing: 0.03em;
+          color: #9ca3af;
+          line-height: 1.1;
+        }
+        .pp-card-cell-value {
+          font-size: 12px;
+          font-weight: 600;
+          color: #1f2937;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          line-height: 1.3;
+        }
+        .pp-card-row {
+          display: flex;
+          align-items: flex-start;
+          gap: 8px;
+          padding: 4px 14px;
+          font-size: 11px;
+          color: #4b5563;
+        }
+        .pp-card-row > svg {
+          flex-shrink: 0;
+          color: #94a3b8;
+          margin-top: 1px;
+        }
+        .pp-card-coords {
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 11px;
+        }
+        .pp-card-addr {
+          padding-bottom: 8px;
+          line-height: 1.35;
+        }
+        .pp-card-actions {
+          display: flex;
+          border-top: 1px solid #e5e7eb;
+          background: #f8fafc;
+        }
+        .pp-card-action {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 3px;
+          padding: 8px 0 7px;
+          border: 0;
+          background: none;
+          color: #475569;
+          cursor: pointer;
+          font-family: 'Inter', -apple-system, sans-serif;
+          font-size: 9px;
+          font-weight: 500;
+          transition: background 0.15s, color 0.15s;
+        }
+        .pp-card-action > svg {
+          width: 16px;
+          height: 16px;
+        }
+        .pp-card-action:hover {
+          background: #e6f7fa;
+          color: #0f7e91;
+        }
+        .pp-card-action + .pp-card-action {
+          border-left: 1px solid #eef2f7;
         }
 
         /* Mobile responsive */
         @media (max-width: 640px) {
-          .pp-popup-container .leaflet-popup-content-wrapper {
-            max-width: 260px;
+          .pp-card {
+            width: min(352px, 86vw);
           }
-          .pp-popup {
-            min-width: 220px;
-          }
-          .pp-popup-header {
-            padding: 8px 10px;
-          }
-          .pp-popup-name {
-            font-size: 12px;
-          }
-          .pp-popup-badge {
-            font-size: 9px;
-            padding: 2px 6px;
-          }
-          .pp-popup-item {
-            padding: 4px 10px;
-          }
-          .pp-popup-label,
-          .pp-popup-value {
-            font-size: 11px;
-          }
-          .pp-popup-live-btn {
-            margin: 6px 10px 10px;
-            padding: 8px 12px;
-            font-size: 11px;
+          .pp-card-action > span {
+            display: none;
           }
         }
       `}</style>

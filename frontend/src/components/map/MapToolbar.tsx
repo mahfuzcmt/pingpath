@@ -9,7 +9,7 @@ interface MapToolbarProps {
   onLocate: () => void;
   locating: boolean;
   disabled?: boolean;
-  /** Additional class name for positioning (e.g., 'top-14' to offset from countdown) */
+  /** Positioning classes (e.g. 'right-3 top-14'); defaults to the top-left corner. */
   className?: string;
 }
 
@@ -131,7 +131,7 @@ export function MapToolbar({ map, onFitAll, onLocate, locating, disabled, classN
     "flex h-9 w-9 items-center justify-center rounded-mkt border border-brand-400/50 bg-brand-50/90 text-brand-600 shadow-glass backdrop-blur-md transition";
 
   return (
-    <div className={`absolute left-3 z-[1000] flex flex-col gap-1.5 ${className ?? "top-3"}`}>
+    <div className={`absolute z-[1000] flex flex-col gap-1.5 ${className ?? "left-3 top-3"}`}>
       {/* Zoom In */}
       <button
         type="button"
