@@ -1,19 +1,17 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { logout } from "@/lib/auth";
-import { api } from "@/lib/api";
-import { useLocale } from "@/lib/i18n";
-import { vehicleState, VEHICLE_STATE_COLOR } from "@/lib/format";
 import { LanguageToggle } from "./LanguageToggle";
 import { NotificationDropdown } from "./NotificationDropdown";
-import type { DeviceView, UserView } from "@/types/domain";
+import type { UserView } from "@/types/domain";
 
 /**
- * ADL-style top bar: global vehicle search on the left, brand + live pill in
- * the centre, notifications / language / user / settings on the right.
+ * ADL-style top bar: brand + live status on the left, notifications /
+ * language / user / settings on the right. Vehicle search lives in the
+ * dashboard's vehicle panel, not here.
  */
 export function Topbar({ user }: { user: UserView; orgId: string }) {
   const router = useRouter();
@@ -26,13 +24,8 @@ export function Topbar({ user }: { user: UserView; orgId: string }) {
 
   return (
     <header className="z-[2100] flex h-[52px] shrink-0 items-center border-b border-surface-300 bg-white px-4">
-      {/* Left: global vehicle search */}
-      <div className="flex flex-1 items-center">
-        <VehicleSearch />
-      </div>
-
-      {/* Center: brand + live status */}
-      <div className="flex items-center gap-3">
+      {/* Left: brand + live status */}
+      <div className="flex flex-1 items-center gap-3">
         <Link href="/dashboard" className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-500">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -41,7 +34,7 @@ export function Topbar({ user }: { user: UserView; orgId: string }) {
               <path d="M2 12l10 5 10-5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </div>
-          <span className="hidden text-lg font-bold text-ink-900 md:block">
+          <span className="text-lg font-bold text-ink-900">
             <span className="text-brand-500">Moto</span>Link
           </span>
         </Link>
@@ -55,11 +48,11 @@ export function Topbar({ user }: { user: UserView; orgId: string }) {
       </div>
 
       {/* Right: controls */}
-      <div className="flex flex-1 items-center justify-end gap-2">
+      <div className="flex items-center justify-end gap-2">
         <NotificationDropdown />
         <LanguageToggle />
 
-        <div className="mx-1 h-5 w-px bg-gray-200" />
+        <div className="mx-1 h-5 w-px bg-surface-300" />
 
         <div className="flex items-center gap-2">
           <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-brand-700 text-xs font-semibold text-white">
@@ -74,7 +67,7 @@ export function Topbar({ user }: { user: UserView; orgId: string }) {
           <button
             type="button"
             onClick={() => setShowSettingsMenu(!showSettingsMenu)}
-            className="flex h-8 w-8 items-center justify-center rounded-md text-ink-500 hover:bg-gray-100"
+            className="flex h-8 w-8 items-center justify-center rounded-md text-ink-500 hover:bg-surface-100"
             aria-label="Account menu"
             aria-expanded={showSettingsMenu}
           >
@@ -87,10 +80,10 @@ export function Topbar({ user }: { user: UserView; orgId: string }) {
           {showSettingsMenu && (
             <>
               <div className="fixed inset-0 z-40" onClick={() => setShowSettingsMenu(false)} />
-              <div className="absolute right-0 top-full z-50 mt-1 w-52 rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
+              <div className="absolute right-0 top-full z-50 mt-1 w-52 rounded-lg border border-surface-300 bg-white py-1 shadow-lg">
                 <Link
                   href="/dashboard/settings"
-                  className="flex items-center gap-2.5 px-4 py-2 text-sm text-ink-700 hover:bg-gray-50"
+                  className="flex items-center gap-2.5 px-4 py-2 text-sm text-ink-700 hover:bg-surface-50"
                   onClick={() => setShowSettingsMenu(false)}
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -99,7 +92,7 @@ export function Topbar({ user }: { user: UserView; orgId: string }) {
                   </svg>
                   System Configuration
                 </Link>
-                <div className="my-1 border-t border-gray-100" />
+                <div className="my-1 border-t border-surface-200" />
                 <button
                   onClick={onSignOut}
                   className="flex w-full items-center gap-2.5 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
@@ -116,135 +109,5 @@ export function Topbar({ user }: { user: UserView; orgId: string }) {
         </div>
       </div>
     </header>
-  );
-}
-
-/* ── Global vehicle search ─────────────────────────────────────────── */
-
-const CACHE_TTL_MS = 60_000;
-const MAX_RESULTS = 8;
-
-function VehicleSearch() {
-  const { t } = useLocale();
-  const router = useRouter();
-  const pathname = usePathname();
-  const [q, setQ] = useState("");
-  const [open, setOpen] = useState(false);
-  const [devices, setDevices] = useState<DeviceView[]>([]);
-  const [active, setActive] = useState(0);
-  const fetchedAt = useRef(0);
-  const rootRef = useRef<HTMLDivElement>(null);
-
-  const ensureDevices = async () => {
-    if (Date.now() - fetchedAt.current < CACHE_TTL_MS) return;
-    fetchedAt.current = Date.now();
-    try {
-      const r = await api.get<DeviceView[]>("/devices");
-      setDevices(r.data);
-    } catch {
-      fetchedAt.current = 0;
-    }
-  };
-
-  useEffect(() => {
-    if (!open) return;
-    const onDown = (e: MouseEvent) => {
-      if (!rootRef.current?.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener("mousedown", onDown);
-    return () => document.removeEventListener("mousedown", onDown);
-  }, [open]);
-
-  const results = useMemo(() => {
-    const needle = q.trim().toLowerCase();
-    if (!needle) return [];
-    return devices
-      .filter(
-        (d) =>
-          d.imei.includes(needle) ||
-          (d.name?.toLowerCase().includes(needle) ?? false) ||
-          (d.vehiclePlate?.toLowerCase().includes(needle) ?? false) ||
-          (d.simMsisdn?.includes(needle) ?? false),
-      )
-      .slice(0, MAX_RESULTS);
-  }, [devices, q]);
-
-  useEffect(() => {
-    setActive(0);
-  }, [q]);
-
-  const pick = (d: DeviceView) => {
-    setOpen(false);
-    setQ("");
-    if (pathname === "/dashboard") {
-      window.dispatchEvent(new CustomEvent("focusVehicle", { detail: d.imei }));
-    } else {
-      router.push(`/dashboard?focus=${encodeURIComponent(d.imei)}`);
-    }
-  };
-
-  return (
-    <div ref={rootRef} className="relative w-full max-w-xs">
-      <input
-        type="search"
-        value={q}
-        placeholder={t("topbar.searchVehicles")}
-        onFocus={() => { setOpen(true); void ensureDevices(); }}
-        onChange={(e) => { setQ(e.target.value); setOpen(true); void ensureDevices(); }}
-        onKeyDown={(e) => {
-          if (e.key === "ArrowDown") { e.preventDefault(); setActive((i) => Math.min(i + 1, results.length - 1)); }
-          else if (e.key === "ArrowUp") { e.preventDefault(); setActive((i) => Math.max(i - 1, 0)); }
-          else if (e.key === "Enter" && results[active]) { e.preventDefault(); pick(results[active]); }
-          else if (e.key === "Escape") setOpen(false);
-        }}
-        className="h-8 w-full rounded-md border border-gray-200 bg-gray-50 pl-8 pr-3 text-sm text-ink-700 placeholder:text-ink-400 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-500/40"
-        role="combobox"
-        aria-expanded={open && q.trim() !== ""}
-        aria-controls="topbar-vehicle-results"
-        aria-autocomplete="list"
-      />
-      <svg
-        className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400"
-        fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"
-      >
-        <circle cx="11" cy="11" r="8" />
-        <path d="m21 21-4.3-4.3" />
-      </svg>
-
-      {open && q.trim() !== "" && (
-        <ul
-          id="topbar-vehicle-results"
-          role="listbox"
-          className="absolute left-0 right-0 top-full z-50 mt-1 max-h-80 overflow-y-auto rounded-md border border-gray-200 bg-white py-1 shadow-lg"
-        >
-          {results.length === 0 && (
-            <li className="px-3 py-2 text-sm text-ink-500">{t("topbar.noResults")}</li>
-          )}
-          {results.map((d, i) => {
-            const color = VEHICLE_STATE_COLOR[vehicleState(d)];
-            return (
-              <li key={d.imei} role="option" aria-selected={i === active}>
-                <button
-                  type="button"
-                  onMouseEnter={() => setActive(i)}
-                  onClick={() => pick(d)}
-                  className={`flex w-full items-center gap-2.5 px-3 py-1.5 text-left ${i === active ? "bg-gray-100" : "hover:bg-gray-50"}`}
-                >
-                  <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: color }} />
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-medium text-ink-800">
-                      {d.name || d.vehiclePlate || d.imei}
-                    </span>
-                    <span className="block truncate font-mono text-[11px] text-ink-500">
-                      {d.vehiclePlate ? `${d.vehiclePlate} · ` : ""}{d.imei}
-                    </span>
-                  </span>
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-    </div>
   );
 }

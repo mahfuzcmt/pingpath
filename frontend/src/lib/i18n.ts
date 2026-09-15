@@ -171,9 +171,6 @@ const STRINGS = {
   "cmd.reply": { en: "Device reply", bn: "ডিভাইসের উত্তর" },
   "cmd.sending": { en: "Sending…", bn: "পাঠানো হচ্ছে…" },
 
-  // ── Top bar ───────────────────────────────────────────────────────
-  "topbar.searchVehicles": { en: "Search vehicles…", bn: "যানবাহন খুঁজুন…" },
-  "topbar.noResults": { en: "No vehicles found", bn: "কোনো যানবাহন পাওয়া যায়নি" },
   "veh.edit": { en: "Edit vehicle", bn: "যানবাহন সম্পাদনা" },
   "veh.name": { en: "Name", bn: "নাম" },
   "veh.plate": { en: "Vehicle number", bn: "গাড়ির নম্বর" },
