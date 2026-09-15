@@ -7,8 +7,9 @@ import { useLocale, type StringKey } from "@/lib/i18n";
 import { useSession } from "@/lib/session-context";
 
 /**
- * ADL-style collapsible left sidebar navigation
- * Matches ADL Moto Viewer's design with icon-only collapsed state
+ * ADL-style two-panel sidebar navigation
+ * Left: Thin colored icon strip
+ * Right: White content panel with navigation items
  */
 
 interface NavSection {
@@ -16,6 +17,8 @@ interface NavSection {
   label: StringKey;
   icon: React.ReactNode;
   href?: string;
+  color: string;        // Icon strip background color
+  activeColor: string;  // Active state color
   children?: NavItem[];
   adminOnly?: boolean;
   superAdminOnly?: boolean;
@@ -35,11 +38,15 @@ const NAV_SECTIONS: NavSection[] = [
     label: "nav.monitor",
     icon: <MonitorIcon />,
     href: "/dashboard",
+    color: "#ef4444",      // Red like ADL
+    activeColor: "#dc2626",
   },
   {
     id: "statistics",
     label: "nav.statistics",
     icon: <StatisticsIcon />,
+    color: "#3b82f6",      // Blue like ADL
+    activeColor: "#2563eb",
     children: [
       { href: "/dashboard/home", label: "nav.home", icon: <HomeIcon /> },
       { href: "/dashboard/reports", label: "nav.reports", icon: <ReportIcon /> },
@@ -50,6 +57,8 @@ const NAV_SECTIONS: NavSection[] = [
     id: "manage",
     label: "nav.manage",
     icon: <ManageIcon />,
+    color: "#3b82f6",      // Blue like ADL
+    activeColor: "#2563eb",
     children: [
       { href: "/dashboard/devices", label: "nav.vehicles", icon: <DeviceIcon /> },
       { href: "/dashboard/drivers", label: "nav.drivers", icon: <DriverIcon /> },
@@ -66,6 +75,8 @@ const NAV_SECTIONS: NavSection[] = [
     label: "nav.customer",
     icon: <CustomerIcon />,
     href: "/dashboard/admin",
+    color: "#ec4899",      // Pink like ADL
+    activeColor: "#db2777",
     superAdminOnly: true,
   },
 ];
@@ -77,20 +88,28 @@ export function Sidebar() {
   const isAdmin = role === "ORG_ADMIN" || role === "SUPER_ADMIN";
   const isSuperAdmin = role === "SUPER_ADMIN";
 
-  // Collapsed state (icon-only)
-  const [collapsed, setCollapsed] = useState(false);
-  // Track expanded sections
+  // Which section is selected in the icon strip
+  const [activeSection, setActiveSection] = useState<string>("monitor");
+  // Track expanded sections in the content panel
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(["monitor"]));
+  // Collapsed state (icon-only mode)
+  const [collapsed, setCollapsed] = useState(false);
 
-  // Auto-expand section containing active route
+  // Auto-select section based on active route
   useEffect(() => {
     for (const section of NAV_SECTIONS) {
+      if (section.href && isActive(section.href)) {
+        setActiveSection(section.id);
+        break;
+      }
       if (section.children) {
         const hasActiveChild = section.children.some((item) =>
           item.href === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(item.href)
         );
         if (hasActiveChild) {
+          setActiveSection(section.id);
           setExpandedSections((prev) => new Set([...prev, section.id]));
+          break;
         }
       }
     }
@@ -125,136 +144,169 @@ export function Sidebar() {
       return true;
     });
 
-  return (
-    <aside
-      className={`relative z-[2000] flex h-full flex-col bg-[#1e2a3b] shadow-xl transition-all duration-300 ${
-        collapsed ? "w-[60px]" : "w-[220px]"
-      }`}
-    >
-      {/* Logo Section - ADL style dark header */}
-      <div className="flex h-[56px] shrink-0 items-center border-b border-white/10 px-3">
-        <Link href="/dashboard" className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-[#22c55e] to-[#16a34a]">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <path d="M12 2L2 7l10 5 10-5-10-5z" fill="white" opacity="0.9"/>
-              <path d="M2 17l10 5 10-5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M2 12l10 5 10-5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </div>
-          {!collapsed && (
-            <div className="flex flex-col">
-              <span className="text-[15px] font-semibold text-white">MotoLink</span>
-              <span className="text-[10px] text-gray-400">GPS Tracking</span>
-            </div>
-          )}
-        </Link>
-      </div>
+  const currentSection = NAV_SECTIONS.find((s) => s.id === activeSection);
 
-      {/* Navigation - ADL dark theme */}
-      <nav className="flex-1 overflow-y-auto px-2 py-3">
-        {filterSections(NAV_SECTIONS).map((section) => (
-          <div key={section.id} className="mb-1">
-            {section.href ? (
-              // Direct link section (no children)
-              <Link
-                href={section.href}
-                className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-[13px] font-medium transition-all ${
-                  isActive(section.href)
-                    ? "bg-[#22c55e] text-white shadow-lg shadow-green-500/20"
-                    : "text-gray-300 hover:bg-white/10 hover:text-white"
+  return (
+    <div className="relative z-[2000] flex h-full">
+      {/* Left Icon Strip - ADL style colored icons */}
+      <div className="flex w-[52px] flex-col bg-white border-r border-gray-200 shadow-sm">
+        {/* Logo */}
+        <div className="flex h-[56px] items-center justify-center border-b border-gray-100">
+          <Link href="/dashboard">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-[#22c55e] to-[#16a34a]">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path d="M12 2L2 7l10 5 10-5-10-5z" fill="white" opacity="0.9"/>
+                <path d="M2 17l10 5 10-5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M2 12l10 5 10-5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+          </Link>
+        </div>
+
+        {/* Icon Navigation */}
+        <nav className="flex-1 flex flex-col items-center py-2 gap-1">
+          {filterSections(NAV_SECTIONS).map((section) => {
+            const isCurrentSection = activeSection === section.id;
+            const hasActiveRoute = section.href
+              ? isActive(section.href)
+              : section.children?.some((c) => isActive(c.href));
+
+            return (
+              <button
+                key={section.id}
+                type="button"
+                onClick={() => {
+                  setActiveSection(section.id);
+                  if (section.href) {
+                    window.location.href = section.href;
+                  }
+                }}
+                className={`group relative flex h-10 w-10 items-center justify-center rounded-lg transition-all ${
+                  isCurrentSection || hasActiveRoute
+                    ? "text-white shadow-md"
+                    : "text-gray-500 hover:bg-gray-100"
                 }`}
-                title={collapsed ? t(section.label) : undefined}
+                style={{
+                  backgroundColor: isCurrentSection || hasActiveRoute ? section.color : undefined,
+                }}
+                title={t(section.label)}
               >
-                <span className={`flex-shrink-0 ${isActive(section.href) ? "text-white" : "text-gray-400"}`}>
+                <span className={isCurrentSection || hasActiveRoute ? "text-white" : ""}>
                   {section.icon}
                 </span>
-                {!collapsed && <span>{t(section.label)}</span>}
+                {/* Tooltip */}
+                <span className="absolute left-full ml-2 hidden whitespace-nowrap rounded bg-gray-800 px-2 py-1 text-xs text-white group-hover:block">
+                  {t(section.label)}
+                </span>
+              </button>
+            );
+          })}
+        </nav>
+
+        {/* Collapse Toggle */}
+        <div className="border-t border-gray-100 p-2">
+          <button
+            type="button"
+            onClick={() => setCollapsed(!collapsed)}
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 mx-auto"
+            title={collapsed ? "Expand" : "Collapse"}
+          >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              className={`transition-transform ${collapsed ? "rotate-180" : ""}`}
+            >
+              <polyline points="11 17 6 12 11 7" />
+              <polyline points="18 17 13 12 18 7" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      {/* Right Content Panel - White with navigation items */}
+      {!collapsed && (
+        <div className="w-[180px] flex flex-col bg-white border-r border-gray-200 shadow-sm">
+          {/* Section Header */}
+          <div
+            className="flex h-[56px] items-center px-4 border-b border-gray-100"
+            style={{
+              background: `linear-gradient(135deg, ${currentSection?.color}15 0%, ${currentSection?.color}05 100%)`,
+            }}
+          >
+            <span
+              className="text-[14px] font-semibold"
+              style={{ color: currentSection?.color }}
+            >
+              {currentSection ? t(currentSection.label) : ""}
+            </span>
+          </div>
+
+          {/* Navigation Items */}
+          <nav className="flex-1 overflow-y-auto p-2">
+            {currentSection?.href ? (
+              // Direct link section
+              <Link
+                href={currentSection.href}
+                className={`flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-[13px] font-medium transition-all ${
+                  isActive(currentSection.href)
+                    ? "text-white shadow-sm"
+                    : "text-gray-700 hover:bg-gray-100"
+                }`}
+                style={{
+                  backgroundColor: isActive(currentSection.href) ? currentSection.color : undefined,
+                }}
+              >
+                <span>{currentSection.icon}</span>
+                <span>{t(currentSection.label)}</span>
               </Link>
             ) : (
-              // Expandable section with children
-              <>
-                <button
-                  type="button"
-                  onClick={() => !collapsed && toggleSection(section.id)}
-                  className={`flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-[13px] font-medium transition-all ${
-                    expandedSections.has(section.id) && !collapsed
-                      ? "bg-white/10 text-white"
-                      : "text-gray-300 hover:bg-white/5 hover:text-white"
-                  }`}
-                  title={collapsed ? t(section.label) : undefined}
-                >
-                  <span className={`flex-shrink-0 ${expandedSections.has(section.id) ? "text-[#22c55e]" : "text-gray-400"}`}>
-                    {section.icon}
-                  </span>
-                  {!collapsed && (
-                    <>
-                      <span className="flex-1 text-left">{t(section.label)}</span>
-                      <svg
-                        width="12"
-                        height="12"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2.5"
-                        className={`text-gray-500 transition-transform ${expandedSections.has(section.id) ? "rotate-180" : ""}`}
-                      >
-                        <polyline points="6 9 12 15 18 9" />
-                      </svg>
-                    </>
-                  )}
-                </button>
-
-                {/* Children - ADL style submenu */}
-                {!collapsed && expandedSections.has(section.id) && (
-                  <div className="mt-1 ml-3 space-y-0.5 border-l border-white/10 pl-3">
-                    {filterItems(section.children).map((item) => (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        className={`flex items-center gap-2.5 rounded-md px-3 py-2 text-[12px] transition-all ${
-                          isActive(item.href)
-                            ? "bg-[#22c55e]/20 font-medium text-[#22c55e]"
-                            : "text-gray-400 hover:bg-white/5 hover:text-gray-200"
-                        }`}
-                      >
-                        <span className={`flex-shrink-0 ${isActive(item.href) ? "text-[#22c55e]" : "text-gray-500"}`}>
-                          {item.icon}
-                        </span>
-                        <span>{t(item.label)}</span>
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </>
+              // Section with children
+              <div className="space-y-1">
+                {filterItems(currentSection?.children).map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] transition-all ${
+                      isActive(item.href)
+                        ? "font-medium text-white shadow-sm"
+                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                    }`}
+                    style={{
+                      backgroundColor: isActive(item.href) ? currentSection?.color : undefined,
+                    }}
+                  >
+                    <span className={isActive(item.href) ? "text-white" : "text-gray-400"}>
+                      {item.icon}
+                    </span>
+                    <span>{t(item.label)}</span>
+                  </Link>
+                ))}
+              </div>
             )}
-          </div>
-        ))}
-      </nav>
+          </nav>
 
-      {/* Collapse Toggle - ADL style */}
-      <div className="border-t border-white/10 p-2">
-        <button
-          type="button"
-          onClick={() => setCollapsed(!collapsed)}
-          className="flex w-full items-center justify-center rounded-md py-2 text-gray-500 transition-colors hover:bg-white/10 hover:text-gray-300"
-          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-        >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            className={`transition-transform ${collapsed ? "rotate-180" : ""}`}
-          >
-            <polyline points="11 17 6 12 11 7" />
-            <polyline points="18 17 13 12 18 7" />
-          </svg>
-        </button>
-      </div>
-    </aside>
+          {/* Brand Footer */}
+          <div className="border-t border-gray-100 p-3">
+            <div className="flex items-center gap-2">
+              <div className="flex h-6 w-6 items-center justify-center rounded bg-gradient-to-br from-[#22c55e] to-[#16a34a]">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 2L2 7l10 5 10-5-10-5z" fill="white"/>
+                </svg>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[11px] font-semibold text-gray-800">MotoLink</span>
+                <span className="text-[9px] text-gray-400">GPS Tracking</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
