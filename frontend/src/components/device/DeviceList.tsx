@@ -3,7 +3,7 @@
 import { useMemo, useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale, type StringKey } from "@/lib/i18n";
-import { filterSpeed, formatSince, formatStopDuration, formatBatteryPercent, getBatteryColor, voltageToBatteryPercent, gsmBars, gsmToPercent, vehicleState, VEHICLE_STATE_COLOR, type VehicleState } from "@/lib/format";
+import { filterSpeed, formatSince, formatStopDuration, vehicleState, VEHICLE_STATE_COLOR, type VehicleState } from "@/lib/format";
 import { buildVehicleSvg } from "@/lib/vehicleIcons";
 import { useSpeedLimits } from "@/hooks/useSpeedLimits";
 import { useTicker } from "@/hooks/useTicker";
@@ -11,43 +11,6 @@ import type { DeviceView, LocationView } from "@/types/domain";
 import type { LiveLocationView } from "@/hooks/useLiveLocations";
 
 const OVERSPEED_COLOR = "#DC2626";
-
-/** Freshness thresholds in milliseconds for UI feedback */
-const FRESHNESS_LIVE_MS = 30 * 1000;    // 🟢 Live: < 30 seconds
-const FRESHNESS_STALE_MS = 60 * 1000;   // 🟡 Stale: 30-60 seconds
-
-type FreshnessStatus = "live" | "stale" | "no-signal";
-
-function getFreshnessStatus(location: LocationView | LiveLocationView | undefined): FreshnessStatus {
-  if (!location) return "no-signal";
-  // Use the actual GPS timestamp to calculate real data age
-  const gpsTime = new Date(location.ts).getTime();
-  const age = Date.now() - gpsTime;
-  if (age < FRESHNESS_LIVE_MS) return "live";
-  if (age < FRESHNESS_STALE_MS) return "stale";
-  return "no-signal";
-}
-
-function getSecondsSinceUpdate(location: LocationView | LiveLocationView | undefined): number {
-  if (!location) return 999;
-  // Use the actual GPS timestamp to show real data age
-  const gpsTime = new Date(location.ts).getTime();
-  return Math.floor((Date.now() - gpsTime) / 1000);
-}
-
-const FRESHNESS_CONFIG = {
-  live: { label: "Live", color: "#16A34A", icon: "🟢" },
-  stale: { label: "Stale", color: "#F59E0B", icon: "🟡" },
-  "no-signal": { label: "No Signal", color: "#DC2626", icon: "🔴" },
-} as const;
-
-interface DeviceListProps {
-  devices: DeviceView[];
-  locations: Map<string, LocationView | LiveLocationView>;
-  selectedImei: string | null;
-  onSelect: (imei: string | null) => void;
-  onViewHistory?: (imei: string) => void;
-}
 
 // 3-dot action menu dropdown
 function DeviceActionsMenu({
@@ -62,7 +25,6 @@ function DeviceActionsMenu({
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // Close menu when clicking outside
   useEffect(() => {
     if (!open) return;
     const handleClick = (e: MouseEvent) => {
@@ -83,18 +45,18 @@ function DeviceActionsMenu({
           e.preventDefault();
           setOpen(!open);
         }}
-        className="flex h-8 w-8 items-center justify-center rounded-lg text-ink-400 transition-all duration-150 hover:bg-white/60 hover:text-ink-700 active:scale-95 active:bg-brand-50 touch-manipulation"
+        className="flex h-6 w-6 items-center justify-center rounded text-[#7E8792] transition hover:bg-[#f0f0f0] hover:text-[#3D4353]"
         title="More actions"
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-          <circle cx="12" cy="5" r="2.5" />
-          <circle cx="12" cy="12" r="2.5" />
-          <circle cx="12" cy="19" r="2.5" />
+          <circle cx="12" cy="5" r="2" />
+          <circle cx="12" cy="12" r="2" />
+          <circle cx="12" cy="19" r="2" />
         </svg>
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full z-[100] mt-1 min-w-[160px] animate-in fade-in slide-in-from-top-1 duration-150 rounded-xl border border-white/40 bg-white py-1.5 shadow-xl">
+        <div className="absolute right-0 top-full z-[100] mt-1 min-w-[140px] rounded border border-[#dddddd] bg-white py-1 shadow-lg">
           <button
             type="button"
             onClick={(e) => {
@@ -103,9 +65,9 @@ function DeviceActionsMenu({
               setOpen(false);
               onEdit();
             }}
-            className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm text-ink-700 transition-colors hover:bg-brand-50 active:bg-brand-100 touch-manipulation"
+            className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] text-[#3D4353] transition hover:bg-[#f5f5f5]"
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
               <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
             </svg>
@@ -119,9 +81,9 @@ function DeviceActionsMenu({
               setOpen(false);
               onViewHistory();
             }}
-            className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm text-ink-700 transition-colors hover:bg-brand-50 active:bg-brand-100 touch-manipulation"
+            className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] text-[#3D4353] transition hover:bg-[#f5f5f5]"
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
             </svg>
             Route History
@@ -132,8 +94,6 @@ function DeviceActionsMenu({
   );
 }
 
-// Sidebar now uses the shared vehicleState() model (same as the Vehicles
-// screen and the map markers) instead of a private 4-state helper.
 type ChipId = VehicleState | "all";
 
 const STATE_LABEL: Record<VehicleState, StringKey> = {
@@ -145,68 +105,27 @@ const STATE_LABEL: Record<VehicleState, StringKey> = {
   nodata: "veh.nodata",
 };
 
-// Vehicle icon - uses same SVG as map markers for consistency
-function VehicleIcon({ type, color }: { type?: string | null; color: string }) {
-  // Use buildVehicleSvg (same as map markers) with size 24 for sidebar
+// Small vehicle icon for list (ADL style - small colored icon)
+function SmallVehicleIcon({ type, color }: { type?: string | null; color: string }) {
   const svg = buildVehicleSvg(type, color, 0, 20);
   return <span dangerouslySetInnerHTML={{ __html: svg }} style={{ display: 'inline-flex' }} />;
 }
 
-// Freshness indicator showing data recency
-function FreshnessIndicator({ location }: { location: LocationView | LiveLocationView | undefined }) {
-  const freshness = getFreshnessStatus(location);
-  const config = FRESHNESS_CONFIG[freshness];
-  const secondsAgo = getSecondsSinceUpdate(location);
-
-  const text = secondsAgo < 60
-    ? `${secondsAgo}s`
-    : secondsAgo < 3600
-      ? `${Math.floor(secondsAgo / 60)}m`
-      : "—";
-
-  return (
-    <span
-      className="inline-flex items-center gap-0.5 rounded px-1 py-0.5 text-[9px] font-semibold"
-      style={{
-        backgroundColor: `${config.color}15`,
-        color: config.color,
-      }}
-      title={`${config.label} - Updated ${text} ago`}
-    >
-      <span className="text-[8px]">{config.icon}</span>
-      <span>{text}</span>
-    </span>
-  );
-}
-
-// GSM signal strength icon — `bars` is 0-4 from gsmBars(device.lastGsmSignal).
-function SignalIcon({ bars, title }: { bars: number; title?: string }) {
-  return (
-    <svg width="14" height="12" viewBox="0 0 14 12" fill="none">
-      {title != null && <title>{title}</title>}
-      {[0, 1, 2, 3].map((i) => (
-        <rect
-          key={i}
-          x={i * 3.5}
-          y={9 - i * 2.5}
-          width="2.5"
-          height={3 + i * 2.5}
-          rx="0.5"
-          fill={i < bars ? "#4DA74D" : "#DDD"}
-        />
-      ))}
-    </svg>
-  );
+interface DeviceListProps {
+  devices: DeviceView[];
+  locations: Map<string, LocationView | LiveLocationView>;
+  selectedImei: string | null;
+  onSelect: (imei: string | null) => void;
+  onViewHistory?: (imei: string) => void;
 }
 
 export function DeviceList({ devices, locations, selectedImei, onSelect, onViewHistory }: DeviceListProps) {
   const router = useRouter();
-  const { t, locale } = useLocale();
+  const { t } = useLocale();
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<ChipId>("all");
-  const [checkedDevices, setCheckedDevices] = useState<Set<string>>(new Set());
+  const [selectedDevices, setSelectedDevices] = useState<Set<string>>(new Set());
   const speedLimits = useSpeedLimits();
-  // Force re-render every second to keep "since" times fresh
   useTicker(1000);
 
   const sorted = useMemo(() => {
@@ -226,7 +145,6 @@ export function DeviceList({ devices, locations, selectedImei, onSelect, onViewH
         return vehicleState(d, locations.get(d.imei)) === filter;
       })
       .sort((a, b) => {
-        // Overspeeding vehicles surface at the top of the list.
         const ao = over(a);
         const bo = over(b);
         if (ao !== bo) return ao ? -1 : 1;
@@ -248,224 +166,196 @@ export function DeviceList({ devices, locations, selectedImei, onSelect, onViewH
     return c;
   }, [devices, locations]);
 
-  const toggleCheck = (imei: string) => {
-    setCheckedDevices((prev) => {
-      const next = new Set(prev);
-      if (next.has(imei)) next.delete(imei);
-      else next.add(imei);
-      return next;
-    });
-  };
+  // Online count (moving + idle + stopped)
+  const onlineCount = counts.moving + counts.idle + counts.stopped;
+  const offlineCount = counts.offline + counts.expired + counts.nodata;
 
-  const toggleAll = () => {
-    if (checkedDevices.size === sorted.length) {
-      setCheckedDevices(new Set());
+  const toggleSelectAll = () => {
+    if (selectedDevices.size === sorted.length) {
+      setSelectedDevices(new Set());
     } else {
-      setCheckedDevices(new Set(sorted.map((d) => d.imei)));
+      setSelectedDevices(new Set(sorted.map(d => d.imei)));
     }
   };
 
-  const FILTERS: { id: ChipId; label: StringKey }[] = [
-    { id: "all", label: "veh.all" },
-    { id: "moving", label: "veh.moving" },
-    { id: "idle", label: "veh.idle" },
-    { id: "stopped", label: "veh.stopped" },
-    { id: "expired", label: "veh.expired" },
-    { id: "offline", label: "veh.offline" },
-    { id: "nodata", label: "veh.nodata" },
-  ];
+  const toggleDevice = (imei: string) => {
+    const next = new Set(selectedDevices);
+    if (next.has(imei)) {
+      next.delete(imei);
+    } else {
+      next.add(imei);
+    }
+    setSelectedDevices(next);
+  };
 
   return (
-    <div className="flex h-full min-h-0 w-full flex-col border-r border-white/20 bg-white/92 backdrop-blur-xl">
+    <div className="flex h-full min-h-0 w-full flex-col bg-white border-r border-[#dddddd]">
       {/* Search */}
-      <div className="border-b border-white/20 px-2 py-2">
-        <input
-          type="search"
-          className="w-full rounded-mkt border border-white/30 bg-white/60 px-3 py-1.5 text-xs text-ink-900 placeholder:text-ink-400 shadow-glass-inset backdrop-blur-sm transition focus:border-brand-400/50 focus:bg-white/80 focus:outline-none focus:ring-2 focus:ring-brand-400/20"
-          placeholder={t("fleet.search")}
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
-      </div>
-
-      {/* Status filter chips — shared 6-state model (matches Vehicles screen) */}
-      <div className="flex flex-wrap items-center gap-1.5 border-b border-white/20 bg-white/50 px-2 py-2 backdrop-blur-sm">
-        {FILTERS.map((f) => (
-          <button
-            key={f.id}
-            type="button"
-            onClick={() => setFilter(f.id)}
-            className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1.5 text-[11px] font-medium transition-all duration-150 active:scale-95 touch-manipulation ${
-              filter === f.id
-                ? "border border-brand-400/50 bg-brand-50/80 text-brand-700 shadow-sm backdrop-blur-sm"
-                : "border border-white/30 bg-white/60 text-ink-600 hover:bg-white/80 hover:border-white/50 active:bg-brand-50/50 backdrop-blur-sm"
-            }`}
+      <div className="border-b border-[#dddddd] px-2 py-2">
+        <div className="relative">
+          <svg
+            className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#888888]"
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
           >
-            {f.id !== "all" && (
-              <span className="status-dot" style={{ backgroundColor: VEHICLE_STATE_COLOR[f.id] }} />
-            )}
-            <span>{t(f.label)}</span>
-            <span className="text-ink-400">{counts[f.id]}</span>
-          </button>
-        ))}
+            <circle cx="11" cy="11" r="7" />
+            <path d="m21 21-4-4" />
+          </svg>
+          <input
+            type="search"
+            className="w-full rounded border border-[#dddddd] bg-white py-1.5 pl-8 pr-3 text-[13px] text-[#3D4353] placeholder:text-[#888888] focus:border-[#0421bc] focus:outline-none"
+            placeholder="IMEI/Device Name/SIM CardNo."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+        </div>
       </div>
 
-      {/* Action buttons */}
-      <div className="flex items-center gap-1.5 border-b border-white/20 bg-white/40 px-2 py-1.5 backdrop-blur-sm">
-        <button type="button" className="flex h-7 w-7 items-center justify-center rounded-lg border border-white/30 bg-white/60 text-ink-600 shadow-sm backdrop-blur-sm transition hover:bg-white/80 hover:border-white/50 hover:text-ink-800" title="Refresh">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M23 4v6h-6M1 20v-6h6" />
-            <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
-          </svg>
+      {/* Status filter tabs - ADL style */}
+      <div className="flex items-center border-b border-[#dddddd] px-2">
+        <button
+          type="button"
+          onClick={() => setFilter("all")}
+          className={`px-3 py-2 text-[13px] font-medium border-b-2 transition ${
+            filter === "all"
+              ? "border-[#0421bc] text-[#0421bc]"
+              : "border-transparent text-[#7E8792] hover:text-[#3D4353]"
+          }`}
+        >
+          All({counts.all})
         </button>
-        <button type="button" className="flex h-7 w-7 items-center justify-center rounded-lg border border-white/30 bg-white/60 text-ink-600 shadow-sm backdrop-blur-sm transition hover:bg-white/80 hover:border-white/50 hover:text-ink-800" title="List view">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <line x1="8" y1="6" x2="21" y2="6" /><line x1="8" y1="12" x2="21" y2="12" /><line x1="8" y1="18" x2="21" y2="18" />
-            <line x1="3" y1="6" x2="3.01" y2="6" /><line x1="3" y1="12" x2="3.01" y2="12" /><line x1="3" y1="18" x2="3.01" y2="18" />
-          </svg>
+        <button
+          type="button"
+          onClick={() => setFilter("moving")}
+          className={`px-3 py-2 text-[13px] font-medium border-b-2 transition ${
+            filter === "moving"
+              ? "border-[#0421bc] text-[#0421bc]"
+              : "border-transparent text-[#7E8792] hover:text-[#3D4353]"
+          }`}
+        >
+          Online({onlineCount})
         </button>
-        <button type="button" className="flex h-7 w-7 items-center justify-center rounded-lg border border-white/30 bg-white/60 text-ink-600 shadow-sm backdrop-blur-sm transition hover:bg-white/80 hover:border-white/50 hover:text-ink-800" title="Share">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
-            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
-          </svg>
+        <button
+          type="button"
+          onClick={() => setFilter("offline")}
+          className={`px-3 py-2 text-[13px] font-medium border-b-2 transition ${
+            filter === "offline"
+              ? "border-[#0421bc] text-[#0421bc]"
+              : "border-transparent text-[#7E8792] hover:text-[#3D4353]"
+          }`}
+        >
+          Offline({offlineCount})
         </button>
-        <button type="button" className="flex h-7 w-7 items-center justify-center rounded-lg border border-white/30 bg-white/60 text-ink-600 shadow-sm backdrop-blur-sm transition hover:bg-white/80 hover:border-white/50 hover:text-ink-800" title="Export">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" />
-          </svg>
+        <button
+          type="button"
+          onClick={() => setFilter("stopped")}
+          className={`px-3 py-2 text-[13px] font-medium border-b-2 transition ${
+            filter === "stopped"
+              ? "border-[#0421bc] text-[#0421bc]"
+              : "border-transparent text-[#7E8792] hover:text-[#3D4353]"
+          }`}
+        >
+          Inactive({counts.stopped})
         </button>
       </div>
 
-      {/* Column header */}
-      <div className="flex items-center gap-2 border-b border-white/20 bg-white/60 px-2 py-1.5 backdrop-blur-sm">
-        <button type="button" className="flex h-6 w-6 items-center justify-center rounded-md text-ink-500 transition hover:bg-white/60 hover:text-ink-700" title="Toggle visibility">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" />
-          </svg>
-        </button>
-        <input
-          type="checkbox"
-          checked={checkedDevices.size === sorted.length && sorted.length > 0}
-          onChange={toggleAll}
-          className="h-3.5 w-3.5 rounded border-white/40 bg-white/60"
-        />
-        <span className="flex-1 text-xs font-semibold text-ink-700">Object</span>
-        <span className="text-[10px] text-ink-500">Ungrouped ({sorted.length})</span>
+      {/* Speed filter + Select all */}
+      <div className="flex items-center justify-between border-b border-[#dddddd] px-3 py-2 bg-[#fafafa]">
+        <div className="flex items-center gap-3">
+          <select className="rounded border border-[#dddddd] bg-white px-2 py-1 text-[12px] text-[#3D4353] focus:border-[#0421bc] focus:outline-none">
+            <option value="">Speed</option>
+            <option value="0">0 km/h</option>
+            <option value="10">{">"} 10 km/h</option>
+            <option value="50">{">"} 50 km/h</option>
+            <option value="80">{">"} 80 km/h</option>
+          </select>
+        </div>
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={selectedDevices.size === sorted.length && sorted.length > 0}
+            onChange={toggleSelectAll}
+            className="h-4 w-4 rounded border-[#dddddd] text-[#0421bc] focus:ring-[#0421bc] cursor-pointer"
+          />
+          <span className="text-[12px] text-[#7E8792]">Select All</span>
+        </label>
       </div>
 
-      {/* Object list */}
+      {/* Vehicle list */}
       <ul className="flex-1 overflow-y-auto">
         {sorted.length === 0 && (
-          <li className="px-3 py-8 text-center text-xs text-ink-500">{t("fleet.noDevices")}</li>
+          <li className="px-3 py-8 text-center text-[13px] text-[#7E8792]">{t("fleet.noDevices")}</li>
         )}
-        {sorted.map((d, idx) => {
+        {sorted.map((d) => {
           const live = locations.get(d.imei);
-          const ts = live?.ts ?? d.lastSeenAt;
           const selected = d.imei === selectedImei;
-          const checked = checkedDevices.has(d.imei);
+          const checked = selectedDevices.has(d.imei);
           const state = vehicleState(d, live);
           const overspeed = speedLimits.isOverspeed(d.imei, live?.speed ?? d.lastSpeed);
           const statusColor = overspeed ? OVERSPEED_COLOR : VEHICLE_STATE_COLOR[state];
-          // Different "since" times per state:
-          // - moving: no duration needed
-          // - idle: no duration (engine on, momentary state)
-          // - stopped: only show duration if we have reliable parkedSince
-          // - offline/expired/nodata: show how long disconnected
-          //
-          // Only use parkedSince if it's recent and reliable (not stale)
-          let sinceTs = ts;
-          let hasReliableParkTime = false;
-          if (state === "stopped" && d.parkedSince && ts) {
-            const parkedTime = new Date(d.parkedSince).getTime();
-            const lastSeenTime = new Date(ts).getTime();
-            // Only use parkedSince if it's within 1 hour of lastSeenAt (not stale)
-            if (lastSeenTime - parkedTime <= 3600000) {
-              sinceTs = d.parkedSince;
-              hasReliableParkTime = true;
-            }
-          }
+          const speed = live?.speed ?? d.lastSpeed ?? 0;
+          const isOnline = state === "moving" || state === "idle" || state === "stopped";
 
           return (
             <li
               key={d.imei}
-              className={`border-b border-white/10 transition ${idx % 2 === 0 ? "bg-white/40" : "bg-white/20"} ${
-                selected ? "!bg-brand-50/70 backdrop-blur-sm" : "hover:bg-white/60"
+              className={`border-b border-[#eeeeee] transition cursor-pointer ${
+                selected
+                  ? "bg-[#e8ebff]"
+                  : "bg-white hover:bg-[#f5f5f5]"
               }`}
+              onClick={() => onSelect(selected ? null : d.imei)}
             >
-              <div className="flex items-center gap-2 px-2 py-1.5">
+              <div className="flex items-center gap-2 px-3 py-2">
+                {/* Checkbox */}
                 <input
                   type="checkbox"
                   checked={checked}
-                  onChange={() => toggleCheck(d.imei)}
-                  className="h-3.5 w-3.5 rounded border-surface-300"
+                  onChange={(e) => {
+                    e.stopPropagation();
+                    toggleDevice(d.imei);
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                  className="h-4 w-4 rounded border-[#dddddd] text-[#0421bc] focus:ring-[#0421bc] cursor-pointer shrink-0"
                 />
-                <button
-                  type="button"
-                  onClick={() => onSelect(selected ? null : d.imei)}
-                  className="flex min-w-0 flex-1 items-center gap-2"
+
+                {/* Vehicle name (blue link style) */}
+                <span className="flex-1 min-w-0 truncate text-[13px] font-medium text-[#0066cc] hover:underline">
+                  {d.name || d.vehiclePlate || d.imei.slice(-8)}
+                </span>
+
+                {/* Speed */}
+                <span
+                  className={`text-[12px] font-medium shrink-0 ${overspeed ? "text-red-600" : "text-[#3D4353]"}`}
                 >
-                  <span className={overspeed ? "animate-pulse" : undefined}>
-                    <VehicleIcon type={d.vehicleType} color={statusColor} />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <div
-                      className={`truncate text-xs font-semibold ${overspeed ? "" : "text-ink-900"}`}
-                      style={{ color: overspeed ? OVERSPEED_COLOR : undefined }}
-                    >
-                      {d.name || d.vehiclePlate || d.imei.slice(-8)}
-                    </div>
-                    <div className="text-[10px]" style={{ color: statusColor }}>
-                      {/* Status display: duration only when we have reliable data */}
-                      {overspeed
-                        ? "Overspeed"
-                        : state === "stopped"
-                          ? hasReliableParkTime
-                            ? `${t(STATE_LABEL[state])} ${formatStopDuration(sinceTs)}`
-                            : t(STATE_LABEL[state])
-                          : state === "idle" || state === "moving"
-                            ? t(STATE_LABEL[state])
-                            : `${t(STATE_LABEL[state])} ${formatSince(sinceTs)}`}
-                    </div>
-                  </div>
-                </button>
-                <div className="flex shrink-0 items-center gap-1">
-                  {/* Freshness indicator */}
-                  <FreshnessIndicator location={live} />
-                  {/* Speed - compact */}
-                  <span
-                    className={`text-[10px] font-semibold ${overspeed ? "animate-pulse" : "text-ink-900"}`}
-                    style={{ color: overspeed ? OVERSPEED_COLOR : undefined }}
-                    title="Speed"
-                  >
-                    {filterSpeed(live?.speed, live?.valid)}<span className="text-[8px] font-normal text-ink-400">kph</span>
-                  </span>
-                  {/* GSM signal - bars only, % in tooltip */}
-                  <SignalIcon
-                    bars={gsmBars(live?.gsmSignal ?? d.lastGsmSignal)}
-                    title={`Signal: ${gsmToPercent(live?.gsmSignal ?? d.lastGsmSignal) ?? 0}%`}
-                  />
-                  {/* Battery - icon + % */}
-                  <span
-                    className="flex items-center text-[9px] font-semibold"
-                    style={{ color: getBatteryColor(live?.voltageMv ?? d.lastVoltageMv) }}
-                    title={`Battery: ${formatBatteryPercent(live?.voltageMv ?? d.lastVoltageMv)}`}
-                  >
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
-                      <rect x="2" y="6" width="18" height="12" rx="2" stroke="currentColor" strokeWidth="2" fill="none"/>
-                      <rect x="20" y="9" width="2" height="6" rx="0.5" fill="currentColor"/>
-                      <rect x="4" y="8" width={`${Math.max(2, (voltageToBatteryPercent(live?.voltageMv ?? d.lastVoltageMv) ?? 0) * 0.14)}`} height="8" rx="1" fill="currentColor"/>
-                    </svg>
-                  </span>
-                  <DeviceActionsMenu
-                    imei={d.imei}
-                    onEdit={() => router.push(`/dashboard/devices/${d.imei}`)}
-                    onViewHistory={() => {
-                      onSelect(d.imei);
-                      if (onViewHistory) onViewHistory(d.imei);
-                    }}
-                  />
+                  {speed > 0 ? `${speed}km/h` : "0km/h"}
+                </span>
+
+                {/* Small vehicle icon */}
+                <div className="shrink-0">
+                  <SmallVehicleIcon type={d.vehicleType} color={statusColor} />
                 </div>
+
+                {/* Status dot */}
+                <span
+                  className="inline-block h-2 w-2 rounded-full shrink-0"
+                  style={{ backgroundColor: isOnline ? "#52c41a" : "#8c8c8c" }}
+                  title={isOnline ? "Online" : "Offline"}
+                />
+
+                {/* Actions */}
+                <DeviceActionsMenu
+                  imei={d.imei}
+                  onEdit={() => router.push(`/dashboard/devices/${d.imei}`)}
+                  onViewHistory={() => {
+                    onSelect(d.imei);
+                    if (onViewHistory) onViewHistory(d.imei);
+                  }}
+                />
               </div>
             </li>
           );

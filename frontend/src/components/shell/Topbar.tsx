@@ -21,14 +21,14 @@ export function Topbar({ user, orgId }: { user: UserView; orgId: string }) {
   }
 
   return (
-    <header className="z-[2100] flex h-[50px] shrink-0 items-center border-b border-gray-200 bg-white px-4">
+    <header className="z-[2100] flex h-[52px] shrink-0 items-center border-b border-gray-200/80 bg-white px-4 shadow-sm">
       {/* Search bar (ADL style) */}
       <div className="flex flex-1 items-center">
-        <div className="relative w-full max-w-md">
+        <div className="relative w-full max-w-sm">
           <input
             type="search"
             placeholder={t("common.searchPlaceholder") || "IMEI/Device Name/SIM CardNo."}
-            className="h-9 w-full rounded-lg border border-gray-200 bg-gray-50 pl-10 pr-4 text-sm text-gray-700 placeholder:text-gray-400 focus:border-[#0421bc] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#0421bc]/30"
+            className="h-9 w-full rounded-md border border-gray-200 bg-gray-50/80 pl-9 pr-4 text-sm text-gray-700 placeholder:text-gray-400 focus:border-[#22c55e] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#22c55e]/20"
           />
           <svg
             className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
@@ -44,28 +44,31 @@ export function Topbar({ user, orgId }: { user: UserView; orgId: string }) {
       </div>
 
       {/* Right side controls */}
-      <div className="flex items-center gap-2">
-        {/* Refresh countdown placeholder - can be implemented later */}
-        <div className="hidden items-center gap-1.5 rounded-lg bg-gray-50 px-3 py-1.5 text-xs text-gray-500 sm:flex">
-          <span className="h-2 w-2 rounded-full bg-emerald-500" />
-          <span>Refresh in <span className="font-semibold text-gray-700">9</span> seconds</span>
+      <div className="flex items-center gap-1.5">
+        {/* Live status indicator */}
+        <div className="hidden items-center gap-1.5 rounded-md bg-emerald-50 px-2.5 py-1.5 text-xs text-emerald-700 sm:flex">
+          <span className="relative flex h-2 w-2">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
+          </span>
+          <span className="font-medium">Live</span>
         </div>
 
-        <div className="mx-2 hidden h-5 w-px bg-gray-200 sm:block" />
+        <div className="mx-1.5 hidden h-5 w-px bg-gray-200 sm:block" />
 
         <NotificationDropdown />
         <LanguageToggle />
 
-        <div className="mx-2 hidden h-5 w-px bg-gray-200 sm:block" />
+        <div className="mx-1.5 hidden h-5 w-px bg-gray-200 sm:block" />
 
         {/* User info */}
-        <div className="hidden items-center gap-2 sm:flex">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#0421bc] text-xs font-semibold text-white">
+        <div className="hidden items-center gap-2.5 sm:flex">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#22c55e] to-[#16a34a] text-xs font-semibold text-white shadow-sm">
             {(user.fullName ?? user.email).charAt(0).toUpperCase()}
           </div>
           <div className="text-right text-[12px] leading-tight" title={orgId}>
             <div className="font-semibold text-gray-800">{user.fullName ?? user.email}</div>
-            <div className="text-gray-500">{user.role.replace("_", " ")}</div>
+            <div className="text-gray-500 capitalize">{user.role.replace("_", " ").toLowerCase()}</div>
           </div>
         </div>
 
@@ -73,7 +76,7 @@ export function Topbar({ user, orgId }: { user: UserView; orgId: string }) {
         <button
           type="button"
           onClick={onSignOut}
-          className="ml-1 flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+          className="ml-1 flex h-8 w-8 items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500"
           title={t("auth.signOut")}
         >
           <svg

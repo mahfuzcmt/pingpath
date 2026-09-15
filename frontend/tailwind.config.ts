@@ -1,8 +1,8 @@
 import type { Config } from "tailwindcss";
 
 /**
- * MotoLink Design System
- * Professional GPS tracking platform with modern, sophisticated UI
+ * MotoLink Design System - ADL Moto Viewer Style
+ * Matching the reference GPS tracking platform UI exactly
  */
 const config: Config = {
   darkMode: "class",
@@ -14,149 +14,125 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // ADL Moto Viewer inspired color scheme
+        // ADL Moto Viewer exact colors
         brand: {
-          50: "#E8EBFF",
-          100: "#C5CBFF",
-          200: "#9EA8FF",
-          300: "#7785FF",
-          400: "#5062FF",
-          500: "#0421bc", // Primary blue (ADL --BG-C)
-          600: "#031A96", // Hover state
+          50: "#e8ebff",
+          100: "#c5cbff",
+          200: "#9ea8ff",
+          300: "#7785ff",
+          400: "#5062ff",
+          500: "#0421bc", // Primary blue (--BG-C, --HD-BG-C)
+          600: "#031a96",
           700: "#021470",
-          800: "#010D4A",
-          900: "#000724", // Darkest
+          800: "#010d4a",
+          900: "#000724",
         },
-        // Accent colors
-        accent: {
-          cyan: "#22D3EE",
-          sky: "#38BDF8",
-          blue: "#0421bc", // ADL primary
-          navy: "#010D4A",
-        },
+        // Surface colors
         surface: {
-          0: "#FFFFFF", // page / panel
-          50: "#FAFBFC", // hover row
-          100: "#EAEEF2", // ADL --S-BG-C secondary background
-          200: "#E5E9ED", // alt row
-          300: "#DDDDDD", // ADL --BR-C border color
-          400: "#D1D5DB",
+          0: "#ffffff",
+          50: "#fafbfc",
+          100: "#EAEEF2", // --S-BG-C secondary background
+          200: "#e5e9ed",
+          300: "#dddddd", // --BR-C border
+          400: "#d1d5db",
         },
+        // Text colors
         ink: {
-          50: "#FFFFFF",
-          100: "#F5F5F5",
-          200: "#E5E5E5",
-          300: "#CCCCCC",
-          400: "#7E8792", // ADL --A-F-C secondary text
-          500: "#6B7280",
-          600: "#4B5563",
-          700: "#3D4353", // ADL --P-F-C primary text
-          900: "#1F2937",
+          50: "#ffffff",
+          100: "#f5f5f5",
+          200: "#e5e5e5",
+          300: "#cccccc",
+          400: "#888888", // --I-L-F-C input label
+          500: "#7E8792", // --A-F-C secondary text
+          600: "#4b5563",
+          700: "#3D4353", // --P-F-C primary text
+          800: "#262626", // --I-F-C input text
+          900: "#1f2937",
           950: "#111827",
         },
+        // Status colors (ADL style)
         status: {
-          all: "#E5E5E5",
-          moving: "#10B981",
-          idle: "#8B5CF6",
-          stopped: "#EF4444",
-          offline: "#94A3B8",
-          expired: "#6B7280",
-          nodata: "#F59E0B",
+          moving: "#52c41a",   // Green
+          stopped: "#1890ff", // Blue
+          idle: "#faad14",    // Orange
+          offline: "#8c8c8c", // Gray
         },
-        alarm: {
-          red: "#EF4444",
-          amber: "#F59E0B",
-          green: "#10B981",
+        // ADL specific
+        adl: {
+          primary: "#0421bc",
+          primaryHover: "rgba(4, 33, 188, 0.1)", // --HD-BG-C-R
+          headerBg: "#0421bc",
+          sidebarBg: "#0421bc",
+          border: "#dddddd",
+          text: "#3D4353",
+          textSecondary: "#7E8792",
+          inputBg: "#ffffff",
+          cardBg: "#ffffff",
+          pageBg: "#EAEEF2",
+        },
+        // Marketing accent colors
+        accent: {
+          teal: "#14b8a6",
         },
       },
       fontFamily: {
-        sans: ["var(--font-inter)", "var(--font-open-sans)", "ui-sans-serif", "system-ui", "sans-serif"],
-        display: ["var(--font-inter)", "var(--font-open-sans)", "ui-sans-serif", "system-ui", "sans-serif"],
-        mono: ["var(--font-jetbrains)", "ui-monospace", "monospace"],
-        bn: ["var(--font-hind-siliguri)", "var(--font-open-sans)", "sans-serif"],
+        // ADL Moto Viewer uses system fonts
+        sans: [
+          "-apple-system",
+          "BlinkMacSystemFont",
+          '"Segoe UI"',
+          "Roboto",
+          '"Helvetica Neue"',
+          "Arial",
+          '"Noto Sans"',
+          "sans-serif",
+        ],
+        mono: ["ui-monospace", "SFMono-Regular", "monospace"],
       },
       fontSize: {
-        xxs: ["10px", "12px"],
-        xs: ["11px", "14px"],
-        sm: ["12px", "16px"],
+        // ADL Moto Viewer font sizes
+        xs: ["12px", "16px"],
+        sm: ["13px", "18px"],   // --G-F-S grid font
         base: ["14px", "20px"],
-        md: ["15px", "22px"],
+        md: ["16px", "24px"],   // --F-S base font
         lg: ["18px", "28px"],
         xl: ["20px", "28px"],
         "2xl": ["24px", "32px"],
         "3xl": ["30px", "36px"],
-        "4xl": ["36px", "40px"],
-        "5xl": ["48px", "52px"],
-        "6xl": ["60px", "64px"],
-        "7xl": ["72px", "76px"],
       },
-      boxShadow: {
-        panel: "0 1px 3px 0 rgba(0,0,0,0.06)",
-        menu: "0 0 5px 0 rgba(0,0,0,0.18)",
-        topbar: "0 1px 0 0 #E5E5E5",
-        // Modern marketing shadows
-        "mkt-sm": "0 2px 8px -2px rgba(0,0,0,0.1)",
-        "mkt-md": "0 4px 16px -4px rgba(0,0,0,0.1), 0 2px 8px -2px rgba(0,0,0,0.06)",
-        "mkt-lg": "0 8px 32px -8px rgba(0,0,0,0.12), 0 4px 16px -4px rgba(0,0,0,0.08)",
-        "mkt-xl": "0 16px 48px -12px rgba(0,0,0,0.15), 0 8px 24px -8px rgba(0,0,0,0.1)",
-        "mkt-glow": "0 0 40px -8px rgba(43,130,212,0.35)",
-        "mkt-glow-lg": "0 0 80px -16px rgba(43,130,212,0.4)",
-        // Glass UI shadows
-        "glass": "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08)",
-        "glass-lg": "0 16px 48px rgba(0,0,0,0.15), 0 4px 16px rgba(0,0,0,0.1)",
-        "glass-inset": "inset 0 1px 0 0 rgba(255,255,255,0.1), inset 0 -1px 0 0 rgba(0,0,0,0.05)",
+      fontWeight: {
+        normal: "400",
+        medium: "500",
+        semibold: "600", // --F-W
+        bold: "700",
       },
       borderRadius: {
-        DEFAULT: "2px",
+        none: "0",
         sm: "2px",
-        md: "3px",
+        DEFAULT: "2px",
+        md: "4px",
         lg: "4px",
-        // Marketing border radius
-        "mkt": "12px",
-        "mkt-lg": "16px",
-        "mkt-xl": "20px",
-        "mkt-2xl": "24px",
+        xl: "8px",
+        mkt: "8px",      // Marketing pages
+        "mkt-lg": "12px", // Marketing cards
       },
-      animation: {
-        "float": "float 6s ease-in-out infinite",
-        "pulse-slow": "pulse 3s ease-in-out infinite",
-        "gradient": "gradient 8s ease infinite",
-        "slide-up": "slideUp 0.5s ease-out",
-        "slide-down": "slideDown 0.3s ease-out",
-        "fade-in": "fadeIn 0.5s ease-out",
-        "scale-in": "scaleIn 0.3s ease-out",
+      boxShadow: {
+        sm: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+        DEFAULT: "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)",
+        md: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+        lg: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+        panel: "0 1px 3px 0 rgba(0,0,0,0.08)",
+        card: "0 2px 8px rgba(0,0,0,0.09)",
+        glass: "0 8px 32px rgba(0, 0, 0, 0.08), inset 0 1px 0 0 rgba(255, 255, 255, 0.5)",
+        // Marketing shadows
+        "mkt-sm": "0 2px 8px -2px rgba(0,0,0,0.08)",
+        "mkt-md": "0 4px 16px -4px rgba(0,0,0,0.12)",
+        "mkt-lg": "0 8px 32px -8px rgba(0,0,0,0.16)",
       },
-      keyframes: {
-        float: {
-          "0%, 100%": { transform: "translateY(0)" },
-          "50%": { transform: "translateY(-10px)" },
-        },
-        gradient: {
-          "0%, 100%": { backgroundPosition: "0% 50%" },
-          "50%": { backgroundPosition: "100% 50%" },
-        },
-        slideUp: {
-          "0%": { opacity: "0", transform: "translateY(20px)" },
-          "100%": { opacity: "1", transform: "translateY(0)" },
-        },
-        slideDown: {
-          "0%": { opacity: "0", transform: "translateY(-10px)" },
-          "100%": { opacity: "1", transform: "translateY(0)" },
-        },
-        fadeIn: {
-          "0%": { opacity: "0" },
-          "100%": { opacity: "1" },
-        },
-        scaleIn: {
-          "0%": { opacity: "0", transform: "scale(0.95)" },
-          "100%": { opacity: "1", transform: "scale(1)" },
-        },
-      },
-      backgroundImage: {
-        "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
-        "gradient-conic": "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
-        "hero-gradient": "linear-gradient(135deg, #0A1928 0%, #0E3257 50%, #0A1928 100%)",
-        "card-gradient": "linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%)",
+      spacing: {
+        "4.5": "18px",
+        "13": "52px",
+        "15": "60px",
       },
     },
   },

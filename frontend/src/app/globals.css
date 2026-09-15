@@ -19,9 +19,10 @@
   }
 
   body {
-    @apply bg-surface-0 text-ink-900 antialiased;
-    font-size: 12px;
-    line-height: 16px;
+    @apply bg-surface-0 text-ink-700 antialiased;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+    font-size: 14px;
+    line-height: 20px;
   }
 
   /* Bengali script — applied via [lang="bn"] on <html> when locale=bn */
@@ -41,175 +42,288 @@
     font-family: inherit;
   }
 
-  /* Scrollbars: thin neutral, matches gps-server.net density */
+  /* Scrollbars (ADL Moto Viewer Style) */
   *::-webkit-scrollbar {
     width: 8px;
     height: 8px;
   }
   *::-webkit-scrollbar-track {
-    background: transparent;
+    background: #f5f5f5;
   }
   *::-webkit-scrollbar-thumb {
-    background: #D9D9D9;
-    border-radius: 4px;
+    background: #cccccc;
+    border-radius: 2px;
   }
   *::-webkit-scrollbar-thumb:hover {
-    background: #BFBFBF;
+    background: #b3b3b3;
   }
 }
 
 @layer components {
-  /* ── Buttons ───────────────────────────────────────────────────── */
+  /* ── Buttons (ADL Moto Viewer Style) ─────────────────────────────── */
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-1 rounded-sm bg-brand-500 px-3 py-[5px] text-xs font-semibold text-white transition hover:bg-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-500/40 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-1 px-3 py-[5px] text-[13px] font-semibold text-white transition focus:outline-none disabled:cursor-not-allowed disabled:opacity-50;
+    background-color: #0421bc;
+    border-radius: 2px;
     height: 28px;
+  }
+  .btn-primary:hover {
+    background-color: #031a96;
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-1 rounded-sm border border-surface-300 bg-surface-100 px-3 text-xs font-semibold text-ink-900 transition hover:bg-white hover:border-surface-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-1 px-3 text-[13px] font-semibold transition focus:outline-none disabled:cursor-not-allowed disabled:opacity-50;
+    background-color: #ffffff;
+    border: 1px solid #dddddd;
+    border-radius: 2px;
+    color: #3D4353;
     height: 28px;
+  }
+  .btn-secondary:hover {
+    background-color: #f5f5f5;
+    border-color: #cccccc;
   }
 
   .btn-ghost {
-    @apply inline-flex items-center justify-center gap-1 rounded-lg bg-white/50 px-2 text-xs text-ink-700 backdrop-blur-sm transition hover:bg-white/80 hover:text-ink-900 focus:outline-none focus:ring-1 focus:ring-brand-500/30;
+    @apply inline-flex items-center justify-center gap-1 px-2 text-[13px] transition focus:outline-none;
+    background-color: transparent;
+    border-radius: 2px;
+    color: #7E8792;
     height: 26px;
+  }
+  .btn-ghost:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    color: #3D4353;
   }
 
   .btn-icon {
-    @apply inline-flex items-center justify-center rounded-lg text-ink-500 backdrop-blur-sm transition hover:bg-white/60 hover:text-ink-900 focus:outline-none;
+    @apply inline-flex items-center justify-center transition focus:outline-none;
+    border-radius: 2px;
+    color: #7E8792;
     width: 28px;
     height: 28px;
   }
+  .btn-icon:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    color: #3D4353;
+  }
 
-  /* ── Inputs ────────────────────────────────────────────────────── */
+  /* ── Inputs (ADL Moto Viewer Style) ──────────────────────────────── */
   .input {
-    @apply w-full rounded-lg border border-white/30 bg-white/60 px-2 text-xs text-ink-900 placeholder:text-ink-400 backdrop-blur-sm transition focus:border-brand-400/50 focus:bg-white/90 focus:outline-none focus:ring-2 focus:ring-brand-400/20 disabled:bg-white/30 disabled:text-ink-500;
+    @apply w-full px-2 text-[13px] transition focus:outline-none disabled:opacity-50;
+    background-color: #ffffff;
+    border: 1px solid #dddddd;
+    border-radius: 2px;
+    color: #262626;
     height: 28px;
+  }
+  .input::placeholder {
+    color: #888888;
+  }
+  .input:focus {
+    border-color: #0421bc;
+    box-shadow: 0 0 0 1px rgba(4, 33, 188, 0.2);
   }
 
   .input-search {
     @apply input;
     padding-left: 26px;
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23808080' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><circle cx='11' cy='11' r='7'/><path d='m21 21-4-4'/></svg>");
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888888' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><circle cx='11' cy='11' r='7'/><path d='m21 21-4-4'/></svg>");
     background-repeat: no-repeat;
     background-position: 8px center;
+    background-color: #ffffff;
   }
 
   .select {
     @apply input;
     appearance: none;
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23808080' stroke-width='2.5'><path d='m6 9 6 6 6-6'/></svg>");
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23888888' stroke-width='2.5'><path d='m6 9 6 6 6-6'/></svg>");
     background-repeat: no-repeat;
     background-position: right 8px center;
     padding-right: 24px;
+    background-color: #ffffff;
   }
 
-  /* ── Surfaces ─────────────────────────────────────────────────── */
+  /* ── Surfaces (ADL Moto Viewer Style) ────────────────────────────── */
   .panel {
-    @apply rounded-mkt border border-white/30 bg-white/85 backdrop-blur-md;
+    background-color: #ffffff;
+    border: 1px solid #dddddd;
+    border-radius: 2px;
   }
 
   .panel-header {
-    @apply flex items-center justify-between border-b border-white/20 bg-white/50 px-3 backdrop-blur-sm;
-    height: 30px;
+    @apply flex items-center justify-between px-3;
+    background-color: #f5f5f5;
+    border-bottom: 1px solid #dddddd;
+    height: 32px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #3D4353;
   }
 
   .panel-body {
     @apply p-3;
+    background-color: #ffffff;
   }
 
-  /* ── Tables ───────────────────────────────────────────────────── */
+  /* ── Tables (ADL Moto Viewer Style) ──────────────────────────────── */
   .data-table {
-    @apply w-full border-collapse text-xs;
+    @apply w-full border-collapse;
+    font-size: 13px;
   }
   .data-table thead th {
-    @apply sticky top-0 z-10 border-b border-white/20 bg-white/60 px-2 py-[6px] text-left font-semibold text-ink-700 backdrop-blur-sm;
+    @apply sticky top-0 z-10 px-2 py-[6px] text-left font-semibold;
+    background-color: #f5f5f5;
+    border-bottom: 1px solid #dddddd;
+    color: #3D4353;
   }
   .data-table tbody td {
-    @apply border-b border-white/10 px-2 py-[6px] text-ink-900;
+    @apply px-2 py-[6px];
+    border-bottom: 1px solid #eeeeee;
+    color: #3D4353;
   }
   .data-table tbody tr:hover td {
-    @apply bg-white/50;
+    background-color: rgba(4, 33, 188, 0.05);
   }
   .data-table tbody tr.is-selected td {
-    @apply bg-brand-50/70;
+    background-color: rgba(4, 33, 188, 0.1);
   }
 
-  /* ── Status pills ─────────────────────────────────────────────── */
+  /* ── Status pills (ADL Moto Viewer Style) ────────────────────────── */
   .status-pill {
-    @apply inline-flex h-[18px] items-center rounded-sm px-2 text-[10px] font-semibold uppercase tracking-wide text-white;
+    @apply inline-flex h-[18px] items-center px-2 text-[10px] font-semibold uppercase tracking-wide text-white;
+    border-radius: 2px;
   }
-  .status-pill-moving { @apply bg-status-moving; }
-  .status-pill-idle { @apply bg-status-idle; }
-  .status-pill-stopped { @apply bg-status-stopped; }
-  .status-pill-offline { @apply bg-status-offline text-ink-900; }
-  .status-pill-expired { @apply bg-status-expired; }
-  .status-pill-nodata { @apply bg-status-nodata text-ink-900; }
+  .status-pill-moving { background-color: #52c41a; }
+  .status-pill-idle { background-color: #faad14; }
+  .status-pill-stopped { background-color: #1890ff; }
+  .status-pill-offline { background-color: #8c8c8c; }
+  .status-pill-expired { background-color: #ff4d4f; }
+  .status-pill-nodata { background-color: #d9d9d9; color: #3D4353; }
 
   .status-dot {
     @apply inline-block h-[8px] w-[8px] rounded-full;
   }
-  .status-dot-online { @apply status-dot bg-status-moving; }
-  .status-dot-offline { @apply status-dot bg-ink-300; }
-  .status-dot-idle { @apply status-dot bg-status-idle; }
-  .status-dot-stopped { @apply status-dot bg-status-stopped; }
+  .status-dot-online { background-color: #52c41a; }
+  .status-dot-offline { background-color: #8c8c8c; }
+  .status-dot-idle { background-color: #faad14; }
+  .status-dot-stopped { background-color: #1890ff; }
 
-  /* ── Tabs (gps-server.net style — top border accent on active) ─ */
+  /* ── Tabs (ADL Moto Viewer Style) ────────────────────────────────── */
   .tab-bar {
-    @apply flex items-stretch border-b border-white/20 bg-white/60 backdrop-blur-sm;
+    @apply flex items-stretch;
+    background-color: #f5f5f5;
+    border-bottom: 1px solid #dddddd;
   }
   .tab-item {
-    @apply flex h-[30px] cursor-pointer items-center gap-1.5 border-t-[3px] border-transparent px-3 text-xs font-semibold text-ink-500 transition hover:bg-white/50 hover:text-ink-900;
+    @apply flex h-[32px] cursor-pointer items-center gap-1.5 px-3 font-semibold transition;
+    font-size: 13px;
+    color: #7E8792;
+    border-bottom: 2px solid transparent;
+  }
+  .tab-item:hover {
+    color: #3D4353;
+    background-color: rgba(0, 0, 0, 0.03);
   }
   .tab-item-active {
-    @apply tab-item border-brand-500 bg-white/40 text-ink-900;
+    @apply tab-item;
+    color: #0421bc;
+    border-bottom-color: #0421bc;
+    background-color: #ffffff;
   }
 
-  /* ── Top panel nav (horizontal icon nav like gps-server.net) ─── */
+  /* ── Top panel nav (ADL Moto Viewer Style) ───────────────────────── */
   .topnav-item {
-    @apply inline-flex h-10 items-center gap-1.5 px-3 text-xs font-semibold text-ink-700 transition hover:bg-white/50 hover:text-ink-900;
+    @apply inline-flex h-10 items-center gap-1.5 px-3 font-semibold transition;
+    font-size: 13px;
+    color: #7E8792;
+  }
+  .topnav-item:hover {
+    background-color: rgba(0, 0, 0, 0.03);
+    color: #3D4353;
   }
   .topnav-item-active {
-    @apply topnav-item border-b-2 border-brand-500 bg-white/40 text-ink-900;
+    @apply topnav-item;
+    border-bottom: 2px solid #0421bc;
+    color: #0421bc;
+    background-color: #ffffff;
   }
 
-  /* ── Filter chips (status filters under tabs) ─────────────────── */
+  /* ── Filter chips (ADL Moto Viewer Style) ────────────────────────── */
   .filter-chip {
-    @apply inline-flex h-[22px] cursor-pointer items-center gap-1.5 rounded-full bg-white/40 px-2 text-[11px] font-semibold text-ink-700 backdrop-blur-sm transition hover:bg-white/70;
+    @apply inline-flex h-[22px] cursor-pointer items-center gap-1.5 px-2 text-[11px] font-semibold transition;
+    background-color: #f5f5f5;
+    border: 1px solid #dddddd;
+    border-radius: 2px;
+    color: #7E8792;
+  }
+  .filter-chip:hover {
+    background-color: #eeeeee;
+    color: #3D4353;
   }
   .filter-chip-active {
-    @apply filter-chip bg-white/80 text-ink-900 shadow-sm border border-white/50;
+    @apply filter-chip;
+    background-color: #0421bc;
+    border-color: #0421bc;
+    color: #ffffff;
   }
 
-  /* ── Resize handles ──────────────────────────────────────────── */
+  /* ── Resize handles (ADL Moto Viewer Style) ──────────────────────── */
   .resize-handle-x {
-    @apply w-[5px] shrink-0 cursor-col-resize bg-surface-100 hover:bg-surface-200;
+    @apply w-[5px] shrink-0 cursor-col-resize;
+    background-color: #EAEEF2;
+  }
+  .resize-handle-x:hover {
+    background-color: #dddddd;
   }
   .resize-handle-y {
-    @apply h-[5px] shrink-0 cursor-row-resize bg-surface-100 hover:bg-surface-200;
+    @apply h-[5px] shrink-0 cursor-row-resize;
+    background-color: #EAEEF2;
+  }
+  .resize-handle-y:hover {
+    background-color: #dddddd;
   }
 
-  /* ── Datalist row (for KV pairs in bottom panel "Data" tab) ──── */
+  /* ── Datalist row (ADL Moto Viewer Style) ───────────────────────── */
   .data-row {
-    @apply flex min-h-[24px] items-center border-b border-surface-100 px-3 text-xs;
+    @apply flex min-h-[24px] items-center px-3;
+    font-size: 13px;
+    border-bottom: 1px solid #eeeeee;
   }
   .data-row dt {
-    @apply w-44 shrink-0 text-ink-500;
+    @apply w-44 shrink-0;
+    color: #7E8792;
   }
   .data-row dd {
-    @apply min-w-0 flex-1 truncate text-ink-900;
+    @apply min-w-0 flex-1 truncate;
+    color: #3D4353;
   }
 }
 
-/* Leaflet attribution and control restyle */
+/* Leaflet attribution and control restyle (ADL Moto Viewer Style) */
 .leaflet-control-attribution {
-  @apply !bg-white/75 !text-ink-700 !text-[10px] !backdrop-blur-md !border-0 !rounded-tl-lg;
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  color: #7E8792 !important;
+  font-size: 10px !important;
+  border: none !important;
+  border-radius: 2px 0 0 0 !important;
 }
 .leaflet-control-zoom {
-  @apply !shadow-glass !border !border-white/30 !rounded-mkt !overflow-hidden !backdrop-blur-md;
+  border: 1px solid #dddddd !important;
+  border-radius: 2px !important;
+  overflow: hidden !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
 }
 .leaflet-control-zoom a {
-  @apply !bg-white/80 !text-ink-700 hover:!bg-white/95 !border-white/20;
+  background-color: #ffffff !important;
+  color: #3D4353 !important;
+  border-bottom: 1px solid #dddddd !important;
+}
+.leaflet-control-zoom a:hover {
+  background-color: #f5f5f5 !important;
+}
+.leaflet-control-zoom a:last-child {
+  border-bottom: none !important;
 }
 
 /* Measure tool styles */
