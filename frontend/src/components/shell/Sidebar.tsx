@@ -81,7 +81,14 @@ const NAV_SECTIONS: NavSection[] = [
   },
 ];
 
-export function Sidebar() {
+interface SidebarProps {
+  /** Render as the flat mobile drawer (all sections + pages in one list). */
+  mobile?: boolean;
+  /** Called after a link is chosen in mobile mode so the drawer can close. */
+  onNavigate?: () => void;
+}
+
+export function Sidebar({ mobile = false, onNavigate }: SidebarProps = {}) {
   const pathname = usePathname();
   const router = useRouter();
   const { t } = useLocale();
@@ -146,6 +153,70 @@ export function Sidebar() {
     });
 
   const currentSection = NAV_SECTIONS.find((s) => s.id === activeSection);
+
+  if (mobile) {
+    return (
+      <div className="flex h-full w-full flex-col bg-white">
+        {/* Brand header */}
+        <div className="flex h-[52px] shrink-0 items-center gap-2 border-b border-surface-300 bg-brand-500 px-4">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path d="M12 2L2 7l10 5 10-5-10-5z" fill="#0421bc" />
+              <path d="M2 17l10 5 10-5" stroke="#0421bc" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M2 12l10 5 10-5" stroke="#0421bc" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
+          <span className="text-base font-bold text-white">MotoLink</span>
+          <button
+            type="button"
+            onClick={onNavigate}
+            className="ml-auto flex h-8 w-8 items-center justify-center rounded-md text-white/80 hover:bg-white/10 hover:text-white"
+            aria-label="Close navigation"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M18 6 6 18M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Flat navigation: every section and its pages, one tap away */}
+        <nav className="min-h-0 flex-1 overflow-y-auto py-2">
+          {filterSections(NAV_SECTIONS).map((section) => {
+            const items = section.href
+              ? [{ href: section.href, label: section.label, icon: section.icon }]
+              : filterItems(section.children);
+            return (
+              <div key={section.id} className="px-2 pb-2">
+                <div className="px-3 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wide text-ink-400">
+                  {t(section.label)}
+                </div>
+                {items.map((item) => {
+                  const active = isActive(item.href);
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={onNavigate}
+                      className={`flex min-h-[44px] items-center gap-3 rounded-md px-3 text-[14px] transition-colors ${
+                        active ? "bg-brand-500/10 font-medium text-ink-900" : "text-ink-700 active:bg-surface-100"
+                      }`}
+                    >
+                      <span className={active ? "text-brand-500" : "text-ink-400"}>{item.icon}</span>
+                      <span>{t(item.label)}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            );
+          })}
+        </nav>
+
+        <div className="shrink-0 border-t border-surface-300 px-4 py-3 text-[11px] text-ink-400">
+          MotoLink GPS Tracking
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative z-[2000] flex h-full">

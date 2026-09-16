@@ -13,7 +13,7 @@ import type { UserView } from "@/types/domain";
  * language / user / settings on the right. Vehicle search lives in the
  * dashboard's vehicle panel, not here.
  */
-export function Topbar({ user }: { user: UserView; orgId: string }) {
+export function Topbar({ user, onMenu }: { user: UserView; orgId: string; onMenu?: () => void }) {
   const router = useRouter();
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
 
@@ -23,10 +23,24 @@ export function Topbar({ user }: { user: UserView; orgId: string }) {
   }
 
   return (
-    <header className="z-[2100] flex h-[52px] shrink-0 items-center border-b border-surface-300 bg-white px-4">
+    <header className="z-[2100] flex h-[52px] shrink-0 items-center gap-2 border-b border-surface-300 bg-white px-3 sm:px-4">
+      {/* Mobile: open the navigation drawer */}
+      {onMenu && (
+        <button
+          type="button"
+          onClick={onMenu}
+          className="-ml-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-ink-700 hover:bg-surface-100 md:hidden"
+          aria-label="Open navigation"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <path d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+      )}
+
       {/* Left: brand + live status */}
-      <div className="flex flex-1 items-center gap-3">
-        <Link href="/dashboard" className="flex items-center gap-2">
+      <div className="flex min-w-0 flex-1 items-center gap-3">
+        <Link href="/dashboard" className="flex shrink-0 items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-500">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
               <path d="M12 2L2 7l10 5 10-5-10-5z" fill="white" opacity="0.9" />
@@ -48,13 +62,13 @@ export function Topbar({ user }: { user: UserView; orgId: string }) {
       </div>
 
       {/* Right: controls */}
-      <div className="flex items-center justify-end gap-2">
+      <div className="flex shrink-0 items-center justify-end gap-1 sm:gap-2">
         <NotificationDropdown />
         <LanguageToggle />
 
-        <div className="mx-1 h-5 w-px bg-surface-300" />
+        <div className="mx-1 hidden h-5 w-px bg-surface-300 sm:block" />
 
-        <div className="flex items-center gap-2">
+        <div className="hidden items-center gap-2 sm:flex">
           <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-brand-700 text-xs font-semibold text-white">
             {(user.fullName ?? user.email).charAt(0).toUpperCase()}
           </div>

@@ -295,9 +295,13 @@
 
   /* ── Tabs (ADL Moto Viewer Style) ────────────────────────────────── */
   .tab-bar {
-    @apply flex items-stretch;
+    @apply flex items-stretch overflow-x-auto;
     background-color: #f5f5f5;
     border-bottom: 1px solid #dddddd;
+    scrollbar-width: none;
+  }
+  .tab-bar::-webkit-scrollbar {
+    display: none;
   }
   .tab-item {
     @apply flex h-[32px] cursor-pointer items-center gap-1.5 px-3 font-semibold transition;

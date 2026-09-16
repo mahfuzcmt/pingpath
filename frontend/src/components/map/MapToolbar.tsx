@@ -11,9 +11,10 @@ interface MapToolbarProps {
   disabled?: boolean;
   /** Positioning classes (e.g. 'right-3 top-14'); defaults to the top-left corner. */
   className?: string;
+  style?: React.CSSProperties;
 }
 
-export function MapToolbar({ map, onFitAll, onLocate, locating, disabled, className }: MapToolbarProps) {
+export function MapToolbar({ map, onFitAll, onLocate, locating, disabled, className, style }: MapToolbarProps) {
   const [measuring, setMeasuring] = useState(false);
   const [measurePoints, setMeasurePoints] = useState<L.LatLng[]>([]);
   const [totalDistance, setTotalDistance] = useState(0);
@@ -131,7 +132,7 @@ export function MapToolbar({ map, onFitAll, onLocate, locating, disabled, classN
     "flex h-9 w-9 items-center justify-center rounded-mkt border border-brand-400/50 bg-brand-50/90 text-brand-600 shadow-glass backdrop-blur-md transition";
 
   return (
-    <div className={`absolute z-[1000] flex flex-col gap-1.5 ${className ?? "left-3 top-3"}`}>
+    <div className={`absolute z-[1000] flex flex-col gap-1.5 ${className ?? "left-3 top-3"}`} style={style}>
       {/* Zoom In */}
       <button
         type="button"

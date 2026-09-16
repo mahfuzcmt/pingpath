@@ -57,7 +57,7 @@ export function CommandSheet({ device, onClose }: Props) {
   ];
 
   return (
-    <div className="absolute bottom-16 right-3 z-[1100] w-[320px] overflow-hidden rounded-xl border border-black/5 bg-white shadow-2xl">
+    <div className="absolute bottom-16 left-3 right-3 z-[1100] overflow-hidden rounded-xl border border-black/5 bg-white shadow-2xl sm:left-auto sm:w-[320px]">
       <div className="flex items-center justify-between border-b border-surface-200 px-3 py-2">
         <div className="min-w-0">
           <div className="text-[13px] font-semibold text-ink-700">{t("cmd.title")}</div>

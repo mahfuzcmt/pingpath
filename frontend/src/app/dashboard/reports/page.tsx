@@ -88,7 +88,7 @@ export default function Page() {
         <h1 className="font-display text-lg font-semibold">{t("reports.title")}</h1>
       </div>
 
-      <div className="mx-auto w-full max-w-3xl space-y-6 p-6">
+      <div className="mx-auto w-full max-w-3xl space-y-6 p-4 sm:p-6">
         <div className="panel p-4">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <label className="text-sm">

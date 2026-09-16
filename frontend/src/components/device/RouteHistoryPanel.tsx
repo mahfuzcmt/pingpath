@@ -218,16 +218,16 @@ export function RouteHistoryPanel({ device, onClose }: Props) {
   return (
     <div className="fixed inset-0 z-[2500] flex flex-col bg-white">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-surface-300 px-4 py-3 bg-white">
-        <div>
-          <div className="font-semibold text-base text-ink-900">
+      <div className="flex items-center justify-between gap-3 border-b border-surface-300 px-4 py-3 bg-white">
+        <div className="min-w-0">
+          <div className="truncate font-semibold text-base text-ink-900">
             {t("fleet.routeHistory")} - {device.name || device.imei}
           </div>
           <div className="font-mono text-xs text-ink-400">{device.imei}</div>
         </div>
         <button
           type="button"
-          className="px-4 py-2 text-sm font-semibold rounded border border-surface-300 bg-white hover:bg-surface-100 text-ink-700 transition-colors"
+          className="shrink-0 px-4 py-2 text-sm font-semibold rounded border border-surface-300 bg-white hover:bg-surface-100 text-ink-700 transition-colors"
           onClick={onClose}
         >
           {t("common.close")}
@@ -235,7 +235,7 @@ export function RouteHistoryPanel({ device, onClose }: Props) {
       </div>
 
       {/* Period selector */}
-      <div className="flex items-center gap-2 border-b border-surface-300 px-4 py-2">
+      <div className="flex flex-wrap items-center gap-2 border-b border-surface-300 px-4 py-2">
         <span className="text-sm text-ink-400">{t("fleet.period")}:</span>
         {(["1h", "6h", "24h", "7d"] as Period[]).map((p) => (
           <button
@@ -286,7 +286,7 @@ export function RouteHistoryPanel({ device, onClose }: Props) {
 
         {/* Selected point info */}
         {selectedPoint && (
-          <div className="absolute right-3 top-3 rounded-lg bg-white/95 backdrop-blur p-3 text-sm min-w-[200px]">
+          <div className="absolute left-3 right-3 top-auto bottom-16 rounded-lg bg-white/95 backdrop-blur p-3 text-sm sm:bottom-auto sm:left-auto sm:right-3 sm:top-3 sm:min-w-[200px]">
             <div className="font-semibold mb-2">{t("fleet.pointDetails")}</div>
             <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
               <div className="text-ink-400">Time:</div>
@@ -312,8 +312,8 @@ export function RouteHistoryPanel({ device, onClose }: Props) {
         )}
 
         {/* Legend */}
-        <div className="absolute left-3 bottom-16 rounded-lg bg-white/95 backdrop-blur p-2 text-xs">
-          <div className="flex items-center gap-4">
+        <div className={`absolute left-3 rounded-lg bg-white/95 backdrop-blur p-2 text-xs ${selectedPoint ? "bottom-3 sm:bottom-16" : "bottom-16"}`}>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
             <div className="flex items-center gap-1">
               <div className="w-3 h-3 rounded-full bg-[#16A34A]"></div>
               <span>Start / Slow</span>

@@ -63,10 +63,10 @@ export default function DriversPage() {
   return (
     <div className="flex h-full flex-col">
       {/* Header */}
-      <div className="border-b border-ink-100 bg-white px-6 py-4">
-        <div className="flex items-center justify-between">
+      <div className="border-b border-ink-100 bg-white px-4 py-3 sm:px-6 sm:py-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-semibold text-ink-900">Drivers</h1>
+            <h1 className="text-xl font-semibold text-ink-900 sm:text-2xl">Drivers</h1>
             <p className="text-sm text-ink-500">
               Manage your fleet drivers and assignments
             </p>

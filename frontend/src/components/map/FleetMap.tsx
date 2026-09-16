@@ -51,6 +51,10 @@ interface FleetMapProps {
   onAdvanceAnimations?: () => boolean;
   /** Pixels covered on the left by the floating vehicle panel (for auto-pan / fit padding). */
   leftInset?: number;
+  /** Extra space (px) reserved above the map's top-edge controls, e.g. for a full-width KPI strip on mobile. */
+  topInset?: number;
+  /** Extra space (px) reserved under the map's bottom-edge controls, e.g. for the mobile vehicle sheet. */
+  bottomInset?: number;
 }
 
 const OVERSPEED_COLOR = "#DC2626";
@@ -516,7 +520,7 @@ function BatchCountdown({ lastRefreshAt }: { lastRefreshAt: Date | null }) {
   );
 }
 
-export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh, lastRefreshAt, showSearch = false, onAdvanceAnimations, leftInset = 0 }: FleetMapProps) {
+export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh, lastRefreshAt, showSearch = false, onAdvanceAnimations, leftInset = 0, topInset = 0, bottomInset = 0 }: FleetMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
@@ -1339,7 +1343,8 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
         onLocate={handleLocate}
         locating={locating}
         disabled={locations.size === 0}
-        className="right-3 top-14"
+        className="right-3"
+        style={{ top: 56 + topInset }}
       />
 
       {/* Address search (top-left, beside toolbar when enabled) - Glassy */}
@@ -1393,7 +1398,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
       )}
 
       {/* Map controls (top-right) — Auto-follow + Traffic + Layer dropdown */}
-      <div className="absolute right-3 top-3 z-[1000] flex items-center gap-2">
+      <div className="absolute right-3 z-[1000] flex items-center gap-2" style={{ top: 12 + topInset }}>
         {/* Auto-follow toggle - only show when a vehicle is selected */}
         {selectedImei && (
           <label
@@ -1436,13 +1441,18 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
       </div>
 
       {/* Bottom-right status row: refresh countdown + global data freshness */}
-      <div className="absolute bottom-6 right-16 z-[1000] flex items-center gap-2">
-        {lastRefreshAt && <BatchCountdown lastRefreshAt={lastRefreshAt} />}
+      <div className="absolute right-16 z-[1000] flex items-center gap-2" style={{ bottom: 24 + bottomInset }}>
+        {/* The freshness pill already carries the countdown; on phones the text version doesn't fit. */}
+        {lastRefreshAt && (
+          <div className="hidden sm:block">
+            <BatchCountdown lastRefreshAt={lastRefreshAt} />
+          </div>
+        )}
         <GlobalFreshnessIndicator locations={locations} deviceByImei={deviceByImei} lastRefreshAt={lastRefreshAt} />
       </div>
 
       {/* Refresh button (bottom-right) - Glassy */}
-      <div className="absolute bottom-6 right-3 z-[1000]">
+      <div className="absolute right-3 z-[1000]" style={{ bottom: 24 + bottomInset }}>
         <button
           type="button"
           onClick={handleRefresh}

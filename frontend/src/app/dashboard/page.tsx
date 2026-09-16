@@ -8,6 +8,7 @@ import { useDeviceGroups } from "@/hooks/useDeviceGroups";
 import { useLiveLocations } from "@/hooks/useLiveLocations";
 import { useSession } from "@/lib/session-context";
 import { useLocale } from "@/lib/i18n";
+import { useIsDesktop, useIsWide } from "@/hooks/useMediaQuery";
 import { DeviceList, type VehicleAction } from "@/components/device/DeviceList";
 import { CommandSheet } from "@/components/device/CommandSheet";
 import { DeviceEditModal } from "@/components/device/DeviceEditModal";
@@ -32,6 +33,10 @@ const FleetMap = dynamic(
 
 const LIST_WIDTH = 340;
 const LIST_GAP = 12;
+/** Height (px) of the mobile vehicle sheet's grab bar when the sheet is closed. */
+const SHEET_BAR = 48;
+/** Height reserved below `lg` for the full-width KPI strip (3-line cells) above the map controls. */
+const NARROW_KPI_INSET = 78;
 
 type Panel = "history" | "live" | "command" | "share" | "edit" | null;
 
@@ -39,6 +44,8 @@ export default function DashboardPage() {
   const router = useRouter();
   const { orgId } = useSession();
   const { t } = useLocale();
+  const isDesktop = useIsDesktop();
+  const isWide = useIsWide();
   const { devices, loading, setDevices } = useDevices();
   const { groups } = useDeviceGroups();
   const { locations, error, refresh, lastRefreshAt, advanceAnimations } = useLiveLocations(orgId);
@@ -46,6 +53,8 @@ export default function DashboardPage() {
   const [selectedImei, setSelectedImei] = useState<string | null>(null);
   const [panel, setPanel] = useState<Panel>(null);
   const [listCollapsed, setListCollapsed] = useState(false);
+  // Phones: the vehicle list is a bottom sheet, closed by default so the map is usable.
+  const [sheetOpen, setSheetOpen] = useState(false);
   const [hiddenImeis, setHiddenImeis] = useState<Set<string>>(new Set());
 
   // Latest positions without re-binding event listeners on every tick.
@@ -128,7 +137,33 @@ export default function DashboardPage() {
     setPanel(null);
   };
 
-  const listInset = listCollapsed ? 0 : LIST_WIDTH + LIST_GAP * 2;
+  const listInset = isDesktop && !listCollapsed ? LIST_WIDTH + LIST_GAP * 2 : 0;
+  const bottomInset = isDesktop ? 0 : SHEET_BAR;
+  // Narrow screens: sit above the freshness/refresh row (and the sheet bar on phones).
+  const statusBottom = isWide ? 24 : (isDesktop ? 68 : SHEET_BAR + 68);
+
+  const onListSelect = (imei: string | null) => {
+    setSelectedImei(imei);
+    if (panel === "history" || panel === "live") setPanel(null);
+    if (!isDesktop) setSheetOpen(false);
+  };
+  const onListAction = (action: VehicleAction, imei: string) => {
+    if (!isDesktop) setSheetOpen(false);
+    runAction(action, imei);
+  };
+
+  const list = (
+    <DeviceList
+      devices={devices}
+      groups={groups}
+      locations={locations}
+      selectedImei={selectedImei}
+      hiddenImeis={hiddenImeis}
+      onSelect={onListSelect}
+      onHiddenChange={setHiddenImeis}
+      onAction={onListAction}
+    />
+  );
 
   return (
     <div className="relative h-full w-full overflow-hidden">
@@ -141,9 +176,11 @@ export default function DashboardPage() {
         lastRefreshAt={lastRefreshAt}
         onAdvanceAnimations={advanceAnimations}
         leftInset={listInset}
+        topInset={isWide ? 0 : NARROW_KPI_INSET}
+        bottomInset={bottomInset}
       />
 
-      {/* Floating vehicle panel (ADL-style card over the map) */}
+      {/* Floating vehicle panel (ADL-style card over the map) — desktop only */}
       <aside
         className={`absolute bottom-3 top-3 z-[1000] hidden w-[340px] flex-col overflow-hidden rounded-xl border border-black/5 bg-white shadow-xl transition-transform duration-300 ease-out md:flex ${
           listCollapsed ? "-translate-x-[372px]" : "translate-x-0"
@@ -151,20 +188,39 @@ export default function DashboardPage() {
         style={{ left: LIST_GAP }}
         aria-hidden={listCollapsed}
       >
-        <DeviceList
-          devices={devices}
-          groups={groups}
-          locations={locations}
-          selectedImei={selectedImei}
-          hiddenImeis={hiddenImeis}
-          onSelect={(imei) => {
-            setSelectedImei(imei);
-            if (panel === "history" || panel === "live") setPanel(null);
-          }}
-          onHiddenChange={setHiddenImeis}
-          onAction={runAction}
-        />
+        {isDesktop && list}
       </aside>
+
+      {/* Mobile vehicle sheet: a grab bar at the bottom that expands over the map */}
+      <section
+        className={`absolute inset-x-0 bottom-0 z-[1000] flex flex-col overflow-hidden rounded-t-2xl border-t border-black/10 bg-white shadow-[0_-8px_24px_rgba(0,0,0,0.12)] transition-[height] duration-300 ease-out md:hidden ${
+          sheetOpen ? "h-[65%]" : ""
+        }`}
+        style={sheetOpen ? undefined : { height: SHEET_BAR }}
+        aria-label={t("nav.vehicles")}
+      >
+        <button
+          type="button"
+          onClick={() => setSheetOpen((v) => !v)}
+          className="flex shrink-0 items-center gap-2 px-4 text-left"
+          style={{ height: SHEET_BAR }}
+          aria-expanded={sheetOpen}
+        >
+          <span className="absolute left-1/2 top-1.5 h-1 w-10 -translate-x-1/2 rounded-full bg-surface-300" aria-hidden />
+          <span className="mt-1 text-[14px] font-semibold text-ink-900">{t("nav.vehicles")}</span>
+          <span className="mt-1 text-[12px] text-ink-500">
+            <span className="text-emerald-600">{liveOnlineCount}</span> {t("list.online").toLowerCase()} ·{" "}
+            {liveOfflineCount} {t("list.offline").toLowerCase()}
+          </span>
+          <svg
+            className={`ml-auto mt-1 h-4 w-4 text-ink-400 transition-transform ${sheetOpen ? "rotate-180" : ""}`}
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"
+          >
+            <path d="m6 15 6-6 6 6" />
+          </svg>
+        </button>
+        <div className="min-h-0 flex-1 border-t border-surface-200">{!isDesktop && list}</div>
+      </section>
 
       {/* Collapse handle on the panel edge */}
       <button
@@ -209,16 +265,16 @@ export default function DashboardPage() {
       {/* Transient status pills sit at the bottom centre, clear of the KPI strip and map controls. */}
       {loading && (
         <div
-          className="pointer-events-none absolute bottom-6 z-[1000] -translate-x-1/2 rounded-full bg-white/90 px-3 py-1 text-xs text-ink-600 shadow"
-          style={{ left: `calc(${listInset}px + (100% - ${listInset}px) / 2)` }}
+          className="pointer-events-none absolute z-[1000] -translate-x-1/2 whitespace-nowrap rounded-full bg-white/90 px-3 py-1 text-xs text-ink-600 shadow"
+          style={{ left: `calc(${listInset}px + (100% - ${listInset}px) / 2)`, bottom: statusBottom }}
         >
           {t("common.loading")}
         </div>
       )}
       {error && (
         <div
-          className="absolute bottom-6 z-[1000] -translate-x-1/2 rounded-md border border-red-200 bg-red-50 px-3 py-1 text-xs text-red-700 shadow"
-          style={{ left: `calc(${listInset}px + (100% - ${listInset}px) / 2)` }}
+          className="absolute z-[1000] max-w-[90vw] -translate-x-1/2 rounded-md border border-red-200 bg-red-50 px-3 py-1 text-xs text-red-700 shadow"
+          style={{ left: `calc(${listInset}px + (100% - ${listInset}px) / 2)`, bottom: statusBottom }}
         >
           {error}
         </div>
