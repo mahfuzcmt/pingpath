@@ -4,6 +4,7 @@ import { useState } from "react";
 import { api, extractError } from "@/lib/api";
 import { useLocale, type StringKey } from "@/lib/i18n";
 import { buildVehicleSvg, VEHICLE_TYPES, DEFAULT_ICON_COLOR, type VehicleTypeId } from "@/lib/vehicleIcons";
+import { useDeviceGroups } from "@/hooks/useDeviceGroups";
 import type { DeviceView } from "@/types/domain";
 
 interface Props {
@@ -35,6 +36,8 @@ export function DeviceEditModal({ device, onClose, onSaved }: Props) {
       : "CAR",
   );
   const [iconColor, setIconColor] = useState(device.iconColor || DEFAULT_ICON_COLOR);
+  const { groups, assignDevices, unassignDevices } = useDeviceGroups();
+  const [groupId, setGroupId] = useState<string>(device.groupId ?? "");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -49,7 +52,15 @@ export function DeviceEditModal({ device, onClose, onSaved }: Props) {
         vehicleType,
         iconColor,
       });
-      onSaved(r.data);
+      // Group membership lives on the groups API, not the device PATCH.
+      let saved = r.data;
+      const oldGroup = device.groupId ?? "";
+      if (groupId !== oldGroup) {
+        if (groupId) await assignDevices(groupId, [device.imei]);
+        else if (oldGroup) await unassignDevices(oldGroup, [device.imei]);
+        saved = { ...saved, groupId: groupId || null };
+      }
+      onSaved(saved);
       onClose();
     } catch (err) {
       setError(extractError(err).message);
@@ -97,6 +108,16 @@ export function DeviceEditModal({ device, onClose, onSaved }: Props) {
               onChange={(e) => setPlate(e.target.value)}
               placeholder="DM-GHA-32-3223"
             />
+          </label>
+
+          <label className="text-xs">
+            <span className="mb-1 block text-ink-9000">{t("veh.group")}</span>
+            <select className="select" value={groupId} onChange={(e) => setGroupId(e.target.value)}>
+              <option value="">{t("list.ungrouped")}</option>
+              {groups.filter((g) => !g.isDefault).map((g) => (
+                <option key={g.id} value={g.id}>{g.name}</option>
+              ))}
+            </select>
           </label>
 
           <div className="text-xs">

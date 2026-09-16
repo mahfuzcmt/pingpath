@@ -13,9 +13,10 @@ import { useIsDesktop, useIsWide } from "@/hooks/useMediaQuery";
 import { DeviceList, type VehicleAction } from "@/components/device/DeviceList";
 import { CommandSheet } from "@/components/device/CommandSheet";
 import { DeviceEditModal } from "@/components/device/DeviceEditModal";
+import { DeviceGroupModal } from "@/components/device/DeviceGroupModal";
 import { ShareLinkModal } from "@/components/share/ShareLinkModal";
 import { KpiStrip } from "@/components/dashboard/KpiStrip";
-import type { DeviceView, LocationView } from "@/types/domain";
+import type { DeviceGroupView, DeviceView, LocationView } from "@/types/domain";
 import type { LiveLocationView } from "@/hooks/useLiveLocations";
 
 // Map + map-bound panels touch window/document at import time → client-only.
@@ -48,7 +49,8 @@ export default function DashboardPage() {
   const isDesktop = useIsDesktop();
   const isWide = useIsWide();
   const { devices, loading, setDevices } = useDevices();
-  const { groups } = useDeviceGroups();
+  const { groups, createGroup, updateGroup, deleteGroup } = useDeviceGroups();
+  const [groupModal, setGroupModal] = useState<{ mode: "new" } | { mode: "edit"; group: DeviceGroupView } | null>(null);
   const { drivers } = useDrivers();
   const driversById = useMemo(() => {
     const m = new Map<string, string>();
@@ -159,6 +161,13 @@ export default function DashboardPage() {
     runAction(action, imei);
   };
 
+  const onDeleteGroup = async (g: DeviceGroupView) => {
+    if (!window.confirm(t("group.deleteConfirm").replace("{name}", g.name))) return;
+    await deleteGroup(g.id);
+    // devices.group_id is ON DELETE SET NULL server-side; mirror it locally.
+    setDevices((prev) => prev.map((d) => (d.groupId === g.id ? { ...d, groupId: null } : d)));
+  };
+
   const list = (
     <DeviceList
       devices={devices}
@@ -169,6 +178,9 @@ export default function DashboardPage() {
       onSelect={onListSelect}
       onHiddenChange={setHiddenImeis}
       onAction={onListAction}
+      onNewGroup={() => setGroupModal({ mode: "new" })}
+      onEditGroup={(group) => setGroupModal({ mode: "edit", group })}
+      onDeleteGroup={(group) => void onDeleteGroup(group)}
     />
   );
 
@@ -268,6 +280,16 @@ export default function DashboardPage() {
       )}
       {selectedDevice && panel === "edit" && (
         <DeviceEditModal device={selectedDevice} onClose={() => setPanel(null)} onSaved={onDeviceSaved} />
+      )}
+      {groupModal && (
+        <DeviceGroupModal
+          group={groupModal.mode === "edit" ? groupModal.group : undefined}
+          onClose={() => setGroupModal(null)}
+          onSave={async (data) => {
+            if (groupModal.mode === "edit") await updateGroup(groupModal.group.id, data);
+            else await createGroup(data as Parameters<typeof createGroup>[0]);
+          }}
+        />
       )}
 
       {/* Transient status pills sit at the bottom centre, clear of the KPI strip and map controls. */}

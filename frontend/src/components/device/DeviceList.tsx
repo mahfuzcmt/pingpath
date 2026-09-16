@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useLocale, type StringKey } from "@/lib/i18n";
 import {
   filterSpeed,
@@ -62,6 +63,8 @@ interface Section {
   name: string;
   color: string;
   rows: Row[];
+  /** Undefined for the synthetic "Ungrouped" section. */
+  group?: DeviceGroupView;
 }
 
 interface DeviceListProps {
@@ -74,6 +77,10 @@ interface DeviceListProps {
   onSelect: (imei: string | null) => void;
   onHiddenChange: (next: Set<string>) => void;
   onAction: (action: VehicleAction, imei: string) => void;
+  /** Group management (ADL: "+" beside the sort bar, pencil/trash on group rows). */
+  onNewGroup?: () => void;
+  onEditGroup?: (group: DeviceGroupView) => void;
+  onDeleteGroup?: (group: DeviceGroupView) => void;
 }
 
 function deviceLabel(d: DeviceView): string {
@@ -147,6 +154,9 @@ export function DeviceList({
   onSelect,
   onHiddenChange,
   onAction,
+  onNewGroup,
+  onEditGroup,
+  onDeleteGroup,
 }: DeviceListProps) {
   const { t } = useLocale();
   const [query, setQuery] = useState("");
@@ -217,7 +227,7 @@ export function DeviceList({
       if (g.isDefault) continue;
       const list = byGroup.get(g.id) ?? [];
       if (list.length === 0 && filtering) continue;
-      out.push({ id: g.id, name: g.name, color: g.color, rows: list });
+      out.push({ id: g.id, name: g.name, color: g.color, rows: list, group: g });
     }
     // Devices whose group id is unknown to the org (stale) still need a home.
     const known = new Set([UNGROUPED_ID, ...groups.map((g) => g.id)]);
@@ -314,16 +324,32 @@ export function DeviceList({
             <option key={k} value={k}>{t(SORT_LABEL[k])}</option>
           ))}
         </select>
-        <label className="flex cursor-pointer items-center gap-1.5 text-[12px] text-ink-500">
-          <input
-            ref={selectAllRef}
-            type="checkbox"
-            checked={allVisible}
-            onChange={toggleAllVisible}
-            className="h-3.5 w-3.5 cursor-pointer accent-brand-500"
-          />
-          {t("list.showAll")}
-        </label>
+        <div className="flex items-center gap-2">
+          <label className="flex cursor-pointer items-center gap-1.5 text-[12px] text-ink-500">
+            <input
+              ref={selectAllRef}
+              type="checkbox"
+              checked={allVisible}
+              onChange={toggleAllVisible}
+              className="h-3.5 w-3.5 cursor-pointer accent-brand-500"
+            />
+            {t("list.showAll")}
+          </label>
+          {onNewGroup && (
+            <button
+              type="button"
+              onClick={onNewGroup}
+              className="btn-icon !h-7 !w-7 text-ink-500 hover:text-brand-500"
+              title={t("group.new")}
+              aria-label={t("group.new")}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-6l-2-2H5a2 2 0 0 0-2 2Z" />
+                <path d="M12 11v6M9 14h6" />
+              </svg>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Grouped vehicle list */}
@@ -335,21 +361,54 @@ export function DeviceList({
           const isCollapsed = collapsed.has(section.id);
           return (
             <div key={section.id}>
-              <button
-                type="button"
-                onClick={() => toggleGroup(section.id)}
-                className="flex h-9 w-full items-center gap-2 border-b border-surface-200 px-3 text-left hover:bg-surface-50"
-              >
-                <svg
-                  width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
-                  className={`shrink-0 text-ink-500 transition-transform ${isCollapsed ? "" : "rotate-90"}`}
+              <div className="group/hdr flex h-9 w-full items-center border-b border-surface-200 pr-2 hover:bg-surface-50">
+                <button
+                  type="button"
+                  onClick={() => toggleGroup(section.id)}
+                  className="flex min-w-0 flex-1 items-center gap-2 px-3 text-left"
                 >
-                  <path d="M9 18l6-6-6-6" />
-                </svg>
-                <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: section.color }} />
-                <span className="truncate text-[13px] font-semibold text-ink-700">{section.name}</span>
-                <span className="text-[12px] text-ink-500 tabular-nums">({section.rows.length})</span>
-              </button>
+                  <svg
+                    width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
+                    className={`shrink-0 text-ink-500 transition-transform ${isCollapsed ? "" : "rotate-90"}`}
+                  >
+                    <path d="M9 18l6-6-6-6" />
+                  </svg>
+                  <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: section.color }} />
+                  <span className="truncate text-[13px] font-semibold text-ink-700">{section.name}</span>
+                  <span className="text-[12px] text-ink-500 tabular-nums">({section.rows.length})</span>
+                </button>
+                {/* Edit / delete for real groups; always visible on touch, hover-only with a mouse (ADL) */}
+                {section.group && (onEditGroup || onDeleteGroup) && (
+                  <div className="flex shrink-0 items-center gap-0.5 md:opacity-0 md:transition-opacity md:group-hover/hdr:opacity-100 md:focus-within:opacity-100">
+                    {onEditGroup && (
+                      <button
+                        type="button"
+                        onClick={() => onEditGroup(section.group!)}
+                        className="btn-icon !h-6 !w-6 hover:text-brand-500"
+                        title={t("group.edit")}
+                        aria-label={`${t("group.edit")} ${section.name}`}
+                      >
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                        </svg>
+                      </button>
+                    )}
+                    {onDeleteGroup && (
+                      <button
+                        type="button"
+                        onClick={() => onDeleteGroup(section.group!)}
+                        className="btn-icon !h-6 !w-6 hover:text-alarm-red"
+                        title={t("group.delete")}
+                        aria-label={`${t("group.delete")} ${section.name}`}
+                      >
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                          <path d="M3 6h18M8 6V4h8v2m1 0v14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V6h10Z" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
               {!isCollapsed &&
                 section.rows.map((row) => (
                   <VehicleRow
@@ -459,12 +518,14 @@ function RowMenu({ onAction, t }: { onAction: (a: VehicleAction) => void; t: (k:
       setOpen(false);
     };
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    const onScroll = () => setOpen(false);
     document.addEventListener("mousedown", close);
     document.addEventListener("keydown", onKey);
-    window.addEventListener("scroll", () => setOpen(false), true);
+    window.addEventListener("scroll", onScroll, true);
     return () => {
       document.removeEventListener("mousedown", close);
       document.removeEventListener("keydown", onKey);
+      window.removeEventListener("scroll", onScroll, true);
     };
   }, [open]);
 
@@ -488,7 +549,9 @@ function RowMenu({ onAction, t }: { onAction: (a: VehicleAction) => void; t: (k:
           <circle cx="12" cy="5" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="12" cy="19" r="2" />
         </svg>
       </button>
-      {open && pos && (
+      {/* Portalled to <body>: the vehicle panel is CSS-transformed (slide animation), which would
+          otherwise make this fixed-position menu resolve against the panel, not the viewport. */}
+      {open && pos && createPortal(
         <div
           ref={menuRef}
           role="menu"
@@ -507,7 +570,8 @@ function RowMenu({ onAction, t }: { onAction: (a: VehicleAction) => void; t: (k:
               {t(m.label)}
             </button>
           ))}
-        </div>
+        </div>,
+        document.body,
       )}
     </>
   );
