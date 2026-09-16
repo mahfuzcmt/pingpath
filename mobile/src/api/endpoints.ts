@@ -10,6 +10,7 @@ import type {
   LatLng,
   LocationView,
   LoginResponse,
+  OrgSummary,
   TripView,
 } from "@/types";
 
@@ -20,6 +21,12 @@ export async function login(email: string, password: string): Promise<LoginRespo
 }
 
 // ----- Devices -----
+/** Current org (name, plan, map key). Backend OrgView is a superset of OrgSummary. */
+export async function getMyOrg(): Promise<OrgSummary> {
+  const r = await api.get<OrgSummary>("/orgs/me");
+  return r.data;
+}
+
 export async function listDevices(status?: string): Promise<DeviceView[]> {
   const r = await api.get<DeviceView[]>("/devices", {
     params: status ? { status } : undefined,

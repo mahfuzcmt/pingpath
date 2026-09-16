@@ -69,7 +69,8 @@ public class AuthService {
                 tokens.accessToken(),
                 tokens.refreshToken(),
                 new UserSummary(user.id(), user.email(), user.fullName(), user.role(), user.orgId()),
-                new OrgSummary(org.id(), org.name(), org.slug(), org.planTier(), org.locale(), org.timezone())
+                new OrgSummary(org.id(), org.name(), org.slug(), org.planTier(), org.locale(), org.timezone(),
+                        org.googleMapsApiKey())
         );
     }
 

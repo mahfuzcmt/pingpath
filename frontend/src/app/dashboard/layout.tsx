@@ -13,16 +13,27 @@ interface BackendUser {
   orgId: string;
 }
 
-async function loadMe(): Promise<AuthMeResponse> {
+interface BackendOrg {
+  id: string;
+  name: string;
+  planTier: string;
+  locale: string;
+  googleMapsApiKey: string | null;
+}
+
+async function loadMe(): Promise<AuthMeResponse & { googleMapsApiKey: string | null }> {
   const session = await readSession();
   if (!session) redirect("/login");
 
-  const r = await fetch(`${backendBase()}/api/v1/auth/me`, {
-    headers: { Authorization: `Bearer ${session.accessToken}` },
-    cache: "no-store",
-  });
+  const headers = { Authorization: `Bearer ${session.accessToken}` };
+  const [r, ro] = await Promise.all([
+    fetch(`${backendBase()}/api/v1/auth/me`, { headers, cache: "no-store" }),
+    fetch(`${backendBase()}/api/v1/orgs/me`, { headers, cache: "no-store" }),
+  ]);
   if (!r.ok) redirect("/login");
   const u = (await r.json()) as BackendUser;
+  // The org call is best-effort: a failure only loses the org name and map key.
+  const o = ro.ok ? ((await ro.json()) as BackendOrg) : null;
 
   return {
     user: {
@@ -34,10 +45,11 @@ async function loadMe(): Promise<AuthMeResponse> {
     },
     org: {
       id: session.orgId,
-      name: "—",
-      plan: "—",
-      locale: "en",
+      name: o?.name ?? "—",
+      plan: o?.planTier ?? "—",
+      locale: o?.locale === "bn" ? "bn" : "en",
     },
+    googleMapsApiKey: o?.googleMapsApiKey ?? null,
   };
 }
 
@@ -54,7 +66,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
       }}
     >
       {/* ADL-style layout: rail + top bar on desktop, drawer nav on mobile */}
-      <DashboardShell user={me.user} orgId={me.org.id}>
+      <DashboardShell user={me.user} orgId={me.org.id} googleMapsApiKey={me.googleMapsApiKey}>
         {children}
       </DashboardShell>
     </SessionProvider>

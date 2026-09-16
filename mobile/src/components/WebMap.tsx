@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { WebView, WebViewMessageEvent } from "react-native-webview";
 import { colors } from "@/theme";
+import { useAuth } from "@/auth/AuthContext";
 
 export interface MapVehicle {
   imei: string;
@@ -60,6 +61,7 @@ interface Props {
 
 // Bangladesh default view.
 const DEFAULT = { lat: 23.685, lng: 90.3563, zoom: 10 };
+// Platform default; an org-owned key from /orgs/me takes precedence (see useAuth).
 const GOOGLE_MAPS_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
 
 // The WebView page gets this origin (via `baseUrl`) so a referrer-restricted
@@ -355,6 +357,10 @@ export default function WebMap({
   onSelect,
   onMapPress,
 }: Props) {
+  // Org-owned Google key (settings on the web dashboard) beats the build-time default.
+  const { org } = useAuth();
+  const googleKey = org?.googleMapsApiKey?.trim() || GOOGLE_MAPS_API_KEY;
+
   const ref = useRef<WebView>(null);
   const [ready, setReady] = useState(false);
   // Commands issued before the map's 'ready' message are queued, not dropped.
@@ -448,7 +454,7 @@ export default function WebMap({
         ref={ref}
         style={styles.fill}
         originWhitelist={["*"]}
-        source={{ html: buildHtml(GOOGLE_MAPS_API_KEY), baseUrl: MAP_REFERRER }}
+        source={{ html: buildHtml(googleKey), baseUrl: MAP_REFERRER }}
         onMessage={onMessage}
         javaScriptEnabled
         domStorageEnabled

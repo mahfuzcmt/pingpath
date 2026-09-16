@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import * as SecureStore from "expo-secure-store";
 import { tokenStore } from "@/api/client";
-import { login as loginRequest } from "@/api/endpoints";
+import { getMyOrg, login as loginRequest } from "@/api/endpoints";
 import { unregisterAlarmPush } from "@/push";
 import { disconnectWs } from "@/ws/stomp";
 import type { OrgSummary, TokenPair, UserSummary } from "@/types";
@@ -51,6 +51,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
   }
 
+  // Org settings (e.g. the Google Maps key) can change on the dashboard while
+  // the app is logged in, so re-read them whenever a session starts.
+  async function refreshOrg(): Promise<void> {
+    try {
+      const org = await getMyOrg();
+      setProfile((prev) => {
+        if (!prev) return prev;
+        const next: Profile = { user: prev.user, org: { ...prev.org, ...org } };
+        void SecureStore.setItemAsync(K_PROFILE, JSON.stringify(next));
+        return next;
+      });
+    } catch {
+      // Offline or stale token: keep the persisted profile.
+    }
+  }
+
   async function doSignOut(): Promise<void> {
     // Best-effort; needs the auth header, so it must run before tokens clear.
     await unregisterAlarmPush();
@@ -77,6 +93,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           tokenStore.set({ accessToken: access, refreshToken: refresh });
           setProfile(JSON.parse(profileJson) as Profile);
           setStatus("authed");
+          void refreshOrg();
         } else {
           setStatus("anon");
         }
@@ -99,6 +116,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await SecureStore.setItemAsync(K_PROFILE, JSON.stringify(prof));
         setProfile(prof);
         setStatus("authed");
+        void refreshOrg();
       },
       signOut: doSignOut,
     }),

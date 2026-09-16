@@ -12,6 +12,8 @@ export interface OrgDetail {
   address: string | null;
   locale: string;
   timezone: string;
+  /** Org-owned Google Maps browser key; null = platform default. */
+  googleMapsApiKey: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -23,6 +25,8 @@ export interface OrgUpdate {
   address?: string;
   locale?: string;
   timezone?: string;
+  /** Omit = unchanged, "" = clear (use platform key). */
+  googleMapsApiKey?: string;
 }
 
 export interface UserDetail {

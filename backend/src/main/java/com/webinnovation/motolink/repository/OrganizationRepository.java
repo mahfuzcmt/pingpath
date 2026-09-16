@@ -28,6 +28,7 @@ public class OrganizationRepository {
             rs.getString("address"),
             rs.getString("locale"),
             rs.getString("timezone"),
+            rs.getString("google_maps_api_key"),
             rs.getObject("created_at", java.time.OffsetDateTime.class).toInstant(),
             rs.getObject("updated_at", java.time.OffsetDateTime.class).toInstant()
     );
@@ -83,6 +84,18 @@ public class OrganizationRepository {
                        updated_at    = now()
                  WHERE id = :id
                 """, params);
+    }
+
+    /**
+     * Set or clear (null) the org's own Google Maps browser key.
+     */
+    public int updateGoogleMapsApiKey(UUID id, String key) {
+        return jdbc.update("""
+                UPDATE organizations
+                   SET google_maps_api_key = :key,
+                       updated_at          = now()
+                 WHERE id = :id
+                """, new MapSqlParameterSource("id", id).addValue("key", key));
     }
 
     /**

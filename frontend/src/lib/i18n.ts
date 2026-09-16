@@ -198,6 +198,7 @@ const STRINGS = {
   "common.close": { en: "Close", bn: "বন্ধ করুন" },
   "common.retry": { en: "Retry", bn: "আবার চেষ্টা" },
   "common.save": { en: "Save", bn: "সংরক্ষণ" },
+  "common.reload": { en: "Reload", bn: "রিলোড" },
   "common.cancel": { en: "Cancel", bn: "বাতিল" },
   "common.delete": { en: "Delete", bn: "মুছুন" },
   "common.create": { en: "Create", bn: "তৈরি করুন" },
@@ -283,6 +284,17 @@ const STRINGS = {
   "settings.org.timezone": { en: "Timezone", bn: "টাইমজোন" },
   "settings.org.plan": { en: "Plan", bn: "প্ল্যান" },
   "settings.org.saved": { en: "Saved", bn: "সংরক্ষিত" },
+  "settings.map.title": { en: "Map", bn: "মানচিত্র" },
+  "settings.map.googleKey": { en: "Google Maps API key", bn: "গুগল ম্যাপস API কী" },
+  "settings.map.googleKeyHelp": {
+    en: "Use your own Google Cloud browser key so map usage is billed to your account. Leave empty to use the MotoLink default key. Restrict the key to this site's address in Google Cloud Console.",
+    bn: "নিজের Google Cloud ব্রাউজার কী ব্যবহার করুন যাতে ম্যাপ ব্যবহারের বিল আপনার অ্যাকাউন্টে যায়। খালি রাখলে MotoLink-এর ডিফল্ট কী ব্যবহৃত হবে। Google Cloud Console-এ কী-টি এই সাইটের ঠিকানায় সীমাবদ্ধ করুন।",
+  },
+  "settings.map.usingOwn": { en: "Using your organization's key", bn: "আপনার প্রতিষ্ঠানের কী ব্যবহৃত হচ্ছে" },
+  "settings.map.usingDefault": { en: "Using the MotoLink default key", bn: "MotoLink-এর ডিফল্ট কী ব্যবহৃত হচ্ছে" },
+  "settings.map.show": { en: "Show", bn: "দেখান" },
+  "settings.map.hide": { en: "Hide", bn: "লুকান" },
+  "settings.map.reloadHint": { en: "Saved. Reload the page to switch the map to the new key.", bn: "সংরক্ষিত। নতুন কী-তে ম্যাপ পরিবর্তন করতে পেজ রিলোড করুন।" },
 
   // ── Billing ────────────────────────────────────────────────────────
   "billing.title": { en: "Subscriptions", bn: "সাবস্ক্রিপশন" },

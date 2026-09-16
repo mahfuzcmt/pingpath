@@ -21,7 +21,8 @@ public final class AuthDtos {
 
     public record UserSummary(UUID id, String email, String fullName, String role, UUID orgId) {}
 
-    public record OrgSummary(UUID id, String name, String slug, String planTier, String locale, String timezone) {}
+    public record OrgSummary(UUID id, String name, String slug, String planTier, String locale, String timezone,
+                             String googleMapsApiKey) {}
 
     public record LoginResponse(
             String accessToken,

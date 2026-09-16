@@ -22,6 +22,8 @@ export function OrgInfoTab({ readOnly }: { readOnly: boolean }) {
   const [busy, setBusy] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [showKey, setShowKey] = useState(false);
+  const [keyChanged, setKeyChanged] = useState(false);
 
   useEffect(() => {
     if (!org) return;
@@ -32,6 +34,7 @@ export function OrgInfoTab({ readOnly }: { readOnly: boolean }) {
       address: org.address ?? "",
       locale: org.locale,
       timezone: org.timezone,
+      googleMapsApiKey: org.googleMapsApiKey ?? "",
     });
   }, [org]);
 
@@ -45,8 +48,11 @@ export function OrgInfoTab({ readOnly }: { readOnly: boolean }) {
     setSaveError(null);
     setSaved(false);
     try {
-      await update(form);
+      const wasKey = org?.googleMapsApiKey ?? "";
+      const saved = await update(form);
       setSaved(true);
+      // The Google JS API is loaded once per page, so a key change needs a reload to apply.
+      setKeyChanged((saved.googleMapsApiKey ?? "") !== wasKey);
       setTimeout(() => setSaved(false), 2500);
     } catch (err) {
       setSaveError(extractError(err).message);
@@ -139,14 +145,56 @@ export function OrgInfoTab({ readOnly }: { readOnly: boolean }) {
         </Field>
       </div>
 
+      {/* Map: bring-your-own Google Maps key (ADL-style per-account map key) */}
+      <fieldset className="space-y-2 rounded-lg border border-surface-200 p-3">
+        <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-ink-700">
+          {t("settings.map.title")}
+        </legend>
+        <Field label={t("settings.map.googleKey")}>
+          <div className="flex gap-2">
+            <input
+              type={showKey ? "text" : "password"}
+              className="input font-mono"
+              autoComplete="off"
+              spellCheck={false}
+              placeholder="AIza…"
+              maxLength={39}
+              value={form.googleMapsApiKey ?? ""}
+              onChange={(e) => setField("googleMapsApiKey", e.target.value.trim())}
+              disabled={readOnly}
+            />
+            <button
+              type="button"
+              className="btn-secondary shrink-0"
+              onClick={() => setShowKey((v) => !v)}
+              aria-pressed={showKey}
+            >
+              {showKey ? t("settings.map.hide") : t("settings.map.show")}
+            </button>
+          </div>
+        </Field>
+        <p className="text-xs text-ink-500">{t("settings.map.googleKeyHelp")}</p>
+        <p className="text-xs font-medium text-ink-700">
+          {org.googleMapsApiKey ? t("settings.map.usingOwn") : t("settings.map.usingDefault")}
+        </p>
+      </fieldset>
+
       {saveError && <div className="text-xs text-alarm-red">{saveError}</div>}
 
       {!readOnly && (
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <button type="submit" className="btn-primary" disabled={busy}>
             {busy ? t("common.loading") : t("common.save")}
           </button>
           {saved && <span className="text-xs text-brand-500">{t("settings.org.saved")}</span>}
+          {keyChanged && (
+            <span className="text-xs text-amber-700">
+              {t("settings.map.reloadHint")}{" "}
+              <button type="button" className="underline" onClick={() => window.location.reload()}>
+                {t("common.reload")}
+              </button>
+            </span>
+          )}
         </div>
       )}
     </form>

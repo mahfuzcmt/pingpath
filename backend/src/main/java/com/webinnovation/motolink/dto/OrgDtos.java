@@ -24,6 +24,8 @@ public final class OrgDtos {
             String address,
             String locale,
             String timezone,
+            /** Org-owned Google Maps browser key; null = platform default key. */
+            String googleMapsApiKey,
             Instant createdAt,
             Instant updatedAt
     ) {
@@ -31,7 +33,8 @@ public final class OrgDtos {
             return new OrgView(
                     o.id(), o.name(), o.slug(), o.planTier(), o.status(),
                     o.contactEmail(), o.contactPhone(), o.address(),
-                    o.locale(), o.timezone(), o.createdAt(), o.updatedAt());
+                    o.locale(), o.timezone(), o.googleMapsApiKey(),
+                    o.createdAt(), o.updatedAt());
         }
     }
 
@@ -41,7 +44,9 @@ public final class OrgDtos {
             String contactPhone,
             String address,
             String locale,
-            String timezone
+            String timezone,
+            /** Absent/null = unchanged; blank = clear (fall back to platform key). */
+            String googleMapsApiKey
     ) {}
 
     public record UserView(

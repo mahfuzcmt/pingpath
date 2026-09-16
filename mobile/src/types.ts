@@ -46,6 +46,8 @@ export interface OrgSummary {
   planTier: string;
   locale: string;
   timezone: string;
+  /** Org-owned Google Maps browser key; null/absent = platform default. */
+  googleMapsApiKey?: string | null;
 }
 
 export interface LoginResponse {

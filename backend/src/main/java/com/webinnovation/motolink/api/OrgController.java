@@ -20,6 +20,7 @@ import com.webinnovation.motolink.repository.UserDeviceRepository;
 import com.webinnovation.motolink.repository.UserRepository;
 import com.webinnovation.motolink.security.TenantContext;
 import com.webinnovation.motolink.service.AuditService;
+import com.webinnovation.motolink.util.GoogleMapsKey;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -70,7 +71,17 @@ public class OrgController {
         if (rows == 0) {
             throw new NotFoundException("organization", orgId.toString());
         }
+        // Map key: null = untouched, blank = clear, otherwise must look like a browser key.
+        if (body.googleMapsApiKey() != null) {
+            String key = GoogleMapsKey.normalize(body.googleMapsApiKey());
+            if (key != null && !GoogleMapsKey.isValid(key)) {
+                throw new DomainException("INVALID_MAPS_KEY",
+                        "That does not look like a Google Maps browser API key (AIza… , 39 characters)");
+            }
+            orgRepo.updateGoogleMapsApiKey(orgId, key);
+        }
         Organization updated = orgRepo.findById(orgId).orElseThrow();
+        // Never log the key itself; the field list says it changed, the value stays in the DB.
         audit.record("ORG_UPDATE", "organization", orgId.toString(),
                 Map.of("fields", nonNullFields(body)));
         return OrgView.of(updated);

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { Sidebar } from "./Sidebar";
 import { Topbar } from "./Topbar";
+import { setGoogleMapsApiKey } from "@/lib/leaflet";
 import type { UserView } from "@/types/domain";
 
 /**
@@ -14,14 +15,21 @@ import type { UserView } from "@/types/domain";
 export function DashboardShell({
   user,
   orgId,
+  googleMapsApiKey,
   children,
 }: {
   user: UserView;
   orgId: string;
+  /** The org's own Google Maps key (null = platform default). */
+  googleMapsApiKey?: string | null;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
   const [navOpen, setNavOpen] = useState(false);
+
+  // Applied during render, not in an effect: child maps read the key while
+  // they render, and children render after this body but before any effect.
+  setGoogleMapsApiKey(googleMapsApiKey);
 
   // Close the drawer whenever navigation happens.
   useEffect(() => {

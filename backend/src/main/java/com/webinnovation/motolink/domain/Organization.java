@@ -14,6 +14,8 @@ public record Organization(
         String address,
         String locale,
         String timezone,
+        /** Org-owned Google Maps browser key; null = platform default. */
+        String googleMapsApiKey,
         Instant createdAt,
         Instant updatedAt
 ) {}

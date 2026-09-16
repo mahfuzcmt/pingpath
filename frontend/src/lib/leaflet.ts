@@ -29,7 +29,23 @@ export const SATELLITE_ATTRIBUTION =
 // back to the previous free OSM + Esri satellite tiles so maps still render.
 // ---------------------------------------------------------------------------
 
+/** Platform-wide key baked into the build. Orgs can override it (see setGoogleMapsApiKey). */
 export const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
+
+// Per-organization key (organizations.google_maps_api_key), set by the
+// dashboard shell once the session is known. Falls back to the platform key.
+// The Google JS API can only be loaded once per page, so a change after the
+// first map mounted takes effect on the next full page load.
+let orgGoogleMapsApiKey = "";
+
+export function setGoogleMapsApiKey(key: string | null | undefined): void {
+  orgGoogleMapsApiKey = key?.trim() ?? "";
+}
+
+/** Effective key: the org's own key when set, else the platform default. */
+export function getGoogleMapsApiKey(): string {
+  return orgGoogleMapsApiKey || GOOGLE_MAPS_API_KEY;
+}
 
 export type BaseLayerKind =
   | "osm"              // OSM Standard (free, always available)
@@ -56,7 +72,8 @@ let googleMapsLoader: Promise<boolean> | null = null;
 
 /** Load the Google Maps JS API once. Resolves false when no key / load error. */
 function loadGoogleMaps(): Promise<boolean> {
-  if (!GOOGLE_MAPS_API_KEY || typeof window === "undefined") return Promise.resolve(false);
+  const key = getGoogleMapsApiKey();
+  if (!key || typeof window === "undefined") return Promise.resolve(false);
   if (window.google?.maps) return Promise.resolve(true);
   if (!googleMapsLoader) {
     googleMapsLoader = new Promise<boolean>((resolve) => {
@@ -64,7 +81,7 @@ function loadGoogleMaps(): Promise<boolean> {
       const script = document.createElement("script");
       script.src =
         "https://maps.googleapis.com/maps/api/js" +
-        `?key=${encodeURIComponent(GOOGLE_MAPS_API_KEY)}` +
+        `?key=${encodeURIComponent(key)}` +
         "&loading=async&callback=__mlGoogleMapsReady";
       script.async = true;
       script.onerror = () => {
@@ -119,12 +136,12 @@ function googleMapType(kind: BaseLayerKind): string | null {
 
 /** Check if Google Maps API key is configured. */
 export function hasGoogleMapsKey(): boolean {
-  return !!GOOGLE_MAPS_API_KEY;
+  return !!getGoogleMapsApiKey();
 }
 
 /** Preload Google Maps API (call early if you know you'll need it). */
 export function preloadGoogleMaps(): void {
-  if (GOOGLE_MAPS_API_KEY) loadGoogleMaps();
+  if (getGoogleMapsApiKey()) loadGoogleMaps();
 }
 
 export async function createBaseLayer(kind: BaseLayerKind = "google-street"): Promise<L.GridLayer> {
