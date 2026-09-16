@@ -99,7 +99,12 @@ public class AlarmService {
      * mirroring ADL's Alarm Overview.
      */
     public AlarmOverview overview(UUID orgId, Instant from, Instant to) {
-        List<AlarmRepository.TypeCount> counts = repo.countByDeviceAndType(orgId, from, to);
+        return overview(orgId, from, to, null);
+    }
+
+    /** @param visible IMEIs the caller may see; null = unrestricted. */
+    public AlarmOverview overview(UUID orgId, Instant from, Instant to, Set<String> visible) {
+        List<AlarmRepository.TypeCount> counts = repo.countByDeviceAndType(orgId, from, to, visible);
         Map<String, Map<String, Integer>> byImei = new TreeMap<>();
         TreeSet<String> types = new TreeSet<>();
         for (var c : counts) {
@@ -108,13 +113,15 @@ public class AlarmService {
         }
         List<AlarmOverviewRow> rows = new ArrayList<>();
         for (Device d : deviceRepo.listForOrg(orgId)) {
+            if (!DeviceAccessService.canSee(visible, d.imei())) continue;
             Map<String, Integer> m = byImei.getOrDefault(d.imei(), Map.of());
             int total = m.values().stream().mapToInt(Integer::intValue).sum();
             rows.add(new AlarmOverviewRow(d.imei(), d.name(), d.vehiclePlate(), m, total));
             byImei.remove(d.imei());
         }
-        // Alarms for devices no longer in the org (deleted / moved) still count.
-        for (var e : byImei.entrySet()) {
+        // Alarms for devices no longer in the org (deleted / moved) still count —
+        // for unrestricted callers; a restricted user has no claim to them.
+        for (var e : visible == null ? byImei.entrySet() : Set.<Map.Entry<String, Map<String, Integer>>>of()) {
             int total = e.getValue().values().stream().mapToInt(Integer::intValue).sum();
             rows.add(new AlarmOverviewRow(e.getKey(), null, null, e.getValue(), total));
         }

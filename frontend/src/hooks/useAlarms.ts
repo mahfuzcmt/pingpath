@@ -18,6 +18,12 @@ export interface AlarmQuery {
 }
 
 interface Options extends AlarmQuery {
+  /**
+   * IMEIs the current user may see. The REST list is already filtered server-side,
+   * but the org-wide WebSocket topic is not, so live alarms are checked here.
+   * `null`/`undefined` = no restriction (admins, or the device list not loaded yet).
+   */
+  allowedImeis?: Set<string> | null;
   /** Fires once per alarm that arrives over the WebSocket and was not already loaded. */
   onNew?: (alarm: AlarmView) => void;
 }
@@ -36,7 +42,8 @@ function normalizeLive(raw: AlarmView & { imei?: string }): AlarmView {
   };
 }
 
-function matches(a: AlarmView, q: AlarmQuery): boolean {
+function matches(a: AlarmView, q: AlarmQuery & { allowedImeis?: Set<string> | null }): boolean {
+  if (q.allowedImeis && !q.allowedImeis.has(a.deviceImei)) return false;
   if (q.type && a.type !== q.type) return false;
   if (q.severity && a.severity !== q.severity) return false;
   if (q.imei && a.deviceImei !== q.imei) return false;
@@ -51,15 +58,15 @@ function matches(a: AlarmView, q: AlarmQuery): boolean {
  * upserts in place.
  */
 export function useAlarms(orgId: string, opts: Options = {}) {
-  const { unackedOnly = false, limit = 100, type, severity, imei, from, to, onNew } = opts;
+  const { unackedOnly = false, limit = 100, type, severity, imei, from, to, onNew, allowedImeis } = opts;
   const [alarms, setAlarms] = useState<AlarmView[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const mounted = useRef(true);
   const onNewRef = useRef(onNew);
-  const queryRef = useRef<AlarmQuery>({ type, severity, imei, from, to });
+  const queryRef = useRef<AlarmQuery & { allowedImeis?: Set<string> | null }>({ type, severity, imei, from, to, allowedImeis });
   onNewRef.current = onNew;
-  queryRef.current = { type, severity, imei, from, to };
+  queryRef.current = { type, severity, imei, from, to, allowedImeis };
 
   const upsert = useCallback((a: AlarmView) => {
     setAlarms((prev) => {

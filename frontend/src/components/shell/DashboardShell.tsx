@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { Sidebar } from "./Sidebar";
 import { Topbar } from "./Topbar";
 import { AlarmToast } from "@/components/alarm/AlarmToast";
-import { setGoogleMapsApiKey } from "@/lib/leaflet";
+import { setGoogleMapsApiKey } from "@/lib/googleMapsKey";
 import type { UserView } from "@/types/domain";
 
 /**

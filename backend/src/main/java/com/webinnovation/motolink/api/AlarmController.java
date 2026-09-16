@@ -9,6 +9,7 @@ import com.webinnovation.motolink.repository.AlarmRepository.AlarmFilter;
 import com.webinnovation.motolink.domain.NotificationDefaults;
 import com.webinnovation.motolink.security.TenantContext;
 import com.webinnovation.motolink.service.AlarmService;
+import com.webinnovation.motolink.service.DeviceAccessService;
 import com.webinnovation.motolink.service.AuditService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -33,6 +34,18 @@ public class AlarmController {
 
     private final AlarmService alarmService;
     private final AuditService audit;
+    private final DeviceAccessService access;
+
+    /** IMEIs the caller may see (null = all devices in the org). */
+    private Set<String> visible() {
+        return access.visibleImeis(TenantContext.currentUserId(), TenantContext.currentRole());
+    }
+
+    private void requireVisible(Set<String> visible, String imei) {
+        if (!DeviceAccessService.canSee(visible, imei)) {
+            throw new NotFoundException("Device not found: " + imei);
+        }
+    }
 
     private static final Set<String> SEVERITIES = Set.of("INFO", "WARNING", "CRITICAL");
 
@@ -66,7 +79,10 @@ public class AlarmController {
                 throw new DomainException("INVALID_SEVERITY", "severity must be one of " + SEVERITIES);
             }
         }
-        var filter = new AlarmFilter(onlyUnacked, typeN, sevN, blankToNull(imei), from, to);
+        Set<String> visible = visible();
+        String imeiN = blankToNull(imei);
+        if (imeiN != null && !DeviceAccessService.canSee(visible, imeiN)) return List.of();
+        var filter = new AlarmFilter(onlyUnacked, typeN, sevN, imeiN, from, to, visible);
         return alarmService.listForOrg(orgId, filter, limit, offset)
                 .stream().map(AlarmView::of).toList();
     }
@@ -84,7 +100,7 @@ public class AlarmController {
         if (!to.isAfter(from)) {
             throw new DomainException("INVALID_RANGE", "to must be after from");
         }
-        return alarmService.overview(orgId, from, to);
+        return alarmService.overview(orgId, from, to, visible());
     }
 
     @GetMapping("/device/{imei}")
@@ -93,6 +109,7 @@ public class AlarmController {
             @RequestParam(name = "limit", defaultValue = "100") int limit,
             @RequestParam(name = "offset", defaultValue = "0") int offset) {
         UUID orgId = TenantContext.requireOrgId();
+        requireVisible(visible(), imei);
         return alarmService.listForDevice(orgId, imei, limit, offset)
                 .stream().map(AlarmView::of).toList();
     }
@@ -100,7 +117,9 @@ public class AlarmController {
     @GetMapping("/{id}")
     public AlarmView get(@PathVariable UUID id) {
         UUID orgId = TenantContext.requireOrgId();
-        return AlarmView.of(alarmService.getOrThrow(orgId, id));
+        var alarm = alarmService.getOrThrow(orgId, id);
+        requireVisible(visible(), alarm.deviceImei());
+        return AlarmView.of(alarm);
     }
 
     /** Body optional: {@code {result: HANDLED|FALSE_ALARM|NO_ACTION, notes}} (ADL "process result"). */
@@ -118,6 +137,7 @@ public class AlarmController {
         if (notes != null && notes.length() > 1000) {
             throw new DomainException("NOTES_TOO_LONG", "notes must be 1000 characters or fewer");
         }
+        requireVisible(visible(), alarmService.getOrThrow(orgId, id).deviceImei());
         boolean ok = alarmService.acknowledge(orgId, id, userId, result, notes);
         if (!ok) {
             // Either non-existent or already acknowledged — fetch and 404 on miss.

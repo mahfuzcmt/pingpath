@@ -60,17 +60,17 @@ export function DeviceGroupModal({ group, onSave, onClose }: DeviceGroupModalPro
         </div>
 
         <div className="flex flex-col gap-3 p-4">
-          <label className="text-xs">
+          <label className="text-[13px]">
             <span className="mb-1 block text-ink-500">{t("group.name")} *</span>
             <input type="text" className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder={t("group.namePlaceholder")} disabled={saving} autoFocus />
           </label>
 
-          <label className="text-xs">
+          <label className="text-[13px]">
             <span className="mb-1 block text-ink-500">{t("group.description")}</span>
             <input type="text" className="input" value={description} onChange={(e) => setDescription(e.target.value)} disabled={saving} />
           </label>
 
-          <div className="text-xs">
+          <div className="text-[13px]">
             <span className="mb-1 block text-ink-500">{t("group.color")}</span>
             <div className="flex flex-wrap gap-1.5">
               {GROUP_COLORS.map((c) => (
@@ -87,7 +87,7 @@ export function DeviceGroupModal({ group, onSave, onClose }: DeviceGroupModalPro
             </div>
           </div>
 
-          <div className="text-xs">
+          <div className="text-[13px]">
             <span className="mb-1 block text-ink-500">{t("group.icon")}</span>
             <div className="flex flex-wrap gap-1.5">
               {GROUP_ICONS.map((i) => (
@@ -109,7 +109,7 @@ export function DeviceGroupModal({ group, onSave, onClose }: DeviceGroupModalPro
             </div>
           </div>
 
-          {error && <p className="text-xs text-alarm-red">{error}</p>}
+          {error && <p className="text-[13px] text-alarm-red">{error}</p>}
         </div>
 
         <div className="modal-footer">

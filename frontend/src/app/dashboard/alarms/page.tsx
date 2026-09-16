@@ -32,7 +32,12 @@ export default function Page() {
   const { orgId } = useSession();
   const { t } = useLocale();
   const [tab, setTab] = useState<Tab>("details");
-  const { devices } = useDevices();
+  const { devices, loading: devicesLoading } = useDevices();
+  // Restrict live alarms to the devices this user may see; unrestricted until the list loads.
+  const allowedImeis = useMemo(
+    () => (devicesLoading ? null : new Set(devices.map((d) => d.imei))),
+    [devices, devicesLoading],
+  );
   const { exportData, loading: exporting } = useExport();
   const [filter, setFilter] = useState<AlarmCenterFilter>({
     type: "",
@@ -63,7 +68,7 @@ export default function Page() {
     }),
     [filter],
   );
-  const { alarms, loading, acknowledge } = useAlarms(orgId, query);
+  const { alarms, loading, acknowledge } = useAlarms(orgId, { ...query, allowedImeis });
 
   return (
     <div className="flex h-full flex-col bg-white">
@@ -82,7 +87,7 @@ export default function Page() {
       <div className="min-h-0 flex-1">
         {tab === "overview" ? (
           <div className="flex h-full flex-col">
-            <div className="flex flex-wrap items-end gap-2 border-b border-surface-300 px-4 py-2 text-xs">
+            <div className="flex flex-wrap items-end gap-2 border-b border-surface-300 px-4 py-2 text-[13px]">
               <label className="flex flex-col gap-0.5">
                 <span className="t-label">{t("common.from")}</span>
                 <input type="date" className="input w-auto" value={filter.from} max={filter.to} onChange={(e) => setFilter({ ...filter, from: e.target.value })} />

@@ -59,8 +59,14 @@ export function GeofenceEditor({ onSubmit, onCancel }: Props) {
 
     map.zoomControl.setPosition('bottomright');
     mapRef.current = map;
+    // The editor mounts as an overlay whose panes settle after first paint; without
+    // re-measuring, Leaflet lays tiles out for a stale size (torn tiles, wrong centre).
+    const ro = new ResizeObserver(() => map.invalidateSize());
+    ro.observe(containerRef.current);
+    setTimeout(() => map.invalidateSize(), 120);
 
     return () => {
+      ro.disconnect();
       centerMarkerRef.current?.remove();
       centerMarkerRef.current = null;
       for (const m of vertexMarkersRef.current) m.remove();
@@ -192,17 +198,17 @@ export function GeofenceEditor({ onSubmit, onCancel }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 z-40 flex flex-col bg-white md:flex-row">
+    <div className="fixed inset-0 z-[2400] flex flex-col bg-white md:flex-row">
       <div className="flex max-h-[45vh] w-full shrink-0 flex-col gap-3 overflow-y-auto border-b border-surface-300 p-4 md:max-h-none md:w-80 md:border-b-0 md:border-r">
         <div className="flex items-center justify-between">
-          <div className="font-display text-sm font-semibold">{t("geo.new")}</div>
+          <div className="font-display text-[14px] font-semibold">{t("geo.new")}</div>
           <button type="button" className="text-ink-400 hover:text-ink-900" onClick={onCancel}>
             ×
           </button>
         </div>
 
-        <label className="text-sm">
-          <span className="mb-1 block text-xs text-ink-400">{t("geo.name")}</span>
+        <label className="text-[14px]">
+          <span className="mb-1 block text-[13px] text-ink-400">{t("geo.name")}</span>
           <input
             type="text"
             className="input"
@@ -212,8 +218,8 @@ export function GeofenceEditor({ onSubmit, onCancel }: Props) {
           />
         </label>
 
-        <label className="text-sm">
-          <span className="mb-1 block text-xs text-ink-400">{t("geo.shape")}</span>
+        <label className="text-[14px]">
+          <span className="mb-1 block text-[13px] text-ink-400">{t("geo.shape")}</span>
           <select
             className="input"
             value={type}
@@ -230,8 +236,8 @@ export function GeofenceEditor({ onSubmit, onCancel }: Props) {
         </label>
 
         {type === "CIRCLE" && (
-          <label className="text-sm">
-            <span className="mb-1 block text-xs text-ink-400">{t("geo.radius")}</span>
+          <label className="text-[14px]">
+            <span className="mb-1 block text-[13px] text-ink-400">{t("geo.radius")}</span>
             <input
               type="number"
               className="input"
@@ -243,8 +249,8 @@ export function GeofenceEditor({ onSubmit, onCancel }: Props) {
           </label>
         )}
 
-        <label className="text-sm">
-          <span className="mb-1 block text-xs text-ink-400">{t("geo.notifyOn")}</span>
+        <label className="text-[14px]">
+          <span className="mb-1 block text-[13px] text-ink-400">{t("geo.notifyOn")}</span>
           <select
             className="input"
             value={notifyOn}
@@ -256,8 +262,8 @@ export function GeofenceEditor({ onSubmit, onCancel }: Props) {
           </select>
         </label>
 
-        <label className="text-sm">
-          <span className="mb-1 block text-xs text-ink-400">Color</span>
+        <label className="text-[14px]">
+          <span className="mb-1 block text-[13px] text-ink-400">Color</span>
           <input
             type="color"
             className="h-8 w-full cursor-pointer rounded border border-surface-300/30 bg-surface-100"
@@ -266,21 +272,21 @@ export function GeofenceEditor({ onSubmit, onCancel }: Props) {
           />
         </label>
 
-        <div className="rounded border border-dashed border-surface-300/30 p-2 text-xs text-ink-400">
+        <div className="rounded border border-dashed border-surface-300/30 p-2 text-[13px] text-ink-400">
           {type === "CIRCLE" ? t("geo.clickToSetCenter") : t("geo.clickToAddVertex")}
         </div>
 
         {type === "POLYGON" && polygon.length > 0 && (
           <button
             type="button"
-            className="btn-ghost text-xs"
+            className="btn-ghost text-[13px]"
             onClick={() => setPolygon((prev) => prev.slice(0, -1))}
           >
             Undo last vertex ({polygon.length})
           </button>
         )}
 
-        {error && <div className="text-xs text-alarm-red">{error}</div>}
+        {error && <div className="text-[13px] text-alarm-red">{error}</div>}
 
         <div className="mt-auto flex gap-2">
           <button type="button" className="btn-ghost flex-1" onClick={onCancel}>

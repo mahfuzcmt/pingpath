@@ -56,14 +56,26 @@ public class PushTokenRepository {
      * settings row get everything (the pre-V15 behaviour), users with a row are
      * filtered by their push_types.
      */
-    public List<String> listTokensForOrgAndType(UUID orgId, String alarmType) {
+    /**
+     * Tokens of org users who opted in to {@code alarmType} pushes AND may see the device:
+     * admins, {@code see_all_devices} users, or an explicit {@code user_devices} row.
+     */
+    public List<String> listTokensForOrgAndType(UUID orgId, String alarmType, String deviceImei) {
         return jdbc.queryForList("""
                 SELECT pt.token
                   FROM push_tokens pt
+                  JOIN users u ON u.id = pt.user_id
                   LEFT JOIN user_notification_settings s ON s.user_id = pt.user_id
                  WHERE pt.org_id = :orgId
+                   AND u.is_active = true
                    AND (s.user_id IS NULL OR :type = ANY(s.push_types))
-                """, new MapSqlParameterSource("orgId", orgId).addValue("type", alarmType),
+                   AND (u.role IN ('SUPER_ADMIN', 'ORG_ADMIN')
+                        OR u.see_all_devices = true
+                        OR EXISTS (SELECT 1 FROM user_devices ud
+                                    WHERE ud.user_id = pt.user_id AND ud.device_imei = :imei))
+                """, new MapSqlParameterSource("orgId", orgId)
+                        .addValue("type", alarmType)
+                        .addValue("imei", deviceImei),
                 String.class);
     }
 

@@ -71,7 +71,7 @@ public class PushService {
         if (!enabled) return;
         try {
             // Respect each user's push preferences (Settings → Notifications).
-            List<String> tokens = tokenRepo.listTokensForOrgAndType(alarm.orgId(), alarm.type());
+            List<String> tokens = tokenRepo.listTokensForOrgAndType(alarm.orgId(), alarm.type(), alarm.deviceImei());
             if (tokens.isEmpty()) return;
 
             String deviceLabel = deviceRepo.findByImei(alarm.deviceImei())

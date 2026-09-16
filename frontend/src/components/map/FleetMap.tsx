@@ -459,7 +459,7 @@ function GlobalFreshnessIndicator({
     <div className="flex items-center gap-2">
       {/* Overall system status */}
       <div
-        className={`glass-btn flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold ${
+        className={`glass-btn flex items-center gap-2 rounded-xl px-3 py-2 text-[13px] font-semibold ${
           isLive ? "pp-global-live" : ""
         }`}
         style={{ borderColor: `${config.color}40` }}
@@ -513,7 +513,7 @@ function BatchCountdown({ lastRefreshAt }: { lastRefreshAt: Date | null }) {
   }, [lastRefreshAt]);
 
   return (
-    <div className="glass-btn flex items-center gap-1.5 rounded-lg px-2 py-1 text-[10px] font-medium text-ink-600">
+    <div className="glass-btn flex items-center gap-1.5 rounded-lg px-2 py-1 text-[11px] font-medium text-ink-600">
       <div
         className={`h-1.5 w-1.5 rounded-full ${secondsLeft <= 2 ? "animate-pulse bg-brand-500" : "bg-emerald-500"}`}
       />
@@ -1355,7 +1355,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           <div className="glass-btn flex overflow-hidden rounded-xl">
             <input
               type="search"
-              className="min-w-0 flex-1 bg-transparent px-3 py-2 text-xs text-ink-900 outline-none placeholder:text-ink-400"
+              className="min-w-0 flex-1 bg-transparent px-3 py-2 text-[13px] text-ink-900 outline-none placeholder:text-ink-400"
               placeholder="Search address…"
               value={searchQ}
               onChange={(e) => setSearchQ(e.target.value)}
@@ -1388,7 +1388,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
                   <button
                     type="button"
                     onClick={() => gotoSearchResult(r)}
-                    className="block w-full border-b border-surface-200/50 px-3 py-2 text-left text-[11px] text-ink-700 transition last:border-b-0 hover:bg-white/60"
+                    className="block w-full border-b border-surface-200/50 px-3 py-2 text-left text-[12px] text-ink-700 transition last:border-b-0 hover:bg-white/60"
                   >
                     {r.label}
                   </button>
@@ -1404,7 +1404,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
         {/* Auto-follow toggle - only show when a vehicle is selected */}
         {selectedImei && (
           <label
-            className={`glass-btn flex cursor-pointer items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition ${
+            className={`glass-btn flex cursor-pointer items-center gap-1.5 rounded-xl px-3 py-2 text-[13px] font-semibold transition ${
               autoFollow
                 ? "!bg-brand-500/90 !border-brand-400/50 text-white"
                 : "text-ink-900"
@@ -1425,7 +1425,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           </label>
         )}
         {trafficAvailable && (
-          <label className="glass-btn flex cursor-pointer items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold text-ink-900">
+          <label className="glass-btn flex cursor-pointer items-center gap-1.5 rounded-xl px-3 py-2 text-[13px] font-semibold text-ink-900">
             <input
               type="checkbox"
               checked={showTraffic}
@@ -1589,7 +1589,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
         .pp-label-name {
           color: #1f2937;
           font-family: var(--font-inter), 'Inter', -apple-system, sans-serif;
-          font-size: 11px;
+          font-size: 12px;
           font-weight: 600;
           line-height: 1;
           padding: 4px 6px;
@@ -1599,7 +1599,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           background: var(--state-color);
           font-family: var(--font-jetbrains), 'JetBrains Mono', monospace;
           font-variant-numeric: tabular-nums;
-          font-size: 10px;
+          font-size: 11px;
           font-weight: 600;
           line-height: 1;
           padding: 4px 5px;
@@ -1613,7 +1613,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           display: inline-flex;
           align-items: center;
           padding: 0 5px;
-          font-size: 10px;
+          font-size: 11px;
         }
         /* Just updated vehicle marker - bright glow pulse */
         .pp-vehicle-icon.pp-just-updated {
@@ -1694,7 +1694,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           padding: 10px 36px 0 14px;
         }
         .pp-card-name {
-          font-size: 14px;
+          font-size: 15px;
           font-weight: 700;
           white-space: nowrap;
           overflow: hidden;
@@ -1722,13 +1722,13 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
         }
         .pp-card-imei {
           font-family: var(--font-jetbrains), 'JetBrains Mono', monospace;
-          font-size: 11px;
+          font-size: 12px;
           font-weight: 600;
           color: #374151;
         }
         .pp-card-state {
           margin-left: auto;
-          font-size: 12px;
+          font-size: 13px;
           font-weight: 600;
           white-space: nowrap;
           overflow: hidden;
@@ -1761,7 +1761,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           min-width: 0;
         }
         .pp-card-cell-label {
-          font-size: 10px;
+          font-size: 11px;
           font-weight: 500;
           text-transform: uppercase;
           letter-spacing: 0.06em;
@@ -1769,7 +1769,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           line-height: 1.2;
         }
         .pp-card-cell-value {
-          font-size: 12px;
+          font-size: 13px;
           font-weight: 600;
           color: #1f2937;
           white-space: nowrap;
@@ -1782,7 +1782,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           align-items: flex-start;
           gap: 8px;
           padding: 4px 14px;
-          font-size: 11px;
+          font-size: 12px;
           color: #4b5563;
         }
         .pp-card-row > svg {
@@ -1792,7 +1792,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
         }
         .pp-card-coords {
           font-family: var(--font-jetbrains), 'JetBrains Mono', monospace;
-          font-size: 11px;
+          font-size: 12px;
         }
         .pp-card-addr {
           padding-bottom: 8px;
@@ -1815,7 +1815,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           color: #475569;
           cursor: pointer;
           font-family: var(--font-inter), 'Inter', -apple-system, sans-serif;
-          font-size: 10px;
+          font-size: 11px;
           font-weight: 500;
           transition: background 0.15s, color 0.15s;
         }

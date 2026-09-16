@@ -119,21 +119,21 @@ export default function Page() {
     <div className="flex h-full flex-col">
       <div className="flex items-center justify-between border-b border-surface-300 px-4 py-3">
         <h1 className="font-display text-lg font-semibold">{t("geo.title")}</h1>
-        <button type="button" className="btn-primary text-sm" onClick={() => setEditing(true)}>
+        <button type="button" className="btn-primary text-[14px]" onClick={() => setEditing(true)}>
           {t("geo.new")}
         </button>
       </div>
 
       <div className="flex-1 overflow-auto">
-        {loading && <div className="px-4 py-6 text-sm text-ink-400">{t("common.loading")}</div>}
-        {error && <div className="px-4 py-6 text-sm text-alarm-red">{error}</div>}
+        {loading && <div className="px-4 py-6 text-[14px] text-ink-400">{t("common.loading")}</div>}
+        {error && <div className="px-4 py-6 text-[14px] text-alarm-red">{error}</div>}
         {!loading && geofences.length === 0 && (
-          <div className="px-4 py-12 text-center text-sm text-ink-400">{t("common.empty")}</div>
+          <div className="px-4 py-12 text-center text-[14px] text-ink-400">{t("common.empty")}</div>
         )}
 
         {geofences.length > 0 && (
-          <table className="w-full min-w-[640px] text-sm">
-            <thead className="sticky top-0 z-10 bg-white text-left text-xs uppercase text-ink-400">
+          <table className="w-full min-w-[640px] text-[14px]">
+            <thead className="sticky top-0 z-10 bg-white text-left text-[13px] uppercase text-ink-400">
               <tr>
                 <th className="px-4 py-2">{t("geo.name")}</th>
                 <th className="px-4 py-2">{t("geo.shape")}</th>
@@ -166,7 +166,7 @@ export default function Page() {
                   <td className="px-4 py-2">
                     <button
                       type="button"
-                      className="inline-flex items-center gap-1.5 rounded bg-white px-2 py-1 text-xs text-ink-800 hover:bg-surface-200"
+                      className="inline-flex items-center gap-1.5 rounded bg-white px-2 py-1 text-[13px] text-ink-800 hover:bg-surface-200"
                       onClick={() => openAssignDialog({ id: g.id, name: g.name })}
                     >
                       <span>{deviceCounts[g.id] ?? 0} vehicles</span>
@@ -179,7 +179,7 @@ export default function Page() {
                   <td className="px-4 py-2 text-right">
                     <button
                       type="button"
-                      className="btn-ghost px-3 py-1 text-xs"
+                      className="btn-ghost px-3 py-1 text-[13px]"
                       disabled={busyId === g.id}
                       onClick={() => handleDelete(g.id, g.name)}
                     >
@@ -210,12 +210,12 @@ export default function Page() {
             <h2 className="mb-1 text-lg font-semibold text-ink-900">
               {t("geo.assignVehicles") || "Assign Vehicles"}
             </h2>
-            <p className="mb-4 text-sm text-ink-400">
+            <p className="mb-4 text-[14px] text-ink-400">
               {assigningGeofence.name}
             </p>
 
             {assignLoading ? (
-              <div className="py-8 text-center text-sm text-ink-400">{t("common.loading")}</div>
+              <div className="py-8 text-center text-[14px] text-ink-400">{t("common.loading")}</div>
             ) : (
               <>
                 {/* Search and Select All */}
@@ -224,14 +224,14 @@ export default function Page() {
                     <div className="flex items-center justify-between">
                       <input
                         type="text"
-                        className="input flex-1 text-sm"
+                        className="input flex-1 text-[14px]"
                         placeholder="Search by name, plate, or IMEI..."
                         value={deviceSearch}
                         onChange={(e) => setDeviceSearch(e.target.value)}
                       />
                       <button
                         type="button"
-                        className="ml-2 text-xs text-brand-500 hover:text-brand-400 whitespace-nowrap"
+                        className="ml-2 text-[13px] text-brand-500 hover:text-brand-400 whitespace-nowrap"
                         onClick={allDevicesSelected ? deselectAllDevices : selectAllDevices}
                       >
                         {allDevicesSelected ? "Deselect All" : "Select All"}
@@ -242,11 +242,11 @@ export default function Page() {
 
                 <div className="max-h-80 overflow-y-auto rounded border border-surface-300 bg-surface-50">
                   {devices.length === 0 ? (
-                    <div className="py-6 text-center text-sm text-ink-400">
+                    <div className="py-6 text-center text-[14px] text-ink-400">
                       {t("common.empty")}
                     </div>
                   ) : filteredDevices.length === 0 ? (
-                    <div className="py-6 text-center text-sm text-ink-400">
+                    <div className="py-6 text-center text-[14px] text-ink-400">
                       No devices match your search
                     </div>
                   ) : (
@@ -267,7 +267,7 @@ export default function Page() {
                             <div className="truncate font-medium text-ink-900">
                               {d.name || d.vehiclePlate || d.imei}
                             </div>
-                            <div className="truncate text-xs text-ink-400">
+                            <div className="truncate text-[13px] text-ink-400">
                               {d.vehiclePlate && d.name ? d.vehiclePlate : d.imei}
                             </div>
                           </div>
@@ -285,13 +285,13 @@ export default function Page() {
             )}
 
             <div className="mt-4 flex items-center justify-between">
-              <span className="text-sm text-ink-400">
+              <span className="text-[14px] text-ink-400">
                 {selectedImeis.size} / {devices.length} {t("geo.selected") || "selected"}
               </span>
               <div className="flex gap-2">
                 <button
                   type="button"
-                  className="btn-ghost px-4 py-2 text-sm"
+                  className="btn-ghost px-4 py-2 text-[14px]"
                   onClick={() => setAssigningGeofence(null)}
                   disabled={assignLoading}
                 >
@@ -299,7 +299,7 @@ export default function Page() {
                 </button>
                 <button
                   type="button"
-                  className="btn-primary px-4 py-2 text-sm"
+                  className="btn-primary px-4 py-2 text-[14px]"
                   onClick={handleSaveAssignment}
                   disabled={assignLoading}
                 >

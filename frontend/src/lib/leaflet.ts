@@ -29,23 +29,9 @@ export const SATELLITE_ATTRIBUTION =
 // back to the previous free OSM + Esri satellite tiles so maps still render.
 // ---------------------------------------------------------------------------
 
-/** Platform-wide key baked into the build. Orgs can override it (see setGoogleMapsApiKey). */
-export const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
-
-// Per-organization key (organizations.google_maps_api_key), set by the
-// dashboard shell once the session is known. Falls back to the platform key.
-// The Google JS API can only be loaded once per page, so a change after the
-// first map mounted takes effect on the next full page load.
-let orgGoogleMapsApiKey = "";
-
-export function setGoogleMapsApiKey(key: string | null | undefined): void {
-  orgGoogleMapsApiKey = key?.trim() ?? "";
-}
-
-/** Effective key: the org's own key when set, else the platform default. */
-export function getGoogleMapsApiKey(): string {
-  return orgGoogleMapsApiKey || GOOGLE_MAPS_API_KEY;
-}
+// Key state lives in lib/googleMapsKey.ts (no Leaflet import, safe for SSR); re-exported here.
+import { getGoogleMapsApiKey } from "./googleMapsKey";
+export { GOOGLE_MAPS_API_KEY, getGoogleMapsApiKey, setGoogleMapsApiKey } from "./googleMapsKey";
 
 export type BaseLayerKind =
   | "osm"              // OSM Standard (free, always available)

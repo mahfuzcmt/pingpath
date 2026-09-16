@@ -17,6 +17,7 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.Collections;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -101,12 +102,16 @@ public class AlarmRepository {
     }
 
     public List<Alarm> listForOrg(UUID orgId, Boolean onlyUnacked, int limit, int offset) {
-        return listForOrg(orgId, new AlarmFilter(onlyUnacked, null, null, null, null, null), limit, offset);
+        return listForOrg(orgId, new AlarmFilter(onlyUnacked, null, null, null, null, null, null), limit, offset);
     }
 
-    /** Optional filters for the alarm center; every field may be null. */
+    /**
+     * Optional filters for the alarm center; every field may be null.
+     * {@code imeis} restricts results to the caller's visible devices: null = unrestricted,
+     * empty = the caller may see no device at all (returns nothing).
+     */
     public record AlarmFilter(Boolean onlyUnacked, String type, String severity, String imei,
-                              Instant from, Instant to) {}
+                              Instant from, Instant to, Collection<String> imeis) {}
 
     public List<Alarm> listForOrg(UUID orgId, AlarmFilter f, int limit, int offset) {
         var params = new MapSqlParameterSource()
@@ -114,6 +119,11 @@ public class AlarmRepository {
                 .addValue("limit", limit)
                 .addValue("offset", offset);
         StringBuilder sql = new StringBuilder(SELECT_FIELDS).append(" WHERE org_id = :orgId");
+        if (f.imeis() != null) {
+            if (f.imeis().isEmpty()) return List.of();
+            sql.append(" AND device_imei IN (:imeis)");
+            params.addValue("imeis", f.imeis());
+        }
         if (Boolean.TRUE.equals(f.onlyUnacked())) {
             sql.append(" AND acknowledged = false");
         }
@@ -215,15 +225,24 @@ public class AlarmRepository {
     /** One row per (device, type) with its count — feeds the Alarm Overview report. */
     public record TypeCount(String imei, String type, int count) {}
 
-    public List<TypeCount> countByDeviceAndType(UUID orgId, Instant from, Instant to) {
+    /** @param imeis null = every device in the org; empty = nothing. */
+    public List<TypeCount> countByDeviceAndType(UUID orgId, Instant from, Instant to, Collection<String> imeis) {
+        if (imeis != null && imeis.isEmpty()) return List.of();
+        var params = new MapSqlParameterSource("orgId", orgId)
+                .addValue("from", Timestamp.from(from))
+                .addValue("to", Timestamp.from(to));
+        String restrict = "";
+        if (imeis != null) {
+            restrict = " AND device_imei IN (:imeis)";
+            params.addValue("imeis", imeis);
+        }
         return jdbc.query("""
                 SELECT device_imei, type, COUNT(*)::int AS n
                   FROM alarms
                  WHERE org_id = :orgId AND ts >= :from AND ts < :to
+                """ + restrict + """
                  GROUP BY device_imei, type
-                """, new MapSqlParameterSource("orgId", orgId)
-                        .addValue("from", Timestamp.from(from))
-                        .addValue("to", Timestamp.from(to)),
+                """, params,
                 (rs, rn) -> new TypeCount(rs.getString("device_imei"), rs.getString("type"), rs.getInt("n")));
     }
 
