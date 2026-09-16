@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { logout } from "@/lib/auth";
 import { LanguageToggle } from "./LanguageToggle";
-import { NotificationDropdown } from "./NotificationDropdown";
 import type { UserView } from "@/types/domain";
 
 /**
@@ -63,7 +62,6 @@ export function Topbar({ user, onMenu }: { user: UserView; orgId: string; onMenu
 
       {/* Right: controls */}
       <div className="flex shrink-0 items-center justify-end gap-1 sm:gap-2">
-        <NotificationDropdown />
         <LanguageToggle />
 
         <div className="mx-1 hidden h-5 w-px bg-surface-300 sm:block" />

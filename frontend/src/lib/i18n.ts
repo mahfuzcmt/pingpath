@@ -823,6 +823,13 @@ export function LocaleProvider({
     } catch {
       // Cookie access may fail in some browser contexts (privacy mode, extensions)
     }
+    // The Google Maps JS API fixes its label language at load time, so a page that
+    // already shows a Google map must reload to get Bengali/English place names.
+    try {
+      if ((window as Window & { google?: { maps?: unknown } }).google?.maps) window.location.reload();
+    } catch {
+      // ignore
+    }
   }, []);
 
   const value = useMemo<LocaleCtx>(

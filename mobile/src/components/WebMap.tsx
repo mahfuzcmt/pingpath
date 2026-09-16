@@ -3,6 +3,7 @@ import { StyleSheet, View } from "react-native";
 import { WebView, WebViewMessageEvent } from "react-native-webview";
 import { colors } from "@/theme";
 import { useAuth } from "@/auth/AuthContext";
+import { useI18n } from "@/i18n";
 
 export interface MapVehicle {
   imei: string;
@@ -72,9 +73,10 @@ const MAP_REFERRER = "https://mobile.motolink.app/";
 // Leaflet in the WebView, mirroring the web dashboard (frontend/src/lib/leaflet.ts):
 // Google Maps base layer via GoogleMutant when a key is configured (OSM misses
 // Bangladesh roads/POIs), free OSM tiles otherwise or when Google fails to load.
-function buildHtml(googleKey: string): string {
+function buildHtml(googleKey: string, language: "en" | "bn"): string {
+  // language → Bengali place names when the app is in Bengali; region=BD biases labels to Bangladesh.
   const googleScripts = googleKey
-    ? `<script src="https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(googleKey)}"></script>
+    ? `<script src="https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(googleKey)}&language=${language}&region=BD"></script>
 <script src="https://unpkg.com/leaflet.gridlayer.googlemutant@0.14.1/dist/Leaflet.GoogleMutant.js"></script>`
     : "";
   return `<!doctype html><html><head>
@@ -359,7 +361,9 @@ export default function WebMap({
 }: Props) {
   // Org-owned Google key (settings on the web dashboard) beats the build-time default.
   const { org } = useAuth();
+  const { locale } = useI18n();
   const googleKey = org?.googleMapsApiKey?.trim() || GOOGLE_MAPS_API_KEY;
+  const mapLanguage: "en" | "bn" = locale === "bn" ? "bn" : "en";
 
   const ref = useRef<WebView>(null);
   const [ready, setReady] = useState(false);
@@ -454,7 +458,7 @@ export default function WebMap({
         ref={ref}
         style={styles.fill}
         originWhitelist={["*"]}
-        source={{ html: buildHtml(googleKey), baseUrl: MAP_REFERRER }}
+        source={{ html: buildHtml(googleKey, mapLanguage), baseUrl: MAP_REFERRER }}
         onMessage={onMessage}
         javaScriptEnabled
         domStorageEnabled

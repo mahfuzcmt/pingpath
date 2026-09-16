@@ -70,6 +70,17 @@ declare global {
 
 let googleMapsLoader: Promise<boolean> | null = null;
 
+/** Language for Google's map labels: follows <html lang>, which the locale provider keeps in sync. */
+export function googleMapsLanguage(): "bn" | "en" {
+  if (typeof document === "undefined") return "en";
+  return document.documentElement.lang === "bn" ? "bn" : "en";
+}
+
+/** True once the Google JS API has been loaded on this page (its language is then fixed). */
+export function isGoogleMapsLoaded(): boolean {
+  return typeof window !== "undefined" && !!window.google?.maps;
+}
+
 /** Load the Google Maps JS API once. Resolves false when no key / load error. */
 function loadGoogleMaps(): Promise<boolean> {
   const key = getGoogleMapsApiKey();
@@ -82,6 +93,8 @@ function loadGoogleMaps(): Promise<boolean> {
       script.src =
         "https://maps.googleapis.com/maps/api/js" +
         `?key=${encodeURIComponent(key)}` +
+        // Bengali place names when the UI is in Bengali; region=BD biases labels/geocoding to Bangladesh.
+        `&language=${googleMapsLanguage()}&region=BD` +
         "&loading=async&callback=__mlGoogleMapsReady";
       script.async = true;
       script.onerror = () => {
