@@ -1,4 +1,4 @@
--- V10: per-organization Google Maps API key.
+-- V14: per-organization Google Maps API key.
 -- Each customer (organization) can bring its own browser key so Google Maps
 -- usage is billed to them, like ADL/gpsen "map key" per account. NULL means
 -- "use the platform default key" baked into the frontend build
