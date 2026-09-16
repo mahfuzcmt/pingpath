@@ -8,10 +8,11 @@ import type { SharedLocationView, SharedHistoryPoint } from "@/types/domain";
 // Import map dynamically to avoid SSR issues
 const SharedMap = dynamic(() => import("./SharedMap"), { ssr: false });
 
-// Public API helper (no auth required)
+// Public API helper (no auth required). Same-origin: /api/public/* is a
+// server-side pass-through to the backend's /api/v1/public/* endpoints, so
+// this works wherever the site is hosted without exposing the backend host.
 async function fetchPublicApi<T>(path: string): Promise<T> {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
-  const res = await fetch(`${baseUrl}${path}`);
+  const res = await fetch(`/api/public${path}`, { cache: "no-store" });
   if (!res.ok) {
     throw new Error(`Failed to fetch: ${res.status}`);
   }
@@ -31,7 +32,7 @@ export default function SharedLocationPage() {
   // Fetch initial location data
   const fetchLocation = useCallback(async () => {
     try {
-      const data = await fetchPublicApi<SharedLocationView>(`/public/share/${token}`);
+      const data = await fetchPublicApi<SharedLocationView>(`/share/${encodeURIComponent(token)}`);
       setLocation(data);
       setError(null);
     } catch (err) {
@@ -45,7 +46,7 @@ export default function SharedLocationPage() {
   // Fetch history if enabled
   const fetchHistory = useCallback(async () => {
     try {
-      const data = await fetchPublicApi<SharedHistoryPoint[]>(`/public/share/${token}/history`);
+      const data = await fetchPublicApi<SharedHistoryPoint[]>(`/share/${encodeURIComponent(token)}/history`);
       setHistory(data);
     } catch (err) {
       console.error("Failed to fetch history:", err);
@@ -68,9 +69,7 @@ export default function SharedLocationPage() {
   useEffect(() => {
     if (!location?.allowRealtime) return;
 
-    const wsUrl = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8080/ws";
-    // Note: For public share, we'd need a different WS endpoint
-    // For now, we'll poll every 10 seconds as fallback
+    // Public viewers have no STOMP credentials, so poll every 10 s instead.
     const interval = setInterval(fetchLocation, 10000);
 
     return () => {
