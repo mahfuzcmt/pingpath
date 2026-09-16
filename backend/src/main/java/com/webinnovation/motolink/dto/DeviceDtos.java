@@ -60,9 +60,14 @@ public final class DeviceDtos {
         }
 
         public static DeviceView of(Device d, SubInfo sub, Instant parkedSince) {
+            return of(d, sub, parkedSince, null);
+        }
+
+        /** @param groupId the calling user's group for this vehicle (groups are per user), or null. */
+        public static DeviceView of(Device d, SubInfo sub, Instant parkedSince, UUID groupId) {
             return new DeviceView(
                     d.id(),
-                    d.groupId(),
+                    groupId,
                     d.driverId(),
                     d.imei(),
                     d.name(),

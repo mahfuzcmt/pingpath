@@ -13,6 +13,7 @@ import com.webinnovation.motolink.repository.SubscriptionRepository.SubInfo;
 import com.webinnovation.motolink.repository.TripRepository;
 import com.webinnovation.motolink.repository.UserRepository;
 import com.webinnovation.motolink.security.TenantContext;
+import com.webinnovation.motolink.service.DeviceGroupService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -38,6 +39,7 @@ public class DeviceController {
     private final SubscriptionRepository subscriptionRepo;
     private final TripRepository tripRepo;
     private final UserRepository userRepo;
+    private final DeviceGroupService groupService;
 
     @GetMapping
     public List<DeviceView> list(@RequestParam(value = "status", required = false) String status) {
@@ -57,8 +59,9 @@ public class DeviceController {
 
         Map<String, SubInfo> subs = subscriptionRepo.latestByOrg(orgId);
         Map<String, Instant> parked = tripRepo.parkedSinceByImei(orgId);
+        Map<String, UUID> groups = userId == null ? Map.of() : groupService.membership(userId);
         return devices.stream()
-                .map(d -> DeviceView.of(d, subs.get(d.imei()), parked.get(d.imei())))
+                .map(d -> DeviceView.of(d, subs.get(d.imei()), parked.get(d.imei()), groups.get(d.imei())))
                 .toList();
     }
 
@@ -77,7 +80,14 @@ public class DeviceController {
                 .orElseThrow(() -> new NotFoundException("device", imei));
         return DeviceView.of(d,
                 subscriptionRepo.latestForImei(orgId, imei).orElse(null),
-                tripRepo.parkedSinceForImei(orgId, imei).orElse(null));
+                tripRepo.parkedSinceForImei(orgId, imei).orElse(null),
+                groupFor(imei));
+    }
+
+    /** The calling user's group for this vehicle, if they filed it into one. */
+    private UUID groupFor(String imei) {
+        UUID userId = TenantContext.currentUserId();
+        return userId == null ? null : groupService.membership(userId).get(imei);
     }
 
     private boolean canSeeAllDevices(UUID userId) {
@@ -121,6 +131,7 @@ public class DeviceController {
                 .orElseThrow(() -> new NotFoundException("device", imei));
         return DeviceView.of(d,
                 subscriptionRepo.latestForImei(orgId, imei).orElse(null),
-                tripRepo.parkedSinceForImei(orgId, imei).orElse(null));
+                tripRepo.parkedSinceForImei(orgId, imei).orElse(null),
+                groupFor(imei));
     }
 }

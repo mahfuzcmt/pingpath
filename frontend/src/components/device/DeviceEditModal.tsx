@@ -114,7 +114,7 @@ export function DeviceEditModal({ device, onClose, onSaved }: Props) {
             <span className="mb-1 block text-ink-9000">{t("veh.group")}</span>
             <select className="select" value={groupId} onChange={(e) => setGroupId(e.target.value)}>
               <option value="">{t("list.ungrouped")}</option>
-              {groups.filter((g) => !g.isDefault).map((g) => (
+              {groups.map((g) => (
                 <option key={g.id} value={g.id}>{g.name}</option>
               ))}
             </select>

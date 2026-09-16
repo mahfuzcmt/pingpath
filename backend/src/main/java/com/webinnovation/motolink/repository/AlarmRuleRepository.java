@@ -24,7 +24,7 @@ public class AlarmRuleRepository {
     private final NamedParameterJdbcTemplate jdbc;
 
     private static final String SELECT_FIELDS = """
-            SELECT id, org_id, name, rule_type, threshold,
+            SELECT id, org_id, owner_user_id, name, rule_type, threshold,
                    window_start, window_end, cooldown_seconds, severity,
                    is_active, applies_to_all, created_at, updated_at
             FROM alarm_rules
@@ -37,6 +37,7 @@ public class AlarmRuleRepository {
         return new AlarmRule(
                 rs.getObject("id", UUID.class),
                 rs.getObject("org_id", UUID.class),
+                rs.getObject("owner_user_id", UUID.class),
                 rs.getString("name"),
                 rs.getString("rule_type"),
                 thr == null ? null : rs.getDouble("threshold"),
@@ -51,13 +52,14 @@ public class AlarmRuleRepository {
         );
     };
 
-    public UUID insert(UUID orgId, String name, String ruleType, Double threshold,
+    public UUID insert(UUID orgId, UUID ownerUserId, String name, String ruleType, Double threshold,
                        LocalTime windowStart, LocalTime windowEnd, int cooldownSeconds,
                        String severity, boolean active, boolean appliesToAll) {
         UUID id = UUID.randomUUID();
         var params = new MapSqlParameterSource()
                 .addValue("id", id)
                 .addValue("orgId", orgId)
+                .addValue("owner", ownerUserId)
                 .addValue("name", name)
                 .addValue("type", ruleType)
                 .addValue("threshold", threshold)
@@ -69,20 +71,21 @@ public class AlarmRuleRepository {
                 .addValue("appliesAll", appliesToAll);
         jdbc.update("""
                 INSERT INTO alarm_rules
-                  (id, org_id, name, rule_type, threshold, window_start, window_end,
+                  (id, org_id, owner_user_id, name, rule_type, threshold, window_start, window_end,
                    cooldown_seconds, severity, is_active, applies_to_all)
                 VALUES
-                  (:id, :orgId, :name, :type, :threshold, :ws, :we,
+                  (:id, :orgId, :owner, :name, :type, :threshold, :ws, :we,
                    :cooldown, :severity, :active, :appliesAll)
                 """, params);
         return id;
     }
 
-    public Optional<AlarmRule> findByOrgAndId(UUID orgId, UUID id) {
+    /** Rules are per user: only the owner can read or edit one. */
+    public Optional<AlarmRule> findByOwnerAndId(UUID ownerUserId, UUID id) {
         try {
             AlarmRule r = jdbc.queryForObject(
-                    SELECT_FIELDS + " WHERE org_id = :orgId AND id = :id",
-                    new MapSqlParameterSource("orgId", orgId).addValue("id", id),
+                    SELECT_FIELDS + " WHERE owner_user_id = :owner AND id = :id",
+                    new MapSqlParameterSource("owner", ownerUserId).addValue("id", id),
                     ROW_MAPPER);
             return Optional.ofNullable(r);
         } catch (EmptyResultDataAccessException e) {
@@ -90,24 +93,35 @@ public class AlarmRuleRepository {
         }
     }
 
-    public List<AlarmRule> listForOrg(UUID orgId) {
+    public List<AlarmRule> listForOwner(UUID ownerUserId) {
         return jdbc.query(
-                SELECT_FIELDS + " WHERE org_id = :orgId ORDER BY created_at DESC",
-                new MapSqlParameterSource("orgId", orgId),
+                SELECT_FIELDS + " WHERE owner_user_id = :owner ORDER BY created_at DESC",
+                new MapSqlParameterSource("owner", ownerUserId),
                 ROW_MAPPER);
     }
 
-    /** Active rules that apply to the given device — either applies_to_all or explicitly assigned. */
+    /**
+     * Active rules that apply to the given device: explicitly assigned, or
+     * applies_to_all rules whose owner may see the device (admins / see_all_devices /
+     * a user_devices row) — a restricted user's "all vehicles" means all of theirs.
+     */
     public List<AlarmRule> findActiveForDevice(UUID orgId, String imei) {
         return jdbc.query("""
-                SELECT DISTINCT ON (r.id) r.id, r.org_id, r.name, r.rule_type, r.threshold,
+                SELECT DISTINCT ON (r.id) r.id, r.org_id, r.owner_user_id, r.name, r.rule_type, r.threshold,
                        r.window_start, r.window_end, r.cooldown_seconds, r.severity,
                        r.is_active, r.applies_to_all, r.created_at, r.updated_at
                 FROM alarm_rules r
+                JOIN users u ON u.id = r.owner_user_id
                 LEFT JOIN alarm_rule_devices d ON d.rule_id = r.id
                 WHERE r.org_id = :orgId
                   AND r.is_active = true
-                  AND (r.applies_to_all = true OR d.device_imei = :imei)
+                  AND u.is_active = true
+                  AND (d.device_imei = :imei
+                       OR (r.applies_to_all = true
+                           AND (u.role IN ('SUPER_ADMIN', 'ORG_ADMIN')
+                                OR u.see_all_devices = true
+                                OR EXISTS (SELECT 1 FROM user_devices ud
+                                            WHERE ud.user_id = u.id AND ud.device_imei = :imei))))
                 """,
                 new MapSqlParameterSource("orgId", orgId).addValue("imei", imei),
                 ROW_MAPPER);
@@ -117,19 +131,19 @@ public class AlarmRuleRepository {
     public List<AlarmRule> listActiveByTypes(java.util.Collection<String> ruleTypes) {
         if (ruleTypes == null || ruleTypes.isEmpty()) return List.of();
         return jdbc.query("""
-                SELECT id, org_id, name, rule_type, threshold, window_start, window_end,
+                SELECT id, org_id, owner_user_id, name, rule_type, threshold, window_start, window_end,
                        cooldown_seconds, severity, is_active, applies_to_all, created_at, updated_at
                   FROM alarm_rules
                  WHERE is_active = true AND rule_type IN (:types)
                 """, new MapSqlParameterSource("types", ruleTypes), ROW_MAPPER);
     }
 
-    public boolean update(UUID orgId, UUID id, String name, Double threshold,
+    public boolean update(UUID ownerUserId, UUID id, String name, Double threshold,
                           LocalTime windowStart, LocalTime windowEnd, Integer cooldownSeconds,
                           String severity, Boolean active, Boolean appliesToAll) {
         var params = new MapSqlParameterSource()
                 .addValue("id", id)
-                .addValue("orgId", orgId)
+                .addValue("owner", ownerUserId)
                 .addValue("name", name)
                 .addValue("threshold", threshold)
                 .addValue("ws", windowStart == null ? null : Time.valueOf(windowStart))
@@ -149,14 +163,14 @@ public class AlarmRuleRepository {
                   is_active       = COALESCE(:active, is_active),
                   applies_to_all  = COALESCE(:appliesAll, applies_to_all),
                   updated_at      = now()
-                WHERE org_id = :orgId AND id = :id
+                WHERE owner_user_id = :owner AND id = :id
                 """, params);
         return n > 0;
     }
 
-    public boolean delete(UUID orgId, UUID id) {
-        int n = jdbc.update("DELETE FROM alarm_rules WHERE org_id = :orgId AND id = :id",
-                new MapSqlParameterSource("orgId", orgId).addValue("id", id));
+    public boolean delete(UUID ownerUserId, UUID id) {
+        int n = jdbc.update("DELETE FROM alarm_rules WHERE owner_user_id = :owner AND id = :id",
+                new MapSqlParameterSource("owner", ownerUserId).addValue("id", id));
         return n > 0;
     }
 

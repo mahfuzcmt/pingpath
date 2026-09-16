@@ -7,6 +7,7 @@ import java.util.UUID;
 public record AlarmRule(
         UUID id,
         UUID orgId,
+        UUID ownerUserId,
         String name,
         String ruleType,
         Double threshold,

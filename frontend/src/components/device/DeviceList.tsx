@@ -238,7 +238,6 @@ export function DeviceList({
       out.push({ id: UNGROUPED_ID, name: t("list.ungrouped"), color: "#7E8792", rows: ungrouped });
     }
     for (const g of [...groups].sort((a, b) => a.sortOrder - b.sortOrder)) {
-      if (g.isDefault) continue;
       const list = byGroup.get(g.id) ?? [];
       if (list.length === 0 && filtering) continue;
       out.push({ id: g.id, name: g.name, color: g.color, rows: list, group: g });
@@ -609,7 +608,7 @@ function RowMenu({ onAction, t, groups = [], currentGroupId = null, onMoveToGrou
               <div className="px-3 pb-1 pt-1.5 text-[11px] font-semibold uppercase tracking-wide text-ink-500">
                 {t("group.moveTo")}
               </div>
-              {[{ id: null as string | null, name: t("list.ungrouped"), color: "#7E8792" }, ...groups.filter((g) => !g.isDefault)].map((g) => {
+              {[{ id: null as string | null, name: t("list.ungrouped"), color: "#7E8792" }, ...groups].map((g) => {
                 const active = (g.id ?? null) === currentGroupId;
                 return (
                   <button

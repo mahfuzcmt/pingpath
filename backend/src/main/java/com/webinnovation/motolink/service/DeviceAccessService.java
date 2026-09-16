@@ -31,6 +31,14 @@ public class DeviceAccessService {
         return new HashSet<>(userDeviceRepo.getDeviceImeis(userId));
     }
 
+    /** Same as {@link #visibleImeis(UUID, String)} but reads the role from the user row (background jobs). */
+    public Set<String> visibleImeis(UUID userId) {
+        if (userId == null) return null;
+        return userRepo.findById(userId)
+                .map(u -> visibleImeis(userId, u.role()))
+                .orElse(new HashSet<>());
+    }
+
     public static boolean canSee(Set<String> visible, String imei) {
         return visible == null || (imei != null && visible.contains(imei));
     }

@@ -19,7 +19,6 @@ public final class DeviceGroupDtos {
             String color,
             String icon,
             int sortOrder,
-            boolean isDefault,
             int deviceCount,
             Instant createdAt
     ) {
@@ -31,7 +30,6 @@ public final class DeviceGroupDtos {
                     group.color(),
                     group.icon(),
                     group.sortOrder(),
-                    group.isDefault(),
                     deviceCount,
                     group.createdAt()
             );

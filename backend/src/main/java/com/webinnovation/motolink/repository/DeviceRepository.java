@@ -21,7 +21,7 @@ public class DeviceRepository {
     private final NamedParameterJdbcTemplate jdbc;
 
     private static final String SELECT_FIELDS = """
-            SELECT id, org_id, group_id, driver_id, imei, name, sim_msisdn, sim_iccid, vehicle_plate, vehicle_type,
+            SELECT id, org_id, driver_id, imei, name, sim_msisdn, sim_iccid, vehicle_plate, vehicle_type,
                    protocol, protocol_variant, model, status, last_seen_at,
                    ST_Y(last_location::geometry) AS last_lat,
                    ST_X(last_location::geometry) AS last_lng,
@@ -34,7 +34,6 @@ public class DeviceRepository {
     private static final RowMapper<Device> ROW_MAPPER = (rs, rn) -> new Device(
             rs.getObject("id", UUID.class),
             rs.getObject("org_id", UUID.class),
-            rs.getObject("group_id", UUID.class),
             rs.getObject("driver_id", UUID.class),
             rs.getString("imei"),
             rs.getString("name"),
@@ -274,41 +273,6 @@ public class DeviceRepository {
                 """, new MapSqlParameterSource("orgId", orgId)
                 .addValue("imei", imei)
                 .addValue("locked", locked));
-    }
-
-    /** Assign a device to a group. Pass null to remove from group. */
-    public int assignToGroup(UUID orgId, String imei, UUID groupId) {
-        return jdbc.update("""
-                UPDATE devices SET group_id = :groupId, updated_at = now()
-                WHERE org_id = :orgId AND imei = :imei
-                """, new MapSqlParameterSource("orgId", orgId)
-                .addValue("imei", imei)
-                .addValue("groupId", groupId));
-    }
-
-    /** Bulk assign multiple devices to a group. */
-    public int bulkAssignToGroup(UUID orgId, List<String> imeis, UUID groupId) {
-        if (imeis == null || imeis.isEmpty()) return 0;
-        return jdbc.update("""
-                UPDATE devices SET group_id = :groupId, updated_at = now()
-                WHERE org_id = :orgId AND imei IN (:imeis)
-                """, new MapSqlParameterSource("orgId", orgId)
-                .addValue("imeis", imeis)
-                .addValue("groupId", groupId));
-    }
-
-    /** List devices by group (null groupId returns ungrouped devices). */
-    public List<Device> listByGroup(UUID orgId, UUID groupId) {
-        if (groupId == null) {
-            return jdbc.query(
-                    SELECT_FIELDS + " FROM devices WHERE org_id = :orgId AND group_id IS NULL ORDER BY name",
-                    new MapSqlParameterSource("orgId", orgId),
-                    ROW_MAPPER);
-        }
-        return jdbc.query(
-                SELECT_FIELDS + " FROM devices WHERE org_id = :orgId AND group_id = :groupId ORDER BY name",
-                new MapSqlParameterSource("orgId", orgId).addValue("groupId", groupId),
-                ROW_MAPPER);
     }
 
     /** Assign a driver to a device. Pass null to unassign. */

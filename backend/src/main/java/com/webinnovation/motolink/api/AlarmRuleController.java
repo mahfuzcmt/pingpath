@@ -28,10 +28,14 @@ public class AlarmRuleController {
     private final AlarmRuleService service;
     private final AuditService audit;
 
+    /** Rules are per user (V18): every endpoint is scoped to the caller. */
+    private static UUID owner() {
+        return TenantContext.requireUserId();
+    }
+
     @GetMapping
     public List<AlarmRuleView> list() {
-        UUID orgId = TenantContext.requireOrgId();
-        return service.listForOrg(orgId).stream()
+        return service.listForOwner(owner()).stream()
                 .map(r -> AlarmRuleView.of(r,
                         r.appliesToAll() ? List.of() : service.listAssignedImeis(r.id())))
                 .toList();
@@ -39,15 +43,14 @@ public class AlarmRuleController {
 
     @GetMapping("/{id}")
     public AlarmRuleView get(@PathVariable UUID id) {
-        UUID orgId = TenantContext.requireOrgId();
-        var r = service.getOrThrow(orgId, id);
+        var r = service.getOrThrow(owner(), id);
         return AlarmRuleView.of(r, r.appliesToAll() ? List.of() : service.listAssignedImeis(id));
     }
 
     @PostMapping
     public ResponseEntity<Map<String, UUID>> create(@RequestBody AlarmRuleRequest req) {
         UUID orgId = TenantContext.requireOrgId();
-        UUID id = service.create(orgId, req);
+        UUID id = service.create(orgId, owner(), req);
         audit.record("ALARM_RULE_CREATE", "alarm_rule", id.toString(),
                 Map.of("name", req.name(), "type", req.ruleType()));
         return ResponseEntity.status(201).body(Map.of("id", id));
@@ -56,18 +59,17 @@ public class AlarmRuleController {
     @PatchMapping("/{id}")
     public ResponseEntity<AlarmRuleView> update(@PathVariable UUID id,
                                                 @RequestBody AlarmRuleRequest req) {
-        UUID orgId = TenantContext.requireOrgId();
-        service.update(orgId, id, req);
+        UUID owner = owner();
+        service.update(owner, id, req);
         audit.record("ALARM_RULE_UPDATE", "alarm_rule", id.toString(), null);
-        var r = service.getOrThrow(orgId, id);
+        var r = service.getOrThrow(owner, id);
         return ResponseEntity.ok(AlarmRuleView.of(r,
                 r.appliesToAll() ? List.of() : service.listAssignedImeis(id)));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
-        UUID orgId = TenantContext.requireOrgId();
-        service.delete(orgId, id);
+        service.delete(owner(), id);
         audit.record("ALARM_RULE_DELETE", "alarm_rule", id.toString(), null);
         return ResponseEntity.noContent().build();
     }

@@ -33,6 +33,7 @@ class AlarmRuleStateTest {
     private DeviceRepository deviceRepo;
     private LocationRepository locationRepo;
     private AlarmRuleService service;
+    private DeviceAccessService access;
     private final UUID orgId = UUID.randomUUID();
     private final Instant now = Instant.parse("2026-09-16T10:00:00Z");
 
@@ -42,17 +43,19 @@ class AlarmRuleStateTest {
         alarmService = mock(AlarmService.class);
         deviceRepo = mock(DeviceRepository.class);
         locationRepo = mock(LocationRepository.class);
-        service = new AlarmRuleService(ruleRepo, alarmService, deviceRepo, locationRepo);
+        access = mock(DeviceAccessService.class);
+        when(access.visibleImeis(any())).thenReturn(null);
+        service = new AlarmRuleService(ruleRepo, alarmService, deviceRepo, locationRepo, access);
         when(ruleRepo.tryFire(any(), anyString(), anyInt(), any())).thenReturn(true);
     }
 
     private AlarmRule rule(String type, double minutes) {
-        return new AlarmRule(UUID.randomUUID(), orgId, "r", type, minutes, null, null, 3600, "WARNING",
+        return new AlarmRule(UUID.randomUUID(), orgId, UUID.randomUUID(), "r", type, minutes, null, null, 3600, "WARNING",
                 true, true, now, now);
     }
 
     private Device device(String status, Instant lastSeen, Integer speed) {
-        return new Device(UUID.randomUUID(), orgId, null, null, "864290061234567", "Bike", null, null, "DHK-1",
+        return new Device(UUID.randomUUID(), orgId, null, "864290061234567", "Bike", null, null, "DHK-1",
                 "MOTORBIKE", "GT06", null, null, status, lastSeen, 23.8, 90.4, speed, 0, 12000, 4, 0,
                 null, false, now, now);
     }

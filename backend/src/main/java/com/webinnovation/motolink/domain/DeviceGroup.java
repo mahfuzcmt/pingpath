@@ -4,33 +4,18 @@ import java.time.Instant;
 import java.util.UUID;
 
 /**
- * Device group for organizing vehicles into categories.
- * Matches ADL Moto Viewer's device grouping functionality.
+ * A vehicle group. Groups belong to one user (V18): every user organises the
+ * vehicles they can see into their own folders, like ADL Moto Viewer.
  */
 public record DeviceGroup(
         UUID id,
         UUID orgId,
+        UUID ownerUserId,
         String name,
         String description,
         String color,
         String icon,
         int sortOrder,
-        boolean isDefault,
         Instant createdAt,
         Instant updatedAt
-) {
-    public static DeviceGroup withDefaults(UUID orgId, String name) {
-        return new DeviceGroup(
-                null,
-                orgId,
-                name,
-                null,
-                "#0284C7",
-                "folder",
-                0,
-                false,
-                Instant.now(),
-                Instant.now()
-        );
-    }
-}
+) {}

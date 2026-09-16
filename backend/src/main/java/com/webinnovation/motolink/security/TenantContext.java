@@ -41,6 +41,15 @@ public final class TenantContext {
         return id;
     }
 
+    /** The authenticated user; per-user resources (groups, rules) refuse anonymous callers. */
+    public static UUID requireUserId() {
+        UUID id = currentUserId();
+        if (id == null) {
+            throw new IllegalStateException("No user in context — request not authenticated");
+        }
+        return id;
+    }
+
     public static void clear() {
         ORG_ID.remove();
         USER_ID.remove();

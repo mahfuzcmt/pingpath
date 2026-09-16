@@ -119,7 +119,6 @@ export interface DeviceGroupView {
   color: string;
   icon: string;
   sortOrder: number;
-  isDefault: boolean;
   deviceCount: number;
   createdAt: string;
 }

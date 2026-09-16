@@ -59,26 +59,29 @@ public class AlarmRuleService {
     private final AlarmService alarmService;
     private final DeviceRepository deviceRepo;
     private final LocationRepository locationRepo;
+    private final DeviceAccessService access;
 
     static final List<String> STATE_RULE_TYPES = List.of("PARKING_TIMEOUT", "OFFLINE_TIMEOUT", "IDLE_TIMEOUT");
 
-    public AlarmRule getOrThrow(UUID orgId, UUID id) {
-        return repo.findByOrgAndId(orgId, id)
+    public AlarmRule getOrThrow(UUID ownerUserId, UUID id) {
+        return repo.findByOwnerAndId(ownerUserId, id)
                 .orElseThrow(() -> new NotFoundException("Alarm rule not found: " + id));
     }
 
-    public List<AlarmRule> listForOrg(UUID orgId) {
-        return repo.listForOrg(orgId);
+    /** Rules are per user (V18): the caller only ever sees their own. */
+    public List<AlarmRule> listForOwner(UUID ownerUserId) {
+        return repo.listForOwner(ownerUserId);
     }
 
     public List<String> listAssignedImeis(UUID ruleId) {
         return repo.listAssignedImeis(ruleId);
     }
 
-    public UUID create(UUID orgId, AlarmRuleRequest req) {
+    public UUID create(UUID orgId, UUID ownerUserId, AlarmRuleRequest req) {
         validate(req, true);
         UUID id = repo.insert(
                 orgId,
+                ownerUserId,
                 req.name(),
                 req.ruleType(),
                 req.threshold(),
@@ -97,9 +100,9 @@ public class AlarmRuleService {
         return id;
     }
 
-    public void update(UUID orgId, UUID id, AlarmRuleRequest req) {
+    public void update(UUID ownerUserId, UUID id, AlarmRuleRequest req) {
         validate(req, false);
-        if (!repo.update(orgId, id, req.name(), req.threshold(),
+        if (!repo.update(ownerUserId, id, req.name(), req.threshold(),
                 req.windowStart(), req.windowEnd(), req.cooldownSeconds(),
                 req.severity(), req.active(), req.appliesToAll())) {
             throw new NotFoundException("Alarm rule not found: " + id);
@@ -112,8 +115,8 @@ public class AlarmRuleService {
         }
     }
 
-    public void delete(UUID orgId, UUID id) {
-        if (!repo.delete(orgId, id)) {
+    public void delete(UUID ownerUserId, UUID id) {
+        if (!repo.delete(ownerUserId, id)) {
             throw new NotFoundException("Alarm rule not found: " + id);
         }
     }
@@ -168,8 +171,11 @@ public class AlarmRuleService {
         Duration limit = Duration.ofMinutes(Math.round(r.threshold()));
         List<Device> devices = deviceRepo.listForOrg(r.orgId());
         Set<String> assigned = r.appliesToAll() ? null : new HashSet<>(repo.listAssignedImeis(r.id()));
+        // An "all vehicles" rule covers the vehicles its owner may see (null = unrestricted).
+        Set<String> visible = r.appliesToAll() ? access.visibleImeis(r.ownerUserId()) : null;
         for (Device d : devices) {
             if (assigned != null && !assigned.contains(d.imei())) continue;
+            if (!DeviceAccessService.canSee(visible, d.imei())) continue;
             if (d.lastSeenAt() == null) continue;  // never connected: nothing to time out
             Instant since = stateSince(r.ruleType(), d);
             if (since == null || Duration.between(since, now).compareTo(limit) < 0) continue;
