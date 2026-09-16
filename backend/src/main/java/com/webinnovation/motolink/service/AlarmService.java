@@ -61,6 +61,10 @@ public class AlarmService {
         return repo.listForOrg(orgId, onlyUnacked, clamp(limit, 1, 500), Math.max(0, offset));
     }
 
+    public List<Alarm> listForOrg(UUID orgId, AlarmRepository.AlarmFilter filter, int limit, int offset) {
+        return repo.listForOrg(orgId, filter, clamp(limit, 1, 500), Math.max(0, offset));
+    }
+
     public List<Alarm> listForDevice(UUID orgId, String imei, int limit, int offset) {
         return repo.listForDevice(orgId, imei, clamp(limit, 1, 500), Math.max(0, offset));
     }

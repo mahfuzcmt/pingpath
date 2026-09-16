@@ -50,6 +50,13 @@ const config: Config = {
           900: "#1f2937",
           950: "#111827",
         },
+        // Alarm severity / feedback colours. Used as text-alarm-red, bg-alarm-amber/10,
+        // border-l-alarm-red … across alarm UI and form errors (ADL status hues).
+        alarm: {
+          red: "#ff4d4f",
+          amber: "#faad14",
+          green: "#52c41a",
+        },
         // Status colors (ADL style)
         status: {
           moving: "#52c41a",   // Green

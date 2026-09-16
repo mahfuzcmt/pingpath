@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { Sidebar } from "./Sidebar";
 import { Topbar } from "./Topbar";
+import { AlarmToast } from "@/components/alarm/AlarmToast";
 import { setGoogleMapsApiKey } from "@/lib/leaflet";
 import type { UserView } from "@/types/domain";
 
@@ -72,6 +73,8 @@ export function DashboardShell({
       <div className="flex min-w-0 flex-1 flex-col">
         <Topbar user={user} orgId={orgId} onMenu={() => setNavOpen(true)} />
         <main className="min-h-0 flex-1 overflow-hidden">{children}</main>
+        {/* Live alarm popups (Settings → Notifications decides which types and whether they sound) */}
+        <AlarmToast />
       </div>
     </div>
   );

@@ -51,6 +51,8 @@ interface FleetMapProps {
   onAdvanceAnimations?: () => boolean;
   /** Pixels covered on the left by the floating vehicle panel (for auto-pan / fit padding). */
   leftInset?: number;
+  /** Driver id → display name, so the popup can show who is assigned to the vehicle. */
+  driversById?: Map<string, string>;
   /** Extra space (px) reserved above the map's top-edge controls, e.g. for a full-width KPI strip on mobile. */
   topInset?: number;
   /** Extra space (px) reserved under the map's bottom-edge controls, e.g. for the mobile vehicle sheet. */
@@ -520,7 +522,7 @@ function BatchCountdown({ lastRefreshAt }: { lastRefreshAt: Date | null }) {
   );
 }
 
-export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh, lastRefreshAt, showSearch = false, onAdvanceAnimations, leftInset = 0, topInset = 0, bottomInset = 0 }: FleetMapProps) {
+export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh, lastRefreshAt, showSearch = false, onAdvanceAnimations, leftInset = 0, topInset = 0, bottomInset = 0, driversById }: FleetMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
@@ -677,7 +679,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           <span class="pp-card-dot" style="background:${stateColor}"></span>
         </div>
         <div class="pp-card-grid">
-          ${cell(ICON.user, t("popup.driver"), "—")}
+          ${cell(ICON.user, t("popup.driver"), esc((device?.driverId && driversById?.get(device.driverId)) || "—"))}
           ${cell(ICON.key, t("popup.acc"), acc, accColor)}
           ${cell(ICON.clock, t("popup.gpsTime"), formatDateTime(location?.ts))}
           ${cell(ICON.signal, t("popup.fix"), fix)}
@@ -699,7 +701,7 @@ export function FleetMap({ devices, locations, selectedImei, onSelect, onRefresh
           ${action("details", ICON.doc, t("act.details"))}
         </div>
       </div>`;
-  }, [speedLimits, t]);
+  }, [speedLimits, t, driversById]);
 
   // Init map once
   useEffect(() => {

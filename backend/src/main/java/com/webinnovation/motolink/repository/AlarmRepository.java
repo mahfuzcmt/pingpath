@@ -98,13 +98,41 @@ public class AlarmRepository {
     }
 
     public List<Alarm> listForOrg(UUID orgId, Boolean onlyUnacked, int limit, int offset) {
+        return listForOrg(orgId, new AlarmFilter(onlyUnacked, null, null, null, null, null), limit, offset);
+    }
+
+    /** Optional filters for the alarm center; every field may be null. */
+    public record AlarmFilter(Boolean onlyUnacked, String type, String severity, String imei,
+                              Instant from, Instant to) {}
+
+    public List<Alarm> listForOrg(UUID orgId, AlarmFilter f, int limit, int offset) {
         var params = new MapSqlParameterSource()
                 .addValue("orgId", orgId)
                 .addValue("limit", limit)
                 .addValue("offset", offset);
         StringBuilder sql = new StringBuilder(SELECT_FIELDS).append(" WHERE org_id = :orgId");
-        if (Boolean.TRUE.equals(onlyUnacked)) {
+        if (Boolean.TRUE.equals(f.onlyUnacked())) {
             sql.append(" AND acknowledged = false");
+        }
+        if (f.type() != null) {
+            sql.append(" AND type = :type");
+            params.addValue("type", f.type());
+        }
+        if (f.severity() != null) {
+            sql.append(" AND severity = :severity");
+            params.addValue("severity", f.severity());
+        }
+        if (f.imei() != null) {
+            sql.append(" AND device_imei = :imei");
+            params.addValue("imei", f.imei());
+        }
+        if (f.from() != null) {
+            sql.append(" AND ts >= :from");
+            params.addValue("from", Timestamp.from(f.from()));
+        }
+        if (f.to() != null) {
+            sql.append(" AND ts < :to");
+            params.addValue("to", Timestamp.from(f.to()));
         }
         sql.append(" ORDER BY ts DESC LIMIT :limit OFFSET :offset");
         return jdbc.query(sql.toString(), params, rowMapper);

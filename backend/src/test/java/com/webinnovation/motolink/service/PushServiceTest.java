@@ -17,6 +17,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -53,7 +55,7 @@ class PushServiceTest {
     @Test
     void sends_messages_and_purges_unregistered_tokens() {
         UUID orgId = UUID.randomUUID();
-        when(tokenRepo.listTokensForOrg(orgId))
+        when(tokenRepo.listTokensForOrgAndType(eq(orgId), any()))
                 .thenReturn(List.of("ExponentPushToken[aaa]", "ExponentPushToken[bbb]"));
         when(deviceRepo.findByImei("864290061234567")).thenReturn(Optional.empty());
 
@@ -81,7 +83,7 @@ class PushServiceTest {
     @Test
     void no_registered_tokens_sends_nothing() {
         UUID orgId = UUID.randomUUID();
-        when(tokenRepo.listTokensForOrg(orgId)).thenReturn(List.of());
+        when(tokenRepo.listTokensForOrgAndType(eq(orgId), any())).thenReturn(List.of());
 
         pushService.sendAlarmPush(alarm(orgId));
 
@@ -98,6 +100,6 @@ class PushServiceTest {
         disabled.sendAlarmPush(alarm(UUID.randomUUID()));
 
         disabledServer.verify();
-        verify(tokenRepo, never()).listTokensForOrg(org.mockito.ArgumentMatchers.any());
+        verify(tokenRepo, never()).listTokensForOrgAndType(any(), any());
     }
 }

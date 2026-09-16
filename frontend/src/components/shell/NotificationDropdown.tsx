@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import Link from "next/link";
+import { alarmTypeLabel, severityLabel } from "@/lib/alarmTypes";
 import { useLocale } from "@/lib/i18n";
 import { useSession } from "@/lib/session-context";
 import { useAlarms } from "@/hooks/useAlarms";
@@ -99,15 +101,29 @@ export function NotificationDropdown() {
           {/* Header */}
           <div className="flex items-center justify-between border-b border-ink-100 bg-ink-50 px-4 py-2.5">
             <span className="text-sm font-semibold text-ink-900">{t("alarms.notifications")}</span>
-            {unackedCount > 0 && (
-              <button
-                type="button"
-                onClick={onAckAll}
-                className="text-xs font-medium text-brand-600 hover:text-brand-700"
+            <div className="flex items-center gap-2">
+              {unackedCount > 0 && (
+                <button
+                  type="button"
+                  onClick={onAckAll}
+                  className="text-xs font-medium text-brand-600 hover:text-brand-700"
+                >
+                  {t("alarms.ackAll")}
+                </button>
+              )}
+              <Link
+                href="/dashboard/settings?tab=notifications"
+                onClick={() => setOpen(false)}
+                className="btn-icon"
+                title={t("notif.title")}
+                aria-label={t("notif.title")}
               >
-                {t("alarms.ackAll")}
-              </button>
-            )}
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="3" />
+                  <path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1" />
+                </svg>
+              </Link>
+            </div>
           </div>
 
           {/* Alarm list */}
@@ -136,9 +152,9 @@ export function NotificationDropdown() {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
                         <span className={`text-xs font-semibold ${SEV_TEXT[a.severity]}`}>
-                          {a.severity}
+                          {severityLabel(a.severity, t)}
                         </span>
-                        <span className="text-xs font-medium text-ink-700">{a.type}</span>
+                        <span className="text-xs font-medium text-ink-700">{alarmTypeLabel(a.type, t)}</span>
                       </div>
                       <div className="mt-0.5 text-[11px] text-ink-600">
                         <span className="font-mono">{a.deviceImei}</span>

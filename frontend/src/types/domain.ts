@@ -291,6 +291,7 @@ export interface GeofenceCreate {
   imeis?: string[];
 }
 
+/** Mirrors backend domain.enums.AlarmType. */
 export type AlarmType =
   | "SOS"
   | "POWER_CUT"
@@ -302,7 +303,28 @@ export type AlarmType =
   | "ACC_ON"
   | "ACC_OFF"
   | "LOW_BATTERY"
+  | "EXTERNAL_LOW_VOLTAGE"
+  | "REMOVE"
+  | "DOOR"
+  | "URGENT_ACCELERATION"
+  | "URGENT_DECELERATION"
   | "CURFEW_VIOLATION";
+
+/** Mirrors backend dto.NotificationDtos.NotificationSettingsView (sets arrive as arrays). */
+export interface NotificationSettings {
+  popupTypes: string[];
+  soundTypes: string[];
+  pushTypes: string[];
+  availableTypes: string[];
+  /** false = the user has never saved settings; values are platform defaults. */
+  customized: boolean;
+}
+
+export interface NotificationSettingsUpdate {
+  popupTypes: string[];
+  soundTypes: string[];
+  pushTypes: string[];
+}
 
 export type AlarmRuleType = "SPEED_OVER" | "VOLTAGE_UNDER" | "ACC_ON_DURING_WINDOW";
 

@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useDevices } from "@/hooks/useDevices";
 import { useDeviceGroups } from "@/hooks/useDeviceGroups";
+import { useDrivers } from "@/hooks/useDrivers";
 import { useLiveLocations } from "@/hooks/useLiveLocations";
 import { useSession } from "@/lib/session-context";
 import { useLocale } from "@/lib/i18n";
@@ -48,6 +49,12 @@ export default function DashboardPage() {
   const isWide = useIsWide();
   const { devices, loading, setDevices } = useDevices();
   const { groups } = useDeviceGroups();
+  const { drivers } = useDrivers();
+  const driversById = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const d of drivers) m.set(d.id, d.name);
+    return m;
+  }, [drivers]);
   const { locations, error, refresh, lastRefreshAt, advanceAnimations } = useLiveLocations(orgId);
 
   const [selectedImei, setSelectedImei] = useState<string | null>(null);
@@ -176,6 +183,7 @@ export default function DashboardPage() {
         lastRefreshAt={lastRefreshAt}
         onAdvanceAnimations={advanceAnimations}
         leftInset={listInset}
+        driversById={driversById}
         topInset={isWide ? 0 : NARROW_KPI_INSET}
         bottomInset={bottomInset}
       />

@@ -51,6 +51,22 @@ public class PushTokenRepository {
                 String.class);
     }
 
+    /**
+     * Tokens of org users who want pushes for {@code alarmType}: users without a
+     * settings row get everything (the pre-V15 behaviour), users with a row are
+     * filtered by their push_types.
+     */
+    public List<String> listTokensForOrgAndType(UUID orgId, String alarmType) {
+        return jdbc.queryForList("""
+                SELECT pt.token
+                  FROM push_tokens pt
+                  LEFT JOIN user_notification_settings s ON s.user_id = pt.user_id
+                 WHERE pt.org_id = :orgId
+                   AND (s.user_id IS NULL OR :type = ANY(s.push_types))
+                """, new MapSqlParameterSource("orgId", orgId).addValue("type", alarmType),
+                String.class);
+    }
+
     /** Purge tokens Expo reported as DeviceNotRegistered (app uninstalled). */
     public void deleteAll(List<String> tokens) {
         if (tokens == null || tokens.isEmpty()) return;

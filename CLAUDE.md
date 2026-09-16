@@ -1240,6 +1240,7 @@ Reworked 2026-09-15 to match (and tidy up) the ADL Moto Viewer live-monitoring s
 - Top bar: global vehicle search (name / plate / IMEI / SIM → focuses the vehicle, or deep-links `/dashboard?focus={imei}` from other pages), brand + Live pill, notifications, language, user menu. No fake refresh counter — the real countdown sits bottom-right beside the freshness indicator.
 - KPI strip floats top-centre of the map area (z ≥ 1000, above Leaflet panes).
 - Real-time updates via WebSocket batches; marker moves animate with CSS transitions.
+- **Alarm notifications (2026-09-16, V15):** every alarm that arrives live pops up as a toast on any dashboard page (`components/alarm/AlarmToast.tsx`, mounted in `DashboardShell`), optionally with a synthesized tone (`lib/alarmSound.ts`; CRITICAL repeats until acknowledged). Which types pop up / sound / push to the phone is per user: `user_notification_settings` (V15), `GET/PUT /users/me/notification-settings`, edited under Settings → Notifications (matrix + "Test sound" + "Preview popup"). `PushService` filters Expo pushes by each user's `push_types`. The alarm center (`/dashboard/alarms`) filters by type/severity/vehicle/date/unacked (`GET /alarms?type&severity&imei&from&to&unacked`), opens a map modal per alarm and exports Excel. Live STOMP alarm payloads use `imei`, not `deviceImei`; `useAlarms` normalises them.
 - Initial load: REST `/devices/locations/last`, then subscribe WS; the map fits the whole fleet once per map instance (flag reset on unmount so StrictMode/remount refits).
 
 ### 10.4 `/dashboard/devices`
@@ -2895,4 +2896,4 @@ Full teardown lives in [`docs/COMPETITIVE_ANALYSIS.md`](docs/COMPETITIVE_ANALYSI
 
 ---
 
-*Last updated: 2026-09-15. Update the date when you change anything substantive.*
+*Last updated: 2026-09-16. Update the date when you change anything substantive.*
