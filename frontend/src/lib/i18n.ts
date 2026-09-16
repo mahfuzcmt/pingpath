@@ -316,6 +316,9 @@ const STRINGS = {
   "notif.all": { en: "all", bn: "সব" },
   "notif.testSound": { en: "Test sound", bn: "শব্দ পরীক্ষা" },
   "notif.previewPopup": { en: "Preview popup", bn: "পপআপ প্রিভিউ" },
+  "notif.unreadPrefix": { en: "You have", bn: "আপনার" },
+  "notif.unreadSuffix": { en: "unread messages,", bn: "টি অপঠিত বার্তা আছে," },
+  "notif.clickDetails": { en: "Click to view details.", bn: "বিস্তারিত দেখতে ক্লিক করুন।" },
   "notif.soundBlocked": { en: "Your browser blocked the sound. Click anywhere on the page, then try again.", bn: "আপনার ব্রাউজার শব্দ ব্লক করেছে। পেজে যেকোনো জায়গায় ক্লিক করে আবার চেষ্টা করুন।" },
   "settings.tab.notifications": { en: "Notifications", bn: "বিজ্ঞপ্তি" },
 

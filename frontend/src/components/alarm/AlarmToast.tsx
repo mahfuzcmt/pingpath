@@ -1,7 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useIsDesktop } from "@/hooks/useMediaQuery";
 import { useLocale } from "@/lib/i18n";
 import { useSession } from "@/lib/session-context";
 import { useAlarms } from "@/hooks/useAlarms";
@@ -78,7 +80,16 @@ export function AlarmToast() {
     if (s?.soundTypes.includes(a.type)) playAlarmSound(a.severity);
   }, []);
 
-  const { acknowledge } = useAlarms(orgId, { unackedOnly: true, limit: 25, onNew });
+  const { alarms, acknowledge } = useAlarms(orgId, { unackedOnly: true, limit: 100, onNew });
+  const unread = alarms.filter((a) => !a.acknowledged).length;
+  const isDesktop = useIsDesktop();
+
+  // ADL-style strip beside the bell: hidden by the user until the count changes again.
+  const [stripHiddenAt, setStripHiddenAt] = useState<number | null>(null);
+  useEffect(() => {
+    setStripHiddenAt(null);
+  }, [unread]);
+  const showStrip = unread > 0 && stripHiddenAt == null && pathname !== "/dashboard/alarms";
 
   // Preview from the settings page: same path as a live alarm, but never persisted.
   useEffect(() => {
@@ -145,9 +156,57 @@ export function AlarmToast() {
     }
   };
 
-  if (toasts.length === 0) return null;
+  // Monitor's bottom-right holds the refresh button (desktop) or the vehicle sheet bar (phones).
+  // Phones also have the freshness row and the loading/error pill stacked above the sheet bar.
+  const bellBottom = isDesktop ? 76 : 172;
 
   return (
+    <>
+      {/* ADL-style unread bell, bottom-right on every dashboard page */}
+      <div className="fixed right-3 z-[2250] flex items-center gap-2" style={{ bottom: bellBottom }}>
+        {showStrip && (
+          <div className="flex max-w-[calc(100vw-88px)] items-center overflow-hidden rounded-md bg-brand-500 text-white shadow-lg">
+            <Link
+              href="/dashboard/alarms?unacked=1"
+              className="flex min-w-0 items-center gap-1 px-3 py-2 text-[12px] leading-tight hover:bg-brand-600"
+            >
+              <span className="truncate">
+                {t("notif.unreadPrefix")} <span className="mx-0.5 text-[15px] font-bold">{unread}</span> {t("notif.unreadSuffix")}
+              </span>
+              <span className="ml-1 hidden shrink-0 sm:inline">{t("notif.clickDetails")}</span>
+            </Link>
+            <button
+              type="button"
+              className="flex h-full shrink-0 items-center px-2 text-white/70 hover:bg-brand-600 hover:text-white"
+              aria-label={t("common.close")}
+              onClick={() => setStripHiddenAt(Date.now())}
+            >
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <path d="M6 6l12 12M18 6 6 18" />
+              </svg>
+            </button>
+          </div>
+        )}
+        <Link
+          href="/dashboard/alarms?unacked=1"
+          className={`relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#F5A623] text-white shadow-lg transition hover:bg-[#e0951b] ${
+            unread > 0 ? "animate-[pp-bell-ring_1.4s_ease-in-out_2]" : ""
+          }`}
+          title={t("alarms.notifications")}
+          aria-label={`${t("alarms.notifications")}: ${unread}`}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 22a2.2 2.2 0 0 0 2.2-2.2H9.8A2.2 2.2 0 0 0 12 22Zm6.5-6.5V11a6.5 6.5 0 0 0-5-6.32V4a1.5 1.5 0 0 0-3 0v.68A6.5 6.5 0 0 0 5.5 11v4.5L3.6 17.4c-.6.6-.2 1.6.7 1.6h15.4c.9 0 1.3-1 .7-1.6l-1.9-1.9Z" />
+          </svg>
+          {unread > 0 && (
+            <span className="absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full border-2 border-white bg-alarm-red px-1 text-[10px] font-bold">
+              {unread > 99 ? "99+" : unread}
+            </span>
+          )}
+        </Link>
+      </div>
+
+      {toasts.length > 0 && (
     <div
       className="pointer-events-none fixed inset-x-3 top-16 z-[2300] flex flex-col gap-2 sm:left-auto sm:right-3 sm:w-[360px]"
       role="status"
@@ -193,5 +252,7 @@ export function AlarmToast() {
         </div>
       ))}
     </div>
+      )}
+    </>
   );
 }
