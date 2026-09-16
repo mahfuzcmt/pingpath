@@ -32,7 +32,7 @@ export type VehicleAction =
   | "streetview"
   | "geofence";
 
-type Tab = "all" | "online" | "offline" | "inactive";
+type Tab = "all" | "moving" | "online" | "offline" | "inactive" | "expired";
 type SortKey = "speed" | "name" | "updated" | "status";
 
 const OVERSPEED_COLOR = "#DC2626";
@@ -44,7 +44,8 @@ const STATE_RANK: Record<VehicleState, number> = {
   moving: 0, idle: 1, stopped: 2, offline: 3, expired: 4, nodata: 5,
 };
 const TAB_LABEL: Record<Tab, StringKey> = {
-  all: "list.all", online: "list.online", offline: "list.offline", inactive: "list.inactive",
+  all: "list.all", moving: "list.moving", online: "list.online", offline: "list.offline",
+  inactive: "list.inactive", expired: "list.expired",
 };
 const SORT_LABEL: Record<SortKey, StringKey> = {
   speed: "list.sortSpeed", name: "list.sortName", updated: "list.sortUpdated", status: "list.sortStatus",
@@ -89,10 +90,16 @@ function deviceLabel(d: DeviceView): string {
   return d.name || d.vehiclePlate || d.imei.slice(-8);
 }
 
-function tabOf(state: VehicleState): Tab {
-  if (ONLINE_STATES.has(state)) return "online";
-  if (INACTIVE_STATES.has(state)) return "inactive";
-  return "offline";
+/** Tabs overlap on purpose: Moving ⊂ Online, Expired ⊂ Inactive (ADL tabs + the two the ops team asked for). */
+function inTab(state: VehicleState, tab: Tab): boolean {
+  switch (tab) {
+    case "all": return true;
+    case "moving": return state === "moving";
+    case "online": return ONLINE_STATES.has(state);
+    case "offline": return state === "offline";
+    case "inactive": return INACTIVE_STATES.has(state);
+    case "expired": return state === "expired";
+  }
 }
 
 function rowStatus(row: Row, t: (k: StringKey) => string): { text: string; color: string } {
@@ -190,8 +197,12 @@ export function DeviceList({
   );
 
   const counts = useMemo(() => {
-    const c: Record<Tab, number> = { all: rows.length, online: 0, offline: 0, inactive: 0 };
-    for (const r of rows) c[tabOf(r.state)]++;
+    const c: Record<Tab, number> = { all: rows.length, moving: 0, online: 0, offline: 0, inactive: 0, expired: 0 };
+    for (const r of rows) {
+      for (const tb of ["moving", "online", "offline", "inactive", "expired"] as Tab[]) {
+        if (inTab(r.state, tb)) c[tb]++;
+      }
+    }
     return c;
   }, [rows]);
 
@@ -199,7 +210,7 @@ export function DeviceList({
     const q = query.trim().toLowerCase();
     return rows
       .filter((r) => {
-        if (tab !== "all" && tabOf(r.state) !== tab) return false;
+        if (!inTab(r.state, tab)) return false;
         if (!q) return true;
         const d = r.device;
         return (
@@ -272,7 +283,7 @@ export function DeviceList({
     });
   };
 
-  const tabs: Tab[] = ["all", "online", "offline", "inactive"];
+  const tabs: Tab[] = ["all", "moving", "online", "offline", "inactive", "expired"];
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col bg-white">
@@ -297,13 +308,14 @@ export function DeviceList({
       </div>
 
       {/* Status tabs */}
-      <div className="flex border-b border-surface-300 px-2">
+      {/* Six tabs don't fit 340px at 13px, so the strip scrolls sideways without a visible bar. */}
+      <div className="flex overflow-x-auto border-b border-surface-300 px-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {tabs.map((id) => (
           <button
             key={id}
             type="button"
             onClick={() => setTab(id)}
-            className={`px-2.5 py-1.5 text-[13px] font-medium transition border-b-2 -mb-px ${
+            className={`shrink-0 whitespace-nowrap px-2 py-1.5 text-[12.5px] font-medium transition border-b-2 -mb-px ${
               tab === id
                 ? "border-brand-500 text-brand-500"
                 : "border-transparent text-ink-500 hover:text-ink-700"
@@ -467,7 +479,7 @@ function VehicleRow({ row, selected, visible, onSelect, onToggleVisible, onActio
           onSelect();
         }
       }}
-      className={`group flex h-9 cursor-pointer items-center gap-2 border-b border-surface-200 border-l-[3px] pl-2 pr-1 transition-colors ${
+      className={`group flex h-9 cursor-pointer items-center gap-2 border-b border-surface-200 border-l-[3px] pl-6 pr-1 transition-colors ${
         selected ? "border-l-brand-500 bg-brand-500/10" : "border-l-transparent hover:bg-surface-50"
       } ${visible ? "" : "opacity-60"}`}
     >

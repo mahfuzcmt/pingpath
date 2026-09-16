@@ -148,6 +148,8 @@ const STRINGS = {
   "list.online": { en: "Online", bn: "অনলাইন" },
   "list.offline": { en: "Offline", bn: "অফলাইন" },
   "list.inactive": { en: "Inactive", bn: "নিষ্ক্রিয়" },
+  "list.moving": { en: "Moving", bn: "চলমান" },
+  "list.expired": { en: "Expired", bn: "মেয়াদোত্তীর্ণ" },
   "list.searchPlaceholder": { en: "IMEI / name / plate / SIM", bn: "আইএমইআই / নাম / নম্বর / সিম" },
   "list.sortSpeed": { en: "Speed", bn: "গতি" },
   "list.sortName": { en: "Name", bn: "নাম" },
