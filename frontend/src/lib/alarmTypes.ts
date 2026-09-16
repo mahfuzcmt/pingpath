@@ -1,5 +1,5 @@
 import type { StringKey } from "@/lib/i18n";
-import type { AlarmSeverity, AlarmType } from "@/types/domain";
+import type { AlarmProcessResult, AlarmSeverity, AlarmType } from "@/types/domain";
 
 /** Same order as backend AlarmType so the settings matrix reads like the enum. */
 export const ALARM_TYPES: AlarmType[] = [
@@ -19,7 +19,17 @@ export const ALARM_TYPES: AlarmType[] = [
   "URGENT_ACCELERATION",
   "URGENT_DECELERATION",
   "CURFEW_VIOLATION",
+  "PARKING_TIMEOUT",
+  "OFFLINE_TIMEOUT",
+  "ENGINE_IDLE",
 ];
+
+export const PROCESS_RESULTS: AlarmProcessResult[] = ["HANDLED", "FALSE_ALARM", "NO_ACTION"];
+
+export function processResultLabel(r: string | null | undefined, t: (k: StringKey) => string): string {
+  if (r === "HANDLED" || r === "FALSE_ALARM" || r === "NO_ACTION") return t(`alarmResult.${r}` as StringKey);
+  return r ?? "";
+}
 
 export const ALARM_SEVERITIES: AlarmSeverity[] = ["CRITICAL", "WARNING", "INFO"];
 

@@ -93,6 +93,28 @@ public class LocationRepository {
                 """, params);
     }
 
+    /** Newest packet with speed > 0 — "when did this vehicle last move". */
+    public Optional<Instant> lastMovingAt(String imei) {
+        var rows = jdbc.query("""
+                SELECT ts FROM locations
+                 WHERE device_imei = :imei AND speed > 0
+                 ORDER BY ts DESC LIMIT 1
+                """, new MapSqlParameterSource("imei", imei),
+                (rs, rn) -> rs.getObject("ts", OffsetDateTime.class).toInstant());
+        return rows.isEmpty() ? Optional.empty() : Optional.of(rows.get(0));
+    }
+
+    /** ACC flag of the newest packet that carried one (V1.8 frames omit it). */
+    public Optional<Boolean> lastAccOn(String imei) {
+        var rows = jdbc.query("""
+                SELECT acc_on FROM locations
+                 WHERE device_imei = :imei AND acc_on IS NOT NULL
+                 ORDER BY ts DESC LIMIT 1
+                """, new MapSqlParameterSource("imei", imei),
+                (rs, rn) -> rs.getBoolean("acc_on"));
+        return rows.isEmpty() ? Optional.empty() : Optional.of(rows.get(0));
+    }
+
     public Optional<Location> findLastForImei(String imei) {
         try {
             Location l = jdbc.queryForObject(

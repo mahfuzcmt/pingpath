@@ -3,6 +3,10 @@ package com.webinnovation.motolink.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.webinnovation.motolink.config.RedisConfig;
 import com.webinnovation.motolink.domain.Alarm;
+import com.webinnovation.motolink.domain.Device;
+import com.webinnovation.motolink.dto.AlarmDtos.AlarmOverview;
+import com.webinnovation.motolink.dto.AlarmDtos.AlarmOverviewRow;
+import com.webinnovation.motolink.repository.DeviceRepository;
 import com.webinnovation.motolink.domain.enums.AlarmSeverity;
 import com.webinnovation.motolink.domain.enums.AlarmType;
 import com.webinnovation.motolink.exception.NotFoundException;
@@ -13,9 +17,14 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.UUID;
 
 /**
@@ -34,6 +43,9 @@ public class AlarmService {
     private final ObjectMapper objectMapper;
     private final SmsService smsService;
     private final PushService pushService;
+    private final DeviceRepository deviceRepo;
+
+    public static final Set<String> PROCESS_RESULTS = Set.of("HANDLED", "FALSE_ALARM", "NO_ACTION");
 
     public Alarm raise(UUID orgId, String imei, AlarmType type, AlarmSeverity severity,
                        Instant ts, Double lat, Double lng, Map<String, Object> metadata) {
@@ -75,6 +87,40 @@ public class AlarmService {
 
     public boolean acknowledge(UUID orgId, UUID alarmId, UUID userId) {
         return repo.acknowledge(orgId, alarmId, userId);
+    }
+
+    public boolean acknowledge(UUID orgId, UUID alarmId, UUID userId, String result, String notes) {
+        return repo.acknowledge(orgId, alarmId, userId, result, notes);
+    }
+
+    /**
+     * Per-vehicle alarm counts by type for a period. Every org device appears
+     * (zero rows included) so the report doubles as a "quiet vehicles" check,
+     * mirroring ADL's Alarm Overview.
+     */
+    public AlarmOverview overview(UUID orgId, Instant from, Instant to) {
+        List<AlarmRepository.TypeCount> counts = repo.countByDeviceAndType(orgId, from, to);
+        Map<String, Map<String, Integer>> byImei = new TreeMap<>();
+        TreeSet<String> types = new TreeSet<>();
+        for (var c : counts) {
+            byImei.computeIfAbsent(c.imei(), k -> new TreeMap<>()).merge(c.type(), c.count(), Integer::sum);
+            types.add(c.type());
+        }
+        List<AlarmOverviewRow> rows = new ArrayList<>();
+        for (Device d : deviceRepo.listForOrg(orgId)) {
+            Map<String, Integer> m = byImei.getOrDefault(d.imei(), Map.of());
+            int total = m.values().stream().mapToInt(Integer::intValue).sum();
+            rows.add(new AlarmOverviewRow(d.imei(), d.name(), d.vehiclePlate(), m, total));
+            byImei.remove(d.imei());
+        }
+        // Alarms for devices no longer in the org (deleted / moved) still count.
+        for (var e : byImei.entrySet()) {
+            int total = e.getValue().values().stream().mapToInt(Integer::intValue).sum();
+            rows.add(new AlarmOverviewRow(e.getKey(), null, null, e.getValue(), total));
+        }
+        rows.sort(Comparator.comparingInt(AlarmOverviewRow::total).reversed()
+                .thenComparing(r -> r.name() == null ? r.imei() : r.name()));
+        return new AlarmOverview(new ArrayList<>(types), rows);
     }
 
     private void publish(Alarm a) {

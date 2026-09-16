@@ -7,18 +7,25 @@ import com.webinnovation.motolink.dto.AlarmRuleDtos.AlarmRuleRequest;
 import com.webinnovation.motolink.exception.DomainException;
 import com.webinnovation.motolink.exception.NotFoundException;
 import com.webinnovation.motolink.protocol.LocationData;
+import com.webinnovation.motolink.domain.Device;
 import com.webinnovation.motolink.repository.AlarmRuleRepository;
+import com.webinnovation.motolink.repository.DeviceRepository;
+import com.webinnovation.motolink.repository.LocationRepository;
+import org.springframework.scheduling.annotation.Scheduled;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -28,6 +35,14 @@ import java.util.UUID;
  *   <li>{@code SPEED_OVER}            — fires OVERSPEED when speed > threshold (kph)</li>
  *   <li>{@code VOLTAGE_UNDER}         — fires LOW_BATTERY when voltage < threshold (mV)</li>
  *   <li>{@code ACC_ON_DURING_WINDOW}  — fires CURFEW_VIOLATION when ACC=on inside window (BD time)</li>
+ * </ul>
+ *
+ * <p>Since 2026-09-16 (ADL parity) three <em>state</em> rules exist as well. They are not
+ * evaluated per packet but by a once-a-minute sweep ({@link #sweepStateRules()}):
+ * <ul>
+ *   <li>{@code PARKING_TIMEOUT}  — threshold minutes without movement → PARKING_TIMEOUT</li>
+ *   <li>{@code OFFLINE_TIMEOUT}  — threshold minutes since the last packet → OFFLINE_TIMEOUT</li>
+ *   <li>{@code IDLE_TIMEOUT}     — ignition on, speed 0 for threshold minutes → ENGINE_IDLE</li>
  * </ul>
  *
  * <p>Each rule has a per-device cooldown to avoid alarm storms (one location packet
@@ -42,6 +57,10 @@ public class AlarmRuleService {
 
     private final AlarmRuleRepository repo;
     private final AlarmService alarmService;
+    private final DeviceRepository deviceRepo;
+    private final LocationRepository locationRepo;
+
+    static final List<String> STATE_RULE_TYPES = List.of("PARKING_TIMEOUT", "OFFLINE_TIMEOUT", "IDLE_TIMEOUT");
 
     public AlarmRule getOrThrow(UUID orgId, UUID id) {
         return repo.findByOrgAndId(orgId, id)
@@ -65,7 +84,7 @@ public class AlarmRuleService {
                 req.threshold(),
                 req.windowStart(),
                 req.windowEnd(),
-                defaultIfNull(req.cooldownSeconds(), 300),
+                defaultIfNull(req.cooldownSeconds(), STATE_RULE_TYPES.contains(req.ruleType()) ? 3600 : 300),
                 defaultIfNull(req.severity(), "WARNING"),
                 defaultIfNull(req.active(), true),
                 defaultIfNull(req.appliesToAll(), true)
@@ -117,6 +136,78 @@ public class AlarmRuleService {
         } catch (Exception e) {
             log.warn("Alarm-rule evaluation failed for imei={}: {}", loc.getImei(), e.getMessage(), e);
         }
+    }
+
+    /**
+     * Minute sweep for the state rules. Cheap: one query per rule for the device
+     * list plus at most two indexed single-row lookups per candidate device.
+     * The rule's cooldown (default 1 h for these types) keeps a vehicle that stays
+     * parked from alarming every minute.
+     */
+    @Scheduled(fixedRate = 60_000, initialDelay = 30_000)
+    public void sweepStateRules() {
+        List<AlarmRule> rules;
+        try {
+            rules = repo.listActiveByTypes(STATE_RULE_TYPES);
+        } catch (Exception e) {
+            log.warn("State-rule sweep could not load rules: {}", e.getMessage());
+            return;
+        }
+        Instant now = Instant.now();
+        for (AlarmRule r : rules) {
+            try {
+                evaluateStateRule(r, now);
+            } catch (Exception e) {
+                log.warn("State rule {} ({}) failed: {}", r.name(), r.ruleType(), e.getMessage());
+            }
+        }
+    }
+
+    void evaluateStateRule(AlarmRule r, Instant now) {
+        if (r.threshold() == null || r.threshold() <= 0) return;
+        Duration limit = Duration.ofMinutes(Math.round(r.threshold()));
+        List<Device> devices = deviceRepo.listForOrg(r.orgId());
+        Set<String> assigned = r.appliesToAll() ? null : new HashSet<>(repo.listAssignedImeis(r.id()));
+        for (Device d : devices) {
+            if (assigned != null && !assigned.contains(d.imei())) continue;
+            if (d.lastSeenAt() == null) continue;  // never connected: nothing to time out
+            Instant since = stateSince(r.ruleType(), d);
+            if (since == null || Duration.between(since, now).compareTo(limit) < 0) continue;
+            if (!repo.tryFire(r.id(), d.imei(), r.cooldownSeconds(), now)) continue;
+            fireState(r, d, since, now);
+        }
+    }
+
+    /** When the offending state began, or null if the device is not in that state. */
+    private Instant stateSince(String ruleType, Device d) {
+        boolean online = "ONLINE".equals(d.status());
+        boolean moving = d.lastSpeed() != null && d.lastSpeed() > 0;
+        return switch (ruleType) {
+            case "OFFLINE_TIMEOUT" -> online ? null : d.lastSeenAt();
+            case "PARKING_TIMEOUT" -> (!online || moving) ? null : locationRepo.lastMovingAt(d.imei()).orElse(null);
+            case "IDLE_TIMEOUT" -> (!online || moving || !locationRepo.lastAccOn(d.imei()).orElse(false))
+                    ? null : locationRepo.lastMovingAt(d.imei()).orElse(null);
+            default -> null;
+        };
+    }
+
+    private void fireState(AlarmRule r, Device d, Instant since, Instant now) {
+        AlarmType type = switch (r.ruleType()) {
+            case "PARKING_TIMEOUT" -> AlarmType.PARKING_TIMEOUT;
+            case "OFFLINE_TIMEOUT" -> AlarmType.OFFLINE_TIMEOUT;
+            case "IDLE_TIMEOUT" -> AlarmType.ENGINE_IDLE;
+            default -> null;
+        };
+        if (type == null) return;
+        Map<String, Object> meta = new HashMap<>();
+        meta.put("ruleId", r.id().toString());
+        meta.put("ruleName", r.name());
+        meta.put("ruleType", r.ruleType());
+        meta.put("thresholdMinutes", r.threshold());
+        meta.put("since", since.toString());
+        meta.put("durationMinutes", Duration.between(since, now).toMinutes());
+        alarmService.raise(r.orgId(), d.imei(), type, AlarmSeverity.valueOf(r.severity()),
+                now, d.lastLatitude(), d.lastLongitude(), meta);
     }
 
     private boolean matches(AlarmRule r, LocationData loc) {
@@ -187,6 +278,12 @@ public class AlarmRuleService {
                     if (req.windowStart() == null || req.windowEnd() == null) {
                         throw new DomainException("VALIDATION",
                                 "windowStart and windowEnd required for ACC_ON_DURING_WINDOW");
+                    }
+                }
+                case "PARKING_TIMEOUT", "OFFLINE_TIMEOUT", "IDLE_TIMEOUT" -> {
+                    if (req.threshold() == null || req.threshold() < 1) {
+                        throw new DomainException("VALIDATION",
+                                "threshold (minutes, >= 1) required for " + req.ruleType());
                     }
                 }
                 default -> throw new DomainException("VALIDATION", "Unknown ruleType: " + req.ruleType());

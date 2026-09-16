@@ -12,7 +12,15 @@ import type {
   AlarmSeverity,
 } from "@/types/domain";
 
-const RULE_TYPES: AlarmRuleType[] = ["SPEED_OVER", "VOLTAGE_UNDER", "ACC_ON_DURING_WINDOW"];
+const RULE_TYPES: AlarmRuleType[] = [
+  "SPEED_OVER",
+  "VOLTAGE_UNDER",
+  "ACC_ON_DURING_WINDOW",
+  "PARKING_TIMEOUT",
+  "OFFLINE_TIMEOUT",
+  "IDLE_TIMEOUT",
+];
+const MINUTE_RULES: AlarmRuleType[] = ["PARKING_TIMEOUT", "OFFLINE_TIMEOUT", "IDLE_TIMEOUT"];
 const SEVERITIES: AlarmSeverity[] = ["INFO", "WARNING", "CRITICAL"];
 
 function describeRule(r: AlarmRuleView, locale: "en" | "bn", t: (k: StringKey) => string): string {
@@ -23,6 +31,10 @@ function describeRule(r: AlarmRuleView, locale: "en" | "bn", t: (k: StringKey) =
       return `< ${formatNumber(r.threshold ?? 0, locale)} ${t("rules.unit.mv")}`;
     case "ACC_ON_DURING_WINDOW":
       return `${r.windowStart?.slice(0, 5) ?? "—"} → ${r.windowEnd?.slice(0, 5) ?? "—"}`;
+    case "PARKING_TIMEOUT":
+    case "OFFLINE_TIMEOUT":
+    case "IDLE_TIMEOUT":
+      return `> ${formatNumber(r.threshold ?? 0, locale)} ${t("rules.unit.minutes")}`;
   }
 }
 
@@ -133,6 +145,7 @@ function RuleForm({ existing, onClose, onSubmit }: FormProps) {
   const [name, setName] = useState(existing?.name ?? "");
   const [ruleType, setRuleType] = useState<AlarmRuleType>(existing?.ruleType ?? "SPEED_OVER");
   const [threshold, setThreshold] = useState<string>(existing?.threshold?.toString() ?? "60");
+  const isMinuteRule = MINUTE_RULES.includes(ruleType);
   const [windowStart, setWindowStart] = useState(existing?.windowStart?.slice(0, 5) ?? "22:00");
   const [windowEnd, setWindowEnd] = useState(existing?.windowEnd?.slice(0, 5) ?? "06:00");
   const [cooldown, setCooldown] = useState<string>(existing?.cooldownSeconds?.toString() ?? "300");
@@ -189,7 +202,14 @@ function RuleForm({ existing, onClose, onSubmit }: FormProps) {
         <label className="block">
           <span className="mb-0.5 block text-xs text-ink-9000">{t("rules.type")}</span>
           <select className="input w-full py-1.5" value={ruleType}
-                  onChange={(e) => setRuleType(e.target.value as AlarmRuleType)}>
+                  onChange={(e) => {
+                    const next = e.target.value as AlarmRuleType;
+                    setRuleType(next);
+                    if (!existing) {
+                      setThreshold(next === "SPEED_OVER" ? "60" : next === "VOLTAGE_UNDER" ? "11500" : MINUTE_RULES.includes(next) ? "30" : threshold);
+                      setCooldown(MINUTE_RULES.includes(next) ? "3600" : "300");
+                    }
+                  }}>
             {RULE_TYPES.map((rt) => (
               <option key={rt} value={rt}>{t(`rules.type.${rt}` as StringKey)}</option>
             ))}
@@ -212,7 +232,7 @@ function RuleForm({ existing, onClose, onSubmit }: FormProps) {
         ) : (
           <label className="block">
             <span className="mb-0.5 block text-xs text-ink-9000">
-              {t("rules.threshold")} ({ruleType === "SPEED_OVER" ? t("rules.unit.kph") : t("rules.unit.mv")})
+              {t("rules.threshold")} ({ruleType === "SPEED_OVER" ? t("rules.unit.kph") : isMinuteRule ? t("rules.unit.minutes") : t("rules.unit.mv")})
             </span>
             <input type="number" className="input w-full py-1.5" value={threshold}
                    onChange={(e) => setThreshold(e.target.value)} required min={1} />

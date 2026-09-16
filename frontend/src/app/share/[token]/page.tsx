@@ -25,6 +25,7 @@ export default function SharedLocationPage() {
 
   const [location, setLocation] = useState<SharedLocationView | null>(null);
   const [history, setHistory] = useState<SharedHistoryPoint[]>([]);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const wsRef = useRef<WebSocket | null>(null);
@@ -48,6 +49,7 @@ export default function SharedLocationPage() {
     try {
       const data = await fetchPublicApi<SharedHistoryPoint[]>(`/share/${encodeURIComponent(token)}/history`);
       setHistory(data);
+      setHistoryLoaded(true);
     } catch (err) {
       console.error("Failed to fetch history:", err);
     }
@@ -125,9 +127,9 @@ export default function SharedLocationPage() {
             </div>
             <div>
               <h1 className="text-lg font-semibold text-white">
-                {location.deviceName || "Vehicle Location"}
+                {location.vehicleName || location.vehiclePlate || "Vehicle Location"}
               </h1>
-              {location.vehiclePlate && (
+              {location.vehiclePlate && location.vehicleName && (
                 <p className="text-sm text-ink-400">{location.vehiclePlate}</p>
               )}
             </div>
@@ -148,6 +150,11 @@ export default function SharedLocationPage() {
 
       {/* Map */}
       <div className="relative min-h-[240px] flex-1">
+        {location.showHistory && historyLoaded && history.length === 0 && (
+          <div className="pointer-events-none absolute left-1/2 top-3 z-[1000] -translate-x-1/2 whitespace-nowrap rounded-full bg-ink-900/80 px-3 py-1 text-xs text-white">
+            No route in the last 24 hours
+          </div>
+        )}
         <SharedMap
           latitude={location.latitude}
           longitude={location.longitude}
@@ -174,8 +181,8 @@ export default function SharedLocationPage() {
             <div>
               <p className="text-xs text-ink-400 mb-1">Last Update</p>
               <p className="text-sm font-medium text-white">
-                {location.lastSeenAt
-                  ? new Date(location.lastSeenAt).toLocaleTimeString()
+                {location.lastUpdate
+                  ? new Date(location.lastUpdate).toLocaleString("en-GB", { timeZone: "Asia/Dhaka", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })
                   : "N/A"}
               </p>
             </div>

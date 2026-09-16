@@ -5,16 +5,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type { SharedHistoryPoint } from "@/types/domain";
 
-// Initialize Google Mutant if available
-let GoogleMutant: typeof import("leaflet.gridlayer.googlemutant") | null = null;
-if (typeof window !== "undefined") {
-  // Dynamic import for Google Mutant
-  import("leaflet.gridlayer.googlemutant").then(m => {
-    GoogleMutant = m;
-  }).catch(() => {
-    console.log("Google Maps layer not available, using OSM fallback");
-  });
-}
+import { createBaseLayer } from "@/lib/leaflet";
 
 interface SharedMapProps {
   latitude: number;
@@ -77,33 +68,13 @@ export default function SharedMap({
       zoomControl: true,
     });
 
-    // Try Google Maps first, fall back to OSM
-    const googleApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-    if (googleApiKey && GoogleMutant) {
-      try {
-        const googleLayer = (L as unknown as { gridLayer: { googleMutant: (opts: object) => L.Layer } })
-          .gridLayer.googleMutant({
-            type: "roadmap",
-            styles: [
-              { elementType: "geometry", stylers: [{ color: "#1a1a2e" }] },
-              { elementType: "labels.text.stroke", stylers: [{ color: "#1a1a2e" }] },
-              { elementType: "labels.text.fill", stylers: [{ color: "#8b8b9e" }] },
-              { featureType: "road", elementType: "geometry", stylers: [{ color: "#2d2d44" }] },
-              { featureType: "water", elementType: "geometry", stylers: [{ color: "#0e0e1a" }] },
-            ],
-          });
-        googleLayer.addTo(map);
-      } catch {
-        // Fall back to OSM
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-          attribution: "&copy; OpenStreetMap contributors",
-        }).addTo(map);
-      }
-    } else {
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: "&copy; OpenStreetMap contributors",
-      }).addTo(map);
-    }
+    // Same base-layer factory as the dashboard: Google when a key is configured
+    // (loads the JS API itself), free OSM tiles otherwise. The layer resolves
+    // async, so guard against the map having been torn down meanwhile.
+    let disposed = false;
+    createBaseLayer("google-street").then((layer) => {
+      if (!disposed) layer.addTo(map);
+    });
 
     // Add vehicle marker
     const marker = L.marker([latitude, longitude], {
@@ -114,10 +85,12 @@ export default function SharedMap({
     mapRef.current = map;
 
     return () => {
+      disposed = true;
       map.remove();
       mapRef.current = null;
       markerRef.current = null;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- init once; later props are applied by the effects below
   }, []);
 
   // Update marker position and icon

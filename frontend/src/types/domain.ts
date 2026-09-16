@@ -308,7 +308,31 @@ export type AlarmType =
   | "DOOR"
   | "URGENT_ACCELERATION"
   | "URGENT_DECELERATION"
-  | "CURFEW_VIOLATION";
+  | "CURFEW_VIOLATION"
+  | "PARKING_TIMEOUT"
+  | "OFFLINE_TIMEOUT"
+  | "ENGINE_IDLE";
+
+/** ADL-style "process result" recorded when an alarm is acknowledged. */
+export type AlarmProcessResult = "HANDLED" | "FALSE_ALARM" | "NO_ACTION";
+
+export interface AlarmAcknowledgeRequest {
+  result?: AlarmProcessResult;
+  notes?: string;
+}
+
+/** Mirrors backend dto.AlarmDtos.AlarmOverview (GET /alarms/overview). */
+export interface AlarmOverviewRow {
+  imei: string;
+  name: string | null;
+  vehiclePlate: string | null;
+  counts: Record<string, number>;
+  total: number;
+}
+export interface AlarmOverview {
+  types: string[];
+  rows: AlarmOverviewRow[];
+}
 
 /** Mirrors backend dto.NotificationDtos.NotificationSettingsView (sets arrive as arrays). */
 export interface NotificationSettings {
@@ -326,7 +350,13 @@ export interface NotificationSettingsUpdate {
   pushTypes: string[];
 }
 
-export type AlarmRuleType = "SPEED_OVER" | "VOLTAGE_UNDER" | "ACC_ON_DURING_WINDOW";
+export type AlarmRuleType =
+  | "SPEED_OVER"
+  | "VOLTAGE_UNDER"
+  | "ACC_ON_DURING_WINDOW"
+  | "PARKING_TIMEOUT"
+  | "OFFLINE_TIMEOUT"
+  | "IDLE_TIMEOUT";
 
 export interface AlarmRuleView {
   id: string;
@@ -369,6 +399,8 @@ export interface AlarmView {
   acknowledged: boolean;
   acknowledgedBy: string | null;
   acknowledgedAt: string | null;
+  processResult: AlarmProcessResult | null;
+  processNotes: string | null;
   metadata: Record<string, unknown>;
 }
 
@@ -626,15 +658,16 @@ export interface CreateShareLinkRequest {
   allowRealtime: boolean;
 }
 
+/** Mirrors backend dto.ShareLocationDtos.SharedLocationView (public, no auth). */
 export interface SharedLocationView {
-  deviceName: string | null;
+  vehicleName: string | null;
   vehiclePlate: string | null;
   vehicleType: string | null;
   latitude: number;
   longitude: number;
   speed: number;
   course: number;
-  lastSeenAt: string | null;
+  lastUpdate: string | null;
   isOnline: boolean;
   showHistory: boolean;
   allowRealtime: boolean;

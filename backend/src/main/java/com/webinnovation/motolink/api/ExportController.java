@@ -30,6 +30,7 @@ public class ExportController {
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
 
     private final ExcelExportService exportService;
+    private final com.webinnovation.motolink.service.AlarmService alarmService;
 
     /**
      * Export trips report to Excel.
@@ -65,6 +66,22 @@ public class ExportController {
         log.info("Exporting alarms to Excel for org={} from={} to={}", orgId, from, to);
         byte[] data = exportService.exportAlarms(orgId, from, to);
         return xlsx(data, "alarms_" + from + "_" + to + ".xlsx");
+    }
+
+    /** GET /exports/alarm-overview.xlsx?from=2026-09-01&to=2026-09-16 — ADL Alarm Overview. */
+    @GetMapping(value = "/alarm-overview.xlsx", produces = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    public ResponseEntity<byte[]> exportAlarmOverview(
+            @RequestParam(name = "from") String fromIso,
+            @RequestParam(name = "to") String toIso) throws IOException {
+        UUID orgId = TenantContext.requireOrgId();
+        LocalDate from = parseDate(fromIso, "from");
+        LocalDate to = parseDate(toIso, "to");
+        validateDateRange(from, to);
+        java.time.ZoneId dhaka = java.time.ZoneId.of("Asia/Dhaka");
+        var overview = alarmService.overview(orgId,
+                from.atStartOfDay(dhaka).toInstant(), to.plusDays(1).atStartOfDay(dhaka).toInstant());
+        byte[] data = exportService.exportAlarmOverview(orgId, from, to, overview);
+        return xlsx(data, "alarm_overview_" + from + "_" + to + ".xlsx");
     }
 
     /**

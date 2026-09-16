@@ -16,6 +16,9 @@ public record Alarm(
         boolean acknowledged,
         UUID acknowledgedBy,
         Instant acknowledgedAt,
+        /** HANDLED / FALSE_ALARM / NO_ACTION, set when acknowledged with a result. */
+        String processResult,
+        String processNotes,
         Map<String, Object> metadata,
         Instant createdAt
 ) {}

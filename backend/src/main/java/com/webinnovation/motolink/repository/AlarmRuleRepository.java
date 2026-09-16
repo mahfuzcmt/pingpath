@@ -113,6 +113,17 @@ public class AlarmRuleRepository {
                 ROW_MAPPER);
     }
 
+    /** Active rules of the given types across every org — the state sweep's work list. */
+    public List<AlarmRule> listActiveByTypes(java.util.Collection<String> ruleTypes) {
+        if (ruleTypes == null || ruleTypes.isEmpty()) return List.of();
+        return jdbc.query("""
+                SELECT id, org_id, name, rule_type, threshold, window_start, window_end,
+                       cooldown_seconds, severity, is_active, applies_to_all, created_at, updated_at
+                  FROM alarm_rules
+                 WHERE is_active = true AND rule_type IN (:types)
+                """, new MapSqlParameterSource("types", ruleTypes), ROW_MAPPER);
+    }
+
     public boolean update(UUID orgId, UUID id, String name, Double threshold,
                           LocalTime windowStart, LocalTime windowEnd, Integer cooldownSeconds,
                           String severity, Boolean active, Boolean appliesToAll) {

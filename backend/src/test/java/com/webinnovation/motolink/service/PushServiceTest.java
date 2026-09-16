@@ -49,7 +49,7 @@ class PushServiceTest {
     private static Alarm alarm(UUID orgId) {
         return new Alarm(UUID.randomUUID(), orgId, "864290061234567", "SOS", "CRITICAL",
                 Instant.parse("2026-07-08T04:23:45Z"), 23.8103, 90.4125,
-                false, null, null, Map.of(), Instant.now());
+                false, null, null, null, null, Map.of(), Instant.now());
     }
 
     @Test

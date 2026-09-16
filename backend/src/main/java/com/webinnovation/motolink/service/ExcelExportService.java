@@ -190,6 +190,53 @@ public class ExcelExportService {
         }
     }
 
+    /** ADL-style Alarm Overview: one row per vehicle, one column per alarm type seen in the period. */
+    public byte[] exportAlarmOverview(UUID orgId, LocalDate from, LocalDate to,
+                                      com.webinnovation.motolink.dto.AlarmDtos.AlarmOverview overview) throws IOException {
+        try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+            Sheet sheet = workbook.createSheet("Alarm Overview");
+            CellStyle headerStyle = createHeaderStyle(workbook);
+            CellStyle totalStyle = createTotalStyle(workbook);
+
+            Row titleRow = sheet.createRow(0);
+            Cell titleCell = titleRow.createCell(0);
+            titleCell.setCellValue("Alarm Overview: " + from + " to " + to);
+            titleCell.setCellStyle(createTitleStyle(workbook));
+            sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, Math.max(3, overview.types().size() + 3)));
+
+            Row headerRow = sheet.createRow(2);
+            List<String> headers = new java.util.ArrayList<>(List.of("Device Name", "IMEI", "Plate No."));
+            headers.addAll(overview.types());
+            headers.add("Total");
+            for (int i = 0; i < headers.size(); i++) {
+                Cell cell = headerRow.createCell(i);
+                cell.setCellValue(headers.get(i));
+                cell.setCellStyle(headerStyle);
+            }
+
+            int rowNum = 3;
+            int grand = 0;
+            for (var r : overview.rows()) {
+                Row row = sheet.createRow(rowNum++);
+                row.createCell(0).setCellValue(r.name() == null ? "" : r.name());
+                row.createCell(1).setCellValue(r.imei());
+                row.createCell(2).setCellValue(r.vehiclePlate() == null ? "" : r.vehiclePlate());
+                int col = 3;
+                for (String t : overview.types()) {
+                    row.createCell(col++).setCellValue(r.counts().getOrDefault(t, 0));
+                }
+                Cell totalCell = row.createCell(col);
+                totalCell.setCellValue(r.total());
+                totalCell.setCellStyle(totalStyle);
+                grand += r.total();
+            }
+            Row sum = sheet.createRow(rowNum + 1);
+            sum.createCell(0).setCellValue("Vehicles: " + overview.rows().size() + " | Alarms: " + grand);
+            for (int i = 0; i < headers.size(); i++) sheet.autoSizeColumn(i);
+            return writeToBytes(workbook);
+        }
+    }
+
     /**
      * Export monthly summary to Excel.
      */

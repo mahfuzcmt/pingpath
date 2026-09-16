@@ -3,9 +3,10 @@
 import { useState } from "react";
 import { useLocale } from "@/lib/i18n";
 import { formatDateTime } from "@/lib/format";
-import { ALARM_SEVERITIES, ALARM_TYPES, alarmTypeLabel, severityLabel } from "@/lib/alarmTypes";
+import { ALARM_SEVERITIES, ALARM_TYPES, alarmTypeLabel, processResultLabel, severityLabel } from "@/lib/alarmTypes";
 import { AlarmMapModal } from "./AlarmMapModal";
-import type { AlarmSeverity, AlarmView, DeviceView } from "@/types/domain";
+import { AcknowledgeDialog } from "./AcknowledgeDialog";
+import type { AlarmAcknowledgeRequest, AlarmSeverity, AlarmView, DeviceView } from "@/types/domain";
 
 export interface AlarmCenterFilter {
   type: string;
@@ -23,7 +24,7 @@ interface AlarmListProps {
   devices: DeviceView[];
   filter: AlarmCenterFilter;
   onFilterChange: (f: AlarmCenterFilter) => void;
-  onAcknowledge: (id: string) => Promise<unknown>;
+  onAcknowledge: (id: string, body?: AlarmAcknowledgeRequest) => Promise<unknown>;
   onExport: () => Promise<void>;
   exporting: boolean;
 }
@@ -36,8 +37,8 @@ const SEV_PILL: Record<AlarmSeverity, string> = {
 
 export function AlarmList({ alarms, loading, devices, filter, onFilterChange, onAcknowledge, onExport, exporting }: AlarmListProps) {
   const { t, locale } = useLocale();
-  const [busy, setBusy] = useState<Set<string>>(new Set());
   const [mapAlarm, setMapAlarm] = useState<AlarmView | null>(null);
+  const [ackAlarm, setAckAlarm] = useState<AlarmView | null>(null);
 
   const deviceName = (imei: string) => {
     const d = devices.find((x) => x.imei === imei);
@@ -45,25 +46,11 @@ export function AlarmList({ alarms, loading, devices, filter, onFilterChange, on
   };
   const set = <K extends keyof AlarmCenterFilter>(k: K, v: AlarmCenterFilter[K]) => onFilterChange({ ...filter, [k]: v });
 
-  const handleAck = async (id: string) => {
-    setBusy((b) => new Set(b).add(id));
-    try {
-      await onAcknowledge(id);
-    } finally {
-      setBusy((b) => {
-        const next = new Set(b);
-        next.delete(id);
-        return next;
-      });
-    }
-  };
-
   const unacked = alarms.filter((a) => !a.acknowledged).length;
 
   return (
     <div className="flex h-full flex-col bg-white">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-surface-300 bg-surface-50 px-4 py-2">
-        <h1 className="t-title">{t("alarms.title")}</h1>
         <span className="t-caption">
           {alarms.length} {t("alarms.shown")} · {unacked} {t("alarms.unacked")}
         </span>
@@ -129,6 +116,7 @@ export function AlarmList({ alarms, loading, devices, filter, onFilterChange, on
                 <th>{t("alarms.vehicle")}</th>
                 <th>{t("alarms.time")}</th>
                 <th>{t("alarms.location")}</th>
+                <th>{t("alarms.processResult")}</th>
                 <th className="text-right" />
               </tr>
             </thead>
@@ -153,12 +141,22 @@ export function AlarmList({ alarms, loading, devices, filter, onFilterChange, on
                       <span className="text-ink-400">—</span>
                     )}
                   </td>
+                  <td>
+                    {a.processResult ? (
+                      <div>
+                        <div className="text-ink-900">{processResultLabel(a.processResult, t)}</div>
+                        {a.processNotes && <div className="max-w-[220px] truncate text-[11px] text-ink-500" title={a.processNotes}>{a.processNotes}</div>}
+                      </div>
+                    ) : (
+                      <span className="text-ink-400">—</span>
+                    )}
+                  </td>
                   <td className="text-right">
                     {a.acknowledged ? (
                       <span className="text-[11px] text-ink-500">{t("common.acknowledged")}</span>
                     ) : (
-                      <button type="button" onClick={() => handleAck(a.id)} disabled={busy.has(a.id)} className="btn-secondary">
-                        {busy.has(a.id) ? t("common.loading") : t("common.acknowledge")}
+                      <button type="button" onClick={() => setAckAlarm(a)} className="btn-secondary">
+                        {t("alarms.process")}
                       </button>
                     )}
                   </td>
@@ -170,6 +168,14 @@ export function AlarmList({ alarms, loading, devices, filter, onFilterChange, on
       </div>
 
       {mapAlarm && <AlarmMapModal alarm={mapAlarm} deviceName={deviceName(mapAlarm.deviceImei)} onClose={() => setMapAlarm(null)} />}
+      {ackAlarm && (
+        <AcknowledgeDialog
+          alarm={ackAlarm}
+          deviceName={deviceName(ackAlarm.deviceImei)}
+          onConfirm={(body) => onAcknowledge(ackAlarm.id, body)}
+          onClose={() => setAckAlarm(null)}
+        />
+      )}
     </div>
   );
 }

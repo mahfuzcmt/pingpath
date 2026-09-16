@@ -32,7 +32,8 @@ public class AlarmRepository {
 
     private static final String SELECT_FIELDS = """
             SELECT id, org_id, device_imei, type, severity, ts, latitude, longitude,
-                   acknowledged, acknowledged_by, acknowledged_at, metadata, created_at
+                   acknowledged, acknowledged_by, acknowledged_at, process_result, process_notes,
+                   metadata, created_at
             FROM alarms
             """;
 
@@ -54,6 +55,8 @@ public class AlarmRepository {
                 rs.getBoolean("acknowledged"),
                 rs.getObject("acknowledged_by", UUID.class),
                 ackedAt == null ? null : ackedAt.toInstant(),
+                rs.getString("process_result"),
+                rs.getString("process_notes"),
                 metadata,
                 rs.getObject("created_at", OffsetDateTime.class).toInstant()
         );
@@ -190,14 +193,38 @@ public class AlarmRepository {
     }
 
     public boolean acknowledge(UUID orgId, UUID alarmId, UUID userId) {
+        return acknowledge(orgId, alarmId, userId, null, null);
+    }
+
+    /** Acknowledge with an ADL-style processing result + note (both optional). */
+    public boolean acknowledge(UUID orgId, UUID alarmId, UUID userId, String result, String notes) {
         int n = jdbc.update("""
                 UPDATE alarms
-                SET acknowledged = true, acknowledged_by = :uid, acknowledged_at = now()
+                SET acknowledged = true, acknowledged_by = :uid, acknowledged_at = now(),
+                    process_result = COALESCE(:result, process_result),
+                    process_notes  = COALESCE(:notes, process_notes)
                 WHERE org_id = :orgId AND id = :id AND acknowledged = false
                 """, new MapSqlParameterSource("orgId", orgId)
                         .addValue("id", alarmId)
-                        .addValue("uid", userId));
+                        .addValue("uid", userId)
+                        .addValue("result", result)
+                        .addValue("notes", notes));
         return n > 0;
+    }
+
+    /** One row per (device, type) with its count — feeds the Alarm Overview report. */
+    public record TypeCount(String imei, String type, int count) {}
+
+    public List<TypeCount> countByDeviceAndType(UUID orgId, Instant from, Instant to) {
+        return jdbc.query("""
+                SELECT device_imei, type, COUNT(*)::int AS n
+                  FROM alarms
+                 WHERE org_id = :orgId AND ts >= :from AND ts < :to
+                 GROUP BY device_imei, type
+                """, new MapSqlParameterSource("orgId", orgId)
+                        .addValue("from", Timestamp.from(from))
+                        .addValue("to", Timestamp.from(to)),
+                (rs, rn) -> new TypeCount(rs.getString("device_imei"), rs.getString("type"), rs.getInt("n")));
     }
 
     private PGobject toJsonb(Map<String, Object> metadata) {

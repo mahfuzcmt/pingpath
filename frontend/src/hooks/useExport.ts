@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { api } from "@/lib/api";
 
-export type ExportType = "trips" | "alarms" | "monthly-summary" | "devices" | "locations";
+export type ExportType = "trips" | "alarms" | "alarm-overview" | "monthly-summary" | "devices" | "locations";
 
 interface ExportParams {
   type: ExportType;
@@ -37,6 +37,11 @@ export function useExport(): UseExportReturn {
           break;
         case "alarms":
           endpoint = "/exports/alarms.xlsx";
+          if (params.from) queryParams.set("from", params.from);
+          if (params.to) queryParams.set("to", params.to);
+          break;
+        case "alarm-overview":
+          endpoint = "/exports/alarm-overview.xlsx";
           if (params.from) queryParams.set("from", params.from);
           if (params.to) queryParams.set("to", params.to);
           break;

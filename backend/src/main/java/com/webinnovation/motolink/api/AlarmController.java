@@ -1,5 +1,7 @@
 package com.webinnovation.motolink.api;
 
+import com.webinnovation.motolink.dto.AlarmDtos.AcknowledgeRequest;
+import com.webinnovation.motolink.dto.AlarmDtos.AlarmOverview;
 import com.webinnovation.motolink.dto.AlarmDtos.AlarmView;
 import com.webinnovation.motolink.exception.DomainException;
 import com.webinnovation.motolink.exception.NotFoundException;
@@ -13,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -72,6 +75,18 @@ public class AlarmController {
         return s == null || s.isBlank() ? null : s.trim();
     }
 
+    /** ADL "Alarm Overview": per-vehicle counts by type. `to` exclusive. */
+    @GetMapping("/overview")
+    public AlarmOverview overview(
+            @RequestParam(name = "from") Instant from,
+            @RequestParam(name = "to") Instant to) {
+        UUID orgId = TenantContext.requireOrgId();
+        if (!to.isAfter(from)) {
+            throw new DomainException("INVALID_RANGE", "to must be after from");
+        }
+        return alarmService.overview(orgId, from, to);
+    }
+
     @GetMapping("/device/{imei}")
     public List<AlarmView> listForDevice(
             @PathVariable String imei,
@@ -88,11 +103,22 @@ public class AlarmController {
         return AlarmView.of(alarmService.getOrThrow(orgId, id));
     }
 
+    /** Body optional: {@code {result: HANDLED|FALSE_ALARM|NO_ACTION, notes}} (ADL "process result"). */
     @PostMapping("/{id}/acknowledge")
-    public ResponseEntity<AlarmView> acknowledge(@PathVariable UUID id) {
+    public ResponseEntity<AlarmView> acknowledge(@PathVariable UUID id,
+                                                 @RequestBody(required = false) AcknowledgeRequest body) {
         UUID orgId = TenantContext.requireOrgId();
         UUID userId = TenantContext.currentUserId();
-        boolean ok = alarmService.acknowledge(orgId, id, userId);
+        String result = body == null || body.result() == null || body.result().isBlank()
+                ? null : body.result().trim().toUpperCase(Locale.ROOT);
+        if (result != null && !AlarmService.PROCESS_RESULTS.contains(result)) {
+            throw new DomainException("INVALID_RESULT", "result must be one of " + AlarmService.PROCESS_RESULTS);
+        }
+        String notes = body == null || body.notes() == null || body.notes().isBlank() ? null : body.notes().trim();
+        if (notes != null && notes.length() > 1000) {
+            throw new DomainException("NOTES_TOO_LONG", "notes must be 1000 characters or fewer");
+        }
+        boolean ok = alarmService.acknowledge(orgId, id, userId, result, notes);
         if (!ok) {
             // Either non-existent or already acknowledged — fetch and 404 on miss.
             alarmService.getOrThrow(orgId, id);  // throws NotFoundException if missing

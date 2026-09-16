@@ -107,6 +107,8 @@ export function NotificationsTab() {
       acknowledged: false,
       acknowledgedBy: null,
       acknowledgedAt: null,
+      processResult: null,
+      processNotes: null,
       metadata: { preview: true },
     };
     unlockAlarmAudio();

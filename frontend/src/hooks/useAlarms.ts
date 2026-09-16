@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
 import { subscribeAlarms } from "@/lib/ws";
-import type { AlarmView } from "@/types/domain";
+import type { AlarmAcknowledgeRequest, AlarmView } from "@/types/domain";
 
 export interface AlarmQuery {
   unackedOnly?: boolean;
@@ -30,6 +30,8 @@ function normalizeLive(raw: AlarmView & { imei?: string }): AlarmView {
     acknowledged: raw.acknowledged ?? false,
     acknowledgedBy: raw.acknowledgedBy ?? null,
     acknowledgedAt: raw.acknowledgedAt ?? null,
+    processResult: raw.processResult ?? null,
+    processNotes: raw.processNotes ?? null,
     metadata: raw.metadata ?? {},
   };
 }
@@ -71,8 +73,8 @@ export function useAlarms(orgId: string, opts: Options = {}) {
     });
   }, []);
 
-  const acknowledge = useCallback(async (id: string) => {
-    const r = await api.post<AlarmView>(`/alarms/${id}/acknowledge`);
+  const acknowledge = useCallback(async (id: string, body?: AlarmAcknowledgeRequest) => {
+    const r = await api.post<AlarmView>(`/alarms/${id}/acknowledge`, body ?? {});
     upsert(r.data);
     return r.data;
   }, [upsert]);
