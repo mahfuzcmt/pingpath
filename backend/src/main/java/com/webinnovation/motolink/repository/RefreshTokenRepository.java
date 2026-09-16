@@ -52,6 +52,13 @@ public class RefreshTokenRepository {
         }
     }
 
+    /** Password changed / reset: every other session must sign in again. */
+    public int revokeAllForUser(UUID userId) {
+        return jdbc.update(
+                "UPDATE refresh_tokens SET revoked_at = now() WHERE user_id = :userId AND revoked_at IS NULL",
+                new MapSqlParameterSource("userId", userId));
+    }
+
     public void revoke(UUID id) {
         jdbc.update(
                 "UPDATE refresh_tokens SET revoked_at = now() WHERE id = :id",

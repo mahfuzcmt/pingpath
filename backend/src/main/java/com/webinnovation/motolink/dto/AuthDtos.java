@@ -17,6 +17,19 @@ public final class AuthDtos {
 
     public record RefreshRequest(@NotBlank String refreshToken) {}
 
+    public record ChangePasswordRequest(
+            @NotBlank String currentPassword,
+            @NotBlank @Size(min = 8, max = 128) String newPassword
+    ) {}
+
+    public record ForgotPasswordRequest(@NotBlank @Email String email) {}
+
+    public record ResetPasswordRequest(
+            @NotBlank @Email String email,
+            @NotBlank @Size(min = 6, max = 6) String code,
+            @NotBlank @Size(min = 8, max = 128) String newPassword
+    ) {}
+
     public record TokenPair(String accessToken, String refreshToken) {}
 
     public record UserSummary(UUID id, String email, String fullName, String role, UUID orgId) {}

@@ -24,6 +24,34 @@ export async function login(req: LoginRequest): Promise<AuthMeResponse> {
   return (await res.json()) as AuthMeResponse;
 }
 
+async function postJson(path: string, body: unknown, fallback: string): Promise<void> {
+  const res = await fetch(path, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+    credentials: "include",
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data?.error?.message ?? `${fallback} (${res.status})`);
+  }
+}
+
+/** Logged-in change; the BFF rotates the session cookie so this tab stays signed in. */
+export function changePassword(currentPassword: string, newPassword: string): Promise<void> {
+  return postJson("/api/auth/change-password", { currentPassword, newPassword }, "Password change failed");
+}
+
+/** Step 1 of forgot-password: request an SMS code. Always resolves for unknown emails. */
+export function forgotPassword(email: string): Promise<void> {
+  return postJson("/api/auth/forgot-password", { email }, "Request failed");
+}
+
+/** Step 2: code from the SMS plus the new password. */
+export function resetPassword(email: string, code: string, newPassword: string): Promise<void> {
+  return postJson("/api/auth/reset-password", { email, code, newPassword }, "Reset failed");
+}
+
 export async function logout(): Promise<void> {
   await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
 }

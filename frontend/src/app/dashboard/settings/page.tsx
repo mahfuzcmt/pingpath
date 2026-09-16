@@ -5,11 +5,14 @@ import { useLocale } from "@/lib/i18n";
 import { useSession } from "@/lib/session-context";
 import { BillingTab } from "@/components/settings/BillingTab";
 import { NotificationsTab } from "@/components/settings/NotificationsTab";
+import { AccountTab } from "@/components/settings/AccountTab";
 import { OrgInfoTab } from "@/components/settings/OrgInfoTab";
 import { UsersTab } from "@/components/settings/UsersTab";
 
-type Tab = "org" | "users" | "notifications" | "billing";
-const TABS: Tab[] = ["org", "users", "notifications", "billing"];
+type Tab = "org" | "users" | "notifications" | "account" | "billing";
+const TABS: Tab[] = ["org", "users", "notifications", "account", "billing"];
+/** Tabs every role may open; org + users are admin-only. */
+const OPEN_TABS: Tab[] = ["notifications", "account", "billing"];
 
 export default function Page() {
   const { t } = useLocale();
@@ -21,7 +24,7 @@ export default function Page() {
   // Deep link, e.g. the bell's gear → /dashboard/settings?tab=notifications
   useEffect(() => {
     const wanted = new URLSearchParams(window.location.search).get("tab") as Tab | null;
-    if (wanted && TABS.includes(wanted) && (isAdmin || wanted === "notifications" || wanted === "billing")) {
+    if (wanted && TABS.includes(wanted) && (isAdmin || OPEN_TABS.includes(wanted))) {
       setTab(wanted);
     }
   }, [isAdmin]);
@@ -44,6 +47,9 @@ export default function Page() {
           <TabButton active={tab === "notifications"} onClick={() => setTab("notifications")}>
             {t("settings.tab.notifications")}
           </TabButton>
+          <TabButton active={tab === "account"} onClick={() => setTab("account")}>
+            {t("settings.tab.account")}
+          </TabButton>
           <TabButton active={tab === "billing"} onClick={() => setTab("billing")}>
             {t("settings.tab.billing")}
           </TabButton>
@@ -54,6 +60,7 @@ export default function Page() {
         {tab === "org" && isAdmin && <OrgInfoTab readOnly={!isAdmin} />}
         {tab === "users" && isAdmin && <UsersTab canManage={isAdmin} />}
         {tab === "notifications" && <NotificationsTab />}
+        {tab === "account" && <AccountTab />}
         {tab === "billing" && <BillingTab />}
       </div>
     </div>

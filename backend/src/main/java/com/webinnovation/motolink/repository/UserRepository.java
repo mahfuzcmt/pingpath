@@ -134,6 +134,15 @@ public class UserRepository {
                 """, params);
     }
 
+    /** Self-service change / reset: no org scoping needed, the caller has proven identity. */
+    public int updatePasswordById(UUID id, String passwordHash) {
+        return jdbc.update("""
+                UPDATE users
+                   SET password_hash = :hash, password_changed_at = now(), updated_at = now()
+                 WHERE id = :id
+                """, new MapSqlParameterSource("id", id).addValue("hash", passwordHash));
+    }
+
     public int updatePassword(UUID id, UUID orgId, String passwordHash) {
         var params = new MapSqlParameterSource()
                 .addValue("id", id)

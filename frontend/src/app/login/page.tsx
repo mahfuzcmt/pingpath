@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, useState } from "react";
+import Link from "next/link";
 import { login } from "@/lib/auth";
 import { useLocale } from "@/lib/i18n";
 import { LanguageToggle } from "@/components/shell/LanguageToggle";
@@ -106,6 +107,12 @@ export default function LoginPage() {
                   {error}
                 </div>
               )}
+
+              <div className="-mt-2 text-right">
+                <Link href="/login/forgot" className="text-xs font-medium text-brand-500 hover:text-brand-600">
+                  {t("auth.forgotPassword")}
+                </Link>
+              </div>
 
               <button type="submit" className="btn-primary w-full h-10 text-sm" disabled={submitting}>
                 {submitting ? (

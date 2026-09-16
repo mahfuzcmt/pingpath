@@ -1053,8 +1053,9 @@ Implementation hits SSL Wireless API (`https://smsplus.sslwireless.com/api/v3/se
 POST /auth/login              { email, password } → { accessToken, refreshToken, user, org }
 POST /auth/refresh            { refreshToken } → { accessToken }
 POST /auth/logout             {} → 204
-POST /auth/forgot-password    { email } → 204
-POST /auth/reset-password     { token, newPassword } → 204
+POST /auth/change-password    { currentPassword, newPassword } → { accessToken, refreshToken }  (revokes all other sessions)
+POST /auth/forgot-password    { email } → 204 always; texts a 6-digit code (15 min, 5 attempts, 3 codes/15 min) to users.phone via SSL Wireless (log stub when SSL_SMS_API_TOKEN is blank)
+POST /auth/reset-password     { email, code, newPassword } → 204   (V16 password_reset_codes, hashed; implemented 2026-09-16)
 GET  /auth/me                 → { user, org }
 ```
 
@@ -1423,6 +1424,7 @@ public void checkPendingDeviceCommands() { ... }
 
 ### 14.2 Password Hashing
 
+- Self-service: Settings → Account (change) and `/login/forgot` (SMS code reset). The Next.js BFF rotates the session cookie on change (`api/auth/change-password`); users without a phone must ask an ORG_ADMIN, who can set passwords via `PATCH /orgs/me/users/:id`.
 - BCrypt with strength 12
 - Forbid passwords < 8 chars, no complexity requirements (length is the meaningful factor)
 - Track `password_changed_at` for forced rotation policies
