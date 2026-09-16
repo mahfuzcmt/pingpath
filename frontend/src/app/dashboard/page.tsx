@@ -49,7 +49,7 @@ export default function DashboardPage() {
   const isDesktop = useIsDesktop();
   const isWide = useIsWide();
   const { devices, loading, setDevices } = useDevices();
-  const { groups, createGroup, updateGroup, deleteGroup } = useDeviceGroups();
+  const { groups, createGroup, updateGroup, deleteGroup, assignDevices, unassignDevices } = useDeviceGroups();
   const [groupModal, setGroupModal] = useState<{ mode: "new" } | { mode: "edit"; group: DeviceGroupView } | null>(null);
   const { drivers } = useDrivers();
   const driversById = useMemo(() => {
@@ -168,6 +168,18 @@ export default function DashboardPage() {
     setDevices((prev) => prev.map((d) => (d.groupId === g.id ? { ...d, groupId: null } : d)));
   };
 
+  const onMoveToGroup = async (imei: string, groupId: string | null) => {
+    const current = devices.find((d) => d.imei === imei)?.groupId ?? null;
+    if (current === groupId) return;
+    try {
+      if (groupId) await assignDevices(groupId, [imei]);
+      else if (current) await unassignDevices(current, [imei]);
+      setDevices((prev) => prev.map((d) => (d.imei === imei ? { ...d, groupId } : d)));
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : t("group.moveFailed"));
+    }
+  };
+
   const list = (
     <DeviceList
       devices={devices}
@@ -181,6 +193,7 @@ export default function DashboardPage() {
       onNewGroup={() => setGroupModal({ mode: "new" })}
       onEditGroup={(group) => setGroupModal({ mode: "edit", group })}
       onDeleteGroup={(group) => void onDeleteGroup(group)}
+      onMoveToGroup={(imei, groupId) => void onMoveToGroup(imei, groupId)}
     />
   );
 

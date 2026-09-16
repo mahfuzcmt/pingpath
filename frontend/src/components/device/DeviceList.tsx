@@ -81,6 +81,8 @@ interface DeviceListProps {
   onNewGroup?: () => void;
   onEditGroup?: (group: DeviceGroupView) => void;
   onDeleteGroup?: (group: DeviceGroupView) => void;
+  /** Row menu "Move to group": null = Ungrouped. */
+  onMoveToGroup?: (imei: string, groupId: string | null) => void;
 }
 
 function deviceLabel(d: DeviceView): string {
@@ -157,6 +159,7 @@ export function DeviceList({
   onNewGroup,
   onEditGroup,
   onDeleteGroup,
+  onMoveToGroup,
 }: DeviceListProps) {
   const { t } = useLocale();
   const [query, setQuery] = useState("");
@@ -419,6 +422,8 @@ export function DeviceList({
                     onSelect={() => onSelect(row.device.imei)}
                     onToggleVisible={() => toggleVisible(row.device.imei)}
                     onAction={(a) => onAction(a, row.device.imei)}
+                    groups={groups}
+                    onMoveToGroup={onMoveToGroup ? (gid) => onMoveToGroup(row.device.imei, gid) : undefined}
                     t={t}
                   />
                 ))}
@@ -440,9 +445,11 @@ interface VehicleRowProps {
   onToggleVisible: () => void;
   onAction: (a: VehicleAction) => void;
   t: (k: StringKey) => string;
+  groups: DeviceGroupView[];
+  onMoveToGroup?: (groupId: string | null) => void;
 }
 
-function VehicleRow({ row, selected, visible, onSelect, onToggleVisible, onAction, t }: VehicleRowProps) {
+function VehicleRow({ row, selected, visible, onSelect, onToggleVisible, onAction, groups, onMoveToGroup, t }: VehicleRowProps) {
   const { device, state, overspeed } = row;
   const status = rowStatus(row, t);
   const iconColor = overspeed ? OVERSPEED_COLOR : VEHICLE_STATE_COLOR[state];
@@ -489,7 +496,13 @@ function VehicleRow({ row, selected, visible, onSelect, onToggleVisible, onActio
         style={{ background: status.color }}
         title={online ? t("fleet.online") : t("fleet.offline")}
       />
-      <RowMenu onAction={onAction} t={t} />
+      <RowMenu
+        onAction={onAction}
+        t={t}
+        groups={groups}
+        currentGroupId={row.device.groupId ?? null}
+        onMoveToGroup={onMoveToGroup}
+      />
     </div>
   );
 }
@@ -505,7 +518,15 @@ const MENU_ITEMS: { action: VehicleAction; label: StringKey }[] = [
   { action: "edit", label: "act.edit" },
 ];
 
-function RowMenu({ onAction, t }: { onAction: (a: VehicleAction) => void; t: (k: StringKey) => string }) {
+interface RowMenuProps {
+  onAction: (a: VehicleAction) => void;
+  t: (k: StringKey) => string;
+  groups?: DeviceGroupView[];
+  currentGroupId?: string | null;
+  onMoveToGroup?: (groupId: string | null) => void;
+}
+
+function RowMenu({ onAction, t, groups = [], currentGroupId = null, onMoveToGroup }: RowMenuProps) {
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
@@ -537,7 +558,7 @@ function RowMenu({ onAction, t }: { onAction: (a: VehicleAction) => void; t: (k:
         onClick={(e) => {
           e.stopPropagation();
           const r = e.currentTarget.getBoundingClientRect();
-          setPos({ top: r.bottom + 4, left: Math.max(8, r.right - 150) });
+          setPos({ top: r.bottom + 4, left: Math.max(8, r.right - 190) });
           setOpen((v) => !v);
         }}
         className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-ink-400 opacity-70 transition hover:bg-surface-200 hover:text-ink-700 group-hover:opacity-100"
@@ -556,7 +577,7 @@ function RowMenu({ onAction, t }: { onAction: (a: VehicleAction) => void; t: (k:
           ref={menuRef}
           role="menu"
           style={{ top: pos.top, left: pos.left }}
-          className="fixed z-[3000] min-w-[150px] rounded-md border border-surface-300 bg-white py-1 shadow-lg"
+          className="fixed z-[3000] min-w-[190px] max-h-[70vh] overflow-y-auto rounded-md border border-surface-300 bg-white py-1 shadow-lg"
           onClick={(e) => e.stopPropagation()}
         >
           {MENU_ITEMS.map((m) => (
@@ -570,6 +591,38 @@ function RowMenu({ onAction, t }: { onAction: (a: VehicleAction) => void; t: (k:
               {t(m.label)}
             </button>
           ))}
+          {onMoveToGroup && (
+            <>
+              <div className="my-1 border-t border-surface-200" />
+              <div className="px-3 pb-1 pt-1.5 text-[10px] font-semibold uppercase tracking-wide text-ink-500">
+                {t("group.moveTo")}
+              </div>
+              {[{ id: null as string | null, name: t("list.ungrouped"), color: "#7E8792" }, ...groups.filter((g) => !g.isDefault)].map((g) => {
+                const active = (g.id ?? null) === currentGroupId;
+                return (
+                  <button
+                    key={g.id ?? "__ungrouped"}
+                    type="button"
+                    role="menuitemradio"
+                    aria-checked={active}
+                    disabled={active}
+                    onClick={() => { setOpen(false); onMoveToGroup(g.id); }}
+                    className={`flex w-full items-center gap-2 px-3 py-1.5 text-left text-[13px] ${
+                      active ? "cursor-default font-semibold text-ink-900" : "text-ink-700 hover:bg-surface-100"
+                    }`}
+                  >
+                    <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: g.color }} />
+                    <span className="truncate">{g.name}</span>
+                    {active && (
+                      <svg className="ml-auto h-3.5 w-3.5 shrink-0 text-brand-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                        <path d="m5 12 5 5L20 7" />
+                      </svg>
+                    )}
+                  </button>
+                );
+              })}
+            </>
+          )}
         </div>,
         document.body,
       )}

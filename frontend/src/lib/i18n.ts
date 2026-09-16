@@ -161,6 +161,8 @@ const STRINGS = {
   "group.delete": { en: "Delete group", bn: "গ্রুপ মুছুন" },
   "group.deleteConfirm": { en: "Delete group \"{name}\"? Its vehicles will move to Ungrouped.", bn: "\"{name}\" গ্রুপটি মুছবেন? এর যানবাহনগুলো গ্রুপবিহীন-এ চলে যাবে।" },
   "group.create": { en: "Create", bn: "তৈরি করুন" },
+  "group.moveTo": { en: "Move to group", bn: "গ্রুপে সরান" },
+  "group.moveFailed": { en: "Could not move the vehicle", bn: "যানবাহন সরানো যায়নি" },
   "group.name": { en: "Group name", bn: "গ্রুপের নাম" },
   "group.namePlaceholder": { en: "e.g. Delivery fleet", bn: "যেমন: ডেলিভারি ফ্লিট" },
   "group.nameRequired": { en: "Group name is required", bn: "গ্রুপের নাম আবশ্যক" },
