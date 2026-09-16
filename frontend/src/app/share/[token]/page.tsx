@@ -112,7 +112,7 @@ export default function SharedLocationPage() {
   }
 
   return (
-    <div className="min-h-screen bg-ink-950 flex flex-col">
+    <div className="flex h-dvh flex-col bg-ink-950">
       {/* Header */}
       <header className="bg-ink-900 border-b border-ink-800 px-4 py-3">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
@@ -147,7 +147,7 @@ export default function SharedLocationPage() {
       </header>
 
       {/* Map */}
-      <div className="flex-1 relative">
+      <div className="relative min-h-[240px] flex-1">
         <SharedMap
           latitude={location.latitude}
           longitude={location.longitude}

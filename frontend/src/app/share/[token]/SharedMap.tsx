@@ -58,6 +58,15 @@ export default function SharedMap({
   const polylineRef = useRef<L.Polyline | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Re-measure when the container resizes (address bar collapse, rotation).
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => mapRef.current?.invalidateSize());
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   // Initialize map
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -146,8 +155,7 @@ export default function SharedMap({
   return (
     <div
       ref={containerRef}
-      className="w-full h-full"
-      style={{ minHeight: "400px" }}
+      className="absolute inset-0"
     />
   );
 }
